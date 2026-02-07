@@ -21,20 +21,20 @@
                     <!-- Gradient hover or text for Creator link -->
                     <a href="#"
                     class="font-bold inline-block bg-clip-text text-transparent
-                            bg-[length:200%_200%]
-                            bg-[linear-gradient(90deg,rgba(0,86,191,1)_0%,rgba(144,207,99,0.98)_52%,rgba(24,121,240,1)_100%)]
-                            transition-all duration-500 ease-in-out
-                            hover:bg-[linear-gradient(450deg,rgba(0,86,191,1)_0%,rgba(144,207,99,0.98)_52%,rgba(24,121,240,1)_100%)]
-                            hover:bg-[position:100%_50%]">
+                            bg-[length:300%_300%]
+                            bg-[linear-gradient(90deg,rgb(255,132,160)_0%,rgb(251,102,157)_20%,rgb(179,45,194)_95%,rgb(136,95,183)_100%)]
+                            transition-all duration-700 ease-out
+                            hover:bg-[position:80%_0%]">
                         Join as Creator
                     </a>
+
 
                 </nav>
             </div>
 
             <!-- Hero Content -->
             <div class="max-w-6xl mx-auto px-4 pt-4 lg:pt-16 pb-8 text-center">
-                <h1 class="pb-4 text-4xl md:text-6xl font-extrabold tracking-tight bg-gradient-to-r from-[#2A7B9B] via-[#57C785] to-[#EDDD53] bg-clip-text text-transparent leading-[1.1]">
+                <h1 class="pb-4 text-4xl md:text-5xl font-bold tracking-tight bg-clip-text text-transparent bg-[linear-gradient(90deg,#FF84A0_0%,#D84EB7_50%,#9553BF_100%)] leading-[1.1]">
                     Influencer Marketing Made Easy
                 </h1>
 
@@ -45,7 +45,7 @@
 
             <!-- Search Bar -->
             <div class="max-w-6xl mx-auto px-4 mb-12">
-                <div class="bg-white dark:bg-gray-800 rounded-[8px] md:rounded-full shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-gray-100 dark:border-gray-700 flex flex-col md:flex-row p-5 md:p-2 md:pl-10 relative items-start md:items-center">
+                <div class="bg-white dark:bg-gray-800 rounded-md md:rounded-full shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-gray-100 dark:border-gray-700 flex flex-col md:flex-row p-5 md:p-2 md:pl-10 relative items-start md:items-center">
                     
                     <!-- Platform Section -->
                     <div class="flex-1 flex flex-col items-start cursor-pointer border-b md:border-b-0 md:border-r border-gray-100 dark:border-gray-700 pb-4 md:pb-0 md:pr-4">
@@ -61,7 +61,7 @@
 
                     <!-- Search Button Container -->
                     <div class="flex justify-end mt-4 md:mt-0 md:items-center">
-                        <button class="bg-[#111111] hover:bg-black transition-all p-4 md:p-5 rounded-full text-white shadow-lg md:ml-2">
+                        <button class="bg-[#222] hover:opacity-80 transition-all p-4 md:p-5 rounded-full text-white shadow-lg md:ml-2">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                             </svg>
@@ -88,7 +88,7 @@
                 @foreach($badges as $badge)
                 <button class="flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-full text-sm font-semibold text-gray-700 dark:text-gray-200 shadow-sm hover:shadow-md hover:border-transparent transition-all group relative overflow-hidden">
                     <!-- Subtle Hover Gradient Overlay -->
-                    <div class="absolute inset-0 opacity-0 group-hover:opacity-10 bg-gradient-to-r from-[#2A7B9B] via-[#57C785] to-[#EDDD53] transition-opacity"></div>
+                    <div class="absolute inset-0 opacity-0 group-hover:opacity-10 bg-gradient-to-r from-[#FF84A0] via-[#D84EB7] to-[#9553BF] transition-opacity"></div>
                     
                     <span class="relative z-10">
                         @include('components.icons.' . $badge['icon'], ['class' => 'w-4 h-4 text-gray-900 dark:text-gray-100'])
@@ -117,9 +117,10 @@
                 <div class="group overflow-hidden font-sans cursor-pointer">
                     <div class="relative overflow-hidden rounded-xl"> <img 
                             src="https://fastly.picsum.photos/id/64/367/267.jpg?hmac=D-dgjsVmMZqhGCO6oL4mSQ_n2oLNkFTPHl7JEbjf1Gs" 
-                            class="w-full h-48 sm:h-64 object-cover transition-transform duration-500 ease-out group-hover:scale-110" 
+                            class="w-full h-48 sm:h-64 object-cover transition-transform duration-500 ease-out group-hover:scale-110 inset-0" 
                             alt="Creator"
                         >
+                        
                         
                         <div class="absolute top-3 left-3 flex flex-wrap gap-1.5">
                             <span class="bg-black/80 backdrop-blur-sm text-white text-[10px] font-bold px-2 py-1 rounded-md border border-white/20 flex items-center gap-1">
@@ -131,8 +132,13 @@
                         </div>
 
                         <div class="absolute bottom-3 left-3 right-3">
-                            <div class="bg-white text-black text-[10px] font-bold px-2 py-0.5 rounded-md w-fit flex items-center gap-1 mb-1">
+                            <div class="flex flex-row items-center gap-2">
+                                <div class="bg-white text-black text-[10px] font-bold px-2 py-0.5 rounded-md w-fit flex items-center gap-1 mb-1">
                                 <x-icons.instagram class="w-4 h-4 text-gradient-to-r from-purple-500 to-pink-500" /> 11.1K
+                                </div>
+                                <div class="bg-white text-black text-[10px] font-bold px-2 py-0.5 rounded-md w-fit flex items-center gap-1 mb-1">
+                                    <x-icons.tiktok class="w-4 h-4 text-gradient-to-r from-purple-500 to-pink-500" /> 11.3K
+                                </div>
                             </div>
                             <div class="flex items-center gap-1 text-white drop-shadow-md">
                                 <span class="font-bold text-sm">Oleksa</span>
@@ -150,7 +156,7 @@
                             </h3>
                             <span class="text-gray-900 dark:text-white font-bold text-lg leading-none">$60</span>
                         </div>
-                        <p class="text-[13px] text-blue-400/80 font-medium mt-1">Los Angeles, CA, US</p>
+                        <p class="text-[13px] text-gray-400 font-medium mt-1">Los Angeles, CA, US</p>
                     </div>
                 </div>
                 @endforeach
