@@ -5,7 +5,7 @@
         <div class="flex h-screen w-full flex-col justify-center sm:p-0 lg:flex-row dark:bg-gray-900">
             <!-- Form -->
             <div class="flex w-full flex-1 flex-col lg:w-1/2">
-                <div class="mx-auto w-full max-w-md pt-5 sm:py-10">
+                <div class="px-12 w-full max-w-md pt-5 sm:py-10">
                     <a href="/"
                         class="inline-flex items-center text-sm text-gray-500 transition-colors hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300">
                         <svg class="stroke-current" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none">
@@ -55,26 +55,6 @@
                         </div>
                         <form>
                             <div class="space-y-5">
-                                {{-- <div class="grid grid-cols-1 gap-5 sm:grid-cols-2">
-                                    <!-- First Name -->
-                                    <div class="sm:col-span-1">
-                                        <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
-                                            First Name<span class="text-error-500">*</span>
-                                        </label>
-                                        <input type="text" id="fname" name="fname"
-                                            placeholder="Enter your first name"
-                                            class="dark:bg-dark-900 shadow-theme-xs focus:border-brand-300 focus:ring-brand-500/10 dark:focus:border-brand-800 h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-3 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30" />
-                                    </div>
-                                    <!-- Last Name -->
-                                    <div class="sm:col-span-1">
-                                        <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
-                                            Last Name<span class="text-error-500">*</span>
-                                        </label>
-                                        <input type="text" id="lname" name="lname"
-                                            placeholder="Enter your last name"
-                                            class="dark:bg-dark-900 shadow-theme-xs focus:border-brand-300 focus:ring-brand-500/10 dark:focus:border-brand-800 h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-3 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30" />
-                                    </div>
-                                </div> --}}
                                 <!-- Email -->
                                 <div>
                                     <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
@@ -140,7 +120,7 @@
                                     </button>
                                 </div>
                             </div>
-                        </form>s
+                        </form>
                         <div class="my-5">
                             <p class="text-center text-sm font-normal text-gray-700 sm:text-start dark:text-gray-400">
                                 Already have an account?
@@ -150,20 +130,7 @@
                     </div>
                 </div>
             </div>
-            {{-- <div class="bg-brand-950 relative hidden h-full w-full items-center lg:grid lg:w-1/2 dark:bg-white/5">
-                <div class="z-1 flex items-center justify-center">
-                    <!-- ===== Common Grid Shape Start ===== -->
-                    <x-common.common-grid-shape />
-                    <div class="flex max-w-xs flex-col items-center">
-                        <a href="/" class="mb-4 block">
-                            <img src="./images/logo/auth-logo.png" alt="Logo" />
-                        </a>
-                        <p class="text-center text-gray-400 dark:text-white/60">
-                            Easy Influencer Hiring Platform
-                        </p>
-                    </div>
-                </div>
-            </div> --}}
+            
             <!-- Toggler -->
             <div class="fixed right-6 bottom-6 z-50">
                 <button
