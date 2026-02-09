@@ -17,7 +17,7 @@
                     <a href="#" class="hover:text-black dark:hover:text-white transition-colors">How It Works</a>
                     <a href="#" class="hover:text-black dark:hover:text-white transition-colors">Pricing</a>
                     <a href="#" class="hover:text-black dark:hover:text-white transition-colors">Login</a>
-                    <a href="#" class="hover:text-black dark:hover:text-white transition-colors">Join as Brand</a>
+                    <a href="{{ route('brandsignup') }}" class="hover:text-black dark:hover:text-white transition-colors">Join as Brand</a>
                     <!-- Gradient hover or text for Creator link -->
                     <a href="#"
                     class="font-bold inline-block bg-clip-text text-transparent

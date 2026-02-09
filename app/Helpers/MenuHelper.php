@@ -15,6 +15,14 @@ class MenuHelper
                 ],
             ],
             [
+                'icon' => 'user',
+                'name' => 'User',
+                'subItems' => [
+                    ['name' => 'brand', 'path' => '/brand-signup', 'pro' => false],
+                    ['name' => 'creator', 'path' => '/creator-signup', 'pro' => true],
+                ],
+            ],
+            [
                 'icon' => 'calendar',
                 'name' => 'Calendar',
                 'path' => '/calendar',

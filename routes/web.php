@@ -7,6 +7,13 @@ use App\Http\Controllers\DashboardController;
 Route::get('/', function () {
     return view('pages.general.home', ['title' => 'Homepage']);
 })->name('home');
+Route::get('/loggedin', function () {
+    return view('pages.general.signin', ['title' => 'Sign In']);
+})->name('signin');
+
+Route::get('/brand-signup', function () {
+    return view('pages.general.signup', ['title' => 'Brand Sign Up']);
+})->name('brandsignup');
 
 
 // dashboard pages
