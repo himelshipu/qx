@@ -8,20 +8,72 @@ class MenuHelper
     {
         return [
             [
-                'icon' => 'dashboard',
+                'icon' => 'home',
                 'name' => 'Dashboard',
+                'path' => '/dashboard',
+            ],
+            [
+                'icon' => 'categories',
+                'name' => 'Categories',
+                'path' => '/categories',
+            ],
+            [
+                'icon' => 'group',
+                'name' => 'Manage Group',
                 'subItems' => [
-                    ['name' => 'Analytics', 'path' => '/dashboard'],
+                    ['name' => 'Active Brand', 'path' => '/active-brand'],
+                    ['name' => 'Create Brand', 'path' => '/create-brand'],
+                    ['name' => 'View Brands', 'path' => '/view-brands'],
+                    ['name' => 'Banded Brand', 'path' => '/banded-brand'],
+                    ['name' => 'Email Unverified', 'path' => '/email-unverified'],
+                    ['name' => 'Mobile Unverified', 'path' => '/mobile-unverified'],
+                    ['name' => 'KYC Unverified', 'path' => '/kyc-unverified'],
+                    ['name' => 'KYC Pending', 'path' => '/kyc-pending'],
+                    ['name' => 'With Balance', 'path' => '/with-balance'],
                 ],
             ],
             [
-                'icon' => 'user',
-                'name' => 'User',
+                'icon' => 'influencer',
+                'name' => 'Manage Influencer',
                 'subItems' => [
-                    ['name' => 'brand', 'path' => '/brand-signup', 'pro' => false],
-                    ['name' => 'creator', 'path' => '/creator-signup', 'pro' => true],
+                    ['name' => 'Active Influencer', 'path' => '/active-influencer'],
+                    ['name' => 'Create Influencer', 'path' => '/create-influencer'],
+                    ['name' => 'View Influencers', 'path' => '/view-influencers'],
+                    ['name' => 'Banded Influencer', 'path' => '/banded-influencer'],
+                    ['name' => 'All Influencer', 'path' => '/all-influencers'],
+                    ['name' => 'Email Unverified', 'path' => '/email-unverified'],
+                    ['name' => 'Mobile Unverified', 'path' => '/mobile-unverified'],
+                    ['name' => 'KYC Unverified', 'path' => '/kyc-unverified'],
+                    ['name' => 'KYC Pending', 'path' => '/kyc-pending'],
+                    ['name' => 'With Balance', 'path' => '/with-balance'],
+                    ['name' => 'Send Notification', 'path' => '/send-notification']
                 ],
             ],
+
+            [
+                'icon' => 'campaign',
+                'name' => 'Campaigns',
+                'subItems' => [
+                    ['name' => 'Pending', 'path' => '/pending-campaigns'],
+                    ['name' => 'Approved', 'path' => '/approved-campaigns'],
+                    ['name' => 'Rejected', 'path' => '/rejected-campaigns'],
+                    ['name' => 'All', 'path' => '/all-campaigns'],
+                ],
+            ],
+            
+            [
+                'icon' => 'tag',
+                'name' => 'Tags',
+                'path' => '/tags',
+            ],
+
+            [
+                'icon' => 'reviews',
+                'name' => 'Reviews',
+                'path' => '/reviews',
+            ],
+            
+
             [
                 'icon' => 'calendar',
                 'name' => 'Calendar',
@@ -142,6 +194,49 @@ class MenuHelper
             'support-ticket' => '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M20 17.0518V12C20 7.58174 16.4183 4 12 4C7.58168 4 3.99994 7.58174 3.99994 12V17.0518M19.9998 14.041V19.75C19.9998 20.5784 19.3282 21.25 18.4998 21.25H13.9998M6.5 18.75H5.5C4.67157 18.75 4 18.0784 4 17.25V13.75C4 12.9216 4.67157 12.25 5.5 12.25H6.5C7.32843 12.25 8 12.9216 8 13.75V17.25C8 18.0784 7.32843 18.75 6.5 18.75ZM17.4999 18.75H18.4999C19.3284 18.75 19.9999 18.0784 19.9999 17.25V13.75C19.9999 12.9216 19.3284 12.25 18.4999 12.25H17.4999C16.6715 12.25 15.9999 12.9216 15.9999 13.75V17.25C15.9999 18.0784 16.6715 18.75 17.4999 18.75Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg>',
 
             'email' => '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M3.5 8.187V17.25C3.5 17.6642 3.83579 18 4.25 18H19.75C20.1642 18 20.5 17.6642 20.5 17.25V8.18747L13.2873 13.2171C12.5141 13.7563 11.4866 13.7563 10.7134 13.2171L3.5 8.187ZM20.5 6.2286C20.5 6.23039 20.5 6.23218 20.5 6.23398V6.24336C20.4976 6.31753 20.4604 6.38643 20.3992 6.42905L12.4293 11.9867C12.1716 12.1664 11.8291 12.1664 11.5713 11.9867L3.60116 6.42885C3.538 6.38481 3.50035 6.31268 3.50032 6.23568C3.50028 6.10553 3.60577 6 3.73592 6H20.2644C20.3922 6 20.4963 6.10171 20.5 6.2286ZM22 6.25648V17.25C22 18.4926 20.9926 19.5 19.75 19.5H4.25C3.00736 19.5 2 18.4926 2 17.25V6.23398C2 6.22371 2.00021 6.2135 2.00061 6.20333C2.01781 5.25971 2.78812 4.5 3.73592 4.5H20.2644C21.2229 4.5 22 5.27697 22.0001 6.23549C22.0001 6.24249 22.0001 6.24949 22 6.25648Z" fill="currentColor"></path></svg>',
+
+            'group' => '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <path d="M12 19V22M12 22H9M12 22H15M14 8C14 6.89543 13.1046 6 12 6C10.8954 6 10 6.89543 10 8C10 9.10457 10.8954 10 12 10C13.1046 10 14 9.10457 14 8ZM6 19H18C20.2091 19 22 17.2091 22 15V6C22 3.79086 20.2091 2 18 2H6C3.79086 2 2 3.79086 2 6V15C2 17.2091 3.79086 19 6 19ZM9.5 15H14.5C15.3284 15 16 14.3284 16 13.5C16 12.6716 15.3284 12 14.5 12H9.5C8.67157 12 8 12.6716 8 13.5C8 14.3284 8.67157 15 9.5 15Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>',
+
+            'user' => '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <ellipse cx="10" cy="17.5" rx="7" ry="3.5" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+            <circle cx="10" cy="7" r="4" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+            <path d="M21 11H17" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            <path d="M19 9L19 13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>',
+
+            'influencer' => '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <ellipse cx="10" cy="17.5" rx="7" ry="3.5" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+            <circle cx="10" cy="7" r="4" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+            <path fill-rule="evenodd" clip-rule="evenodd" d="M15.0448 10.2496C14.7228 10.7485 14.3288 11.1965 13.8774 11.5791C14.2319 11.6901 14.609 11.75 15.0001 11.75C17.0712 11.75 18.7501 10.0711 18.7501 7.99999C18.7501 6.04422 17.2529 4.43814 15.3421 4.26538C15.6083 4.78435 15.8011 5.34717 15.9068 5.94015C16.6979 6.28887 17.2501 7.07994 17.2501 7.99999C17.2501 9.2277 16.2668 10.2257 15.0448 10.2496Z" fill="currentColor"/>
+            <path fill-rule="evenodd" clip-rule="evenodd" d="M18.9997 17.5563C18.9896 18.1705 18.8148 18.7606 18.5009 19.3108C18.8693 19.2095 19.2144 19.092 19.5312 18.96C20.1284 18.7112 20.6606 18.3959 21.055 18.0074C21.452 17.6162 21.7501 17.1064 21.7501 16.5C21.7501 15.8935 21.452 15.3837 21.055 14.9925C20.6606 14.604 20.1284 14.2887 19.5312 14.0399C18.5086 13.6138 17.1907 13.3394 15.7495 13.2683C16.7517 13.7774 17.5702 14.4169 18.1351 15.1443C18.4329 15.2274 18.7072 15.3215 18.9543 15.4245C19.443 15.6281 19.7894 15.8514 20.0023 16.0611C20.2125 16.2682 20.2501 16.416 20.2501 16.5C20.2501 16.5839 20.2125 16.7317 20.0023 16.9388C19.7961 17.1419 19.4645 17.3579 18.9997 17.5563Z" fill="currentColor"/>
+            </svg>',
+
+            'categories' => '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="22" viewBox="0 0 20 22" fill="none">
+            <path d="M18.75 16.5139L10.5623 20.1529C10.0451 20.3828 9.45485 20.3828 8.93772 20.1529L0.75 16.5139M18.75 11.5139L10.5623 15.1529C10.0451 15.3828 9.45485 15.3828 8.93772 15.1529L0.75 11.5139M1.53885 6.40836L8.85557 10.0667C9.41863 10.3482 10.0814 10.3482 10.6444 10.0667L17.9611 6.40836C18.6982 6.03984 18.6982 4.98803 17.9611 4.6195L10.6444 0.961146C10.0814 0.679618 9.41863 0.679618 8.85557 0.961145L1.53886 4.6195C0.801808 4.98803 0.801806 6.03983 1.53885 6.40836Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>',
+
+            'campaign' => '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <path fill-rule="evenodd" clip-rule="evenodd" d="M8.00024 8.77858V5C8.00024 3.89543 8.89567 3 10.0002 3H20.0002C21.1048 3 22.0002 3.89543 22.0002 5V13C22.0002 14.1046 21.1048 15 20.0002 15H18.2233C17.9056 15 17.5925 14.9243 17.3099 14.7792L9.08685 10.5578C8.41973 10.2153 8.00024 9.52847 8.00024 8.77858ZM12.0002 6.25C11.586 6.25 11.2502 6.58579 11.2502 7C11.2502 7.41421 11.586 7.75 12.0002 7.75H18.0002C18.4145 7.75 18.7502 7.41421 18.7502 7C18.7502 6.58579 18.4145 6.25 18.0002 6.25H12.0002ZM14.2502 11C14.2502 10.5858 14.586 10.25 15.0002 10.25H18.0002C18.4145 10.25 18.7502 10.5858 18.7502 11C18.7502 11.4142 18.4145 11.75 18.0002 11.75H15.0002C14.586 11.75 14.2502 11.4142 14.2502 11ZM10.0002 14C10.0002 15.1046 9.10481 16 8.00024 16C6.89567 16 6.00024 15.1046 6.00024 14C6.00024 12.8954 6.89567 12 8.00024 12C9.10481 12 10.0002 12.8954 10.0002 14ZM14.3126 14.3183C14.6892 14.4908 14.8545 14.936 14.6819 15.3126C14.0769 16.6326 11.9325 19.0228 8.00014 19.0228C4.65974 19.0228 3.01891 20.704 2.6573 21.3615C2.45768 21.7244 2.00164 21.8568 1.6387 21.6572C1.27576 21.4576 1.14336 21.0016 1.34298 20.6386C1.98137 19.4779 4.14054 17.5228 8.00014 17.5228C11.2678 17.5228 12.9234 15.5493 13.3183 14.6876C13.4909 14.311 13.9361 14.1457 14.3126 14.3183Z" fill="currentColor"/>
+            </svg>',
+
+            'home' => '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <path d="M8 16C11.1715 17.3455 12.9364 17.3211 16 16M16.1804 22H7.81965C5.5109 22 3.6393 20.214 3.6393 18.0108V13.133C3.6393 12.4248 3.34447 11.7456 2.81969 11.2448C1.60381 10.0845 1.76187 8.16205 3.15251 7.19692L9.54124 2.763C11.0071 1.74567 12.9929 1.74567 14.4588 2.763L20.8475 7.19691C22.2381 8.16205 22.3962 10.0845 21.1803 11.2448C20.6555 11.7456 20.3607 12.4248 20.3607 13.133V18.0108C20.3607 20.214 18.4891 22 16.1804 22Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>',
+
+            'tag' => '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <path d="M10 7C10 8.65685 8.65685 10 7 10C5.34315 10 4 8.65685 4 7C4 5.34315 5.34315 4 7 4C8.65685 4 10 5.34315 10 7Z" stroke="currentColor" stroke-width="1.5"/>
+            <path d="M20 17C20 18.6569 18.6569 20 17 20C15.3431 20 14 18.6569 14 17C14 15.3431 15.3431 14 17 14C18.6569 14 20 15.3431 20 17Z" stroke="currentColor" stroke-width="1.5"/>
+            <path d="M14 6C14 4.89543 14.8954 4 16 4H18C19.1046 4 20 4.89543 20 6V8C20 9.10457 19.1046 10 18 10H16C14.8954 10 14 9.10457 14 8V6Z" stroke="currentColor" stroke-width="1.5"/>
+            <path d="M4 16C4 14.8954 4.89543 14 6 14H8C9.10457 14 10 14.8954 10 16V18C10 19.1046 9.10457 20 8 20H6C4.89543 20 4 19.1046 4 18V16Z" stroke="currentColor" stroke-width="1.5"/>
+            </svg>',
+
+            'reviews' => '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <path d="M10.0328 3.27141C10.8375 1.5762 13.1625 1.5762 13.9672 3.27141L15.3579 6.20118C15.6774 6.87435 16.2951 7.34094 17.0096 7.44888L20.1193 7.91869C21.9187 8.19053 22.6371 10.4895 21.3351 11.8091L19.0849 14.0896C18.5679 14.6136 18.332 15.3685 18.454 16.1084L18.9852 19.3285C19.2926 21.1918 17.4116 22.6126 15.8022 21.7329L13.0208 20.2126C12.3817 19.8633 11.6183 19.8633 10.9792 20.2126L8.19776 21.7329C6.58839 22.6126 4.70742 21.1918 5.01479 19.3286L5.54599 16.1084C5.66804 15.3685 5.43211 14.6136 4.91508 14.0896L2.66488 11.8091C1.36287 10.4895 2.08133 8.19053 3.88066 7.91869L6.99037 7.44888C7.70489 7.34094 8.32257 6.87435 8.64211 6.20118L10.0328 3.27141Z" fill="currentColor"/>
+            </svg>',
+
+
         ];
 
         return $icons[$iconName] ?? '<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" fill="currentColor"/></svg>';
