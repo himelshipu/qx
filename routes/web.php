@@ -31,6 +31,11 @@ Route::get('/profile', function () {
     return view('pages.admin.profile', ['title' => 'Profile']);
 })->name('profile');
 
+// categories pages
+Route::get('/categories', function () {
+    return view('pages.admin.categories.categories', ['title' => 'Categories']);
+})->name('categories');
+
 // form pages
 Route::get('/form-elements', function () {
     return view('pages.admin.form.form-elements', ['title' => 'Form Elements']);
