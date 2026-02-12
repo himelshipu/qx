@@ -37,7 +37,7 @@
             </div>
         </div>
 
-        <!-- SOCIAL LINKS SECTION (Restored) -->
+        <!-- SOCIAL LINKS SECTION -->
         <div>
             <h5 class="mb-3 text-sm font-medium text-gray-800 dark:text-white/90 lg:mb-6">
                 Social Links
