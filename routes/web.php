@@ -36,6 +36,16 @@ Route::get('/categories', function () {
     return view('pages.admin.categories.categories', ['title' => 'Categories']);
 })->name('categories');
 
+// brand pages
+Route::get('/create-brand', function () {
+    return view('pages.admin.brand.create-brand', ['title' => 'Create Brand']);
+})->name('create-brand');
+
+// influencer pages
+Route::get('/create-influencer', function () {
+    return view('pages.admin.influencer.create-influencer', ['title' => 'Create Influencer']);
+})->name('create-influencer');
+
 // form pages
 Route::get('/form-elements', function () {
     return view('pages.admin.form.form-elements', ['title' => 'Form Elements']);
