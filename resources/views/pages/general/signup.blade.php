@@ -10,16 +10,18 @@
         init() {
             // Get URL parameter on page load
             const urlParams = new URLSearchParams(window.location.search);
-            const urlType = urlParams.get('type');
+            const urlType = urlParams.get('user-type');
             if (urlType && (urlType === 'brand' || urlType === 'creator')) {
                 this.role = urlType;
+            } else {
+                this.role = 'brand';
             }
         },
         updateRole(newRole) {
             this.role = newRole;
             // Update URL without reload
             const url = new URL(window.location);
-            url.searchParams.set('type', newRole);
+            url.searchParams.set('user-type', newRole);
             window.history.replaceState({}, '', url);
         }
      }">
@@ -63,20 +65,17 @@
                     </button>
                 </div>
 
-                <!-- Hidden input for type -->
-                <input type="hidden" name="type" :value="role">
-
                 <div x-show="role === 'brand'" x-cloak>
                     <form method="POST" action="/register">
                         @csrf
-                        <input type="hidden" name="type" :value="role">
+                        <input type="hidden" name="user_type" :value="role">
                         @include('components.general.auth.brand-signup-form')
                     </form>
                 </div>
                 <div x-show="role === 'creator'" x-cloak>
                     <form method="POST" action="/register">
                         @csrf
-                        <input type="hidden" name="type" :value="role">
+                        <input type="hidden" name="user_type" :value="role">
                         @include('components.general.auth.creator-signup-form')
                     </form>
                 </div>

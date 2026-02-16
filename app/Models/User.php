@@ -21,7 +21,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'name',
         'email',
         'password',
-        'type',
+        'user_type',
     ];
 
     /**
@@ -45,5 +45,21 @@ class User extends Authenticatable implements MustVerifyEmail
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    /**
+     * Get the Brand associated with the user.
+     */
+    public function brand()
+    {
+        return $this->hasOne(\App\Models\Brand::class);
+    }
+
+    /**
+     * Get the Creator associated with the user.
+     */
+    public function creator()
+    {
+        return $this->hasOne(\App\Models\Creator::class);
     }
 }

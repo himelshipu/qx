@@ -3,8 +3,6 @@
 declare(strict_types=1);
 
 use App\Http\Controllers\Admin\DashboardController;
-use App\Http\Controllers\Auth\AuthenticatedSessionController;
-use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Web\HomeController;
 use Illuminate\Support\Facades\Route;
@@ -28,29 +26,6 @@ use Illuminate\Support\Facades\Route;
 Route::middleware(['web'])->group(function () {
     // Home page
     Route::get('/', [HomeController::class, 'index'])->name('home');
-    
-    // Custom login view - using existing custom design
-    Route::get('/signin', function () {
-        return view('pages.general.signin');
-    })->name('login.view');
-    
-    // Also handle /login for Breeze password reset flow (GET only)
-    // Named as 'login' so password.reset and other Breeze features work
-    Route::get('/login', function () {
-        return view('pages.general.signin');
-    })->name('login');
-    
-    // Custom sign-up page with type query parameter
-    Route::get('/sign-up', function (\Illuminate\Http\Request $request) {
-        $type = $request->query('type', 'brand');
-        
-        // Validate type - fallback to brand if invalid
-        if (!in_array($type, ['brand', 'creator'])) {
-            $type = 'brand';
-        }
-        
-        return view('pages.general.signup', ['type' => $type]);
-    })->name('register');
 });
 
 /*

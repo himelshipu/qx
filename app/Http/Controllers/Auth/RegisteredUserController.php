@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\Brand;
+use App\Models\Creator;
 use App\Models\User;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
@@ -17,9 +19,16 @@ class RegisteredUserController extends Controller
     /**
      * Display the registration view.
      */
-    public function create(): View
+    public function create(Request $request): View
     {
-        return view('auth.register');
+        $userType = $request->query('user-type', 'brand');
+        
+        // Validate user type - fallback to brand if invalid
+        if (!in_array($userType, ['brand', 'creator'])) {
+            $userType = 'brand';
+        }
+        
+        return view('auth.register', ['userType' => $userType]);
     }
 
     /**
@@ -33,15 +42,28 @@ class RegisteredUserController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
-            'type' => ['required', 'in:brand,creator'],
+            'user_type' => ['required', 'in:brand,creator'],
+            'brand_name' => ['nullable', 'string', 'max:255'],
         ]);
 
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
-            'type' => $request->type ?? 'brand',
+            'user_type' => $request->user_type ?? 'brand',
         ]);
+
+        // Auto-create Brand or Creator record based on user_type
+        if ($user->user_type === 'brand') {
+            Brand::create([
+                'user_id' => $user->id,
+                'brand_name' => $request->input('brand_name', $request->name),
+            ]);
+        } elseif ($user->user_type === 'creator') {
+            Creator::create([
+                'user_id' => $user->id,
+            ]);
+        }
 
         event(new Registered($user));
 

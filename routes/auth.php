@@ -12,12 +12,14 @@ use App\Http\Controllers\Auth\VerifyEmailController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('guest')->group(function () {
-    // Registration POST is handled via custom /sign-up route in web.php
-    // This still uses Breeze controller for registration logic
+    Route::get('register', [RegisteredUserController::class, 'create'])
+        ->name('register');
+    
     Route::post('register', [RegisteredUserController::class, 'store']);
 
-    // Login POST is handled via custom /signin or /login route in web.php
-    // This still uses Breeze controller for login logic
+    Route::get('login', [AuthenticatedSessionController::class, 'create'])
+        ->name('login');
+    
     Route::post('login', [AuthenticatedSessionController::class, 'store']);
 
     Route::get('forgot-password', [PasswordResetLinkController::class, 'create'])

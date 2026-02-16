@@ -32,19 +32,23 @@
                 maxlength="6"
             >
         </div>
-        
+
         <div class="flex flex-col gap-3">
             <button class="w-full bg-gradient-to-r from-gray-900 to-gray-800 hover:from-pink-600 hover:to-pink-500 text-white font-semibold py-4 px-6 rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200">
                 Continue
             </button>
-            
-            <p class="text-center text-sm text-gray-500 dark:text-gray-400">
+            <div class="text-center text-sm text-gray-500 dark:text-gray-400">
                 Didn't receive the code? 
-                <button class="text-pink-600 dark:text-pink-400 hover:text-pink-700 dark:hover:text-pink-300 font-medium hover:underline transition-colors">
-                    Resend
-                </button>
-            </p>
+                <form method="POST" action="{{ route('verification.send') }}" class="inline">
+                    @csrf
+                    <button type="submit" class="text-pink-600 dark:text-pink-400 hover:text-pink-700 dark:hover:text-pink-300 font-medium hover:underline transition-colors">
+                        Resend
+                    </button>
+                </form>
+            </div>
         </div>
+        
+  
     </div>
 
 
@@ -60,16 +64,7 @@
         </div>
     @endif
 
-    <div class="mt-4 flex items-center justify-between">
-        <form method="POST" action="{{ route('verification.send') }}">
-            @csrf
-
-            <div>
-                <x-primary-button>
-                    {{ __('Resend Verification Email') }}
-                </x-primary-button>
-            </div>
-        </form>
+    <div class="mt-4 flex items-center justify-center gap-4">
 
         <form method="POST" action="{{ route('logout') }}">
             @csrf
@@ -81,56 +76,197 @@
     </div>
 
 
-    <!-- STEP 3: OBJECTIVE (Survey) -->
-    <div x-show="step === 'objective'" x-cloak class="text-center my-2">
-        <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-10">What are you here to do?</h1>
-        
+   
+
+
+
+
+
+
+
+
+    <div 
+    x-data="{ 
+        stepIndex: 1,
+        steps: ['objective','budget','business-type','people','influencer-type'],
+        objective: '',
+        budget: '',
+        businessType: '',
+        companySize: '',
+        influencerTypes: [],
+        get step() { return this.steps[this.stepIndex - 1] },
+        next() { if(this.stepIndex < this.steps.length) this.stepIndex++ },
+        prev() { if(this.stepIndex > 1) this.stepIndex-- },
+        progress() { return (this.stepIndex / this.steps.length) * 100 }
+    }"
+    class="max-w-2xl mx-auto my-10"
+>
+
+    <!-- Top Navigation -->
+    <div class="flex items-center justify-between mb-6">
+        <button 
+            @click="prev()" 
+            x-show="stepIndex > 1"
+            class="text-sm font-medium text-gray-600 dark:text-gray-300 hover:underline">
+            ← Back
+        </button>
+
+        <div class="text-sm text-gray-500 dark:text-gray-400">
+            Step <span x-text="stepIndex"></span> of <span x-text="steps.length"></span>
+        </div>
+    </div>
+
+    <!-- Progress Bar -->
+    <div class="w-full bg-gray-200 dark:bg-gray-800 rounded-full h-2 mb-10">
+        <div 
+            class="bg-pink-400 h-2 rounded-full transition-all duration-300"
+            :style="'width: ' + progress() + '%'"
+        ></div>
+    </div>
+
+    <!-- STEP 1: OBJECTIVE -->
+    <div x-show="step === 'objective'" x-cloak class="text-center">
+        <h1 class="text-3xl font-bold mb-10">What are you here to do?</h1>
+
         <div class="space-y-4 mb-10">
-            <!-- Option 1 -->
-            <label class="relative flex items-center p-5 border rounded-2xl cursor-pointer transition-all hover:border-pink-400"
-                    :class="objective === 'one-time' ? 'border-pink-400 ring-1 ring-pink-400' : 'border-gray-100 dark:border-gray-800'">
+            <label class="flex items-center p-5 border rounded-2xl cursor-pointer"
+                :class="objective === 'one-time' ? 'border-pink-400 ring-1 ring-pink-400' : 'border-gray-200'">
                 <input type="radio" x-model="objective" value="one-time" class="sr-only">
-                <div class="w-6 h-6 rounded-full border-2 flex items-center justify-center mr-4" :class="objective === 'one-time' ? 'border-pink-400' : 'border-gray-200'">
-                    <div class="w-3 h-3 rounded-full bg-pink-400" x-show="objective === 'one-time'"></div>
-                </div>
-                <div class="flex items-center gap-3">
-                    <span class="text-xl">👥</span>
-                    <span class="text-lg font-medium text-gray-800 dark:text-white">Find influencers for a one-time campaign</span>
-                </div>
+                <span class="text-lg font-medium">Find influencers for a one-time campaign</span>
             </label>
 
-            <!-- Option 2 -->
-            <label class="relative flex items-center p-5 border rounded-2xl cursor-pointer transition-all hover:border-pink-400"
-                    :class="objective === 'ongoing' ? 'border-pink-400 ring-1 ring-pink-400' : 'border-gray-100 dark:border-gray-800'">
+            <label class="flex items-center p-5 border rounded-2xl cursor-pointer"
+                :class="objective === 'ongoing' ? 'border-pink-400 ring-1 ring-pink-400' : 'border-gray-200'">
                 <input type="radio" x-model="objective" value="ongoing" class="sr-only">
-                <div class="w-6 h-6 rounded-full border-2 flex items-center justify-center mr-4" :class="objective === 'ongoing' ? 'border-pink-400' : 'border-gray-200'">
-                    <div class="w-3 h-3 rounded-full bg-pink-400" x-show="objective === 'ongoing'"></div>
-                </div>
-                <div class="flex items-center gap-3">
-                    <span class="text-xl">🛒</span>
-                    <span class="text-lg font-medium text-gray-800 dark:text-white">Get ongoing influencer content</span>
-                </div>
+                <span class="text-lg font-medium">Get ongoing influencer content</span>
             </label>
 
-            <!-- Option 3 -->
-            <label class="relative flex items-center p-5 border rounded-2xl cursor-pointer transition-all hover:border-pink-400"
-                    :class="objective === 'exploring' ? 'border-pink-400 ring-1 ring-pink-400' : 'border-gray-100 dark:border-gray-800'">
+            <label class="flex items-center p-5 border rounded-2xl cursor-pointer"
+                :class="objective === 'exploring' ? 'border-pink-400 ring-1 ring-pink-400' : 'border-gray-200'">
                 <input type="radio" x-model="objective" value="exploring" class="sr-only">
-                <div class="w-6 h-6 rounded-full border-2 flex items-center justify-center mr-4" :class="objective === 'exploring' ? 'border-pink-400' : 'border-gray-200'">
-                    <div class="w-3 h-3 rounded-full bg-pink-400" x-show="objective === 'exploring'"></div>
-                </div>
-                <div class="flex items-center gap-3">
-                    <span class="text-xl">📱</span>
-                    <span class="text-lg font-medium text-gray-800 dark:text-white">I'm not sure yet, just exploring</span>
-                </div>
+                <span class="text-lg font-medium">I'm not sure yet, just exploring</span>
             </label>
         </div>
 
-        <button class="w-full py-4 rounded-xl font-bold transition-all"
-                :class="objective ? 'bg-[#1A1A1A] text-white hover:bg-black' : 'bg-gray-400 text-white cursor-not-allowed'">
-            Continue
+        <div class="space-y-3">
+            <button @click="next()" 
+                class="w-full py-4 rounded-xl font-bold"
+                :class="objective ? 'bg-black text-white' : 'bg-gray-400 text-white cursor-not-allowed'"
+                :disabled="!objective">
+                Continue
+            </button>
+            <button @click="next()" class="text-sm text-gray-500 hover:underline">Skip</button>
+        </div>
+    </div>
+
+    <!-- STEP 2: BUDGET -->
+    <div x-show="step === 'budget'" x-cloak class="text-center">
+        <h1 class="text-3xl font-bold mb-10">What's your approximate budget?</h1>
+
+        <div class="space-y-4 mb-10">
+            <template x-for="item in ['under-1000','1000-5000','5000-10000','10000-25000','25000-50000','50000+']">
+                <label class="flex items-center p-5 border rounded-2xl cursor-pointer"
+                    :class="budget === item ? 'border-pink-400 ring-1 ring-pink-400' : 'border-gray-200'">
+                    <input type="radio" x-model="budget" :value="item" class="sr-only">
+                    <span class="text-lg font-medium" x-text="item"></span>
+                </label>
+            </template>
+        </div>
+
+        <div class="space-y-3">
+            <button @click="next()" 
+                class="w-full py-4 rounded-xl font-bold"
+                :class="budget ? 'bg-black text-white' : 'bg-gray-400 text-white cursor-not-allowed'"
+                :disabled="!budget">
+                Continue
+            </button>
+            <button @click="next()" class="text-sm text-gray-500 hover:underline">Skip</button>
+        </div>
+    </div>
+
+    <!-- STEP 3: BUSINESS TYPE -->
+    <div x-show="step === 'business-type'" x-cloak class="text-center">
+        <h1 class="text-3xl font-bold mb-10">What type of business are you?</h1>
+
+        <div class="space-y-4 mb-10">
+            <template x-for="item in ['agency','ecommerce','website','local','other']">
+                <label class="flex items-center p-5 border rounded-2xl cursor-pointer"
+                    :class="businessType === item ? 'border-pink-400 ring-1 ring-pink-400' : 'border-gray-200'">
+                    <input type="radio" x-model="businessType" :value="item" class="sr-only">
+                    <span class="text-lg font-medium capitalize" x-text="item"></span>
+                </label>
+            </template>
+        </div>
+
+        <div class="space-y-3">
+            <button @click="next()" 
+                class="w-full py-4 rounded-xl font-bold"
+                :class="businessType ? 'bg-black text-white' : 'bg-gray-400 text-white cursor-not-allowed'"
+                :disabled="!businessType">
+                Continue
+            </button>
+            <button @click="next()" class="text-sm text-gray-500 hover:underline">Skip</button>
+        </div>
+    </div>
+
+    <!-- STEP 4: PEOPLE -->
+    <div x-show="step === 'people'" x-cloak class="text-center">
+        <h1 class="text-3xl font-bold mb-10">How many people work at your company?</h1>
+
+        <div class="space-y-4 mb-10">
+            <template x-for="item in ['just-me','2-10','11-50','51-200','201-500','500+']">
+                <label class="flex items-center p-5 border rounded-2xl cursor-pointer"
+                    :class="companySize === item ? 'border-pink-400 ring-1 ring-pink-400' : 'border-gray-200'">
+                    <input type="radio" x-model="companySize" :value="item" class="sr-only">
+                    <span class="text-lg font-medium" x-text="item"></span>
+                </label>
+            </template>
+        </div>
+
+        <div class="space-y-3">
+            <button @click="next()" 
+                class="w-full py-4 rounded-xl font-bold"
+                :class="companySize ? 'bg-black text-white' : 'bg-gray-400 text-white cursor-not-allowed'"
+                :disabled="!companySize">
+                Continue
+            </button>
+            <button @click="next()" class="text-sm text-gray-500 hover:underline">Skip</button>
+        </div>
+    </div>
+
+    <!-- STEP 5: INFLUENCER TYPE -->
+    <div x-show="step === 'influencer-type'" x-cloak class="text-center">
+        <h1 class="text-3xl font-bold mb-10">What type of influencers are you looking for?</h1>
+
+        <div class="grid grid-cols-2 gap-4 mb-10">
+            <template x-for="item in ['beauty','fashion','travel','health','food','tech','gaming','lifestyle']">
+                <label class="flex items-center justify-center p-5 border rounded-2xl cursor-pointer"
+                    :class="influencerTypes.includes(item) ? 'border-pink-400 ring-1 ring-pink-400' : 'border-gray-200'">
+                    <input type="checkbox" x-model="influencerTypes" :value="item" class="sr-only">
+                    <span class="text-lg font-medium capitalize" x-text="item"></span>
+                </label>
+            </template>
+        </div>
+
+        <button 
+            @click="console.log({objective,budget,businessType,companySize,influencerTypes})"
+            class="w-full py-4 rounded-xl font-bold bg-black text-white hover:bg-gray-900">
+            Save
         </button>
     </div>
+
+</div>
+
+
+
+
+
+
+
+
+
+
+
 
 
 </div>
