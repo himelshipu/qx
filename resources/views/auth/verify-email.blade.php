@@ -1,4 +1,4 @@
-@extends('web.layouts.app')
+@extends('frontend.layouts.app')
 @section('content')
 <div class="max-w-lg mx-auto px-4 sm:px-0">
     <div class="mb-8">

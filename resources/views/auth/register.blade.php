@@ -1,4 +1,4 @@
-@extends('web.layouts.app')
+@extends('frontend.layouts.app')
 @section('content')
     <div class="relative z-1 bg-white p-6 sm:p-0 dark:bg-gray-900 py-12">
         <div class="flex w-full flex-col justify-center sm:p-0 lg:flex-row dark:bg-gray-900">

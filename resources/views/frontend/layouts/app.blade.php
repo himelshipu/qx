@@ -30,6 +30,31 @@
             }
         })();
     </script>
+
+    <!-- Alpine.js Theme Store Initialization -->
+    <script>
+        document.addEventListener('alpine:init', () => {
+            Alpine.store('theme', {
+                theme: localStorage.getItem('theme') || 
+                       (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'),
+                
+                toggle() {
+                    this.theme = this.theme === 'light' ? 'dark' : 'light';
+                    localStorage.setItem('theme', this.theme);
+                    
+                    if (this.theme === 'dark') {
+                        document.documentElement.classList.add('dark');
+                        document.body.classList.add('dark', 'bg-gray-900', 'text-gray-100');
+                        document.body.classList.remove('bg-white', 'text-gray-900');
+                    } else {
+                        document.documentElement.classList.remove('dark');
+                        document.body.classList.remove('dark', 'bg-gray-900', 'text-gray-100');
+                        document.body.classList.add('bg-white', 'text-gray-900');
+                    }
+                }
+            });
+        });
+    </script>
 </head>
 
 <body class="transition-colors duration-200">
@@ -57,10 +82,12 @@
         </button>
     </div>
 
+    @include('frontend.layouts.header')
     <!-- Main Content -->
-    <main>
+    <main class="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8 bg-gray-50">
         @yield('content')
     </main>
+    @include('frontend.layouts.footer')
 
     @stack('scripts')
 </body>

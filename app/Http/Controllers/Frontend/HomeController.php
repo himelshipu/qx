@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Http\Controllers\Web;
+namespace App\Http\Controllers\Frontend;
 
 use App\Http\Controllers\Controller;
 use App\Services\Web\HomeService;
@@ -34,7 +34,7 @@ final class HomeController extends Controller
     {
         $homeData = $this->homeService->getHomePageData();
 
-        return view('web.home', [
+        return view('frontend.pages.home', [
             'title' => 'Welcome',
             'appName' => $homeData->appName,
             'appVersion' => $homeData->appVersion,
