@@ -1,6 +1,6 @@
 <div class="space-y-6">
     <!-- Personal Info -->
-   <div class=" grid grid-cols-2 gap-6 sm:grid-cols-2">
+   <div class=" grid grid-cols-2 gap-2 sm:grid-cols-2">
         <div>
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-400">
                 Full Name<span class="text-error-500"> *</span>
@@ -79,7 +79,7 @@
         <h5 class="mb-3 text-sm font-medium text-gray-800 dark:text-white/90 lg:mb-6">
             Social Links
         </h5>
-        <div class="grid grid-cols-1 gap-x-6 gap-y-5 lg:grid-cols-2">
+        <div class=" grid grid-cols-2 gap-2 sm:grid-cols-2">
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-400">
                     Facebook

@@ -3,7 +3,7 @@
     <div class="relative z-1 bg-white p-6 sm:p-0 dark:bg-gray-900 py-12">
         <div class="flex w-full flex-col justify-center sm:p-0 lg:flex-row dark:bg-gray-900">
             <div class="flex w-full flex-1 flex-col lg:w-1/2">
-                <div class="mx-auto flex w-full max-w-md flex-1 flex-col justify-center">
+                <div class="mx-auto flex w-full max-w-lg flex-1 flex-col justify-center">
                     <div class="mb-5 sm:mb-8">
                         <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-2 text-center">
                             Create Your Account

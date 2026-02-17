@@ -16,8 +16,8 @@ return new class extends Migration
             $table->string('name');
             $table->string('email')->unique();
             $table->string('user_type')->default('brand');
-            $table->string('verification_code')->nullable()->after('email_verified_at');
-            $table->timestamp('verification_code_expires_at')->nullable()->after('verification_code');
+            $table->string('verification_code')->nullable();
+            $table->timestamp('verification_code_expires_at')->nullable();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->rememberToken();

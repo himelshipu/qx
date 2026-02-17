@@ -14,7 +14,7 @@
                         Back to dashboard
                     </a>
                 </div>
-                <div class="mx-auto flex w-full max-w-md flex-1 flex-col justify-center">
+                <div class="mx-auto flex w-full max-w-xl flex-1 flex-col justify-center">
                     <div class="mb-5 sm:mb-8">
                         <h1 class="text-title-sm sm:text-title-md mb-2 font-semibold text-gray-800 dark:text-white/90 text-center">
                             Welcome Back
