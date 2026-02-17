@@ -41,6 +41,10 @@ Route::get('/create-brand', function () {
     return view('pages.admin.brand.create-brand', ['title' => 'Create Brand']);
 })->name('create-brand');
 
+Route::get('/active-brand', function () {
+    return view('pages.admin.brand.active-brand', ['title' => 'ActiveBrands']);
+})->name('active-brand');
+
 // influencer pages
 Route::get('/create-influencer', function () {
     return view('pages.admin.influencer.create-influencer', ['title' => 'Create Influencer']);
