@@ -3,13 +3,9 @@
 namespace App\Listeners;
 
 use Illuminate\Auth\Events\Registered;
-use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Queue\InteractsWithQueue;
 
-class SendEmailVerificationNotification implements ShouldQueue
+class SendEmailVerificationNotification
 {
-    use InteractsWithQueue;
-
     /**
      * Create the event listener.
      */
@@ -27,6 +23,6 @@ class SendEmailVerificationNotification implements ShouldQueue
             return;
         }
 
-        $event->user->sendEmailVerificationNotification();
+        $event->user->sendVerificationCodeNotification();
     }
 }

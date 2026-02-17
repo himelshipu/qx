@@ -2,13 +2,12 @@
 
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\ConfirmablePasswordController;
-use App\Http\Controllers\Auth\EmailVerificationNotificationController;
-use App\Http\Controllers\Auth\EmailVerificationPromptController;
 use App\Http\Controllers\Auth\NewPasswordController;
 use App\Http\Controllers\Auth\PasswordController;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
 use App\Http\Controllers\Auth\RegisteredUserController;
-use App\Http\Controllers\Auth\VerifyEmailController;
+use App\Http\Controllers\Auth\VerificationCodeController;
+use App\Http\Controllers\BrandSetupController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('guest')->group(function () {
@@ -35,17 +34,22 @@ Route::middleware('guest')->group(function () {
         ->name('password.store');
 });
 
+// Email verification code routes - must be accessible to logged-in users (not verified yet)
 Route::middleware('auth')->group(function () {
-    Route::get('verify-email', EmailVerificationPromptController::class)
+    Route::get('email-verification', [VerificationCodeController::class, 'show'])
         ->name('verification.notice');
 
-    Route::get('verify-email/{id}/{hash}', VerifyEmailController::class)
-        ->middleware(['signed', 'throttle:6,1'])
+    Route::post('email-verification/send', [VerificationCodeController::class, 'send'])
+        ->name('verification.send');
+
+    Route::post('email-verification/verify', [VerificationCodeController::class, 'verify'])
         ->name('verification.verify');
 
-    Route::post('email/verification-notification', [EmailVerificationNotificationController::class, 'store'])
-        ->middleware('throttle:6,1')
-        ->name('verification.send');
+    // Brand setup routes (before email verification)
+    Route::get('brand-setup', [BrandSetupController::class, 'show'])->name('brand-setup.show');
+    Route::post('brand-setup/step', [BrandSetupController::class, 'storeStep'])->name('brand-setup.store-step');
+    Route::get('brand-setup/data', [BrandSetupController::class, 'getSetupData'])->name('brand-setup.get-data');
+    Route::post('brand-setup/complete', [BrandSetupController::class, 'complete'])->name('brand-setup.complete');
 
     Route::get('confirm-password', [ConfirmablePasswordController::class, 'show'])
         ->name('password.confirm');

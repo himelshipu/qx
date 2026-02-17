@@ -18,7 +18,20 @@ class Brand extends Model
     protected $fillable = [
         'user_id',
         'brand_name',
+        'setup_data',
     ];
+
+    /**
+     * Get the attributes that should be cast.
+     *
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'setup_data' => 'json',
+        ];
+    }
 
     /**
      * Get the user that owns the brand.
