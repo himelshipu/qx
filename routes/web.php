@@ -45,6 +45,10 @@ Route::get('/active-brand', function () {
     return view('pages.admin.brand.active-brand', ['title' => 'ActiveBrands']);
 })->name('active-brand');
 
+Route::get('/brand-details', function () {
+    return view('pages.admin.brand.brand-details', ['title' => 'Brand Details']);
+})->name('brand-details');
+
 // influencer pages
 Route::get('/create-influencer', function () {
     return view('pages.admin.influencer.create-influencer', ['title' => 'Create Influencer']);

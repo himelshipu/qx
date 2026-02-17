@@ -23,7 +23,7 @@ class MenuHelper
                 'subItems' => [
                     ['name' => 'Active Brand', 'path' => '/active-brand'],
                     ['name' => 'Create Brand', 'path' => '/create-brand'],
-                    ['name' => 'View Brands', 'path' => '/view-brands'],
+                    ['name' => 'Brand Details', 'path' => '/brand-details'],
                     ['name' => 'Banded Brand', 'path' => '/banded-brand'],
                     ['name' => 'Email Unverified', 'path' => '/email-unverified'],
                     ['name' => 'Mobile Unverified', 'path' => '/mobile-unverified'],
