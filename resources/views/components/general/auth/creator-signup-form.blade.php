@@ -84,7 +84,7 @@
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-400">
                     Facebook
                 </label>
-                <input type="text" value="" placeholder="https://facebook.com/yourprofile"
+                <input type="text" name="facebook" value="{{ old('facebook') }}" placeholder="https://facebook.com/yourprofile"
                     class="dark:bg-dark-900 h-11 w-full appearance-none rounded-lg border border-gray-300 bg-transparent bg-none px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-gray-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-gray-800" />
             </div>
 
@@ -92,7 +92,7 @@
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-400">
                     Tiktok
                 </label>
-                <input type="text" value="" placeholder="https://tiktok.com/@yourprofile"
+                <input type="text" name="tiktok" value="{{ old('tiktok') }}" placeholder="https://tiktok.com/@yourprofile"
                     class="dark:bg-dark-900 h-11 w-full appearance-none rounded-lg border border-gray-300 bg-transparent bg-none px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-gray-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-gray-800" />
             </div>
 
@@ -100,7 +100,7 @@
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-400">
                     Linkedin
                 </label>
-                <input type="text" value="" placeholder="https://linkedin.com/in/yourprofile"
+                <input type="text" name="linkedin" value="{{ old('linkedin') }}" placeholder="https://linkedin.com/in/yourprofile"
                     class="dark:bg-dark-900 h-11 w-full appearance-none rounded-lg border border-gray-300 bg-transparent bg-none px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-gray-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-gray-800" />
             </div>
 
@@ -108,7 +108,7 @@
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-400">
                     Instagram
                 </label>
-                <input type="text" value="" placeholder="https://instagram.com/yourprofile"
+                <input type="text" name="instagram" value="{{ old('instagram') }}" placeholder="https://instagram.com/yourprofile"
                     class="dark:bg-dark-900 h-11 w-full appearance-none rounded-lg border border-gray-300 bg-transparent bg-none px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-gray-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-gray-800" />
             </div>
         </div>

@@ -44,6 +44,10 @@ class RegisteredUserController extends Controller
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
             'user_type' => ['required', 'in:brand,creator'],
             'brand_name' => ['nullable', 'string', 'max:255'],
+            'facebook' => ['nullable', 'string', 'max:255'],
+            'tiktok' => ['nullable', 'string', 'max:255'],
+            'linkedin' => ['nullable', 'string', 'max:255'],
+            'instagram' => ['nullable', 'string', 'max:255'],
         ]);
 
         $user = User::create([
@@ -62,6 +66,10 @@ class RegisteredUserController extends Controller
         } elseif ($user->user_type === 'creator') {
             Creator::create([
                 'user_id' => $user->id,
+                'facebook' => $request->input('facebook'),
+                'tiktok' => $request->input('tiktok'),
+                'linkedin' => $request->input('linkedin'),
+                'instagram' => $request->input('instagram'),
             ]);
         }
 

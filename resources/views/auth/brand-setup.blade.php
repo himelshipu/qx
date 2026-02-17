@@ -30,33 +30,7 @@
         ></div>
     </div>
 
-    <!-- Step 1: Brand Name -->
-    <div x-show="currentStep.key === 'brand-name'" x-cloak class="text-center">
-        <h1 class="text-3xl font-bold mb-2">What's your brand name?</h1>
-        <p class="text-gray-600 dark:text-gray-400 mb-10">This is what creators will see</p>
-
-        <div class="space-y-6 mb-10">
-            <input 
-                type="text" 
-                x-model="formData['brand-name']"
-                placeholder="Enter your brand name" 
-                class="w-full px-4 py-4 rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:border-pink-400 dark:focus:border-pink-600 focus:ring-2 focus:ring-pink-200 dark:focus:ring-pink-900/30 outline-none transition-all duration-200"
-            >
-        </div>
-
-        <div class="space-y-3">
-            <button 
-                @click="nextStep()" 
-                class="w-full py-4 rounded-xl font-bold"
-                :class="formData['brand-name'] ? 'bg-gradient-to-r from-gray-900 to-gray-800 hover:from-pink-600 hover:to-pink-500 text-white' : 'bg-gray-400 text-white cursor-not-allowed'"
-                :disabled="!formData['brand-name']">
-                Continue
-            </button>
-            <button @click="skipStep()" class="text-sm text-gray-500 hover:underline">Skip</button>
-        </div>
-    </div>
-
-    <!-- Step 2: Objective -->
+    <!-- Step 1: Objective -->
     <div x-show="currentStep.key === 'objective'" x-cloak class="text-center">
         <h1 class="text-3xl font-bold mb-10">What are you here to do?</h1>
 
@@ -81,7 +55,7 @@
         </div>
     </div>
 
-    <!-- Step 3: Budget -->
+    <!-- Step 2: Budget -->
     <div x-show="currentStep.key === 'budget'" x-cloak class="text-center">
         <h1 class="text-3xl font-bold mb-10">What's your approximate budget?</h1>
 
@@ -106,7 +80,7 @@
         </div>
     </div>
 
-    <!-- Step 4: Business Type -->
+    <!-- Step 3: Business Type -->
     <div x-show="currentStep.key === 'business-type'" x-cloak class="text-center">
         <h1 class="text-3xl font-bold mb-10">What type of business are you?</h1>
 
@@ -131,7 +105,7 @@
         </div>
     </div>
 
-    <!-- Step 5: Company Size -->
+    <!-- Step 4: Company Size -->
     <div x-show="currentStep.key === 'company-size'" x-cloak class="text-center">
         <h1 class="text-3xl font-bold mb-10">How many people work at your company?</h1>
 
@@ -156,7 +130,7 @@
         </div>
     </div>
 
-    <!-- Step 6: Influencer Type -->
+    <!-- Step 5: Influencer Type (Checkbox Step) -->
     <div x-show="currentStep.key === 'influencer-type'" x-cloak class="text-center">
         <h1 class="text-3xl font-bold mb-10">What industries are you interested in?</h1>
 
@@ -179,17 +153,13 @@
         </div>
     </div>
 
-    <!-- Step 7: Summary/Complete -->
+    <!-- Step 6: Summary/Complete (No checkbox) -->
     <div x-show="currentStep.key === 'summary'" x-cloak class="text-center">
         <h1 class="text-3xl font-bold mb-10">You're all set!</h1>
         <p class="text-gray-600 dark:text-gray-400 mb-10">Here's a summary of your brand information.</p>
 
         <div class="bg-gray-50 dark:bg-gray-800 rounded-2xl p-8 mb-10 text-left">
             <div class="space-y-4">
-                <div v-if="formData['brand-name']">
-                    <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Brand Name</p>
-                    <p class="text-lg font-semibold text-gray-900 dark:text-white" x-text="formData['brand-name']"></p>
-                </div>
                 <div v-if="formData.objective">
                     <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Objective</p>
                     <p class="text-lg font-semibold text-gray-900 dark:text-white" x-text="getOptionLabel('objective', formData.objective)"></p>
@@ -231,7 +201,6 @@ function brandSetup() {
     return {
         currentStepIndex: 0,
         formData: {
-            'brand-name': '',
             objective: '',
             budget: '',
             'business-type': '',
@@ -239,10 +208,6 @@ function brandSetup() {
             'influencer-type': []
         },
         steps: [
-            {
-                key: 'brand-name',
-                options: []
-            },
             {
                 key: 'objective',
                 options: [
@@ -363,17 +328,8 @@ function brandSetup() {
                             this.formData['influencer-type'] = [];
                         }
                     }
-                    this.loadUserEmail();
                 })
                 .catch(error => console.error('Error loading data:', error));
-        },
-
-        loadUserEmail() {
-            // Load brand name if exists
-            const brandName = '{{ $brand->brand_name }}';
-            if (brandName) {
-                this.formData['brand-name'] = brandName;
-            }
         },
 
         isInfluencerTypeSelected(value) {
@@ -401,19 +357,13 @@ function brandSetup() {
             return option ? option.label : value;
         },
 
-        completeBrandSetup() {
-            // Save the brand name
-            const brandName = this.formData['brand-name'] || 'My Brand';
-            
+        completeBrandSetup() {            
             fetch('{{ route("brand-setup.complete") }}', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                },
-                body: JSON.stringify({
-                    brand_name: brandName
-                })
+                }
             })
             .then(response => response.json())
             .then(data => {

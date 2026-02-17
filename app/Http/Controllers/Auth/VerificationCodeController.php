@@ -4,32 +4,36 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Mail\SendVerificationCodeMail;
-use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\ValidationException;
 
 class VerificationCodeController extends Controller
 {
     /**
-     * Show the verification code forms.
+     * Show the email verification page.
      */
     public function show(Request $request)
     {
-        return view('auth.verify-code');
+        // Redirect if already verified
+        if (Auth::user()->hasVerifiedEmail()) {
+            if (Auth::user()->user_type === 'brand') {
+                return redirect(route('brand-setup.show'));
+            }
+            return redirect(route('dashboard'));
+        }
+
+        return view('auth.verify-email');
     }
 
     /**
-     * Send a new verification code to the user's email.
+     * Send a new verification code to the authenticated user.
      */
     public function send(Request $request)
     {
-        $request->validate([
-            'email' => 'required|email|exists:users,email',
-        ]);
-
-        $user = User::where('email', $request->email)->first();
+        $user = Auth::user();
 
         // Check if user is already verified
         if ($user->hasVerifiedEmail()) {
@@ -39,39 +43,41 @@ class VerificationCodeController extends Controller
         // Generate a 6-digit verification code
         $verificationCode = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
 
-        // Store the code with 15 minutes expiration
+        // Store the code with 2 minutes expiration
         $user->update([
             'verification_code' => $verificationCode,
-            'verification_code_expires_at' => now()->addMinutes(15),
+            'verification_code_expires_at' => now()->addMinutes(2),
         ]);
 
         // Send the verification code via email (synchronous)
         try {
             Mail::send(new SendVerificationCodeMail($user, $verificationCode));
         } catch (\Exception $e) {
-            \Log::error('Failed to send verification code email: ' . $e->getMessage());
+            Log::error('Failed to send verification code email: ' . $e->getMessage());
             return back()->withErrors(['email' => 'Failed to send verification code. Please try again.']);
         }
 
         return back()
             ->with('email', $user->email)
-            ->with('success', 'Verification code sent to your email. Valid for 15 minutes.');
+            ->with('success', 'Verification code sent to your email. Valid for 2 minutes.');
     }
 
     /**
-     * Verify the code entered by the user.
+     * Verify the code entered by the authenticated user.
      */
     public function verify(Request $request)
     {
         $request->validate([
-            'email' => 'required|email|exists:users,email',
             'code' => 'required|string|size:6',
         ]);
 
-        $user = User::where('email', $request->email)->first();
+        $user = Auth::user();
 
         // Check if user is already verified
         if ($user->hasVerifiedEmail()) {
+            if ($user->user_type === 'brand') {
+                return redirect(route('brand-setup.show'))->with('success', 'Your email is already verified.');
+            }
             return redirect(route('dashboard'))->with('success', 'Your email is already verified.');
         }
 
@@ -89,22 +95,16 @@ class VerificationCodeController extends Controller
             ]);
         }
 
-        // Mark email as verified
-        $user->update([
-            'email_verified_at' => now(),
-            'verification_code' => null,
-            'verification_code_expires_at' => null,
-        ]);
+        // Mark email as verified and clear OTP
+        $user->markEmailAsVerified();
 
         // Refresh the authenticated user in the session
         Auth::setUser($user->refresh());
 
         // Determine redirect based on user type
         if ($user->user_type === 'brand') {
-            // Brand users go to setup
             return redirect(route('brand-setup.show'))->with('success', 'Your email has been verified successfully!');
         } else {
-            // Creator users go directly to dashboard
             return redirect(route('dashboard'))->with('success', 'Your email has been verified successfully!');
         }
     }

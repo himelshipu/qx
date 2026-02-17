@@ -2,6 +2,7 @@
 
 namespace App\Listeners;
 
+use App\Models\User;
 use Illuminate\Auth\Events\Registered;
 
 class SendEmailVerificationNotification
@@ -19,10 +20,13 @@ class SendEmailVerificationNotification
      */
     public function handle(Registered $event): void
     {
-        if ($event->user->hasVerifiedEmail()) {
+        /** @var User $user */
+        $user = $event->user;
+        
+        if ($user->hasVerifiedEmail()) {
             return;
         }
 
-        $event->user->sendVerificationCodeNotification();
+        $user->sendVerificationCodeNotification();
     }
 }

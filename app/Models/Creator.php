@@ -17,6 +17,10 @@ class Creator extends Model
      */
     protected $fillable = [
         'user_id',
+        'facebook',
+        'tiktok',
+        'linkedin',
+        'instagram',
     ];
 
     /**

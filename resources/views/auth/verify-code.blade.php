@@ -40,7 +40,7 @@
                                 autocomplete="off" />
                 <x-input-error :messages="$errors->get('code')" class="mt-2" />
                 <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">
-                    {{ __('Enter the 6-digit code from your email. Valid for 15 minutes.') }}
+                    {{ __('Enter the 6-digit code from your email. Valid for 2 minutes.') }}
                 </p>
             </div>
 

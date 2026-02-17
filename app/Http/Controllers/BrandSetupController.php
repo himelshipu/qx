@@ -21,7 +21,6 @@ class BrandSetupController extends Controller
             // Create a new brand
             $brand = Brand::create([
                 'user_id' => $user->id,
-                'brand_name' => '',
                 'setup_data' => null,
             ]);
         }
@@ -76,15 +75,7 @@ class BrandSetupController extends Controller
         $user = auth()->user();
         $brand = Brand::where('user_id', $user->id)->firstOrFail();
         
-        // Validate brand name if provided
-        $request->validate([
-            'brand_name' => 'required|string|max:255',
-        ]);
         
-        // Update brand name
-        $brand->update([
-            'brand_name' => $request->input('brand_name'),
-        ]);
         
         return response()->json([
             'success' => true,

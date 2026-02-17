@@ -5,12 +5,12 @@
         body {
             font-family: Arial, sans-serif;
             background-color: #f4f4f4;
-            padding: 20px;
+            padding: 10px;
         }
         .container {
             background-color: #ffffff;
             border-radius: 8px;
-            padding: 40px;
+            padding: 20px;
             max-width: 600px;
             margin: 0 auto;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
@@ -22,20 +22,20 @@
         }
         .message {
             color: #666666;
-            line-height: 1.6;
-            margin-bottom: 30px;
-            font-size: 16px;
+            line-height: 1.2;
+            margin-bottom: 10px;
+            font-size: 13px;
         }
         .code-box {
             background-color: #f9f9f9;
             border: 2px solid #007bff;
             border-radius: 6px;
-            padding: 20px;
+            padding: 10px;
             text-align: center;
-            margin: 30px 0;
+            margin: 10px 0;
         }
         .code {
-            font-size: 32px;
+            font-size: 22px;
             font-weight: bold;
             color: #007bff;
             letter-spacing: 4px;
@@ -43,23 +43,23 @@
         }
         .code-note {
             color: #999999;
-            font-size: 14px;
-            margin-top: 15px;
+            font-size: 10px;
+            margin-top: 5px;
         }
         .footer {
             border-top: 1px solid #eeeeee;
-            padding-top: 20px;
-            margin-top: 30px;
+            padding-top: 5px;
+            margin-top: 5px;
             color: #999999;
-            font-size: 14px;
+            font-size: 12px;
             text-align: center;
         }
         .warning {
             background-color: #fff3cd;
             border-left: 4px solid #ffc107;
-            padding: 15px;
-            margin: 20px 0;
+            padding: 10px;
             border-radius: 4px;
+              line-height: 1.5;
             color: #856404;
             font-size: 14px;
         }
@@ -76,7 +76,7 @@
 
         <div class="code-box">
             <div class="code">{{ $verificationCode }}</div>
-            <div class="code-note">Valid for 15 minutes</div>
+            <div class="code-note">Valid for 2 minutes</div>
         </div>
 
         <div class="warning">

@@ -11,17 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('creators', function (Blueprint $table) {
-            $table->id();
-            $table->unsignedBigInteger('user_id');
+        Schema::table('creators', function (Blueprint $table) {
             $table->string('facebook')->nullable()->after('user_id');
             $table->string('tiktok')->nullable()->after('facebook');
             $table->string('linkedin')->nullable()->after('tiktok');
             $table->string('instagram')->nullable()->after('linkedin');
-            $table->timestamps();
-
-            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
-            $table->unique('user_id');
         });
     }
 
@@ -30,6 +24,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('creators');
+        Schema::table('creators', function (Blueprint $table) {
+            $table->dropColumn(['facebook', 'tiktok', 'linkedin', 'instagram']);
+        });
     }
 };
