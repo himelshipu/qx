@@ -15,7 +15,7 @@
                 <a href="#" class="hover:text-black dark:hover:text-white transition-colors">Pricing</a>
                 
                 @auth
-                    <a href="{{ route('dashboard') }}" class="hover:text-black dark:hover:text-white transition-colors">Dashboard</a>
+                    <a href="{{ route('dashboard.index') }}" class="hover:text-black dark:hover:text-white transition-colors">Dashboard</a>
                 @else
                     <a href="{{ route('login') }}" class="hover:text-black dark:hover:text-white transition-colors">Login</a>
                     <a href="{{ route('register', ['user-type' => 'brand']) }}" class="hover:text-black dark:hover:text-white transition-colors">Join as Brand</a>

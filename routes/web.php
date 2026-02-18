@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Backend\DashboardController;
 use App\Http\Controllers\Frontend\HomeController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
@@ -33,11 +33,11 @@ Route::middleware(['web'])->group(function () {
 | Authenticated Routes (Breeze)
 |--------------------------------------------------------------------------
 */
-Route::middleware(['auth', 'verified'])->group(function () {
+Route::prefix('dashboard') ->name('dashboard.')->middleware(['auth', 'verified'])->group(function () {
     // Dashboard
-    Route::get('/dashboard', function () {
-        return view('dashboard');
-    })->name('dashboard');
+   
+     Route::get('/', [DashboardController::class, 'index'])->name('index');
+    
 
     // Profile routes
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -50,14 +50,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
 | Admin Routes
 |--------------------------------------------------------------------------
 */
-Route::prefix('admin')
-    ->name('admin.')
-    ->middleware(['web', 'auth', 'verified'])
-    ->group(function () {
-        // Dashboard
-        Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 
-        // Additional admin routes can be added here
-    });
 
 require __DIR__.'/auth.php';
