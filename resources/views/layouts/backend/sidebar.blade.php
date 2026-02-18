@@ -1,10 +1,14 @@
 
 @php
     use App\Helpers\MenuHelper;
+    use Illuminate\Support\Facades\Route;
+
     $menuGroups = MenuHelper::getMenuGroups();
 
-    // Get current path
+    // Get current path and route
     $currentPath = request()->path();
+    $currentFullPath = request()->getPathInfo();
+    $currentRouteName = Route::currentRouteName();
 @endphp
 
 <aside id="sidebar"
@@ -23,10 +27,24 @@
                     @if (isset($item['subItems']))
                         // Check if any submenu item matches current path
                         @foreach ($item['subItems'] as $subItem)
-                            if (currentPath === '{{ ltrim($subItem['path'], '/') }}' ||
-                                window.location.pathname === '{{ $subItem['path'] }}') {
+                            @php
+                                $candidate = $subItem['route'] ?? ($subItem['path'] ?? null);
+                                $subUrl = '';
+                                if (!empty($candidate)) {
+                                    if (str_starts_with($candidate, '/')) {
+                                        $subUrl = $candidate;
+                                    } elseif (Route::has($candidate)) {
+                                        $subUrl = route($candidate);
+                                    } else {
+                                        $subUrl = $candidate;
+                                    }
+                                }
+                            @endphp
+                            if (currentPath === '{{ ltrim($subUrl, '/') }}' ||
+                                window.location.pathname === '{{ $subUrl }}') {
                                 this.openSubmenus['{{ $groupIndex }}-{{ $itemIndex }}'] = true;
-                            } @endforeach
+                            }
+                        @endforeach
             @endif
             @endforeach
             @endforeach
@@ -120,9 +138,22 @@
                                                 x-show="$store.sidebar.isExpanded ||  $store.sidebar.isMobileOpen"
                                                 class="menu-item-text flex items-center gap-2">
                                                 {{ $item['name'] }}
+                                                @php
+                                                    $itemCandidate = $item['route'] ?? ($item['path'] ?? null);
+                                                    $itemUrlForCheck = '';
+                                                    if (!empty($itemCandidate)) {
+                                                        if (str_starts_with($itemCandidate, '/')) {
+                                                            $itemUrlForCheck = $itemCandidate;
+                                                        } elseif (Route::has($itemCandidate)) {
+                                                            $itemUrlForCheck = route($itemCandidate);
+                                                        } else {
+                                                            $itemUrlForCheck = $itemCandidate;
+                                                        }
+                                                    }
+                                                @endphp
                                                 @if (!empty($item['new']))
                                                     <span class="absolute right-10"
-                                                        :class="isActive('{{ $item['path'] ?? '' }}') ?
+                                                        :class="isActive('{{ $itemUrlForCheck }}') ?
                                                             'menu-dropdown-badge menu-dropdown-badge-active' :
                                                             'menu-dropdown-badge menu-dropdown-badge-inactive'">
                                                         new
@@ -146,16 +177,30 @@
                                         <div x-show="isSubmenuOpen({{ $groupIndex }}, {{ $itemIndex }}) && ($store.sidebar.isExpanded || $store.sidebar.isMobileOpen)">
                                             <ul class="mt-2 space-y-1 ml-9">
                                                 @foreach ($item['subItems'] as $subItem)
+                                                    @php
+                                                        $subCandidate = $subItem['route'] ?? ($subItem['path'] ?? null);
+                                                        $subItemUrl = '#';
+                                                        if (!empty($subCandidate)) {
+                                                            if (str_starts_with($subCandidate, '/')) {
+                                                                $subItemUrl = $subCandidate;
+                                                            } elseif (Route::has($subCandidate)) {
+                                                                $subItemUrl = route($subCandidate);
+                                                            } else {
+                                                                $subItemUrl = $subCandidate;
+                                                            }
+                                                        }
+                                                    @endphp
+
                                                     <li>
-                                                        <a href="{{ $subItem['path'] }}" class="menu-dropdown-item"
-                                                            :class="isActive('{{ $subItem['path'] }}') ?
+                                                        <a href="{{ $subItemUrl }}" class="menu-dropdown-item"
+                                                            :class="isActive('{{ $subItemUrl }}') ?
                                                                 'menu-dropdown-item-active' :
                                                                 'menu-dropdown-item-inactive'">
                                                             {{ $subItem['name'] }}
                                                             <span class="flex items-center gap-1 ml-auto">
                                                                 @if (!empty($subItem['new']))
                                                                     <span
-                                                                        :class="isActive('{{ $subItem['path'] }}') ?
+                                                                        :class="isActive('{{ $subItemUrl }}') ?
                                                                             'menu-dropdown-badge menu-dropdown-badge-active' :
                                                                             'menu-dropdown-badge menu-dropdown-badge-inactive'">
                                                                         new
@@ -163,7 +208,7 @@
                                                                 @endif
                                                                 @if (!empty($subItem['pro']))
                                                                     <span
-                                                                        :class="isActive('{{ $subItem['path'] }}') ?
+                                                                        :class="isActive('{{ $subItemUrl }}') ?
                                                                             'menu-dropdown-badge-pro menu-dropdown-badge-pro-active' :
                                                                             'menu-dropdown-badge-pro menu-dropdown-badge-pro-inactive'">
                                                                         pro
@@ -177,9 +222,23 @@
                                         </div>
                                     @else
                                         <!-- Simple Menu Item -->
-                                        <a href="{{ $item['path'] }}" class="menu-item group"
+                                        @php
+                                            $candidate = $item['route'] ?? ($item['path'] ?? null);
+                                            $itemUrl = '#';
+                                            if (!empty($candidate)) {
+                                                if (str_starts_with($candidate, '/')) {
+                                                    $itemUrl = $candidate;
+                                                } elseif (Route::has($candidate)) {
+                                                    $itemUrl = route($candidate);
+                                                } else {
+                                                    $itemUrl = $candidate;
+                                                }
+                                            }
+                                        @endphp
+
+                                        <a href="{{ $itemUrl }}" class="menu-item group"
                                             :class="[
-                                                isActive('{{ $item['path'] }}') ? 'menu-item-active' :
+                                                isActive('{{ $itemUrl }}') ? 'menu-item-active' :
                                                 'menu-item-inactive',
                                                 (!$store.sidebar.isExpanded && !$store.sidebar.isMobileOpen) ?
                                                 'xl:justify-center' :
@@ -188,7 +247,7 @@
 
                                             <!-- Icon -->
                                             <span
-                                                :class="isActive('{{ $item['path'] }}') ? 'menu-item-icon-active' :
+                                                :class="isActive('{{ $itemUrl }}') ? 'menu-item-icon-active' :
                                                     'menu-item-icon-inactive'">
                                                 {!! MenuHelper::getIconSvg($item['icon']) !!}
                                             </span>
@@ -207,19 +266,19 @@
                                             </span>
                                         </a>
                                     @endif
-                                </li>
-                            @endforeach
-                        </ul>
-                    </div>
-                @endforeach
-            </div>
-        </nav>
-
-        
-
-    </div>
-</aside>
-
+                                            <span
+                                                x-show="$store.sidebar.isExpanded ||  $store.sidebar.isMobileOpen"
+                                                class="menu-item-text flex items-center gap-2">
+                                                {{ $item['name'] }}
+                                                @if (!empty($item['new']))
+                                                    <span class="absolute right-10"
+                                                        :class="isActive('{{ $itemUrl }}') ?
+                                                            'menu-dropdown-badge menu-dropdown-badge-active' :
+                                                            'menu-dropdown-badge menu-dropdown-badge-inactive'">
+                                                        new
+                                                    </span>
+                                                @endif
+                                            </span>
 <!-- Mobile Overlay -->
 <div x-show="$store.sidebar.isMobileOpen" @click="$store.sidebar.setMobileOpen(false)"
     class="fixed z-50 h-screen w-full bg-gray-900/50"></div>

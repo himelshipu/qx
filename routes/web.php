@@ -2,6 +2,10 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\Backend\BrandController;
+use App\Http\Controllers\Backend\CategoryController;
+use App\Http\Controllers\Backend\CampaignController;
+use App\Http\Controllers\Backend\CreatorController;
 use App\Http\Controllers\Backend\DashboardController;
 use App\Http\Controllers\Frontend\HomeController;
 use App\Http\Controllers\ProfileController;
@@ -37,7 +41,11 @@ Route::prefix('dashboard') ->name('dashboard.')->middleware(['auth', 'verified']
     // Dashboard
    
      Route::get('/', [DashboardController::class, 'index'])->name('index');
-    
+     Route::get('/categories', [CategoryController::class, 'index'])->name('categories.index');
+     Route::get('/brands', [BrandController::class, 'index'])->name('brands.index');
+     Route::get('/brands/details/{id}', [BrandController::class, 'view'])->name('brands.view');
+     Route::get('/creators', [CreatorController::class, 'index'])->name('creators.index');
+     Route::get('/campaigns', [CampaignController::class, 'index'])->name('campaigns.index');
 
     // Profile routes
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
