@@ -153,7 +153,7 @@
 
                                 @foreach($categories as $category)
                                     <button type="button" 
-                                        class="category-option px-4 py-2 text-[13px] font-medium bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-lg border border-transparent hover:border-gray-200 dark:hover:border-gray-600 transition-all active:scale-95"
+                                        class="category-option px-4 py-2 text-[13px] font-medium bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-white rounded-lg border border-transparent hover:border-gray-200 dark:hover:border-gray-600 transition-all active:scale-95"
                                         data-value="{{ $category }}">
                                         {{ $category }}
                                     </button>
@@ -355,12 +355,108 @@
             </div>
         </section>
 
+        <section class="search-section-wrapper bg-white dark:bg-transparent py-20 overflow-hidden">
+            <div class="max-w-screen-2xl mx-auto px-2">
+                
+                <div class="flex flex-col lg:flex-row items-center gap-16 lg:gap-24 mb-24">  
+                   
+                    <div class="w-full lg:w-1/2">
+                        <!-- Search Badge -->
+                        <span class="inline-block px-6 py-2 rounded-full text-white font-bold text-sm bg-[linear-gradient(90deg,#FF71A4_0%,#D84EB7_50%,#9553BF_100%)] shadow-md">
+                            Search
+                        </span>
 
+                        <h2 class="text-3xl md:text-5xl font-bold text-gray-900 dark:text-white mt-8 leading-[1.1] tracking-tight">
+                            Find and Hire Influencers in Seconds on the Marketplace
+                        </h2>
+
+                        <div class="mt-12 space-y-12">          
+                            <div>
+                                <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-3">Search Influencers</h3>
+                                <p class="text-gray-500 dark:text-gray-400 leading-relaxed max-w-lg">
+                                    Search thousands of vetted Instagram, TikTok, and YouTube influencers.
+                                </p>
+                            </div>
+
+                            <div>
+                                <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-3">Purchase & Chat Securely</h3>
+                                <p class="text-gray-500 dark:text-gray-400 leading-relaxed max-w-lg">
+                                    Safely purchase and communicate through Collabstr. We hold your payment until the work is completed.
+                                </p>
+                            </div>
+                            
+                            <div>
+                                <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-3">Receive Quality Content</h3>
+                                <p class="text-gray-500 dark:text-gray-400 leading-relaxed max-w-lg">
+                                    Receive your high-quality content from influencers directly through the platform.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    
+                    <div class="w-full lg:w-1/2 relative group">
+                        <div class="relative z-10 drop-shadow-2xl transition-transform duration-700 group-hover:-translate-y-2">
+                            <img src="{{ asset('images/demo-image.png') }}" alt="Marketplace Preview" class="w-full h-auto rounded-2xl">
+                        </div>
+                        
+                        <div class="absolute -top-10 -right-10 w-64 h-64 bg-pink-100 dark:bg-pink-900/10 rounded-full blur-3xl opacity-50 -z-1"></div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    @php
+                        $benefits = [
+                            [
+                                'icon' => '$',
+                                'title' => 'No Upfront Cost',
+                                'desc' => 'Search influencers for free. No subscriptions, contracts, or hidden fees.'
+                            ],
+                            [
+                                'icon' => '✓',
+                                'title' => 'Vetted Influencers',
+                                'desc' => 'Every influencer is vetted by us. Always receive high-quality, professional content.'
+                            ],
+                            [
+                                'icon' => '💬',
+                                'title' => 'Instant Chat',
+                                'desc' => 'Instantly chat with influencers and stay in touch throughout the whole transaction.'
+                            ],
+                            [
+                                'icon' => '🔒',
+                                'title' => 'Secure Purchases',
+                                'desc' => "Your money is held safely until you approve the influencer's work."
+                            ],
+                        ];
+                    @endphp
+
+                    @foreach($benefits as $item)
+                    <div class="relative bg-white dark:bg-gray-900 px-6 py-4 rounded-xl border border-gray-100 dark:border-gray-800 shadow-[0_4px_20px_rgba(0,0,0,0.03)] hover:shadow-xl transition-all group overflow-hidden cursor-pointer">
+                        <!-- Left Accent Border -->
+                        <div class="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-[#FF71A4] to-[#9553BF] opacity-50 group-hover:opacity-100 transition-opacity"></div>
+                        
+                        <div class="relative z-10">
+                            <div class="text-2xl mb-2 text-[#D84EB7] font-bold">
+                                {{ $item['icon'] }}
+                            </div>
+                            <h4 class="text-lg font-bold text-gray-900 dark:text-white mb-3">
+                                {{ $item['title'] }}
+                            </h4>
+                            <p class="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
+                                {{ $item['desc'] }}
+                            </p>
+                        </div>
+                    </div>
+                    @endforeach
+                </div>
+
+            </div>
+        </section>
 
 
 
         <footer class="w-full bg-white border-t border-gray-100 dark:bg-gray-900 dark:border-gray-800 mt-10">
-            <div class=" mx-auto px-4 sm:px-6 lg:px-8 py-12">
+            <div class=" mx-auto px-2 py-12">
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-16">
                     <div class="flex flex-col items-start">
                         <h4 class="text-sm font-semibold text-gray-900 dark:text-white mb-6">Resources</h4>
@@ -406,7 +502,7 @@
             </div>
 
             <div class="border-t border-gray-100 dark:border-gray-800">
-                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex flex-col md:flex-row items-center justify-between gap-4">
+                <div class="max-w-7xl mx-auto px-2 py-6 flex flex-col md:flex-row items-center justify-between gap-4">
                     <div class="flex flex-wrap items-center gap-4 md:gap-6 text-sm text-gray-600 dark:text-gray-400">
                         <span>© QX Inc.</span>
                         <a href="#" class="hover:text-gray-900 dark:hover:text-white">Privacy</a>
