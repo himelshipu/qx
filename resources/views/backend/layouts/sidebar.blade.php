@@ -22,7 +22,7 @@
         }
     }"
     :class="$store.sidebar.isExpanded ? 'w-72' : 'w-20'"
-    x-init="$watch('$store.sidebar.isExpanded', val => !val ? openMenus = [])">
+    x-init="$watch('$store.sidebar.isExpanded', val => { if (!val) openMenus = [] })">
     
     <div class="h-20 flex items-center justify-center px-4 border-b border-gray-100 dark:border-gray-800">
         <a href="/" class="flex items-center gap-3">

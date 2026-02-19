@@ -357,7 +357,7 @@ function brandSetup() {
             return option ? option.label : value;
         },
 
-        completeBrandSetup() {            
+        completeBrandSetup() {
             fetch('{{ route("brand-setup.complete") }}', {
                 method: 'POST',
                 headers: {
@@ -365,13 +365,23 @@ function brandSetup() {
                     'X-CSRF-TOKEN': '{{ csrf_token() }}'
                 }
             })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    window.location.href = data.redirect;
+            .then(response => {
+                const ct = response.headers.get('content-type') || '';
+                if (ct.includes('application/json')) {
+                    return response.json().then(data => {
+                        if (data && data.success) {
+                            window.location.href = data.redirect;
+                        }
+                    });
                 }
+
+                // Non-JSON response (HTML error/redirect) — fallback to dashboard
+                window.location.href = '{{ route("dashboard.index") }}';
             })
-            .catch(error => console.error('Error completing setup:', error));
+            .catch(error => {
+                console.error('Error completing setup:', error);
+                window.location.href = '{{ route("dashboard.index") }}';
+            });
         }
     }
 }

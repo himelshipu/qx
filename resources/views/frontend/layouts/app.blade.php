@@ -84,7 +84,7 @@
 
     @include('frontend.layouts.header')
     <!-- Main Content -->
-    <main class="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8 bg-gray-50">
+    <main class="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8 ">
         @yield('content')
     </main>
     @include('frontend.layouts.footer')

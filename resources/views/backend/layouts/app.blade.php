@@ -64,7 +64,7 @@ window.addEventListener('resize', checkMobile);"
             <!-- app header start -->
             @include('backend.layouts.app-header')
             <!-- app header end -->
-            <main class="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8 bg-gray-50">
+            <main class="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8 ">
                 @yield('content')
             </main>
         </div>
