@@ -39,7 +39,7 @@
                 <div>
                     <nav class="flex flex-wrap items-center justify-center gap-4 md:gap-6 lg:gap-8 text-sm lg:text-[14px] font-medium text-gray-600 dark:text-gray-300">
                         <a href="#" class="hover:text-black dark:hover:text-white py-2 transition-colors border-b-3 border-b-pink-300 ">Home</a>
-                        <a href="#" class="hover:text-black dark:hover:text-white py-2 transition-colors">Library</a>
+                        <a href="{{ route('library') }}" class="hover:text-black dark:hover:text-white py-2 transition-colors">Library</a>
                         <a href="#" class="hover:text-black dark:hover:text-white py-2 transition-colors">Search</a>
                         <a href="#" class="hover:text-black dark:hover:text-white py-2 transition-colors">Track</a>
                         <a href="#" class="hover:text-black dark:hover:text-white py-2 transition-colors">Help Center</a>
@@ -200,8 +200,6 @@
                 @endforeach
             </div>
         </section>
-
-        
 
         <section class="w-full pb-8">
             <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-3">
@@ -454,7 +452,6 @@
         </section>
 
 
-
         <footer class="w-full bg-white border-t border-gray-100 dark:bg-gray-900 dark:border-gray-800 mt-10">
             <div class=" mx-auto px-2 py-12">
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-16">
@@ -529,6 +526,9 @@
 
     </main>
 </div>
+
+
+
 
 <!-- Modal Overlay -->
 <div id="wishlist-modal" class="fixed inset-0 z-[100] hidden items-center justify-center p-4">

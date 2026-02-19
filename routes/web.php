@@ -15,6 +15,9 @@ Route::get('/brand-signup', function () {
     return view('pages.general.signup', ['title' => 'Brand Sign Up']);
 })->name('brandsignup');
 
+Route::get('/content-library', function () {
+    return view('pages.general.content-library', ['title' => 'Content Library']);
+})->name('content-library');
 
 // dashboard pages
 Route::get('/dashboard', function () {
