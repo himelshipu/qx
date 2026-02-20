@@ -2,10 +2,10 @@
 
 @section('content')
 
-<div class="min-h-screen bg-white dark:bg-gray-950 flex flex-col gap-8 px-4 sm:px-6 lg:px-8">
+<div class="min-h-screen bg-white dark:bg-gray-950 flex flex-col gap-4 px-4 sm:px-6 lg:px-8 py-20">
 
 
-    <div class="bg-[#1A1A1A] text-white p-8 mt-12">
+    <div class="bg-[#1A1A1A] text-white p-8">
         <div class="flex flex-col md:flex-row items-center justify-between gap-6">
 
             <div class="max-w-2xl">
@@ -24,10 +24,10 @@
         </div>
     </div>
 
-    <div class="max-w-screen-2xl mx-auto px-4 flex flex-col gap-6">
+    <div class="px-4 flex flex-col gap-6">
 
         <!-- ================= PROFILE SECTION ================= -->
-        <section class="py-14">
+        <section class="py-14 max-w-svw mx-auto">
 
             <!-- Edit Button -->
             <div class="flex justify-end mb-6">
