@@ -38,8 +38,8 @@
             
                 <div>
                     <nav class="flex flex-wrap items-center justify-center gap-4 md:gap-6 lg:gap-8 text-sm lg:text-[14px] font-medium text-gray-600 dark:text-gray-300">
-                        <a href="#" class="hover:text-black dark:hover:text-white py-2 transition-colors border-b-3 border-b-pink-300 ">Home</a>
-                        <a href="{{ route('library') }}" class="hover:text-black dark:hover:text-white py-2 transition-colors">Library</a>
+                        <a href="#" class="hover:text-black dark:hover:text-white py-2 transition-colors border-b-3 border-b-purple-300 ">Home</a>
+                        <a href="/content-library/" class="hover:text-black dark:hover:text-white py-2 transition-colors">Library</a>
                         <a href="#" class="hover:text-black dark:hover:text-white py-2 transition-colors">Search</a>
                         <a href="#" class="hover:text-black dark:hover:text-white py-2 transition-colors">Track</a>
                         <a href="#" class="hover:text-black dark:hover:text-white py-2 transition-colors">Help Center</a>
@@ -230,7 +230,7 @@
                         <!-- Badges -->
                         <div class="absolute top-3 left-3 flex flex-wrap gap-1.5">
                             <span class="bg-black/80 backdrop-blur-sm text-white text-[10px] font-normal px-2 py-1 rounded-md border border-white/20 flex items-center gap-1">
-                            <x-icons.heart-badge class="w-4 h-4 text-pink-400" /> Top Creator
+                            <x-icons.heart-badge class="w-4 h-4 text-purple-400" /> Top Creator
                             </span>
                             <span class="bg-black/80 backdrop-blur-sm text-white text-[10px] font-normal px-2 py-1 rounded-md border border-white/20 flex items-center gap-1">
                                 <x-icons.checkmark class="w-4 h-4 text-green-500" /> Responds Fast
@@ -241,7 +241,7 @@
                         <div class="absolute bottom-3 left-3 right-3">
                             <div class="flex flex-row items-center gap-2">
                                 <div class="bg-white text-black text-[10px] font-medium px-2 py-0.5 rounded-md w-fit flex items-center gap-1 mb-1">
-                                    <x-icons.instagram class="w-4 h-4 text-pink-500" /> 11.1K
+                                    <x-icons.instagram class="w-4 h-4 text-purple-500" /> 11.1K
                                 </div>
                             </div>
                             <div class="flex items-center gap-1 text-white drop-shadow-md">
@@ -311,7 +311,7 @@
 
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-12">
                         <div>
-                            <span class="text-pink-500 text-5xl leading-none">“</span>
+                            <span class="text-purple-500 text-5xl leading-none">“</span>
                             <h4 class="font-semibold text-gray-900 dark:text-white mt-4">
                                 5 stars from a creator and a brand
                             </h4>
@@ -324,7 +324,7 @@
                         </div>
 
                         <div>
-                            <span class="text-pink-500 text-5xl leading-none">“</span>
+                            <span class="text-purple-500 text-5xl leading-none">“</span>
                             <h4 class="font-semibold text-gray-900 dark:text-white mt-4">
                                 Best platform to connect with influencers
                             </h4>
@@ -337,7 +337,7 @@
                         </div>
 
                         <div>
-                            <span class="text-pink-500 text-5xl leading-none">“</span>
+                            <span class="text-purple-500 text-5xl leading-none">“</span>
                             <h4 class="font-semibold text-gray-900 dark:text-white mt-4">
                                 Great way to generate content
                             </h4>
@@ -398,7 +398,7 @@
                             <img src="{{ asset('images/demo-image.png') }}" alt="Marketplace Preview" class="w-full h-auto rounded-2xl">
                         </div>
                         
-                        <div class="absolute -top-10 -right-10 w-64 h-64 bg-pink-100 dark:bg-pink-900/10 rounded-full blur-3xl opacity-50 -z-1"></div>
+                        <div class="absolute -top-10 -right-10 w-64 h-64 bg-purple-100 dark:bg-purple-900/10 rounded-full blur-3xl opacity-50 -z-1"></div>
                     </div>
                 </div>
 
