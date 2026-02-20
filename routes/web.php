@@ -19,6 +19,10 @@ Route::get('/content-library', function () {
     return view('pages.general.content-library', ['title' => 'Content Library']);
 })->name('content-library');
 
+Route::get('/brand-profile', function () {
+    return view('pages.general.brand-profile', ['title' => 'Brand Profile']);
+})->name('brand-profile');
+
 // dashboard pages
 Route::get('/dashboard', function () {
     return view('pages.admin.dashboard.ecommerce', ['title' => 'E-commerce Dashboard']);
