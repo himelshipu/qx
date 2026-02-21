@@ -24,6 +24,11 @@ Route::get('/influencers', function () {
     return view('pages.general.influencers', ['title' => 'Influencers']);
 })->name('influencers');
 
+//Campaigns
+Route::get('/campaigns', function () {
+    return view('pages.general.campaigns', ['title' => 'Campaigns']);
+})->name('campaigns');
+
 //Brand Profile
 Route::get('/brand-profile', function () {
     return view('pages.general.brand-profile', ['title' => 'Brand Profile']);
