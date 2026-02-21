@@ -52,8 +52,8 @@
                 <!-- Profile Dropdown Content -->
                 <div class="absolute right-0 top-full mt-3 w-56 bg-white rounded-[20px] shadow-[0_10px_40px_rgba(0,0,0,0.1)] border border-gray-50 invisible opacity-0 scale-95 group-hover:visible group-hover:opacity-100 group-hover:scale-100 transition-all duration-300 origin-top-right z-50 overflow-hidden">
                     <div class="py-2 flex flex-col">
-                        <a href="#" class="px-7 py-3.5 text-[15px] font-bold text-gray-800 hover:bg-gray-50 transition-colors">Profile</a>
-                        <a href="#" class="px-7 py-3.5 text-[15px] font-bold text-gray-800 hover:bg-gray-50 transition-colors">Offers</a>
+                        <a href="/brand-profile/" class="px-7 py-3.5 text-[15px] font-bold text-gray-800 hover:bg-gray-50 transition-colors">Profile</a>
+                        <a href="/brand-edit-profile/" class="px-7 py-3.5 text-[15px] font-bold text-gray-800 hover:bg-gray-50 transition-colors">Edit Profile</a>
                         <div class="border-t border-gray-100 my-1 mx-2"></div>
                         <a href="#" class="px-7 py-3.5 text-[15px] font-medium text-gray-600 hover:bg-gray-50 transition-colors">Account</a>
                         <a href="#" class="px-7 py-3.5 text-[15px] font-medium text-gray-600 hover:bg-gray-50 transition-colors">Log Out</a>

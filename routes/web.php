@@ -19,9 +19,16 @@ Route::get('/content-library', function () {
     return view('pages.general.content-library', ['title' => 'Content Library']);
 })->name('content-library');
 
+//Brand Profile
 Route::get('/brand-profile', function () {
     return view('pages.general.brand-profile', ['title' => 'Brand Profile']);
 })->name('brand-profile');
+
+//Brand Edit Profile
+Route::get('/brand-edit-profile', function () {
+    return view('pages.general.brand-edit-profile', ['title' => 'Brand Edit Profile']);
+})->name('brand-edit-profile');
+
 
 // dashboard pages
 Route::get('/dashboard', function () {

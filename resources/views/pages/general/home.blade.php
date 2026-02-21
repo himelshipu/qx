@@ -38,11 +38,11 @@
                         transition-all duration-700 ease-out
                         hover:bg-[position:100%_0%]
                         leading-[1.1]">
-                    Influencer Marketing Made Easy
+                    The Creator Network Built for E-Commerce
                 </h1>
 
                 <p class="text-base text-gray-500 dark:text-gray-400 mx-auto leading-relaxed mt-4">
-                    Find and collaborate with top Instagram, TikTok, YouTube, and UGC influencers to create authentic content for your brand.
+                    Rockies brings brands and creators together into a single workflow -- talent discovery, task assignments, approvals, timeline tracking, and reporting -- plus automated commissions, payouts, invoices and contracts
                 </p>
             </div>
 
