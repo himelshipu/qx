@@ -19,6 +19,11 @@ Route::get('/content-library', function () {
     return view('pages.general.content-library', ['title' => 'Content Library']);
 })->name('content-library');
 
+//Influencers
+Route::get('/influencers', function () {
+    return view('pages.general.influencers', ['title' => 'Influencers']);
+})->name('influencers');
+
 //Brand Profile
 Route::get('/brand-profile', function () {
     return view('pages.general.brand-profile', ['title' => 'Brand Profile']);
