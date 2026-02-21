@@ -29,6 +29,10 @@ Route::get('/brand-edit-profile', function () {
     return view('pages.general.brand-edit-profile', ['title' => 'Brand Edit Profile']);
 })->name('brand-edit-profile');
 
+//Post Campaign
+Route::get('/post-campaign', function () {
+    return view('pages.general.post-campaign', ['title' => 'Post Campaign']);
+})->name('post-campaign');
 
 // dashboard pages
 Route::get('/dashboard', function () {
