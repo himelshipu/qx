@@ -13,7 +13,7 @@
                 </div>
 
                 <nav class="flex flex-wrap items-center justify-center gap-4 md:gap-6 lg:gap-8 text-sm lg:text-[14px] font-medium text-gray-600 dark:text-gray-300">
-                    <a href="#" class="hover:text-black dark:hover:text-white transition-colors">Search</a>
+                    <a href="/influencers/" class="hover:text-black dark:hover:text-white transition-colors">Search</a>
                     <a href="#" class="hover:text-black dark:hover:text-white transition-colors">How It Works</a>
                     <a href="#" class="hover:text-black dark:hover:text-white transition-colors">Login</a>
                     <a href="{{ route('brandsignup') }}" class="hover:text-black dark:hover:text-white transition-colors">Join as Brand</a>
@@ -21,7 +21,7 @@
                     <a href="#"
                     class="font-bold inline-block bg-clip-text text-transparent
                             bg-[length:300%_300%]
-                            bg-[linear-gradient(90deg,rgba(147,51,234,1)_0%,rgba(192,132,252,1)_35%,rgba(169,77,255,1)_100%)]
+                            bg-[linear-gradient(90deg,rgb(192,132,252)_0%,rgb(192,132,252)_35%,rgb(169,77,255)_100%)]
                             transition-all duration-700 ease-out
                             hover:bg-[position:80%_0%]">
                         Join as Creator
@@ -34,14 +34,13 @@
                 <h1 class="pb-4 text-4xl md:text-5xl font-bold tracking-tight 
                         bg-clip-text text-transparent 
                         bg-[length:200%_100%]
-                        bg-[linear-gradient(90deg,rgba(147,51,234,1)_0%,rgba(192,132,252,1)_35%,rgba(169,77,255,1)_100%)]
+                        bg-[linear-gradient(90deg,rgb(192,132,252)_0%,rgb(205,161,245)_35%,rgb(226,198,254)_100%)]
                         transition-all duration-700 ease-out
-                        hover:bg-[position:100%_0%]
                         leading-[1.1]">
                     The Creator Network Built for E-Commerce
                 </h1>
 
-                <p class="text-base text-gray-500 dark:text-gray-400 mx-auto leading-relaxed mt-4">
+                <p class="text-base text-gray-500 dark:text-gray-400 mx-auto leading-relaxed mt-4 max-w-4xl">
                     Rockies brings brands and creators together into a single workflow -- talent discovery, task assignments, approvals, timeline tracking, and reporting -- plus automated commissions, payouts, invoices and contracts
                 </p>
             </div>
@@ -136,7 +135,7 @@
                 @foreach($badges as $badge)
                 <button class="flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-full text-sm font-semibold text-gray-700 dark:text-gray-200 shadow-sm hover:shadow-md hover:border-transparent transition-all group relative overflow-hidden">
                     <!-- Subtle Hover Gradient Overlay -->
-                    <div class="absolute inset-0 opacity-0 group-hover:opacity-10 bg-gradient-to-r from-[#9333EA] via-[#C084FC] to-[#A94DFF] transition-opacity"></div>
+                    <div class="absolute inset-0 opacity-0 group-hover:opacity-10 bg-gradient-to-r from-[#cd9dfd] via-[#C084FC] to-[#c084fc] transition-opacity"></div>
                     
                     <span class="relative z-10">
                         @include('components.icons.' . $badge['icon'], ['class' => 'w-4 h-4 text-gray-900 dark:text-gray-100'])
@@ -306,7 +305,7 @@
                    
                     <div class="w-full lg:w-1/2">
                         <!-- Search Badge -->
-                        <span class="inline-block px-6 py-2 rounded-full text-white font-bold text-sm bg-gradient-to-r from-[#9333EA] via-[#C084FC] to-[#A94DFF] shadow-md">
+                        <span class="inline-block px-6 py-2 rounded-full text-white font-bold text-sm bg-gradient-to-r from-[#9333EA] to-[#c084fc] shadow-md">
                             Search
                         </span>
 
@@ -341,7 +340,7 @@
                     
                     <div class="w-full lg:w-1/2 relative group">
                         <div class="relative z-10 drop-shadow-2xl transition-transform duration-700 group-hover:-translate-y-2">
-                            <img src="{{ asset('images/demo-image.png') }}" alt="Marketplace Preview" class="w-full h-auto rounded-2xl">
+                            <img src="{{ asset('images/marketplace.png') }}" alt="Marketplace Preview" class="w-full h-auto rounded-2xl">
                         </div>
                         
                         <div class="absolute -top-10 -right-10 w-64 h-64 bg-purple-100 dark:bg-purple-900/10 rounded-full blur-3xl opacity-50 -z-1"></div>
@@ -377,10 +376,10 @@
                     @foreach($benefits as $item)
                     <div class="relative bg-white dark:bg-gray-900 px-6 py-4 rounded-xl border border-gray-100 dark:border-gray-800 shadow-[0_4px_20px_rgba(0,0,0,0.03)] hover:shadow-xl transition-all group overflow-hidden cursor-pointer">
                         <!-- Left Accent Border -->
-                        <div class="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-[#FF71A4] to-[#9553BF] opacity-50 group-hover:opacity-100 transition-opacity"></div>
+                        <div class="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-[#dec0f8] to-[#d5adfd] opacity-50 group-hover:opacity-100 transition-opacity"></div>
                         
                         <div class="relative z-10">
-                            <div class="text-2xl mb-2 text-[#D84EB7] font-bold">
+                            <div class="text-2xl mb-2 text-[#c084fc] font-bold">
                                 {{ $item['icon'] }}
                             </div>
                             <h4 class="text-lg font-bold text-gray-900 dark:text-white mb-3">
