@@ -21,7 +21,7 @@
                     <a href="#"
                     class="font-bold inline-block bg-clip-text text-transparent
                             bg-[length:300%_300%]
-                            bg-[linear-gradient(90deg,rgb(192,132,252)_0%,rgb(192,132,252)_35%,rgb(169,77,255)_100%)]
+                            bg-[linear-gradient(90deg,rgba(147,51,234,1)_0%,rgba(183,118,241,1)_50%,rgba(205,157,253,1)_100%)]
                             transition-all duration-700 ease-out
                             hover:bg-[position:80%_0%]">
                         Join as Creator
@@ -34,7 +34,7 @@
                 <h1 class="pb-4 text-4xl md:text-5xl font-bold tracking-tight 
                         bg-clip-text text-transparent 
                         bg-[length:200%_100%]
-                        bg-[linear-gradient(90deg,rgba(175,120,229,1)_0%,rgb(205,161,245)_35%,rgb(226,198,254)_100%)]
+                        bg-[linear-gradient(90deg,rgba(147,51,234,1)_0%,rgba(183,118,241,1)_50%,rgba(205,157,253,1)_100%)]
                         transition-all duration-700 ease-out
                         leading-[1.1]">
                     The Creator Network Built for E-Commerce
