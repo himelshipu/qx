@@ -19,6 +19,11 @@ Route::get('/content-library', function () {
     return view('pages.general.content-library', ['title' => 'Content Library']);
 })->name('content-library');
 
+//support 
+Route::get('/support', function () {
+    return view('pages.general.support', ['title' => 'Support']);
+})->name('support');
+
 //faq
 Route::get('/faq', function () {
     return view('pages.general.faq', ['title' => 'FAQ']);
