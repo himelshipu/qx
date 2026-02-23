@@ -20,9 +20,9 @@ class VerificationCodeController extends Controller
         // Redirect if already verified
         if (Auth::user()->hasVerifiedEmail()) {
             if (Auth::user()->user_type === 'brand') {
-                return redirect(route('brand-setup.show'));
+                return redirect(route('dashboard.brands.view'));
             }
-            return redirect(route('dashboard'));
+            return redirect(route('dashboard.index'));
         }
 
         return view('auth.verify-email');
@@ -76,9 +76,9 @@ class VerificationCodeController extends Controller
         // Check if user is already verified
         if ($user->hasVerifiedEmail()) {
             if ($user->user_type === 'brand') {
-                return redirect(route('brand-setup.show'))->with('success', 'Your email is already verified.');
+                return redirect(route('dashboard.brands.view'))->with('success', 'Your email is already verified.');
             }
-            return redirect(route('dashboard'))->with('success', 'Your email is already verified.');
+            return redirect(route('dashboard.index'))->with('success', 'Your email is already verified.');
         }
 
         // Check if verification code is valid
@@ -103,9 +103,9 @@ class VerificationCodeController extends Controller
 
         // Determine redirect based on user type
         if ($user->user_type === 'brand') {
-            return redirect(route('brand-setup.show'))->with('success', 'Your email has been verified successfully!');
+            return redirect(route('dashboard.brands.view'))->with('success', 'Your email has been verified successfully!');
         } else {
-            return redirect(route('dashboard'))->with('success', 'Your email has been verified successfully!');
+            return redirect(route('dashboard.index'))->with('success', 'Your email has been verified successfully!');
         }
     }
 }

@@ -1,11 +1,8 @@
 @extends('frontend.layouts.app')
 
 @section('content')
-<div 
-    x-data="brandSetup()" 
-    x-init="loadData()"
-    class="max-w-2xl mx-auto px-4 sm:px-0 my-10"
->
+<div  x-data="brandSetup()"   x-init="loadData()"
+    class="max-w-2xl mx-auto px-4 sm:px-0 my-10">
     <!-- Top Navigation -->
     <div class="flex items-center justify-between mb-6">
         <button 
