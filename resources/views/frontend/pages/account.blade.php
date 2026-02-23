@@ -2,206 +2,418 @@
 
 @section('content')
 <div class="min-h-screen bg-white dark:bg-gray-950 px-4 sm:px-6 lg:px-8 py-16" 
-     x-data="{ tab: 'details' }">
+     x-data="{ tab: 'profile' }">
     
-    <div class="max-w-4xl mx-auto">
-        <h1 class="text-4xl font-bold text-gray-900 dark:text-white mb-10">Account</h1>
+    <div class="max-w-5xl mx-auto">
+        <h1 class="text-4xl font-bold text-gray-900 dark:text-white mb-10">My Account</h1>
 
-        @if (session('status') === 'details-updated')
-            <div class="mb-6 p-4 bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 rounded-lg">
-                Details updated successfully.
+        <!-- Status Messages -->
+        @if (session('status') === 'profile-updated')
+            <div class="mb-6 p-4 bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 rounded-xl font-medium flex items-center gap-3">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                Profile updated successfully.
             </div>
         @endif
 
         @if (session('status') === 'password-updated')
-            <div class="mb-6 p-4 bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 rounded-lg">
+            <div class="mb-6 p-4 bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 rounded-xl font-medium flex items-center gap-3">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
                 Password updated successfully.
             </div>
         @endif
 
-        <div class="flex gap-10 border-b border-gray-100 dark:border-gray-800 mb-10">
-            <button @click="tab = 'details'" 
-                    :class="tab === 'details' ? 'border-b-2 border-black dark:border-white text-black dark:text-white' : 'text-gray-400 hover:text-gray-600'" 
-                    class="pb-4 text-lg font-bold transition-all">
-                Details
+        @if (session('status') === 'billing-updated')
+            <div class="mb-6 p-4 bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 rounded-xl font-medium flex items-center gap-3">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                Billing information updated successfully.
+            </div>
+        @endif
+
+        @if ($errors->any())
+            <div class="mb-6 p-4 bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300 rounded-xl">
+                <div class="font-bold mb-2">Please fix the following errors:</div>
+                <ul class="list-disc list-inside space-y-1 text-sm">
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+
+        <!-- Tab Navigation -->
+        <div class="flex gap-8 border-b border-gray-200 dark:border-gray-800 mb-10 overflow-x-auto pb-4 md:pb-0">
+            <button @click="tab = 'profile'" 
+                    :class="tab === 'profile' ? 'border-b-2 border-black dark:border-white text-black dark:text-white' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'" 
+                    class="pb-4 text-base font-medium transition-all whitespace-nowrap">
+                Profile
             </button>
-            <button @click="tab = 'payment'" 
-                    :class="tab === 'payment' ? 'border-b-2 border-black dark:border-white text-black dark:text-white' : 'text-gray-400 hover:text-gray-600'" 
-                    class="pb-4 text-lg font-bold transition-all">
-                Payment
+            <button @click="tab = 'billing'" 
+                    :class="tab === 'billing' ? 'border-b-2 border-black dark:border-white text-black dark:text-white' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'" 
+                    class="pb-4 text-base font-medium transition-all whitespace-nowrap">
+                Billing
             </button>
-            <button @click="tab = 'settings'" 
-                    :class="tab === 'settings' ? 'border-b-2 border-black dark:border-white text-black dark:text-white' : 'text-gray-400 hover:text-gray-600'" 
-                    class="pb-4 text-lg font-bold transition-all">
-                Settings
+            <button @click="tab = 'password'" 
+                    :class="tab === 'password' ? 'border-b-2 border-black dark:border-white text-black dark:text-white' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'" 
+                    class="pb-4 text-base font-medium transition-all whitespace-nowrap">
+                Password
+            </button>
+           <button @click="tab = 'security'" 
+                    :class="tab === 'security' ? 'border-b-2 border-black dark:border-white text-black dark:text-white' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'" 
+                    class="pb-4 text-base font-medium transition-all whitespace-nowrap">
+                Security
             </button>
         </div>
 
-        <div class="mt-8">
-            <div x-show="tab === 'details'" x-cloak class="space-y-8 animate-in fade-in duration-300">
-                <form action="{{ route('dashboard.account.details.update') }}" method="POST" class="space-y-8">
-                    @csrf
-                    
+        <!-- Profile Tab -->
+        <div x-show="tab === 'profile'" x-cloak class="space-y-8 animate-in fade-in duration-300">
+            <form action="{{ route('dashboard.account.details.update') }}" method="POST" enctype="multipart/form-data" class="space-y-8">
+                @csrf
+
+                <!-- Profile Picture Section -->
+                <div class="flex flex-col items-center space-y-4">
+                    <div class="relative group">
+                        <div class="relative w-32 h-32 rounded-full bg-gradient-to-br from-purple-100 to-blue-100 dark:from-purple-900 dark:to-blue-900 flex items-center justify-center border-4 border-white dark:border-gray-800 shadow-lg overflow-hidden cursor-pointer transition hover:shadow-xl" @click="(function(){ const fileInput = $el.closest('.group').querySelector('input[name=profile_image]'); if(fileInput) fileInput.click(); })()">
+                            <input type="file" name="profile_image" class="hidden" accept="image/*" @change="$event.target.form.submit()">
+                            @if ($user->profile_image_path)
+                                <img src="{{ Storage::url($user->profile_image_path) }}" class="w-full h-full object-cover">
+                            @else
+                                <svg class="w-16 h-16 text-gray-400 dark:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 0a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            @endif
+                        </div>
+                        <div class="absolute bottom-0 right-0 bg-purple-400 text-white p-2 rounded-full shadow-lg hover:bg-purple-500 transition cursor-pointer">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                        </div>
+                    </div>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Click to upload profile picture</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Name -->
                     <div>
-                        <label class="mb-2 block text-sm font-bold text-gray-800 dark:text-white">Email</label>
-                        <input type="email" value="{{ $user->email }}" readonly
-                            class="h-12 w-full rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 px-4 text-sm text-gray-500 focus:outline-none cursor-not-allowed" />
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Full Name *</label>
+                        <input type="text" name="name" value="{{ old('name', $user->name) }}"
+                            class="w-full h-11 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-4 text-sm text-gray-900 dark:text-white focus:border-purple-400 focus:ring-2 focus:ring-purple-200 dark:focus:ring-purple-800 transition outline-none" 
+                            required />
+                        @error('name')
+                            <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
+                        @enderror
                     </div>
 
-                    <div class="space-y-3 flex flex-col gap-4" x-data="{ showPass1: false, showPass2: false }">
-                        <label class="block text-sm font-bold text-gray-800 dark:text-white">Password</label>
-                        
-                        <div class="relative">
-                            <input :type="showPass1 ? 'text' : 'password'" name="password" placeholder="Enter New Password"
-                                class="h-12 w-full rounded-xl border border-gray-200 dark:border-gray-800 bg-transparent px-4 pr-12 text-sm text-gray-800 dark:text-white focus:border-purple-400 focus:ring-0 outline-none placeholder:text-gray-300" />
-                            <button type="button" @click="showPass1 = !showPass1" class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400">
-                                <x-icons.eye class="w-5 h-5" />
-                            </button>
-                        </div>
-
-                        <div class="relative">
-                            <input :type="showPass2 ? 'text' : 'password'" name="password_confirmation" placeholder="Confirm New Password"
-                                class="h-12 w-full rounded-xl border border-gray-200 dark:border-gray-800 bg-transparent px-4 pr-12 text-sm text-gray-800 dark:text-white focus:border-purple-400 focus:ring-0 outline-none placeholder:text-gray-300" />
-                            <button type="button" @click="showPass2 = !showPass2" class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400">
-                                <x-icons.eye class="w-5 h-5" />
-                            </button>
-                        </div>
-                        
-                        <div class="relative mt-2">
-                            <input type="password" name="current_password" placeholder="Current Password (required to change password)"
-                                class="h-12 w-full rounded-xl border border-gray-200 dark:border-gray-800 bg-transparent px-4 pr-12 text-sm text-gray-800 dark:text-white focus:border-purple-400 focus:ring-0 outline-none placeholder:text-gray-300" />
-                        </div>
+                    <!-- Email -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Email Address *</label>
+                        <input type="email" name="email" value="{{ old('email', $user->email) }}"
+                            class="w-full h-11 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-4 text-sm text-gray-900 dark:text-white focus:border-purple-400 focus:ring-2 focus:ring-purple-200 dark:focus:ring-purple-800 transition outline-none" 
+                            required />
+                        @error('email')
+                            <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
+                        @enderror
                     </div>
 
-                  
-
-                    <div class="space-y-3 flex flex-col gap-4">
-                        <label class="block text-sm font-bold text-gray-800 dark:text-white">Billing Address</label>
-                        <div class="relative w-full" x-data="locationPicker" @click.away="showDropdown = false">    
-                            <div class="relative">
-                                <input 
-                                    type="text" 
-                                    name="billing_address"
-                                    x-model="search"
-                                    value="{{ old('billing_address', $brand->setup_data['billing']['billing_address'] ?? '') }}"
-                                    @input.debounce.500ms="fetchLocations()"
-                                    @focus="if(results.length > 0) showDropdown = true"
-                                    placeholder="Search for a country/city (e.g. USA)..."
-                                    class="h-12 w-full rounded-xl border border-gray-200 dark:border-gray-800 bg-transparent pl-4 pr-10 text-sm text-gray-800 dark:text-white focus:border-purple-400 focus:ring-0 outline-none" 
-                                />
-
-                                <button x-show="search.length > 0" @click="search = ''; results = []; showDropdown = false;" type="button" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-purple-500">
-                                    <x-icons.x class="h-5 w-5" />
-                                </button>
-                            </div>
-
-                            <div 
-                                x-show="showDropdown && results.length > 0" 
-                                x-cloak
-                                x-transition
-                                class="absolute left-0 right-0 top-full z-50 mt-1 max-h-60 overflow-y-auto rounded-xl border border-gray-100 bg-white shadow-2xl dark:border-gray-800 dark:bg-gray-900"
-                            >
-                                <template x-for="(loc, index) in results" :key="index">
-                                    <div 
-                                        @click="select(loc)"
-                                        class="cursor-pointer border-b border-gray-50 px-4 py-3 last:border-none hover:bg-blue-50/50 dark:border-gray-800 dark:hover:bg-gray-800 transition-colors"
-                                    >
-                                        <span class="text-sm font-bold text-gray-800 dark:text-white" x-text="loc.city"></span>
-                                        <span class="ml-1 text-sm text-gray-400" x-text="loc.country"></span>
-                                    </div>
-                                </template>
-                            </div>
-                        </div>
-                        <input type="text" name="zip_code" value="{{ old('zip_code', $brand->setup_data['billing']['zip_code'] ?? '') }}" placeholder="Zip/Postal Code" class="h-12 w-full rounded-xl border border-gray-200 dark:border-gray-800 px-4 text-sm outline-none focus:border-purple-400 placeholder:text-gray-300 dark:text-white bg-transparent" />
+                    <!-- Phone -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Phone</label>
+                        <input type="tel" name="phone" value="{{ old('phone', $user->phone) }}" placeholder="+1 (555) 123-4567"
+                            class="w-full h-11 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-4 text-sm text-gray-900 dark:text-white focus:border-purple-400 focus:ring-2 focus:ring-purple-200 dark:focus:ring-purple-800 transition outline-none" />
+                        @error('phone')
+                            <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
+                        @enderror
                     </div>
 
-                    <button type="submit" class="flex w-full items-center justify-center py-5 border border-gray-900 dark:border-purple-400/50 rounded-xl font-bold text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-purple-400/10 transition shadow-sm active:scale-[0.99]">
-                        Save Changes
-                    </button>
-                </form>
+                    <!-- Date of Birth -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Date of Birth</label>
+                        <input type="date" name="date_of_birth" value="{{ old('date_of_birth', $user->date_of_birth?->format('Y-m-d')) }}"
+                            class="w-full h-11 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-4 text-sm text-gray-900 dark:text-white focus:border-purple-400 focus:ring-2 focus:ring-purple-200 dark:focus:ring-purple-800 transition outline-none" />
+                        @error('date_of_birth')
+                            <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <!-- Gender -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Gender</label>
+                        <select name="gender"
+                            class="w-full h-11 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-4 text-sm text-gray-900 dark:text-white focus:border-purple-400 focus:ring-2 focus:ring-purple-200 dark:focus:ring-purple-800 transition outline-none">
+                            <option value="">Select Gender</option>
+                            <option value="male" {{ old('gender', $user->gender) === 'male' ? 'selected' : '' }}>Male</option>
+                            <option value="female" {{ old('gender', $user->gender) === 'female' ? 'selected' : '' }}>Female</option>
+                            <option value="other" {{ old('gender', $user->gender) === 'other' ? 'selected' : '' }}>Other</option>
+                        </select>
+                        @error('gender')
+                            <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <!-- Company Name -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Company Name</label>
+                        <input type="text" name="company_name" value="{{ old('company_name', $user->company_name) }}"
+                            class="w-full h-11 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-4 text-sm text-gray-900 dark:text-white focus:border-purple-400 focus:ring-2 focus:ring-purple-200 dark:focus:ring-purple-800 transition outline-none" />
+                        @error('company_name')
+                            <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <!-- Job Title -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Job Title</label>
+                        <input type="text" name="job_title" value="{{ old('job_title', $user->job_title) }}"
+                            class="w-full h-11 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-4 text-sm text-gray-900 dark:text-white focus:border-purple-400 focus:ring-2 focus:ring-purple-200 dark:focus:ring-purple-800 transition outline-none" />
+                        @error('job_title')
+                            <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <!-- Country -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Country</label>
+                        <input type="text" name="country" value="{{ old('country', $user->country) }}"
+                            class="w-full h-11 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-4 text-sm text-gray-900 dark:text-white focus:border-purple-400 focus:ring-2 focus:ring-purple-200 dark:focus:ring-purple-800 transition outline-none" />
+                        @error('country')
+                            <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <!-- City -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">City</label>
+                        <input type="text" name="city" value="{{ old('city', $user->city) }}"
+                            class="w-full h-11 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-4 text-sm text-gray-900 dark:text-white focus:border-purple-400 focus:ring-2 focus:ring-purple-200 dark:focus:ring-purple-800 transition outline-none" />
+                        @error('city')
+                            <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <!-- Postal Code -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Postal Code</label>
+                        <input type="text" name="postal_code" value="{{ old('postal_code', $user->postal_code) }}"
+                            class="w-full h-11 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-4 text-sm text-gray-900 dark:text-white focus:border-purple-400 focus:ring-2 focus:ring-purple-200 dark:focus:ring-purple-800 transition outline-none" />
+                        @error('postal_code')
+                            <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
+                        @enderror
+                    </div>
+                </div>
+
+                <!-- Bio -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Bio</label>
+                    <textarea name="bio" rows="4" placeholder="Tell us about yourself... (max 1000 characters)"
+                        class="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-4 py-3 text-sm text-gray-900 dark:text-white focus:border-purple-400 focus:ring-2 focus:ring-purple-200 dark:focus:ring-purple-800 transition outline-none resize-none">{{ old('bio', $user->bio) }}</textarea>
+                    @error('bio')
+                        <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <button type="submit" class="w-full md:w-48 bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white font-bold py-3 rounded-lg transition shadow-lg active:scale-95">
+                    Save Changes
+                </button>
+            </form>
+        </div>
+
+        <!-- Billing Tab -->
+        <div x-show="tab === 'billing'" x-cloak class="space-y-8 animate-in fade-in duration-300">
+            <form action="{{ route('dashboard.account.billing.update') }}" method="POST" class="space-y-8">
+                @csrf
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Legal Company Name -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Legal Company Name</label>
+                        <input type="text" name="legal_company_name" value="{{ old('legal_company_name', $brand->setup_data['billing']['legal_company_name'] ?? '') }}"
+                            class="w-full h-11 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-4 text-sm text-gray-900 dark:text-white focus:border-purple-400 focus:ring-2 focus:ring-purple-200 dark:focus:ring-purple-800 transition outline-none" />
+                        @error('legal_company_name')
+                            <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <!-- VAT ID -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">VAT ID</label>
+                        <input type="text" name="vat_id" value="{{ old('vat_id', $brand->setup_data['billing']['vat_id'] ?? '') }}" placeholder="Optional"
+                            class="w-full h-11 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-4 text-sm text-gray-900 dark:text-white focus:border-purple-400 focus:ring-2 focus:ring-purple-200 dark:focus:ring-purple-800 transition outline-none" />
+                        @error('vat_id')
+                            <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <!-- Billing Address -->
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Billing Address</label>
+                        <input type="text" name="billing_address" value="{{ old('billing_address', $brand->setup_data['billing']['billing_address'] ?? '') }}"
+                            class="w-full h-11 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-4 text-sm text-gray-900 dark:text-white focus:border-purple-400 focus:ring-2 focus:ring-purple-200 dark:focus:ring-purple-800 transition outline-none" />
+                        @error('billing_address')
+                            <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <!-- Billing City -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">City</label>
+                        <input type="text" name="billing_city" value="{{ old('billing_city', $brand->setup_data['billing']['billing_city'] ?? '') }}"
+                            class="w-full h-11 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-4 text-sm text-gray-900 dark:text-white focus:border-purple-400 focus:ring-2 focus:ring-purple-200 dark:focus:ring-purple-800 transition outline-none" />
+                        @error('billing_city')
+                            <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <!-- Billing Country -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Country</label>
+                        <input type="text" name="billing_country" value="{{ old('billing_country', $brand->setup_data['billing']['billing_country'] ?? '') }}"
+                            class="w-full h-11 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-4 text-sm text-gray-900 dark:text-white focus:border-purple-400 focus:ring-2 focus:ring-purple-200 dark:focus:ring-purple-800 transition outline-none" />
+                        @error('billing_country')
+                            <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <!-- Billing Postal Code -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Postal Code</label>
+                        <input type="text" name="billing_postal_code" value="{{ old('billing_postal_code', $brand->setup_data['billing']['billing_postal_code'] ?? '') }}"
+                            class="w-full h-11 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-4 text-sm text-gray-900 dark:text-white focus:border-purple-400 focus:ring-2 focus:ring-purple-200 dark:focus:ring-purple-800 transition outline-none" />
+                        @error('billing_postal_code')
+                            <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
+                        @enderror
+                    </div>
+                </div>
+
+                <button type="submit" class="w-full md:w-48 bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white font-bold py-3 rounded-lg transition shadow-lg active:scale-95">
+                    Save Billing Info
+                </button>
+            </form>
+        </div>
+
+        <!-- Password Tab -->
+        <div x-show="tab === 'password'" x-cloak class="space-y-8 animate-in fade-in duration-300" x-data="{ showPass: { old: false, new: false, confirm: false } }">
+            <form action="{{ route('dashboard.account.password.update') }}" method="POST" class="space-y-6 max-w-md">
+                @csrf
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Current Password *</label>
+                    <div class="relative">
+                        <input :type="showPass.old ? 'text' : 'password'" name="current_password" placeholder="Enter your current password"
+                            class="w-full h-11 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-4 pr-12 text-sm text-gray-900 dark:text-white focus:border-purple-400 focus:ring-2 focus:ring-purple-200 dark:focus:ring-purple-800 transition outline-none" 
+                            required />
+                        <button type="button" @click="showPass.old = !showPass.old" class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                        </button>
+                    </div>
+                    @error('current_password')
+                        <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">New Password *</label>
+                    <div class="relative">
+                        <input :type="showPass.new ? 'text' : 'password'" name="password" placeholder="Enter new password"
+                            class="w-full h-11 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-4 pr-12 text-sm text-gray-900 dark:text-white focus:border-purple-400 focus:ring-2 focus:ring-purple-200 dark:focus:ring-purple-800 transition outline-none" 
+                            required />
+                        <button type="button" @click="showPass.new = !showPass.new" class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                        </button>
+                    </div>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">At least 8 characters with uppercase, lowercase, number, and symbol</p>
+                    @error('password')
+                        <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Confirm Password *</label>
+                    <div class="relative">
+                        <input :type="showPass.confirm ? 'text' : 'password'" name="password_confirmation" placeholder="Confirm new password"
+                            class="w-full h-11 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-4 pr-12 text-sm text-gray-900 dark:text-white focus:border-purple-400 focus:ring-2 focus:ring-purple-200 dark:focus:ring-purple-800 transition outline-none" 
+                            required />
+                        <button type="button" @click="showPass.confirm = !showPass.confirm" class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                        </button>
+                    </div>
+                    @error('password_confirmation')
+                        <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <button type="submit" class="w-full md:w-48 bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white font-bold py-3 rounded-lg transition shadow-lg active:scale-95">
+                    Update Password
+                </button>
+            </form>
+        </div>
+
+        <!-- Security Tab -->
+        <div x-show="tab === 'security'" x-cloak class="space-y-12 animate-in fade-in duration-300">
+            <!-- Account Status -->
+            <div class="border border-gray-200 dark:border-gray-800 rounded-xl p-6">
+                <div class="flex items-center justify-between flex-wrap gap-4">
+                    <div>
+                        <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-1">Account Status</h3>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">
+                            Status: <span class="font-medium {{ $user->is_active ? 'text-green-500' : 'text-red-500' }}">
+                                @if ($user->is_active)
+                                    ✓ Active
+                                @else
+                                    ✗ Inactive
+                                @endif
+                            </span>
+                        </p>
+                    </div>
+                    <form action="{{ route('dashboard.account.toggle-status') }}" method="POST">
+                        @csrf
+                        <button type="submit" class="px-4 py-2 rounded-lg font-medium text-sm transition {{ $user->is_active ? 'bg-red-100 text-red-700 hover:bg-red-200' : 'bg-green-100 text-green-700 hover:bg-green-200' }}">
+                            {{ $user->is_active ? 'Deactivate' : 'Activate' }}
+                        </button>
+                    </form>
+                </div>
             </div>
 
-            <div x-show="tab === 'payment'" 
-                x-cloak 
-                x-data="{ showAddFundsModal: false }" 
-                class="space-y-12 animate-in fade-in duration-300 text-start">
-                
-                <div class="space-y-4">
-                    <div class="flex items-center gap-3">
-                        <h3 class="text-lg font-bold text-gray-900 dark:text-white">Subscription</h3>
-                        <a href="#" class="text-sm font-bold text-purple-400 hover:underline">Upgrade</a>
+            <!-- Logout -->
+            <div class="border border-gray-200 dark:border-gray-800 rounded-xl p-6">
+                <div class="flex items-center justify-between flex-wrap gap-4">
+                    <div>
+                        <h3 class="text-lg font-bold text-gray-900 dark:text-white">Log Out</h3>
+                        <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Sign out from your account</p>
                     </div>
-                    <p class="text-gray-600 dark:text-gray-400 text-base leading-relaxed">
-                        You have no subscription. Upgrade to post campaigns and have 550,000+ creators come to you.
-                    </p>
-                </div>
-
-                <div class="space-y-4">
-                    <div class="flex items-center gap-3">
-                        <h3 class="text-lg font-bold text-gray-900 dark:text-white">Balance</h3>
-                        <a href="#" @click.prevent="showAddFundsModal = true" class="text-sm font-bold text-purple-400 hover:underline">Add Funds</a>
-                    </div>
-                    <p class="text-3xl font-bold text-gray-900 dark:text-white">$0.00</p>
-                </div>
-
-                <div x-show="showAddFundsModal" 
-                    class="fixed inset-0 z-[100] flex items-center justify-center p-4 overflow-hidden" 
-                    x-cloak>
-                    
-                    <div x-show="showAddFundsModal" 
-                        x-transition.opacity 
-                        @click="showAddFundsModal = false" 
-                        class="fixed inset-0 bg-black/60 backdrop-blur-sm"></div>
-
-                    <div x-show="showAddFundsModal"
-                        x-transition:enter="transition ease-out duration-300"
-                        x-transition:enter-start="opacity-0 scale-95"
-                        x-transition:enter-end="opacity-100 scale-100"
-                        x-transition:leave="transition ease-in duration-200"
-                        x-transition:leave-start="opacity-100 scale-100"
-                        x-transition:leave-end="opacity-0 scale-95"
-                        class="relative w-full max-w-xl bg-white dark:bg-gray-900 rounded-[2.5rem] shadow-2xl overflow-hidden p-8 md:p-14 text-center">
-                        
-                        <button @click="showAddFundsModal = false" class="absolute top-8 right-10 text-gray-400 hover:text-black dark:hover:text-white transition">
-                            <x-icons.x class="w-6 h-6" stroke-width="2.5" />
-                        </button>
-
-                        <h2 class="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-10">How Much Do You Want to Add?</h2>
-
-                        <div class="mb-10">
-                            <input type="number" 
-                                placeholder="Amount (USD)" 
-                                class="w-full h-14 rounded-xl border border-gray-200 dark:border-gray-800 bg-transparent px-6 text-lg font-medium focus:border-purple-400 focus:ring-0 dark:text-white placeholder:text-gray-400 transition-colors">
-                        </div>
-
-                        <button @click="showAddFundsModal = false" class="w-full bg-[#1A1A1A] hover:bg-purple-400 text-white font-bold py-4 rounded-xl text-lg transition shadow-lg active:scale-95 uppercase tracking-widest">
-                            Continue
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <div x-show="tab === 'settings'" x-cloak class="space-y-12 animate-in fade-in duration-300 text-start">
-                <div class="space-y-4">
-                    <h3 class="text-lg font-bold text-gray-900 dark:text-white">Log Out</h3>
                     <form method="POST" action="{{ route('logout') }}">
                         @csrf
-                        <button type="submit" class="bg-[#1A1A1A] hover:bg-purple-400 text-white w-64 py-4 rounded-xl font-bold text-sm transition shadow-lg active:scale-95 uppercase tracking-widest">
+                        <button type="submit" class="px-6 py-2 rounded-lg font-medium text-sm bg-yellow-100 text-yellow-700 hover:bg-yellow-200 transition">
                             Sign Out
                         </button>
                     </form>
                 </div>
+            </div>
 
-                <div class="pt-6">
-                    <form method="POST" action="{{ route('dashboard.account.destroy') }}" onsubmit="return confirm('Are you sure you want to delete your account? This action cannot be undone.')">
+            <!-- Delete Account -->
+            <div class="border-2 border-red-200 dark:border-red-900 rounded-xl p-6 bg-red-50 dark:bg-red-950/20" x-data="{ deleteOpen: false }">
+                <div class="flex items-center justify-between mb-4 flex-wrap gap-4">
+                    <div>
+                        <h3 class="text-lg font-bold text-red-700 dark:text-red-300">Delete Account</h3>
+                        <p class="text-sm text-red-600 dark:text-red-400 mt-1">Permanently delete your account and all data</p>
+                    </div>
+                    <button @click="deleteOpen = !deleteOpen" class="px-4 py-2 rounded-lg font-medium text-sm bg-red-100 text-red-700 hover:bg-red-200 transition">
+                        Delete
+                    </button>
+                </div>
+
+                <div x-show="deleteOpen" x-cloak class="mt-4 p-4 bg-white dark:bg-gray-900 rounded-lg border border-red-200 dark:border-red-800">
+                    <p class="text-sm text-gray-700 dark:text-gray-300 mb-4 font-medium">
+                        ⚠️ This action cannot be undone. Please enter your password to confirm deletion.
+                    </p>
+                    <form method="POST" action="{{ route('dashboard.account.destroy') }}" @submit="if(!confirm('Are you absolutely sure? All your data will be permanently deleted.')) $event.preventDefault();">
                         @csrf
                         @method('DELETE')
-                        <div class="mb-4">
-                            <input type="password" name="password" placeholder="Enter your password to confirm" class="h-12 w-full max-w-md rounded-xl border border-gray-200 dark:border-gray-800 bg-transparent px-4 text-sm focus:border-red-500 focus:ring-0 outline-none" required>
+                        <div class="flex gap-3 flex-wrap">
+                            <input type="password" name="password" placeholder="Enter your password" 
+                                class="flex-1 min-w-[200px] h-11 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-4 text-sm text-gray-900 dark:text-white focus:border-red-400 focus:ring-2 focus:ring-red-200 dark:focus:ring-red-800 transition outline-none"
+                                required>
+                            <button type="submit" class="px-6 py-2 rounded-lg font-medium text-sm bg-red-500 text-white hover:bg-red-600 transition active:scale-95">
+                                Delete Account
+                            </button>
                         </div>
-                        <button type="submit" class="text-sm font-medium text-gray-400 hover:text-red-500 transition-colors">
-                            Delete Account
-                        </button>
+                        @error('password')
+                            <p class="mt-2 text-xs text-red-500">{{ $message }}</p>
+                        @enderror
                     </form>
                 </div>
             </div>
@@ -213,44 +425,3 @@
     [x-cloak] { display: none !important; }
 </style>
 @endsection
-
-<script>
-document.addEventListener('alpine:init', () => {
-    Alpine.data('locationPicker', () => ({
-        search: '{{ old('billing_address', $brand->setup_data['billing']['billing_address'] ?? '') }}',
-        results: [],
-        showDropdown: false,
-
-        async fetchLocations() {
-            if (this.search.length < 3) {
-                this.results = [];
-                this.showDropdown = false;
-                return;
-            }
-
-            try {
-                let url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(this.search)}&addressdetails=1&limit=5`;
-                let response = await fetch(url, {
-                    headers: { 'User-Agent': 'QX-Influencer-Platform' }
-                });
-                let data = await response.json();
-
-                this.results = data.map(item => ({
-                    city: item.address.city || item.address.town || item.address.village || item.display_name.split(',')[0],
-                    country: item.address.country
-                }));
-
-                this.showDropdown = true;
-            } catch (error) {
-                console.error('Error:', error);
-            }
-        },
-
-        select(loc) {
-            this.search = `${loc.city}, ${loc.country}`;
-            this.showDropdown = false;
-            this.results = [];
-        }
-    }))
-})
-</script>

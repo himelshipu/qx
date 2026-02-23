@@ -4,14 +4,16 @@
         <!-- After login menu -->
         <div class="mx-auto py-6 flex flex-col sm:px-0 px-4 sm:flex-row items-center justify-between space-y-4 sm:space-y-0">
             <div class="flex items-center gap-2">
-                <img src="/images/logo/logo-dark.png" alt="Logo" class="h-11 dark:block hidden">
-                <img src="/images/logo/logo.png" alt="Logo" class="h-11 dark:hidden block">
+                <a href="{{ route('home') }}">
+                    <img src="/images/logo/logo.png" alt="Logo" class="h-11 dark:hidden block">
+                    <img src="/images/logo/logo-dark.png" alt="Logo" class="h-11 dark:block hidden">
+                </a>
             </div>
 
             <div>
                 <nav class="flex flex-wrap items-center justify-center gap-4 md:gap-6 lg:gap-8 text-sm lg:text-[14px] font-medium text-gray-600 dark:text-gray-300">
-                    <a href="#" class="hover:text-black dark:hover:text-white py-2 transition-colors border-b-3 border-b-purple-300">Home</a>
-                    <a href="/content-library/" class="hover:text-black dark:hover:text-white py-2 transition-colors">Library</a>
+                    <a href="{{ route('home') }}" class="hover:text-black dark:hover:text-white py-2 transition-colors border-b-3 border-b-purple-300">Home</a>
+                    <a href="{{ route('dashboard.content-library') }}" class="hover:text-black dark:hover:text-white py-2 transition-colors">Library</a>
                     <a href="#" class="hover:text-black dark:hover:text-white py-2 transition-colors">Search</a>
                     <a href="{{ route('faq') }}" class="hover:text-black dark:hover:text-white py-2 transition-colors">Faq</a>
                     <a href="{{ route('support') }}" class="hover:text-black dark:hover:text-white py-2 transition-colors">Support</a>
@@ -46,15 +48,27 @@
                     </button>
 
                     <!-- Profile Dropdown Content -->
-                    <div class="absolute right-0 top-full mt-3 w-56 bg-white rounded-[20px] shadow-[0_10px_40px_rgba(0,0,0,0.1)] border border-gray-50 invisible opacity-0 scale-95 group-hover:visible group-hover:opacity-100 group-hover:scale-100 transition-all duration-300 origin-top-right z-50 overflow-hidden">
-                        <div class="py-2 flex flex-col">
-                            <a href="#" class="px-7 py-3.5 text-[15px] font-bold text-gray-800 hover:bg-gray-50 transition-colors">Profile</a>
-                            <a href="#" class="px-7 py-3.5 text-[15px] font-bold text-gray-800 hover:bg-gray-50 transition-colors">Offers</a>
-                            <div class="border-t border-gray-100 my-1 mx-2"></div>
-                            <a href="{{ route('dashboard.account.edit') }}" class="px-7 py-3.5 text-[15px] font-medium text-gray-600 hover:bg-gray-50 transition-colors">Account</a>
-                            <a href="{{ route('logout') }}" class="px-7 py-3.5 text-[15px] font-medium text-gray-600 hover:bg-gray-50 transition-colors">Log Out</a>
+                        <div class="absolute right-0 top-full mt-3 w-56 bg-white rounded-[20px] shadow-[0_10px_40px_rgba(0,0,0,0.1)] border border-gray-50 invisible opacity-0 scale-95 group-hover:visible group-hover:opacity-100 group-hover:scale-100 transition-all duration-300 origin-top-right z-50 overflow-hidden">
+                            <div class="py-2 flex flex-col">
+                                <a href="#" class="px-7 py-3.5 text-[15px] font-bold text-gray-800 hover:bg-gray-50 transition-colors">Profile</a>
+                                <a href="#" class="px-7 py-3.5 text-[15px] font-bold text-gray-800 hover:bg-gray-50 transition-colors">Offers</a>
+
+                                <div class="border-t border-gray-100 my-1 mx-2"></div>
+
+                                <a href="{{ route('dashboard.account.edit') }}" class="px-7 py-3.5 text-[15px] font-medium text-gray-600 hover:bg-gray-50 transition-colors">
+                                    Account
+                                </a>
+
+                                <form method="POST" action="{{ route('logout') }}">
+                                    @csrf
+                                    <button type="submit"
+                                        class="text-left px-7 py-3.5 text-[15px] font-medium text-gray-600 hover:bg-gray-50 transition-colors w-full">
+                                        Log Out
+                                    </button>
+                                </form>
+                            </div>
                         </div>
-                    </div>
+
                 </div>
             </div>  
         </div>

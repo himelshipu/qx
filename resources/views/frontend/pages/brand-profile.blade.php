@@ -96,7 +96,7 @@
                         />
 
                         <button x-show="search.length > 0" @click="search = ''; results = []; showDropdown = false;" type="button" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-blue-500">
-                            <x-icons.x class="h-5 w-5" />
+                            <x-icons.close class="h-5 w-5" />
                         </button>
                     </div>
 
@@ -184,7 +184,7 @@
                         </div>
 
                         <button x-show="profilePreview" @click.stop="removeProfile" type="button" class="absolute -top-1 -right-1 bg-red-500 text-white rounded-full p-1 shadow-lg hover:bg-red-600 transition">
-                            <x-icons.x class="w-4 h-4" stroke-width="3" />
+                            <x-icons.close class="w-4 h-4" stroke-width="3" />
                         </button>
                     </div>
                 </div>

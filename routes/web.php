@@ -11,6 +11,7 @@ use App\Http\Controllers\Backend\DashboardController;
 use App\Http\Controllers\BrandProfileController;
 use App\Http\Controllers\Frontend\HomeController;
 use App\Http\Controllers\Frontend\StaticPagesController;
+use App\Http\Controllers\Frontend\ContentLibraryController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
@@ -52,6 +53,7 @@ Route::prefix('dashboard') ->name('dashboard.')->middleware(['auth', 'verified']
      Route::get('/brands/details/{id}', [BrandController::class, 'view'])->name('brands.view');
      Route::get('/creators', [CreatorController::class, 'index'])->name('creators.index');
      Route::get('/campaigns', [CampaignController::class, 'index'])->name('campaigns.index');
+     Route::get('/content-library', [ContentLibraryController::class, 'index'])->name('content-library');
 
 
 
@@ -61,11 +63,17 @@ Route::prefix('dashboard') ->name('dashboard.')->middleware(['auth', 'verified']
   // Brand Profile routes
     Route::get('/brand-profile/edit', [BrandProfileController::class, 'edit'])->name('brand.profile.edit');
     Route::post('/brand-profile/update', [BrandProfileController::class, 'update'])->name('brand.profile.update');
+    Route::delete('/brand-profile/profile-image', [BrandProfileController::class, 'deleteProfileImage'])->name('brand.profile.delete-image');
+    Route::delete('/brand-profile/cover-image', [BrandProfileController::class, 'deleteCoverImage'])->name('brand.profile.delete-cover');
+    Route::post('/brand-profile/toggle-verification', [BrandProfileController::class, 'toggleVerification'])->name('brand.profile.toggle-verification');
+    Route::post('/brand-profile/toggle-status', [BrandProfileController::class, 'toggleStatus'])->name('brand.profile.toggle-status');
 
     // Account routes
     Route::get('/account', [AccountController::class, 'edit'])->name('account.edit');
     Route::post('/account/details', [AccountController::class, 'updateDetails'])->name('account.details.update');
+    Route::post('/account/billing', [AccountController::class, 'updateBilling'])->name('account.billing.update');
     Route::post('/account/password', [AccountController::class, 'updatePassword'])->name('account.password.update');
+    Route::post('/account/toggle-status', [AccountController::class, 'toggleStatus'])->name('account.toggle-status');
     Route::delete('/account', [AccountController::class, 'destroy'])->name('account.destroy');
 
 });

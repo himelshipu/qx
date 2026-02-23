@@ -18,7 +18,21 @@ class Brand extends Model
     protected $fillable = [
         'user_id',
         'brand_name',
+        'description',
+        'website',
+        'phone',
+        'email',
+        'location',
+        'city',
+        'country',
+        'postal_code',
+        'profile_image_path',
+        'cover_image_path',
+        'categories',
+        'social_links',
         'setup_data',
+        'is_verified',
+        'is_active',
     ];
 
     /**
@@ -30,6 +44,8 @@ class Brand extends Model
     {
         return [
             'setup_data' => 'json',
+            'categories' => 'json',
+            'social_links' => 'json',
         ];
     }
 

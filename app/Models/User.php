@@ -24,7 +24,17 @@ class User extends Authenticatable
         'verification_code',           
         'verification_code_expires_at', 
         'email_verified_at',
-
+        'phone',
+        'date_of_birth',
+        'gender',
+        'country',
+        'city',
+        'postal_code',
+        'company_name',
+        'job_title',
+        'bio',
+        'profile_image_path',
+        'is_active',
     ];
 
     /**
