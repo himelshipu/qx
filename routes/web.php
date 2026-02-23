@@ -2,11 +2,13 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\AccountController;
 use App\Http\Controllers\Backend\BrandController;
 use App\Http\Controllers\Backend\CategoryController;
 use App\Http\Controllers\Backend\CampaignController;
 use App\Http\Controllers\Backend\CreatorController;
 use App\Http\Controllers\Backend\DashboardController;
+use App\Http\Controllers\BrandProfileController;
 use App\Http\Controllers\Frontend\HomeController;
 use App\Http\Controllers\Frontend\StaticPagesController;
 use App\Http\Controllers\ProfileController;
@@ -51,10 +53,21 @@ Route::prefix('dashboard') ->name('dashboard.')->middleware(['auth', 'verified']
      Route::get('/creators', [CreatorController::class, 'index'])->name('creators.index');
      Route::get('/campaigns', [CampaignController::class, 'index'])->name('campaigns.index');
 
-    // Profile routes
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+
+
+
+
+  // Brand Profile routes
+    Route::get('/brand-profile/edit', [BrandProfileController::class, 'edit'])->name('brand.profile.edit');
+    Route::post('/brand-profile/update', [BrandProfileController::class, 'update'])->name('brand.profile.update');
+
+    // Account routes
+    Route::get('/account', [AccountController::class, 'edit'])->name('account.edit');
+    Route::post('/account/details', [AccountController::class, 'updateDetails'])->name('account.details.update');
+    Route::post('/account/password', [AccountController::class, 'updatePassword'])->name('account.password.update');
+    Route::delete('/account', [AccountController::class, 'destroy'])->name('account.destroy');
+
 });
 
 /*

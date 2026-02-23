@@ -51,8 +51,8 @@
                             <a href="#" class="px-7 py-3.5 text-[15px] font-bold text-gray-800 hover:bg-gray-50 transition-colors">Profile</a>
                             <a href="#" class="px-7 py-3.5 text-[15px] font-bold text-gray-800 hover:bg-gray-50 transition-colors">Offers</a>
                             <div class="border-t border-gray-100 my-1 mx-2"></div>
-                            <a href="#" class="px-7 py-3.5 text-[15px] font-medium text-gray-600 hover:bg-gray-50 transition-colors">Account</a>
-                            <a href="#" class="px-7 py-3.5 text-[15px] font-medium text-gray-600 hover:bg-gray-50 transition-colors">Log Out</a>
+                            <a href="{{ route('dashboard.account.edit') }}" class="px-7 py-3.5 text-[15px] font-medium text-gray-600 hover:bg-gray-50 transition-colors">Account</a>
+                            <a href="{{ route('logout') }}" class="px-7 py-3.5 text-[15px] font-medium text-gray-600 hover:bg-gray-50 transition-colors">Log Out</a>
                         </div>
                     </div>
                 </div>
