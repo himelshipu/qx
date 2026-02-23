@@ -8,6 +8,7 @@ use App\Http\Controllers\Backend\CampaignController;
 use App\Http\Controllers\Backend\CreatorController;
 use App\Http\Controllers\Backend\DashboardController;
 use App\Http\Controllers\Frontend\HomeController;
+use App\Http\Controllers\Frontend\StaticPagesController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
@@ -30,6 +31,9 @@ use Illuminate\Support\Facades\Route;
 Route::middleware(['web'])->group(function () {
     // Home page
     Route::get('/', [HomeController::class, 'index'])->name('home');
+    Route::get('/campaigns', [HomeController::class, 'campaigns'])->name('campaigns');
+    Route::get('/faq', [StaticPagesController::class, 'faq'])->name('faq');
+    Route::get('/support', [StaticPagesController::class, 'support'])->name('support');
 });
 
 /*

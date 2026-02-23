@@ -11,8 +11,8 @@
 
             <nav class="flex flex-wrap items-center justify-center gap-4 md:gap-6 lg:gap-8 text-sm lg:text-[14px] font-medium text-gray-600 dark:text-gray-300">
                 <a href="#" class="hover:text-black dark:hover:text-white transition-colors">Search</a>
-                <a href="#" class="hover:text-black dark:hover:text-white transition-colors">How It Works</a>
-                <a href="#" class="hover:text-black dark:hover:text-white transition-colors">Pricing</a>
+                <a href="{{ route('faq') }}" class="hover:text-black dark:hover:text-white transition-colors">Faq</a>
+                <a href="{{ route('support') }}" class="hover:text-black dark:hover:text-white transition-colors">Support</a>
                 
                 @auth
                     <a href="{{ route('dashboard.index') }}" class="hover:text-black dark:hover:text-white transition-colors">Dashboard</a>
