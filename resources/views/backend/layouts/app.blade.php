@@ -10,7 +10,6 @@
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
-    <!-- Alpine stores are defined in resources/js/app.js; avoid duplicating here -->
 
     <!-- Apply dark mode immediately to prevent flash -->
     <script>
@@ -52,9 +51,8 @@ window.addEventListener('resize', checkMobile);"
     class="transition-colors duration-200">
 
     <div class="min-h-screen xl:flex">
-        @include('backend.layouts.backdrop')
-        @include('backend.layouts.sidebar')
-
+        <x-backend.shell.backdrop />
+        <x-backend.shell.sidebar />
         <div class="flex-1 transition-all duration-300 ease-in-out"
             :class="{
                 'xl:ml-[290px]': $store.sidebar.isExpanded,
@@ -62,7 +60,7 @@ window.addEventListener('resize', checkMobile);"
                 'ml-0': $store.sidebar.isMobileOpen
             }">
             <!-- app header start -->
-            @include('backend.layouts.app-header')
+            <x-backend.shell.header />
             <!-- app header end -->
             <main class="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8 ">
                 @yield('content')

@@ -46,7 +46,7 @@
                             <form method="POST" action="{{ route('register') }}">
                                 @csrf
                                 <input type="hidden" name="user_type" value="brand">
-                                @include('components.general.auth.brand-signup-form')
+                                <x-frontend.signup.brand />
                             </form>
                         </div>
 
@@ -55,7 +55,7 @@
                             <form method="POST" action="{{ route('register') }}">
                                 @csrf
                                 <input type="hidden" name="user_type" value="creator">
-                                @include('components.general.auth.creator-signup-form')
+                                <x-frontend.signup.creator />
                             </form>
                         </div>
 

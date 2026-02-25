@@ -1,6 +1,6 @@
 @extends('backend.layouts.app')
 
 @section('content')
-    <x-common.page-breadcrumb pageTitle="Active Camapaigns" />
+    <x-backend.shell.breadcrumb pageTitle="Active Camapaigns" />
 
 @endsection

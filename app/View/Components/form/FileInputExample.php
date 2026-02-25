@@ -1,12 +1,12 @@
 <?php
 
-namespace App\View\Components;
+namespace App\View\Components\form;
 
 use Closure;
 use Illuminate\Contracts\View\View;
 use Illuminate\View\Component;
 
-class DatePicker extends Component
+class FileInputExample extends Component
 {
     /**
      * Create a new component instance.
@@ -21,6 +21,6 @@ class DatePicker extends Component
      */
     public function render(): View|Closure|string
     {
-        return view('components.form.date-picker');
+        return view('components.form.file-input-example');
     }
 }

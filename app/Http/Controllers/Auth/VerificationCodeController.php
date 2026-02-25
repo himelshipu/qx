@@ -20,7 +20,11 @@ class VerificationCodeController extends Controller
         // Redirect if already verified
         if (Auth::user()->hasVerifiedEmail()) {
             if (Auth::user()->user_type === 'brand') {
-                return redirect(route('dashboard.brands.view'));
+                $brand = Auth::user()->brand;
+                if ($brand) {
+                    return redirect(route('dashboard.brands.view', $brand->id));
+                }
+                return redirect(route('dashboard.index'));
             }
             return redirect(route('dashboard.index'));
         }
@@ -76,7 +80,11 @@ class VerificationCodeController extends Controller
         // Check if user is already verified
         if ($user->hasVerifiedEmail()) {
             if ($user->user_type === 'brand') {
-                return redirect(route('dashboard.brands.view'))->with('success', 'Your email is already verified.');
+                $brand = $user->brand;
+                if ($brand) {
+                    return redirect(route('dashboard.brands.view', $brand->id))->with('success', 'Your email is already verified.');
+                }
+                return redirect(route('dashboard.index'))->with('success', 'Your email is already verified.');
             }
             return redirect(route('dashboard.index'))->with('success', 'Your email is already verified.');
         }
@@ -99,8 +107,12 @@ class VerificationCodeController extends Controller
         $user->markEmailAsVerified();
 
         // Refresh the authenticated user in the session
-        Auth::setUser($user->refresh());
-
+        Auth::login($user, true);
+        $brand = $user->brand;
+            if ($brand) {
+                return redirect(route('dashboard.brands.view', $brand->id))->with('success', 'Your email has been verified successfully!');
+            }
+            return redirect(route('dashboard.index'));
         // Determine redirect based on user type
         if ($user->user_type === 'brand') {
             return redirect(route('dashboard.brands.view'))->with('success', 'Your email has been verified successfully!');

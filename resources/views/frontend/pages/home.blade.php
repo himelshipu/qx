@@ -4,13 +4,13 @@
 <div class="min-h-screen bg-white dark:bg-gray-900 transition-colors duration-200">
    <main class="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col gap-20">
     
-        @include('frontend.partials.hero')
-        @include('frontend.partials.featured')
-        @include('frontend.partials.cases')
-        @include('frontend.partials.search')
-        @include('frontend.partials.campaign')
-        @include('frontend.partials.faq')
-        @include('frontend.partials.cta')
+    <x-frontend.navigation.hero />
+    <x-frontend.partials.featured />
+    <x-frontend.partials.cases />
+    <x-frontend.partials.search />
+    <x-frontend.partials.campaign />
+    <x-frontend.partials.faq />
+    <x-frontend.partials.cta />
         
    
 

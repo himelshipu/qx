@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Brand;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class BrandSetupController extends Controller
 {
@@ -12,11 +13,11 @@ class BrandSetupController extends Controller
      */
     public function show()
     {
-        $user = auth()->user();
+        $user = Auth::user();
         
         // Check if brand already exists for this user
         $brand = Brand::where('user_id', $user->id)->first();
-        
+            
         if (!$brand) {
             // Create a new brand
             $brand = Brand::create([
@@ -33,7 +34,7 @@ class BrandSetupController extends Controller
      */
     public function storeStep(Request $request)
     {
-        $user = auth()->user();
+        $user = Auth::user();
         $brand = Brand::where('user_id', $user->id)->firstOrFail();
         
         $step = $request->input('step');
@@ -59,7 +60,7 @@ class BrandSetupController extends Controller
      */
     public function getSetupData()
     {
-        $user = auth()->user();
+        $user = Auth::user();
         $brand = Brand::where('user_id', $user->id)->firstOrFail();
         
         return response()->json([
@@ -72,7 +73,7 @@ class BrandSetupController extends Controller
      */
     public function complete(Request $request)
     {
-        $user = auth()->user();
+        $user = Auth::user();
         $brand = Brand::where('user_id', $user->id)->firstOrFail();
         
         

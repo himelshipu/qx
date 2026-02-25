@@ -4,13 +4,11 @@ import 'flatpickr/dist/flatpickr.min.css';
 import ApexCharts from 'apexcharts';
 import { createPopper } from '@popperjs/core';
 
-// Make libraries globally available for inline scripts
 window.Alpine = Alpine;
 window.flatpickr = flatpickr;
 window.ApexCharts = ApexCharts;
 window.createPopper = createPopper;
 
-// Theme Store - Shared across admin and public
 Alpine.store('theme', {
     init() {
         const savedTheme = localStorage.getItem('theme');

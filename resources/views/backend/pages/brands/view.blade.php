@@ -17,7 +17,7 @@
     $lastActive = $brand->updated_at->diffForHumans();
 @endphp
 
-<x-common.page-breadcrumb pageTitle="Brand Details" />
+<x-backend.shell.breadcrumb pageTitle="Brand Details" />
 
 <div class="flex flex-col gap-6" x-data="{ activeModal: null }">
     
