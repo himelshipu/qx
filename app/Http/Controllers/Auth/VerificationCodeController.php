@@ -19,14 +19,15 @@ class VerificationCodeController extends Controller
     {
         // Redirect if already verified
         if (Auth::user()->hasVerifiedEmail()) {
+            // If brand, send to setup if not completed, otherwise home
             if (Auth::user()->user_type === 'brand') {
                 $brand = Auth::user()->brand;
-                if ($brand) {
-                    return redirect(route('dashboard.brands.view', $brand->id));
+                if (!$brand || empty($brand->setup_data)) {
+                    return redirect(route('brand-setup.show'));
                 }
-                return redirect(route('dashboard.index'));
+                return redirect(route('home'));
             }
-            return redirect(route('dashboard.index'));
+            return redirect(route('home'));
         }
 
         return view('auth.verify-email');
@@ -103,21 +104,20 @@ class VerificationCodeController extends Controller
             ]);
         }
 
-        // Mark email as verified and clear OTP
+        // Mark email as verified and refresh session
         $user->markEmailAsVerified();
-
-        // Refresh the authenticated user in the session
         Auth::login($user, true);
-        $brand = $user->brand;
-            if ($brand) {
-                return redirect(route('dashboard.brands.view', $brand->id))->with('success', 'Your email has been verified successfully!');
-            }
-            return redirect(route('dashboard.index'));
-        // Determine redirect based on user type
+
+        // Redirect based on user type and brand setup status
         if ($user->user_type === 'brand') {
-            return redirect(route('dashboard.brands.view'))->with('success', 'Your email has been verified successfully!');
-        } else {
-            return redirect(route('dashboard.index'))->with('success', 'Your email has been verified successfully!');
+            $brand = $user->brand;
+            if (!$brand || empty($brand->setup_data)) {
+                return redirect(route('brand-setup.show'))->with('success', 'Your email has been verified successfully!');
+            }
+            return redirect(route('home'))->with('success', 'Your email has been verified successfully!');
         }
+
+        // Creators and other users go to homepage
+        return redirect(route('home'))->with('success', 'Your email has been verified successfully!');
     }
 }

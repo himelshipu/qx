@@ -1,8 +1,7 @@
 @extends('frontend.layouts.app')
 
 @section('content')
-<div  x-data="brandSetup()"   x-init="loadData()"
-    class="max-w-2xl mx-auto px-4 sm:px-0 my-10">
+<div x-data="brandSetup()" x-init="loadData()" class="max-w-2xl mx-auto px-4 sm:px-0 my-10">
     <!-- Top Navigation -->
     <div class="flex items-center justify-between mb-6">
         <button 
@@ -32,7 +31,7 @@
         <h1 class="text-3xl font-bold mb-10">What are you here to do?</h1>
 
         <div class="space-y-4 mb-10">
-            <template x-for="option in currentStep.options">
+            <template x-for="option in currentStep.options" :key="option.value">
                 <label class="flex items-center p-5 border rounded-2xl cursor-pointer transition-all"
                     :class="formData.objective === option.value ? 'border-pink-400 ring-1 ring-pink-400 bg-pink-50 dark:bg-pink-900/20' : 'border-gray-200 dark:border-gray-700 hover:border-gray-300'">
                     <input type="radio" x-model="formData.objective" :value="option.value" class="w-4 h-4 rounded-full cursor-pointer">
@@ -57,7 +56,7 @@
         <h1 class="text-3xl font-bold mb-10">What's your approximate budget?</h1>
 
         <div class="space-y-4 mb-10">
-            <template x-for="option in currentStep.options">
+            <template x-for="option in currentStep.options" :key="option.value">
                 <label class="flex items-center p-5 border rounded-2xl cursor-pointer transition-all"
                     :class="formData.budget === option.value ? 'border-pink-400 ring-1 ring-pink-400 bg-pink-50 dark:bg-pink-900/20' : 'border-gray-200 dark:border-gray-700 hover:border-gray-300'">
                     <input type="radio" x-model="formData.budget" :value="option.value" class="w-4 h-4 rounded-full cursor-pointer">
@@ -82,7 +81,7 @@
         <h1 class="text-3xl font-bold mb-10">What type of business are you?</h1>
 
         <div class="space-y-4 mb-10">
-            <template x-for="option in currentStep.options">
+            <template x-for="option in currentStep.options" :key="option.value">
                 <label class="flex items-center p-5 border rounded-2xl cursor-pointer transition-all"
                     :class="formData['business-type'] === option.value ? 'border-pink-400 ring-1 ring-pink-400 bg-pink-50 dark:bg-pink-900/20' : 'border-gray-200 dark:border-gray-700 hover:border-gray-300'">
                     <input type="radio" x-model="formData['business-type']" :value="option.value" class="w-4 h-4 rounded-full cursor-pointer">
@@ -107,7 +106,7 @@
         <h1 class="text-3xl font-bold mb-10">How many people work at your company?</h1>
 
         <div class="space-y-4 mb-10">
-            <template x-for="option in currentStep.options">
+            <template x-for="option in currentStep.options" :key="option.value">
                 <label class="flex items-center p-5 border rounded-2xl cursor-pointer transition-all"
                     :class="formData['company-size'] === option.value ? 'border-pink-400 ring-1 ring-pink-400 bg-pink-50 dark:bg-pink-900/20' : 'border-gray-200 dark:border-gray-700 hover:border-gray-300'">
                     <input type="radio" x-model="formData['company-size']" :value="option.value" class="w-4 h-4 rounded-full cursor-pointer">
@@ -127,12 +126,13 @@
         </div>
     </div>
 
-    <!-- Step 5: Influencer Type (Checkbox Step) -->
+    <!-- Step 5: Influencer Type -->
     <div x-show="currentStep.key === 'influencer-type'" x-cloak class="text-center">
         <h1 class="text-3xl font-bold mb-10">What industries are you interested in?</h1>
+        <p class="text-gray-600 dark:text-gray-400 mb-6">Select all that apply (optional)</p>
 
         <div class="grid grid-cols-2 gap-4 mb-10">
-            <template x-for="option in currentStep.options">
+            <template x-for="option in currentStep.options" :key="option.value">
                 <label class="flex items-center justify-center p-5 border rounded-2xl cursor-pointer transition-all"
                     :class="isInfluencerTypeSelected(option.value) ? 'border-pink-400 ring-1 ring-pink-400 bg-pink-50 dark:bg-pink-900/20' : 'border-gray-200 dark:border-gray-700 hover:border-gray-300'">
                     <input type="checkbox" @change="toggleInfluencerType(option.value)" :checked="isInfluencerTypeSelected(option.value)" class="w-4 h-4 cursor-pointer">
@@ -150,36 +150,53 @@
         </div>
     </div>
 
-    <!-- Step 6: Summary/Complete (No checkbox) -->
+    <!-- Step 6: Summary -->
     <div x-show="currentStep.key === 'summary'" x-cloak class="text-center">
-        <h1 class="text-3xl font-bold mb-10">You're all set!</h1>
+        <h1 class="text-3xl font-bold mb-10">You're all set, <span x-text="formData.brand_name || 'Brand'"></span>!</h1>
         <p class="text-gray-600 dark:text-gray-400 mb-10">Here's a summary of your brand information.</p>
 
         <div class="bg-gray-50 dark:bg-gray-800 rounded-2xl p-8 mb-10 text-left">
             <div class="space-y-4">
-                <div v-if="formData.objective">
+                <div>
+                    <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Brand Name</p>
+                    <p class="text-lg font-semibold text-gray-900 dark:text-white" x-text="formData.brand_name || 'Not provided'"></p>
+                </div>
+                <div>
                     <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Objective</p>
-                    <p class="text-lg font-semibold text-gray-900 dark:text-white" x-text="getOptionLabel('objective', formData.objective)"></p>
+                    <p class="text-lg font-semibold text-gray-900 dark:text-white">
+                        <span x-text="formData.objective ? getOptionLabel('objective', formData.objective) : 'Skipped'"></span>
+                        <span x-show="!formData.objective" class="text-gray-400 italic">(Skipped)</span>
+                    </p>
                 </div>
-                <div v-if="formData.budget">
+                <div>
                     <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Budget</p>
-                    <p class="text-lg font-semibold text-gray-900 dark:text-white" x-text="getOptionLabel('budget', formData.budget)"></p>
+                    <p class="text-lg font-semibold text-gray-900 dark:text-white">
+                        <span x-text="formData.budget ? getOptionLabel('budget', formData.budget) : 'Skipped'"></span>
+                        <span x-show="!formData.budget" class="text-gray-400 italic">(Skipped)</span>
+                    </p>
                 </div>
-                <div v-if="formData['business-type']">
+                <div>
                     <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Business Type</p>
-                    <p class="text-lg font-semibold text-gray-900 dark:text-white" x-text="getOptionLabel('business-type', formData['business-type'])"></p>
+                    <p class="text-lg font-semibold text-gray-900 dark:text-white">
+                        <span x-text="formData['business-type'] ? getOptionLabel('business-type', formData['business-type']) : 'Skipped'"></span>
+                        <span x-show="!formData['business-type']" class="text-gray-400 italic">(Skipped)</span>
+                    </p>
                 </div>
-                <div v-if="formData['company-size']">
+                <div>
                     <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Company Size</p>
-                    <p class="text-lg font-semibold text-gray-900 dark:text-white" x-text="getOptionLabel('company-size', formData['company-size'])"></p>
+                    <p class="text-lg font-semibold text-gray-900 dark:text-white">
+                        <span x-text="formData['company-size'] ? getOptionLabel('company-size', formData['company-size']) : 'Skipped'"></span>
+                        <span x-show="!formData['company-size']" class="text-gray-400 italic">(Skipped)</span>
+                    </p>
                 </div>
-                <div v-if="formData['influencer-type'] && formData['influencer-type'].length > 0">
+                <div>
                     <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Interested Industries</p>
-                    <div class="flex flex-wrap gap-2 mt-2">
-                        <template x-for="type in formData['influencer-type']">
-                            <span class="inline-block bg-pink-100 dark:bg-pink-900/30 text-pink-700 dark:text-pink-300 px-3 py-1 rounded-full text-sm" x-text="type"></span>
+                    <div x-show="formData['influencer-type'] && formData['influencer-type'].length > 0" class="flex flex-wrap gap-2 mt-2">
+                        <template x-for="type in formData['influencer-type']" :key="type">
+                            <span class="inline-block bg-pink-100 dark:bg-pink-900/30 text-pink-700 dark:text-pink-300 px-3 py-1 rounded-full text-sm" x-text="getOptionLabel('influencer-type', type)"></span>
                         </template>
                     </div>
+                    <p x-show="!formData['influencer-type'] || formData['influencer-type'].length === 0" class="text-gray-400 italic">Skipped</p>
                 </div>
             </div>
         </div>
@@ -190,7 +207,6 @@
             </button>
         </div>
     </div>
-
 </div>
 
 <script>
@@ -198,6 +214,7 @@ function brandSetup() {
     return {
         currentStepIndex: 0,
         formData: {
+            brand_name: '',
             objective: '',
             budget: '',
             'business-type': '',
@@ -286,8 +303,13 @@ function brandSetup() {
         },
 
         skipStep() {
-            // Mark current step as skipped (null) and move to next
-            this.formData[this.currentStep.key] = null;
+            const stepKey = this.currentStep.key;
+            if (stepKey === 'influencer-type') {
+                this.formData[stepKey] = [];
+            } else {
+                this.formData[stepKey] = null;
+            }
+            this.saveCurrentStep();
             this.nextStep();
         },
 
@@ -312,17 +334,22 @@ function brandSetup() {
             fetch('{{ route("brand-setup.get-data") }}')
                 .then(response => response.json())
                 .then(data => {
-                    const setupData = data.setup_data;
-                    if (setupData) {
+                    if (data.setup_data) {
                         this.formData = {
-                            ...this.formData,
-                            ...setupData
+                            brand_name: data.brand_name || '',
+                            objective: data.setup_data.objective || '',
+                            budget: data.setup_data.budget || '',
+                            'business-type': data.setup_data['business-type'] || '',
+                            'company-size': data.setup_data['company-size'] || '',
+                            'influencer-type': Array.isArray(data.setup_data['influencer-type']) ? data.setup_data['influencer-type'] : []
                         };
-                        // Ensure influencer-type is an array
-                        if (typeof this.formData['influencer-type'] === 'string') {
-                            this.formData['influencer-type'] = [];
-                        } else if (!Array.isArray(this.formData['influencer-type'])) {
-                            this.formData['influencer-type'] = [];
+                    }
+                    
+                    const savedStep = data.current_step;
+                    if (savedStep) {
+                        const stepIndex = this.steps.findIndex(s => s.key === savedStep);
+                        if (stepIndex !== -1) {
+                            this.currentStepIndex = stepIndex;
                         }
                     }
                 })
@@ -363,17 +390,17 @@ function brandSetup() {
                 }
             })
             .then(response => {
-                const ct = response.headers.get('content-type') || '';
-                if (ct.includes('application/json')) {
+                if (response.redirected) {
+                    window.location.href = response.url;
+                } else {
                     return response.json().then(data => {
                         if (data && data.success) {
-                            window.location.href = data.redirect;
+                            window.location.href = data.redirect || '{{ route("dashboard.index") }}';
+                        } else {
+                            window.location.href = '{{ route("dashboard.index") }}';
                         }
                     });
                 }
-
-                // Non-JSON response (HTML error/redirect) — fallback to dashboard
-                window.location.href = '{{ route("dashboard.index") }}';
             })
             .catch(error => {
                 console.error('Error completing setup:', error);
@@ -383,5 +410,4 @@ function brandSetup() {
     }
 }
 </script>
-
 @endsection

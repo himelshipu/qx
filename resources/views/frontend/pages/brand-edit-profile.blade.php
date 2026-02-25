@@ -297,7 +297,7 @@
             <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-6">Brand Settings</h3>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <!-- Verification Status -->
-                <div class="border border-gray-200 dark:border-gray-800 rounded-lg p-6">
+                {{-- <div class="border border-gray-200 dark:border-gray-800 rounded-lg p-6">
                     <div class="flex items-center justify-between">
                         <div>
                             <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Brand Verification</p>
@@ -307,10 +307,10 @@
                             {{ $brand->is_verified ? '✓' : '○' }}
                         </div>
                     </div>
-                </div>
+                </div> --}}
 
                 <!-- Active Status -->
-                <div class="border border-gray-200 dark:border-gray-800 rounded-lg p-6">
+                {{-- <div class="border border-gray-200 dark:border-gray-800 rounded-lg p-6">
                     <div class="flex items-center justify-between">
                         <div>
                             <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Brand Status</p>
@@ -320,7 +320,7 @@
                             {{ $brand->is_active ? '✓' : '✗' }}
                         </div>
                     </div>
-                </div>
+                </div> --}}
             </div>
         </div>
     </div>

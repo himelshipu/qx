@@ -64,7 +64,9 @@ class BrandSetupController extends Controller
         $brand = Brand::where('user_id', $user->id)->firstOrFail();
         
         return response()->json([
+            'brand_name' => $brand->brand_name ?? '',
             'setup_data' => $brand->setup_data ?? [],
+            'current_step' => null,
         ]);
     }
 
