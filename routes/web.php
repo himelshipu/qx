@@ -12,7 +12,6 @@ use App\Http\Controllers\BrandProfileController;
 use App\Http\Controllers\Frontend\HomeController;
 use App\Http\Controllers\Frontend\StaticPagesController;
 use App\Http\Controllers\Frontend\ContentLibraryController;
-use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
 /*
