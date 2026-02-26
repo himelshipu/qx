@@ -42,9 +42,20 @@
                             </svg>
                         </span>
                         
-                        <div class="w-10 h-10 rounded-full bg-[#FFE4C4] flex items-center justify-center text-base font-bold text-black uppercase tracking-tighter">
-                            SM
-                        </div>
+                        <!-- Profile Image or Initials -->
+                        @auth
+                            @if(Auth::user()->profile_image_path && file_exists(public_path(Auth::user()->profile_image_path)))
+                                <img src="{{ asset(Auth::user()->profile_image_path) }}" alt="Profile" class="w-10 h-10 rounded-full object-cover">
+                            @else
+                                <div class="w-10 h-10 rounded-full bg-[#FFE4C4] flex items-center justify-center text-base font-bold text-black uppercase tracking-tighter">
+                                    {{ Str::of(Auth::user()->name)->explode(' ')->map(fn($word) => Str::upper($word[0]))->take(2)->join('') }}
+                                </div>
+                            @endif
+                        @else
+                            <div class="w-10 h-10 rounded-full bg-[#FFE4C4] flex items-center justify-center text-base font-bold text-black uppercase tracking-tighter">
+                                SM
+                            </div>
+                        @endauth
                     </button>
 
                     <!-- Profile Dropdown Content -->
