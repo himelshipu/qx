@@ -1,24 +1,55 @@
-*.log
-.DS_Store
-.env
-.env.backup
-.env.production
-.phpactor.json
-.phpunit.result.cache
-/.fleet
-/.idea
-/.nova
-/.phpunit.cache
-/.vscode
-/.zed
-/auth.json
-/node_modules
+# Composer
+/vendor/
+composer.phar
+composer.lock (optional - include if you don't use Flex)
+
+# Node
+/node_modules/
+/npm-debug.log
+yarn-error.log
+/package-lock.json (optional - use if using npm)
+/yarn.lock (optional - use if using yarn)
+
+# Laravel
+/.env
+/.env.*
+/.env.backup
+/.env.production
+/.phpunit.result.cache
+Homestead.json
+Homestead.yaml
+auth.json
+
+# Vite / Build
 /public/build
 /public/hot
 /public/storage
 /storage/*.key
 /storage/pail
-/vendor
-Homestead.json
-Homestead.yaml
+/storage/app/public/
+/storage/framework/cache/
+/storage/framework/sessions/
+/storage/framework/views/
+/storage/logs/
+/bootstrap/cache/
+
+# IDEs and Editors
+/.idea/
+/.vscode/
+/*.swp
+*.swo
+*~
+.DS_Store
+/.fleet
+/.nova
+/.zed
+
+# OS
 Thumbs.db
+.DS_Store
+
+# Testing
+.phpunit.cache
+
+# Misc
+*.log
