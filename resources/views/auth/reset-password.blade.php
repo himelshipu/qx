@@ -1,9 +1,9 @@
 @extends('frontend.layouts.app')
 @section('content')
-<div class="max-w-lg mx-auto px-4 sm:px-0">
+<div class="max-w-lg mx-auto">
     <div class="mb-8">
-        <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-3">Reset Password</h1>
-        <p class="text-sm text-gray-600 dark:text-gray-400">Please choose a new password for your account.</p>
+        <h1 class="text-3xl md:text-4xl font-semibold text-[#222] dark:text-white leading-tight text-center mb-4">Reset Password</h1>
+        <p class="text-sm text-gray-700 dark:text-gray-400">Please choose a new password for your account.</p>
     </div>
 
     @if ($errors->any())
@@ -27,7 +27,7 @@
                 type="email" 
                 id="email"
                 name="email"
-                class="w-full h-12 px-4 text-base rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:border-pink-400 dark:focus:border-pink-600 focus:ring-2 focus:ring-pink-200 dark:focus:ring-pink-900/30 outline-none transition-all duration-200"
+                class="dark:bg-dark-900 shadow-theme-xs focus:border-pink-50 focus:ring-gray-500/10 dark:focus:border-gray-800 h-12 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30"
                 value="{{ old('email', $request->email) }}"
                 required
                 autofocus
@@ -44,7 +44,7 @@
                 id="password"
                 name="password"
                 placeholder="Enter new password"
-                class="w-full h-12 px-4 text-base rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:border-pink-400 dark:focus:border-pink-600 focus:ring-2 focus:ring-pink-200 dark:focus:ring-pink-900/30 outline-none transition-all duration-200"
+                class="dark:bg-dark-900 shadow-theme-xs focus:border-pink-50 focus:ring-gray-500/10 dark:focus:border-gray-800 h-12 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30"
                 required
                 autocomplete="new-password"
             >
@@ -59,7 +59,7 @@
                 id="password_confirmation"
                 name="password_confirmation"
                 placeholder="Confirm your new password"
-                class="w-full h-12 px-4 text-base rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:border-pink-400 dark:focus:border-pink-600 focus:ring-2 focus:ring-pink-200 dark:focus:ring-pink-900/30 outline-none transition-all duration-200"
+                class="dark:bg-dark-900 shadow-theme-xs focus:border-pink-50 focus:ring-gray-500/10 dark:focus:border-gray-800 h-12 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30"
                 required
                 autocomplete="new-password"
             >
@@ -83,7 +83,7 @@
     </div>
 
     <div class="mt-4 flex items-center justify-center">
-        <a href="{{ route('login') }}" class="text-pink-600 dark:text-pink-400 hover:text-pink-700 dark:hover:text-pink-300 font-medium hover:underline transition-colors">
+        <a href="{{ route('login') }}" class="bg-[#222] shadow-theme-xs hover:bg-purple-400 flex w-full items-center justify-center rounded-lg px-4 py-3 text-sm font-medium text-white transition">
             Back to Login
         </a>
     </div>

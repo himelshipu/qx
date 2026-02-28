@@ -5,18 +5,38 @@
         <div class="mx-auto py-6 flex flex-col sm:px-0 px-4 sm:flex-row items-center justify-between space-y-4 sm:space-y-0">
             <div class="flex items-center gap-2">
                 <a href="{{ route('home') }}">
-                    <img src="/images/logo/logo.png" alt="Logo" class="h-11 dark:hidden block">
-                    <img src="/images/logo/logo-dark.png" alt="Logo" class="h-11 dark:block hidden">
+                    <img src="/images/logo/header-logo.png" alt="Logo" class="h-11 dark:hidden block">
+                    <img src="/images/logo/header-logo.png" alt="Logo" class="h-11 dark:block hidden">
                 </a>
             </div>
 
             <div>
-                <nav class="flex flex-wrap items-center justify-center gap-4 md:gap-6 lg:gap-8 text-sm lg:text-[14px] font-medium text-gray-600 dark:text-gray-300">
-                    <a href="{{ route('home') }}" class="hover:text-black dark:hover:text-white py-2 transition-colors border-b-3 border-b-purple-300">Home</a>
-                    <a href="{{ route('dashboard.content-library') }}" class="hover:text-black dark:hover:text-white py-2 transition-colors">Library</a>
-                    <a href="#" class="hover:text-black dark:hover:text-white py-2 transition-colors">Search</a>
-                    <a href="{{ route('faq') }}" class="hover:text-black dark:hover:text-white py-2 transition-colors">Faq</a>
-                    <a href="{{ route('support') }}" class="hover:text-black dark:hover:text-white py-2 transition-colors">Support</a>
+                <nav class="flex flex-wrap items-center justify-center gap-4 md:gap-6 lg:gap-10 text-sm font-medium">
+
+                    <a href="{{ route('home') }}" 
+                    class="nav-link {{ request()->routeIs('home') ? 'active' : '' }}">
+                        Home
+                    </a>
+
+                    <a href="{{ route('dashboard.content-library') }}" 
+                    class="nav-link {{ request()->routeIs('dashboard.content-library') ? 'active' : '' }}">
+                        Library
+                    </a>
+
+                    <a href="#" class="nav-link">
+                        Search
+                    </a>
+
+                    <a href="{{ route('faq') }}" 
+                    class="nav-link {{ request()->routeIs('faq') ? 'active' : '' }}">
+                        Faq
+                    </a>
+
+                    <a href="{{ route('support') }}" 
+                    class="nav-link {{ request()->routeIs('support') ? 'active' : '' }}">
+                        Support
+                    </a>
+
                 </nav>
             </div>
 

@@ -109,7 +109,7 @@
 
 
 
-<section class="w-full bg-white dark:bg-gray-950 max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8" 
+<section class="min-h-screen transition-colors duration-200" 
     x-data="{ 
         openFilter: null, 
         startDate: null, 
@@ -205,8 +205,8 @@
 
     <!-- Header Section -->
     <div class="mb-10">
-        <h1 class="text-3xl md:text-5xl font-medium text-[#1F2937] dark:text-[#ebd9fe] mt-8 tracking-tight">Content Library</h1>
-        <p class="text-gray-500 dark:text-[#ebd9fe] mt-2">See all your delivered content in one place</p>
+        <h1 class="text-3xl md:text-4xl font-semibold text-[#222] dark:text-white leading-tight text-left mb-2">Content Library</h1>
+        <p class="text-sm text-gray-700 dark:text-gray-400">See all your delivered content in one place</p>
     </div>
 
     <!-- Filters Row --> 
@@ -332,7 +332,7 @@
     <!-- CONTENT TABLE -->
     <div class="rounded-2xl border border-gray-200 bg-white pt-4 dark:border-gray-800 dark:bg-white/[0.03] shadow-sm">
         <div class="flex flex-col gap-2 px-5 mb-4 items-end sm:px-6">
-            <input type="text" placeholder="Search anything in library..." class="h-10 w-64 rounded-lg border border-gray-300 bg-transparent px-4 text-sm dark:border-gray-300 dark:text-white">
+            <input type="text" placeholder="Search anything in library..." class="mt-1.5 dark:bg-dark-900 shadow-theme-xs focus:border-pink-50 focus:ring-gray-500/10 dark:focus:border-gray-800 h-12 w-64 rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30" />
         </div>
 
         <div class="overflow-hidden">

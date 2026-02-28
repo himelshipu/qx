@@ -1,29 +1,29 @@
 <div class="space-y-6">
     <!-- Personal Info -->
-   <div class=" grid grid-cols-2 gap-2 sm:grid-cols-2">
+   <div class="grid grid-cols-1 gap-6">
         <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-400">
+            <label class="block text-sm font-medium text-gray-800 dark:text-gray-400 mb-1.5">
                 Full Name<span class="text-error-500"> *</span>
             </label>
             <input type="text" id="name" name="name" value="{{ old('name') }}" placeholder="Your Full Name"
-                class="dark:bg-dark-900 shadow-theme-xs focus:border-pink-50 focus:ring-gray-500/10 dark:focus:border-gray-800 h-12 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-3 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30" />
+                class="dark:bg-dark-900 shadow-theme-xs focus:border-pink-50 focus:ring-gray-500/10 dark:focus:border-gray-800 h-12 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30" />
             @error('name')
                 <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
             @enderror
         </div> 
         <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-400">
+            <label class="block text-sm font-medium text-gray-800 dark:text-gray-400 mb-1.5">
             Email<span class="text-error-500"> *</span>
             </label>
             <input type="email" id="email" name="email" value="{{ old('email') }}" placeholder="info@gmail.com"
-                class="dark:bg-dark-900 shadow-theme-xs focus:border-pink-50 focus:ring-gray-500/10 dark:focus:border-gray-800 h-12 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-3 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30" />
+                class="dark:bg-dark-900 shadow-theme-xs focus:border-pink-50 focus:ring-gray-500/10 dark:focus:border-gray-800 h-12 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30" />
             @error('email')
                 <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
             @enderror
         </div>
         <!-- Password -->
         <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-400">
+            <label class="block text-sm font-medium text-gray-800 dark:text-gray-400 mb-1.5">
                 Password<span class="text-error-500"> *</span>
             </label>
             <div x-data="{ showPassword: false }" class="relative">
@@ -31,7 +31,7 @@
                     id="password"
                     name="password"
                     placeholder="Enter your password"
-                    class="dark:bg-dark-900 shadow-theme-xs focus:border-pink-50 focus:ring-gray-500/10 dark:focus:border-gray-800 h-12 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-3 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30" />
+                    class="dark:bg-dark-900 shadow-theme-xs focus:border-pink-50 focus:ring-gray-500/10 dark:focus:border-gray-800 h-12 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30" />
                 <span @click="showPassword = !showPassword"
                     class="absolute top-1/2 right-4 z-30 -translate-y-1/2 cursor-pointer text-gray-500 dark:text-gray-400">
                     <svg x-show="!showPassword" class="fill-current" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -49,7 +49,7 @@
 
         <!-- Confirm Password -->
         <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-400">
+            <label class="block text-sm font-medium text-gray-800 dark:text-gray-400 mb-1.5">
                 Confirm Password<span class="text-error-500"> *</span>
             </label>
             <div x-data="{ showPassword: false }" class="relative">
@@ -57,7 +57,7 @@
                     id="password_confirmation"
                     name="password_confirmation"
                     placeholder="Confirm your password"
-                    class="dark:bg-dark-900 shadow-theme-xs focus:border-pink-50 focus:ring-brand-500/10 dark:focus:border-gray-800 h-12 w-full rounded-lg border border-gray-300 bg-transparent py-2.5 pr-11 pl-4 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-3 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30" />
+                    class="dark:bg-dark-900 shadow-theme-xs focus:border-pink-50 focus:ring-brand-500/10 dark:focus:border-gray-800 h-12 w-full rounded-lg border border-gray-300 bg-transparent py-2.5 pr-11 pl-4 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30" />
                 <span @click="showPassword = !showPassword"
                     class="absolute top-1/2 right-4 z-30 -translate-y-1/2 cursor-pointer text-gray-500 dark:text-gray-400">
                     <svg x-show="!showPassword" class="fill-current" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -76,45 +76,45 @@
 
     <!-- SOCIAL LINKS SECTION -->
     <div>
-        <h5 class="mb-3 text-sm font-medium text-gray-800 dark:text-white/90 lg:mb-6">
+        <h5 class="mb-2 text-sm font-bold text-gray-800 dark:text-white/90">
             Social Links
         </h5>
-        <div class=" grid grid-cols-2 gap-2 sm:grid-cols-2">
+        <div class="grid grid-cols-2 gap-4">
             <div>
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-400">
+                <label class="block text-sm font-medium text-gray-800 dark:text-gray-400 mb-1.5">
                     Facebook
                 </label>
                 <input type="text" name="facebook" value="{{ old('facebook') }}" placeholder="https://facebook.com/yourprofile"
-                    class="dark:bg-dark-900 h-11 w-full appearance-none rounded-lg border border-gray-300 bg-transparent bg-none px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-gray-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-gray-800" />
+                    class="dark:bg-dark-900 h-11 w-full appearance-none rounded-lg border border-gray-300 bg-transparent bg-none px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-gray-300 focus:outline-hidden focus:ring-1 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-gray-800" />
             </div>
 
             <div>
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-400">
+                <label class="block text-sm font-medium text-gray-800 dark:text-gray-400 mb-1.5">
                     Tiktok
                 </label>
                 <input type="text" name="tiktok" value="{{ old('tiktok') }}" placeholder="https://tiktok.com/@yourprofile"
-                    class="dark:bg-dark-900 h-11 w-full appearance-none rounded-lg border border-gray-300 bg-transparent bg-none px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-gray-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-gray-800" />
+                    class="dark:bg-dark-900 h-11 w-full appearance-none rounded-lg border border-gray-300 bg-transparent bg-none px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-gray-300 focus:outline-hidden focus:ring-1 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-gray-800" />
             </div>
 
             <div>
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-400">
+                <label class="block text-sm font-medium text-gray-800 dark:text-gray-400 mb-1.5">
                     Linkedin
                 </label>
                 <input type="text" name="linkedin" value="{{ old('linkedin') }}" placeholder="https://linkedin.com/in/yourprofile"
-                    class="dark:bg-dark-900 h-11 w-full appearance-none rounded-lg border border-gray-300 bg-transparent bg-none px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-gray-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-gray-800" />
+                    class="dark:bg-dark-900 h-11 w-full appearance-none rounded-lg border border-gray-300 bg-transparent bg-none px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-gray-300 focus:outline-hidden focus:ring-1 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-gray-800" />
             </div>
 
             <div>
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-400">
+                <label class="block text-sm font-medium text-gray-800 dark:text-gray-400 mb-1.5">
                     Instagram
                 </label>
                 <input type="text" name="instagram" value="{{ old('instagram') }}" placeholder="https://instagram.com/yourprofile"
-                    class="dark:bg-dark-900 h-11 w-full appearance-none rounded-lg border border-gray-300 bg-transparent bg-none px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-gray-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-gray-800" />
+                    class="dark:bg-dark-900 h-11 w-full appearance-none rounded-lg border border-gray-300 bg-transparent bg-none px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-gray-300 focus:outline-hidden focus:ring-1 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-gray-800" />
             </div>
         </div>
     </div>
 
-    <button type="submit" class="bg-[#1A1A1A] hover:bg-[#ff84a3] flex w-full items-center justify-center rounded-xl px-4 py-4 text-sm font-bold text-white transition active:scale-[0.98]">
+    <button type="submit" class="bg-[#1A1A1A] hover:bg-purple-400 flex w-full items-center justify-center rounded-xl px-4 py-4 text-sm font-bold text-white transition active:scale-[0.98]">
         Create Account
     </button>
 </div>

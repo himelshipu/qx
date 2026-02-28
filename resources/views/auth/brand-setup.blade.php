@@ -1,7 +1,7 @@
 @extends('frontend.layouts.app')
 
 @section('content')
-<div x-data="brandSetup()" x-init="loadData()" class="max-w-2xl mx-auto px-4 sm:px-0 my-10">
+<div x-data="brandSetup()" x-init="loadData()" class="max-w-2xl mx-auto">
     <!-- Top Navigation -->
     <div class="flex items-center justify-between mb-6">
         <button 
@@ -14,14 +14,12 @@
         <div class="text-sm text-gray-500 dark:text-gray-400">
             Step <span x-text="currentStepIndex + 1"></span> of <span x-text="steps.length"></span>
         </div>
-
-        <div></div>
     </div>
 
     <!-- Progress Bar -->
     <div class="w-full bg-gray-200 dark:bg-gray-800 rounded-full h-2 mb-10">
         <div 
-            class="bg-gradient-to-r from-pink-400 to-pink-600 h-2 rounded-full transition-all duration-300"
+            class="bg-gradient-to-r from-purple-400 to-purple-600 h-2 rounded-full transition-all duration-300"
             :style="'width: ' + progressPercentage() + '%'"
         ></div>
     </div>
@@ -33,7 +31,7 @@
         <div class="space-y-4 mb-10">
             <template x-for="option in currentStep.options" :key="option.value">
                 <label class="flex items-center p-5 border rounded-2xl cursor-pointer transition-all"
-                    :class="formData.objective === option.value ? 'border-pink-400 ring-1 ring-pink-400 bg-pink-50 dark:bg-pink-900/20' : 'border-gray-200 dark:border-gray-700 hover:border-gray-300'">
+                    :class="formData.objective === option.value ? 'border-purple-400 ring-1 ring-purple-400 bg-purple-50 dark:bg-purple-900/20' : 'border-gray-200 dark:border-gray-700 hover:border-gray-300'">
                     <input type="radio" x-model="formData.objective" :value="option.value" class="w-4 h-4 rounded-full cursor-pointer">
                     <span class="text-lg font-medium ml-4" x-text="option.label"></span>
                 </label>
@@ -43,7 +41,7 @@
         <div class="space-y-3">
             <button @click="nextStep()" 
                 class="w-full py-4 rounded-xl font-bold"
-                :class="formData.objective ? 'bg-gradient-to-r from-gray-900 to-gray-800 hover:from-pink-600 hover:to-pink-500 text-white' : 'bg-gray-400 text-white cursor-not-allowed'"
+                :class="formData.objective ? 'bg-gradient-to-r from-gray-900 to-gray-800 hover:from-purple-600 hover:to-purple-500 text-white' : 'bg-gray-400 text-white cursor-not-allowed'"
                 :disabled="!formData.objective">
                 Continue
             </button>
@@ -58,7 +56,7 @@
         <div class="space-y-4 mb-10">
             <template x-for="option in currentStep.options" :key="option.value">
                 <label class="flex items-center p-5 border rounded-2xl cursor-pointer transition-all"
-                    :class="formData.budget === option.value ? 'border-pink-400 ring-1 ring-pink-400 bg-pink-50 dark:bg-pink-900/20' : 'border-gray-200 dark:border-gray-700 hover:border-gray-300'">
+                    :class="formData.budget === option.value ? 'border-purple-400 ring-1 ring-purple-400 bg-purple-50 dark:bg-purple-900/20' : 'border-gray-200 dark:border-gray-700 hover:border-gray-300'">
                     <input type="radio" x-model="formData.budget" :value="option.value" class="w-4 h-4 rounded-full cursor-pointer">
                     <span class="text-lg font-medium ml-4" x-text="option.label"></span>
                 </label>
@@ -68,7 +66,7 @@
         <div class="space-y-3">
             <button @click="nextStep()" 
                 class="w-full py-4 rounded-xl font-bold"
-                :class="formData.budget ? 'bg-gradient-to-r from-gray-900 to-gray-800 hover:from-pink-600 hover:to-pink-500 text-white' : 'bg-gray-400 text-white cursor-not-allowed'"
+                :class="formData.budget ? 'bg-gradient-to-r from-gray-900 to-gray-800 hover:from-purple-600 hover:to-purple-500 text-white' : 'bg-gray-400 text-white cursor-not-allowed'"
                 :disabled="!formData.budget">
                 Continue
             </button>
@@ -83,7 +81,7 @@
         <div class="space-y-4 mb-10">
             <template x-for="option in currentStep.options" :key="option.value">
                 <label class="flex items-center p-5 border rounded-2xl cursor-pointer transition-all"
-                    :class="formData['business-type'] === option.value ? 'border-pink-400 ring-1 ring-pink-400 bg-pink-50 dark:bg-pink-900/20' : 'border-gray-200 dark:border-gray-700 hover:border-gray-300'">
+                    :class="formData['business-type'] === option.value ? 'border-purple-400 ring-1 ring-purple-400 bg-purple-50 dark:bg-purple-900/20' : 'border-gray-200 dark:border-gray-700 hover:border-gray-300'">
                     <input type="radio" x-model="formData['business-type']" :value="option.value" class="w-4 h-4 rounded-full cursor-pointer">
                     <span class="text-lg font-medium ml-4" x-text="option.label"></span>
                 </label>
@@ -93,7 +91,7 @@
         <div class="space-y-3">
             <button @click="nextStep()" 
                 class="w-full py-4 rounded-xl font-bold"
-                :class="formData['business-type'] ? 'bg-gradient-to-r from-gray-900 to-gray-800 hover:from-pink-600 hover:to-pink-500 text-white' : 'bg-gray-400 text-white cursor-not-allowed'"
+                :class="formData['business-type'] ? 'bg-gradient-to-r from-gray-900 to-gray-800 hover:from-purple-600 hover:to-purple-500 text-white' : 'bg-gray-400 text-white cursor-not-allowed'"
                 :disabled="!formData['business-type']">
                 Continue
             </button>
@@ -108,7 +106,7 @@
         <div class="space-y-4 mb-10">
             <template x-for="option in currentStep.options" :key="option.value">
                 <label class="flex items-center p-5 border rounded-2xl cursor-pointer transition-all"
-                    :class="formData['company-size'] === option.value ? 'border-pink-400 ring-1 ring-pink-400 bg-pink-50 dark:bg-pink-900/20' : 'border-gray-200 dark:border-gray-700 hover:border-gray-300'">
+                    :class="formData['company-size'] === option.value ? 'border-purple-400 ring-1 ring-purple-400 bg-purple-50 dark:bg-purple-900/20' : 'border-gray-200 dark:border-gray-700 hover:border-gray-300'">
                     <input type="radio" x-model="formData['company-size']" :value="option.value" class="w-4 h-4 rounded-full cursor-pointer">
                     <span class="text-lg font-medium ml-4" x-text="option.label"></span>
                 </label>
@@ -118,7 +116,7 @@
         <div class="space-y-3">
             <button @click="nextStep()" 
                 class="w-full py-4 rounded-xl font-bold"
-                :class="formData['company-size'] ? 'bg-gradient-to-r from-gray-900 to-gray-800 hover:from-pink-600 hover:to-pink-500 text-white' : 'bg-gray-400 text-white cursor-not-allowed'"
+                :class="formData['company-size'] ? 'bg-gradient-to-r from-gray-900 to-gray-800 hover:from-purple-600 hover:to-purple-500 text-white' : 'bg-gray-400 text-white cursor-not-allowed'"
                 :disabled="!formData['company-size']">
                 Continue
             </button>
@@ -134,7 +132,7 @@
         <div class="grid grid-cols-2 gap-4 mb-10">
             <template x-for="option in currentStep.options" :key="option.value">
                 <label class="flex items-center justify-center p-5 border rounded-2xl cursor-pointer transition-all"
-                    :class="isInfluencerTypeSelected(option.value) ? 'border-pink-400 ring-1 ring-pink-400 bg-pink-50 dark:bg-pink-900/20' : 'border-gray-200 dark:border-gray-700 hover:border-gray-300'">
+                    :class="isInfluencerTypeSelected(option.value) ? 'border-purple-400 ring-1 ring-purple-400 bg-purple-50 dark:bg-purple-900/20' : 'border-gray-200 dark:border-gray-700 hover:border-gray-300'">
                     <input type="checkbox" @change="toggleInfluencerType(option.value)" :checked="isInfluencerTypeSelected(option.value)" class="w-4 h-4 cursor-pointer">
                     <span class="text-lg font-medium ml-3" x-text="option.label"></span>
                 </label>
@@ -143,7 +141,7 @@
 
         <div class="space-y-3">
             <button @click="nextStep()" 
-                class="w-full py-4 rounded-xl font-bold bg-gradient-to-r from-gray-900 to-gray-800 hover:from-pink-600 hover:to-pink-500 text-white">
+                class="w-full py-4 rounded-xl font-bold bg-gradient-to-r from-gray-900 to-gray-800 hover:from-purple-600 hover:to-purple-500 text-white">
                 Continue
             </button>
             <button @click="skipStep()" class="text-sm text-gray-500 hover:underline">Skip</button>
@@ -159,32 +157,32 @@
             <div class="space-y-4">
                 <div>
                     <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Brand Name</p>
-                    <p class="text-lg font-semibold text-gray-900 dark:text-white" x-text="formData.brand_name || 'Not provided'"></p>
+                    <p class="text-lg font-semibold text-gray-800 dark:text-white" x-text="formData.brand_name || 'Not provided'"></p>
                 </div>
                 <div>
                     <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Objective</p>
-                    <p class="text-lg font-semibold text-gray-900 dark:text-white">
+                    <p class="text-lg font-semibold text-gray-800 dark:text-white">
                         <span x-text="formData.objective ? getOptionLabel('objective', formData.objective) : 'Skipped'"></span>
                         <span x-show="!formData.objective" class="text-gray-400 italic">(Skipped)</span>
                     </p>
                 </div>
                 <div>
                     <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Budget</p>
-                    <p class="text-lg font-semibold text-gray-900 dark:text-white">
+                    <p class="text-lg font-semibold text-gray-800 dark:text-white">
                         <span x-text="formData.budget ? getOptionLabel('budget', formData.budget) : 'Skipped'"></span>
                         <span x-show="!formData.budget" class="text-gray-400 italic">(Skipped)</span>
                     </p>
                 </div>
                 <div>
                     <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Business Type</p>
-                    <p class="text-lg font-semibold text-gray-900 dark:text-white">
+                    <p class="text-lg font-semibold text-gray-800 dark:text-white">
                         <span x-text="formData['business-type'] ? getOptionLabel('business-type', formData['business-type']) : 'Skipped'"></span>
                         <span x-show="!formData['business-type']" class="text-gray-400 italic">(Skipped)</span>
                     </p>
                 </div>
                 <div>
                     <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Company Size</p>
-                    <p class="text-lg font-semibold text-gray-900 dark:text-white">
+                    <p class="text-lg font-semibold text-gray-800 dark:text-white">
                         <span x-text="formData['company-size'] ? getOptionLabel('company-size', formData['company-size']) : 'Skipped'"></span>
                         <span x-show="!formData['company-size']" class="text-gray-400 italic">(Skipped)</span>
                     </p>
@@ -193,7 +191,7 @@
                     <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Interested Industries</p>
                     <div x-show="formData['influencer-type'] && formData['influencer-type'].length > 0" class="flex flex-wrap gap-2 mt-2">
                         <template x-for="type in formData['influencer-type']" :key="type">
-                            <span class="inline-block bg-pink-100 dark:bg-pink-900/30 text-pink-700 dark:text-pink-300 px-3 py-1 rounded-full text-sm" x-text="getOptionLabel('influencer-type', type)"></span>
+                            <span class="inline-block bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 px-3 py-1 rounded-full text-sm" x-text="getOptionLabel('influencer-type', type)"></span>
                         </template>
                     </div>
                     <p x-show="!formData['influencer-type'] || formData['influencer-type'].length === 0" class="text-gray-400 italic">Skipped</p>
@@ -202,7 +200,7 @@
         </div>
 
         <div class="space-y-3">
-            <button @click="completeBrandSetup()" class="w-full py-4 rounded-xl font-bold bg-gradient-to-r from-gray-900 to-gray-800 hover:from-pink-600 hover:to-pink-500 text-white">
+            <button @click="completeBrandSetup()" class="w-full py-4 rounded-xl font-bold bg-gradient-to-r from-gray-900 to-gray-800 hover:from-purple-600 hover:to-purple-500 text-white">
                 Go to Dashboard
             </button>
         </div>

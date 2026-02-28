@@ -1,21 +1,21 @@
 @extends('frontend.layouts.app')
 
 @section('content')
-<div class="min-h-screen bg-white dark:bg-gray-950 px-4 sm:px-6 lg:px-8 py-20">
+<div class="min-h-screen transition-colors duration-200">
     <main class="max-w-5xl flex flex-col gap-16 mx-auto">
         
         <!-- SECTION: FOR INFLUENCERS -->
         <section x-data="{ activeAccordion: null }">
-            <h2 class="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-10 px-4">For Influencers</h2>
+            <h2 class="text-3xl md:text-4xl font-semibold text-[#222] dark:text-white leading-tight text-left mb-8">For Influencers</h2>
 
-            <div class="border-t border-gray-200 dark:border-gray-800">
+            <div class="border-b border-gray-200 dark:border-gray-800">
                 
                 <!-- FAQ Item 1 -->
                 <div class="group border-b border-gray-200 dark:border-gray-800 transition-all duration-300 hover:bg-gray-50/50 dark:hover:bg-white/[0.02]">
                     <div class="py-7 px-4">
                         <button @click="activeAccordion = (activeAccordion === 1 ? null : 1)" 
                                 class="flex w-full items-center justify-between text-left">
-                            <span class="text-lg font-bold text-gray-900 dark:text-white transition-colors duration-300 group-hover:text-purple-600 dark:group-hover:text-purple-400">
+                            <span class="text-lg font-bold text-gray-800 dark:text-white transition-colors duration-300 group-hover:text-purple-600 dark:group-hover:text-purple-400">
                                 How does QX work?
                             </span>
                             <span class="ml-6 flex-shrink-0 text-gray-400 group-hover:text-gray-600">
@@ -37,7 +37,7 @@
                     <div class="py-7 px-4">
                         <button @click="activeAccordion = (activeAccordion === 2 ? null : 2)" 
                                 class="flex w-full items-center justify-between text-left">
-                            <span class="text-lg font-bold text-gray-900 dark:text-white transition-colors duration-300 group-hover:text-purple-600 dark:group-hover:text-purple-400">
+                            <span class="text-lg font-bold text-gray-800 dark:text-white transition-colors duration-300 group-hover:text-purple-600 dark:group-hover:text-purple-400">
                                 How do I get paid?
                             </span>
                             <span class="ml-6 flex-shrink-0 text-gray-400 group-hover:text-gray-600">
@@ -59,7 +59,7 @@
                     <div class="py-7 px-4">
                         <button @click="activeAccordion = (activeAccordion === 3 ? null : 3)" 
                                 class="flex w-full items-center justify-between text-left">
-                            <span class="text-lg font-bold text-gray-900 dark:text-white transition-colors duration-300 group-hover:text-purple-600 dark:group-hover:text-purple-400">
+                            <span class="text-lg font-bold text-gray-800 dark:text-white transition-colors duration-300 group-hover:text-purple-600 dark:group-hover:text-purple-400">
                                 What platforms does QX support?
                             </span>
                             <span class="ml-6 flex-shrink-0 text-gray-400 group-hover:text-gray-600">
@@ -81,14 +81,14 @@
 
         <!-- SECTION: FOR BRANDS -->
         <section x-data="{ activeAccordion: null }">
-            <h2 class="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-10 px-4">For Brands</h2>
-            <div class="border-t border-gray-200 dark:border-gray-800">
+            <h2 class="text-3xl md:text-4xl font-semibold text-[#222] dark:text-white leading-tight text-left mb-4">For Brands</h2>
+            <div class="border-b border-gray-200 dark:border-gray-800">
                 
                 <div class="group border-b border-gray-200 dark:border-gray-800 transition-all duration-300 hover:bg-gray-50/50 dark:hover:bg-white/[0.02]">
                     <div class="py-7 px-4">
                         <button @click="activeAccordion = (activeAccordion === 1 ? null : 1)" 
                                 class="flex w-full items-center justify-between text-left">
-                            <span class="text-lg font-bold text-gray-900 dark:text-white transition-colors duration-300 group-hover:text-purple-600 dark:group-hover:text-purple-400">
+                            <span class="text-lg font-bold text-gray-800 dark:text-white transition-colors duration-300 group-hover:text-purple-600 dark:group-hover:text-purple-400">
                                 How do I find influencers?
                             </span>
                             <span class="ml-6 flex-shrink-0 text-gray-400 group-hover:text-gray-600">

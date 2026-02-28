@@ -1,8 +1,8 @@
 @extends('frontend.layouts.app')
 
 @section('content')
-<div class="min-h-screen bg-white dark:bg-gray-900 transition-colors duration-200">
-   <main class="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col gap-20">
+<div class="min-h-screen transition-colors duration-200">
+   <main class="container mx-auto px-4 flex flex-col gap-16">
     
     <x-frontend.navigation.hero />
     <x-frontend.partials.featured />

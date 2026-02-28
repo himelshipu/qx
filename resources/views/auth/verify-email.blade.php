@@ -1,8 +1,8 @@
 @extends('frontend.layouts.app')
 @section('content')
-<div class="max-w-lg mx-auto px-4 sm:px-0">
+<div class="max-w-lg mx-auto">
     <div class="mb-8">
-        <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-3">Verify your email</h1>
+        <h1 class="text-3xl md:text-4xl font-semibold text-[#222] dark:text-white leading-tight text-left mb-4">Verify your email</h1>
         <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <p class="text-sm text-gray-600 dark:text-gray-400">We sent a code to <span class="font-semibold text-gray-900 dark:text-white">{{ auth()->user()->email }}</span></p>
             <a href="https://mail.google.com" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 px-5 py-2.5 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 rounded-xl text-sm font-medium text-gray-700 dark:text-gray-200 transition-colors duration-200">
@@ -16,9 +16,9 @@
     </div>
 
     <div class="space-y-6">
-        <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-4">
+        <div class="bg-blue-50 dark:bg-blue-900/20 border border-purple-300 dark:border-purple-300 rounded-xl p-4">
             <p class="text-sm text-gray-700 dark:text-gray-300">
-                <span class="font-medium">Tip:</span> Check your <span class="font-semibold text-blue-600 dark:text-blue-400">spam</span> folder for an email from 
+                <span class="font-medium">Tip:</span> Check your <span class="font-semibold text-purple-400 dark:text-purple-400">spam</span> folder for an email from 
                 <span class="font-mono text-xs bg-blue-100 dark:bg-blue-900/40 px-2 py-1 rounded-md">info@gmail.com</span>
             </p>
         </div>
@@ -39,13 +39,13 @@
         
         <form method="POST" action="{{ route('verification.verify') }}" class="space-y-4">
             @csrf
-            <div class="space-y-2">
+            <div>
                 <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Verification Code</label>
                 <input 
                     type="text" 
                     name="code"
                     placeholder="Enter 6-digit code" 
-                    class="w-full h-12 px-4 text-lg text-center tracking-widest font-mono rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:border-pink-400 dark:focus:border-pink-600 focus:ring-2 focus:ring-pink-200 dark:focus:ring-pink-900/30 outline-none transition-all duration-200"
+                    class="mt-1.5 dark:bg-dark-900 shadow-theme-xs focus:border-pink-50 focus:ring-gray-500/10 dark:focus:border-gray-800 h-12 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30"
                     maxlength="6"
                     required
                     value="{{ old('code') }}"
@@ -56,7 +56,7 @@
             </div>
 
             <div class="flex flex-col gap-3">
-                <button type="submit" class="w-full bg-gradient-to-r from-gray-900 to-gray-800 hover:from-pink-600 hover:to-pink-500 text-white font-semibold py-4 px-6 rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200">
+                <button type="submit" class="bg-[#222] shadow-theme-xs hover:bg-purple-400 flex w-full items-center justify-center rounded-lg px-4 py-3 text-sm font-medium text-white transition">
                     Continue
                 </button>
             </div>
@@ -66,7 +66,7 @@
             Didn't receive the code? 
             <form method="POST" action="{{ route('verification.send') }}" class="inline">
                 @csrf
-                <button type="submit" class="text-pink-600 dark:text-pink-400 hover:text-pink-700 dark:hover:text-pink-300 font-medium hover:underline transition-colors">
+                <button type="submit" class="text-purple-400 dark:text-purple-500 hover:text-pink-700 dark:hover:text-pink-300 font-medium hover:underline transition-colors">
                     Resend
                 </button>
             </form>
@@ -84,7 +84,7 @@
         <form method="POST" action="{{ route('logout') }}">
             @csrf
 
-            <button type="submit" class="underline text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-800">
+            <button type="submit" class="flex w-full items-center justify-center rounded-lg text-md font-medium text-[#222] hover:text-purple-400 transition">
                 Log Out
             </button>
         </form>

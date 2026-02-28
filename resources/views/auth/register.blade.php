@@ -1,14 +1,14 @@
 @extends('frontend.layouts.app')
 @section('content')
-    <div class="relative z-1 bg-white p-6 sm:p-0 dark:bg-gray-900 py-12">
+    <div class="relative z-1">
         <div class="flex w-full flex-col justify-center sm:p-0 lg:flex-row dark:bg-gray-900">
             <div class="flex w-full flex-1 flex-col lg:w-1/2">
                 <div class="mx-auto flex w-full max-w-lg flex-1 flex-col justify-center">
-                    <div class="mb-5 sm:mb-8">
-                        <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-2 text-center">
+                    <div class="mb-4 sm:mb-8">
+                        <h1 class="text-3xl md:text-4xl font-semibold text-[#222] dark:text-white leading-normal text-center mb-1">
                             Create Your Account
                         </h1>
-                        <p class="text-sm text-gray-500 text-center dark:text-gray-400">Choose your account type below</p>
+                        <p class="text-sm text-gray-800 text-center dark:text-gray-400">Choose your account type below</p>
                     </div>
 
                     <div x-data="{ 
@@ -22,7 +22,7 @@
                     }">
 
                         <!-- Role Selection Buttons -->
-                        <div class="grid grid-cols-2 gap-3 sm:grid-cols-2 sm:gap-5 mb-8">
+                        <div class="grid grid-cols-2 gap-3 sm:grid-cols-2 sm:gap-4 mb-6">
                             <button type="button" @click="updateRole('brand')" :class="role === 'brand' ? 'bg-gray-200 dark:bg-white/10' : 'bg-gray-100 dark:bg-white/5'" class="inline-flex items-center justify-center gap-3 rounded-lg px-6 py-3 text-sm font-medium text-gray-700 transition-all dark:text-white">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
                                     <ellipse cx="10" cy="17.5" rx="7" ry="3.5" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
@@ -60,9 +60,9 @@
                         </div>
 
                         <!-- Login Link -->
-                        <p class="mt-6 text-sm text-center text-gray-700 dark:text-gray-400">
+                        <p class="mt-6 text-sm text-center text-gray-800 dark:text-gray-400">
                             Already have an account? 
-                            <a href="{{ route('login') }}" class="text-pink-400 font-bold">Sign In</a>
+                            <a href="{{ route('login') }}" class="text-purple-400 font-bold pl-1">Sign In</a>
                         </p>
                     </div>
                 </div>

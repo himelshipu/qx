@@ -1,9 +1,9 @@
 @extends('frontend.layouts.app')
 @section('content')
-<div class="max-w-lg mx-auto px-4 sm:px-0">
+<div class="max-w-lg mx-auto">
     <div class="mb-8">
-        <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-3">Forgot Password</h1>
-        <p class="text-sm text-gray-600 dark:text-gray-400">No problem. Just let us know your email address and we will send you a password reset link.</p>
+        <h1 class="text-3xl md:text-4xl font-semibold text-[#222] dark:text-white leading-tight text-center mb-4">Forgot Password</h1>
+        <p class="text-sm text-gray-800 text-center dark:text-gray-400">No problem. Just let us know your email address and we will send you a password reset link.</p>
     </div>
 
     @if (session('status'))
@@ -24,13 +24,13 @@
         @csrf
         
         <div class="space-y-2">
-            <label for="email" class="text-sm font-medium text-gray-700 dark:text-gray-300">Email Address</label>
+            <label for="email" class="mb-1.5 block text-sm font-medium text-gray-800 dark:text-gray-400">Email Address</label>
             <input 
                 type="email" 
                 id="email"
                 name="email"
                 placeholder="Enter your email" 
-                class="w-full h-12 px-4 text-base rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:border-pink-400 dark:focus:border-pink-600 focus:ring-2 focus:ring-pink-200 dark:focus:ring-pink-900/30 outline-none transition-all duration-200"
+                class="dark:bg-dark-900 shadow-theme-xs focus:border-pink-50 focus:ring-gray-500/10 dark:focus:border-gray-800 h-12 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30"
                 value="{{ old('email') }}"
                 required
                 autofocus
@@ -38,13 +38,13 @@
         </div>
 
         <div class="flex flex-col gap-3">
-            <button type="submit" class="w-full bg-gradient-to-r from-gray-900 to-gray-800 hover:from-pink-600 hover:to-pink-500 text-white font-semibold py-4 px-6 rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200">
+            <button type="submit" class="bg-[#1A1A1A] hover:bg-purple-400 flex w-full items-center justify-center rounded-xl px-4 py-4 text-sm font-bold text-white transition active:scale-[0.98]">
                 Send Password Reset Link
             </button>
         </div>
     </form>
 
-    <div class="mt-8 text-sm text-gray-600 dark:text-gray-400">
+    <div class="mt-8 text-sm text-gray-800 text-center dark:text-gray-400">
         <p>
             We'll send an email to the address you provide with instructions to reset your password. 
             The link will expire in 60 minutes for security reasons.
@@ -52,7 +52,7 @@
     </div>
 
     <div class="mt-4 flex items-center justify-center">
-        <a href="{{ route('login') }}" class="text-pink-600 dark:text-pink-400 hover:text-pink-700 dark:hover:text-pink-300 font-medium hover:underline transition-colors">
+        <a href="{{ route('login') }}" class="text-purple-400 font-bold">
             Back to Login
         </a>
     </div>
