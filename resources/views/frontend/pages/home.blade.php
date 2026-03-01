@@ -6,10 +6,13 @@
     
     <x-frontend.navigation.hero />
     <x-frontend.partials.featured />
+    <x-frontend.partials.social-media />
     <x-frontend.partials.cases />
     <x-frontend.partials.search />
     <x-frontend.partials.campaign />
+    <x-frontend.partials.categories />
     <x-frontend.partials.faq />
+    <x-frontend.partials.trusted-reviews />
     <x-frontend.partials.cta />
         
    

@@ -95,15 +95,7 @@
             
             <!-- Details Tab -->
             <div x-show="tab === 'details'" x-cloak class="space-y-8 text-start animate-in fade-in duration-300">
-                <div>
-                    <label class="block text-sm font-medium text-gray-800 dark:text-gray-400 mb-2">Brand Name <span class="text-error-500"> *</span></label>
-                    <input type="text" name="brand_name" value="{{ old('brand_name', $brand->brand_name ?? '') }}" required
-                        class="dark:bg-dark-900 shadow-theme-xs focus:border-pink-50 focus:ring-gray-500/10 dark:focus:border-gray-800 h-12 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30" />
-                    @error('brand_name')
-                        <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
-                    @enderror
-                </div>
-
+                <!-- Location -->
                 <div>
                     <label class="block text-sm font-medium text-gray-800 dark:text-gray-400 mb-2">Location</label>
                     <input type="text" name="location" value="{{ old('location', $brand->location ?? '') }}" placeholder="E.g. New York, NY"
@@ -112,45 +104,7 @@
                         <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
                     @enderror
                 </div>
-
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-800 dark:text-gray-400 mb-2">City</label>
-                        <input type="text" name="city" value="{{ old('city', $brand->city ?? '') }}" placeholder="E.g. New York"
-                            class="dark:bg-dark-900 shadow-theme-xs focus:border-pink-50 focus:ring-gray-500/10 dark:focus:border-gray-800 h-12 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30" />
-                        @error('city')
-                            <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
-                        @enderror
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-800 dark:text-gray-400 mb-2">Country</label>
-                        <input type="text" name="country" value="{{ old('country', $brand->country ?? '') }}" placeholder="E.g. United States"
-                            class="dark:bg-dark-900 shadow-theme-xs focus:border-pink-50 focus:ring-gray-500/10 dark:focus:border-gray-800 h-12 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30" />
-                        @error('country')
-                            <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
-                        @enderror
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-800 dark:text-gray-400 mb-2">Phone</label>
-                        <input type="tel" name="phone" value="{{ old('phone', $brand->phone ?? '') }}" placeholder="+1 (555) 123-4567"
-                            class="dark:bg-dark-900 shadow-theme-xs focus:border-pink-50 focus:ring-gray-500/10 dark:focus:border-gray-800 h-12 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30" />
-                        @error('phone')
-                            <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
-                        @enderror
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-800 dark:text-gray-400 mb-2">Email</label>
-                        <input type="email" name="email" value="{{ old('email', $brand->email ?? '') }}" placeholder="E.g. brand@example.com"
-                            class="dark:bg-dark-900 shadow-theme-xs focus:border-pink-50 focus:ring-gray-500/10 dark:focus:border-gray-800 h-12 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30" />
-                        @error('email')
-                            <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
-                        @enderror
-                    </div>
-                </div>
-
+                <!-- Description -->
                 <div>
                     <label class="block text-sm font-medium text-gray-800 dark:text-gray-400 mb-2">Description</label>
                     <textarea name="description" rows="5" placeholder="Tell us about your brand, mission, and what you do... (max 1000 characters)"
@@ -159,7 +113,7 @@
                         <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
                     @enderror
                 </div>
-
+                <!-- Categories -->
                 <div>
                     <label class="block text-sm font-medium text-gray-800 dark:text-gray-400 mb-4">Categories</label>
                     <div class="flex flex-wrap gap-2">
@@ -207,6 +161,24 @@
                 </div>
 
                 <div>
+                    <label class="block text-sm font-medium text-gray-800 dark:text-gray-400 mb-2">Facebook</label>
+                    <input type="url" name="facebook" value="{{ old('facebook', $brand?->social_links['facebook'] ?? '') }}" placeholder="https://facebook.com/yourprofile"
+                        class="dark:bg-dark-900 shadow-theme-xs focus:border-pink-50 focus:ring-gray-500/10 dark:focus:border-gray-800 h-12 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30" />
+                    @error('facebook')
+                        <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-800 dark:text-gray-400 mb-2">Twitter</label>
+                    <input type="url" name="twitter" value="{{ old('twitter', $brand?->social_links['twitter'] ?? '') }}" placeholder="https://twitter.com/yourprofile"
+                        class="dark:bg-dark-900 shadow-theme-xs focus:border-pink-50 focus:ring-gray-500/10 dark:focus:border-gray-800 h-12 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30" />
+                    @error('twitter')
+                        <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <div>
                     <label class="block text-sm font-medium text-gray-800 dark:text-gray-400 mb-2">YouTube</label>
                     <input type="url" name="youtube" value="{{ old('youtube', $brand?->social_links['youtube'] ?? '') }}" placeholder="https://youtube.com/c/yourchannel"
                         class="dark:bg-dark-900 shadow-theme-xs focus:border-pink-50 focus:ring-gray-500/10 dark:focus:border-gray-800 h-12 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30" />
@@ -214,6 +186,16 @@
                         <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
                     @enderror
                 </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-800 dark:text-gray-400 mb-2">Others</label>
+                    <input type="url" name="others" value="{{ old('others', $brand?->social_links['others'] ?? '') }}" placeholder="https://yourprofile.com"
+                        class="dark:bg-dark-900 shadow-theme-xs focus:border-pink-50 focus:ring-gray-500/10 dark:focus:border-gray-800 h-12 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30" />
+                    @error('others')
+                        <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
+                    @enderror
+                </div>
+
             </div>
 
             <!-- Images Tab -->

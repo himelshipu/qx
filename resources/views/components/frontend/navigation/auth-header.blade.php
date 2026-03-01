@@ -23,7 +23,7 @@
                         Library
                     </a>
 
-                    <a href="#" class="nav-link">
+                    <a href="{{ route('influencers') }}" class="nav-link">
                         Search
                     </a>
 

@@ -53,11 +53,19 @@
                     class="pb-4 text-base font-medium transition-all whitespace-nowrap">
                 Update Password
             </button>
-           <button @click="tab = 'security'" 
+
+            <button @click="tab = 'security'" 
                     :class="tab === 'security' ? 'border-b-2 border-black dark:border-white text-black dark:text-white' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'" 
                     class="pb-4 text-base font-medium transition-all whitespace-nowrap">
                 Security
             </button>
+
+           <button @click="tab = 'payment'" 
+                    :class="tab === 'payment' ? 'border-b-2 border-black dark:border-white text-black dark:text-white' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'" 
+                    class="pb-4 text-base font-medium transition-all whitespace-nowrap">
+                Payment
+            </button>
+
         </div>
 
         <!-- Details Tab -->
@@ -65,7 +73,7 @@
             <form action="{{ route('dashboard.account.details.update') }}" method="POST" class="space-y-8">
                 @csrf
 
-                <div class="grid grid-cols-2 gap-6">
+                <div class="flex flex-col gap-6">
                     <!-- Name -->
                     <div>
                         <label class="block text-sm font-medium text-gray-800 dark:text-gray-300 mb-2">Full Name <span class="text-error-500"> *</span></label>
@@ -90,7 +98,7 @@
                     <!-- Legal Company Name -->
                     <div>
                         <label class="block text-sm font-medium text-gray-800 dark:text-gray-300 mb-2">Legal Company Name</label>
-                        <input type="text" name="legal_company_name" value="{{ old('legal_company_name', $brand->setup_data['details']['legal_company_name'] ?? '') }}" placeholder="The official name of your company for billing purposes"
+                        <input type="text" name="legal_company_name" value="{{ old('legal_company_name', $brand->setup_data['details']['legal_company_name'] ?? '') }}" placeholder="Company Name for Invoicing"
                             class="dark:bg-dark-900 shadow-theme-xs focus:border-pink-50 focus:ring-gray-500/10 dark:focus:border-gray-800 h-12 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30" />
                         @error('legal_company_name')
                             <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
@@ -108,48 +116,26 @@
                     </div>
 
                     <!-- Billing Address -->
-                    <div class="md:col-span-2">
+                    <div class="md:col-span-2 flex flex-col gap-2">
                         <label class="block text-sm font-medium text-gray-800 dark:text-gray-300 mb-2">Billing Address</label>
-                        <input type="text" name="billing_address" value="{{ old('billing_address', $brand->setup_data['details']['billing_address'] ?? '') }}" placeholder="The street address for billing purposes"
+                        <input type="text" name="billing_address" value="{{ old('billing_address', $brand->setup_data['details']['billing_address'] ?? '') }}" placeholder="Street address"
                             class="dark:bg-dark-900 shadow-theme-xs focus:border-pink-50 focus:ring-gray-500/10 dark:focus:border-gray-800 h-12 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30" />
                         @error('billing_address')
                             <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
                         @enderror
-                    </div>
-
-                    <!-- Billing City -->
-                    <div>
-                        <label class="block text-sm font-medium text-gray-800 dark:text-gray-300 mb-2">City</label>
-                        <input type="text" name="billing_city" value="{{ old('billing_city', $brand->setup_data['details']['billing_city'] ?? '') }}" placeholder="The city for your billing address"
+                        <!-- city -->
+                        <input type="text" name="billing_city" value="{{ old('billing_city', $brand->setup_data['details']['billing_city'] ?? '') }}" placeholder="City Name"
                             class="dark:bg-dark-900 shadow-theme-xs focus:border-pink-50 focus:ring-gray-500/10 dark:focus:border-gray-800 h-12 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30" />
-                        @error('billing_city')
-                            <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    <!-- Billing Country -->
-                    <div>
-                        <label class="block text-sm font-medium text-gray-800 dark:text-gray-300 mb-2">Country</label>
-                        <input type="text" name="billing_country" value="{{ old('billing_country', $brand->setup_data['details']['billing_country'] ?? '') }}" placeholder="The country for your billing address"
-                            class="dark:bg-dark-900 shadow-theme-xs focus:border-pink-50 focus:ring-gray-500/10 dark:focus:border-gray-800 h-12 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30" />
-                        @error('billing_country')
-                            <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    <!-- Billing Postal Code -->
-                    <div>
-                        <label class="block text-sm font-medium text-gray-800 dark:text-gray-300 mb-2">Postal Code</label>
+                        <!-- Postal Code -->
                         <input type="text" name="billing_postal_code" value="{{ old('billing_postal_code', $brand->setup_data['details']['billing_postal_code'] ?? '') }}" placeholder="The postal or ZIP code for your billing address"
-                            class="dark:bg-dark-900 shadow-theme-xs focus:border-pink-50 focus:ring-gray-500/10 dark:focus:border-gray-800 h-12 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30" />
-                        @error('billing_postal_code')
-                            <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
-                        @enderror
+                        class="dark:bg-dark-900 shadow-theme-xs focus:border-pink-50 focus:ring-gray-500/10 dark:focus:border-gray-800 h-12 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30" />
                     </div>
+
+                    
                 </div>
 
                 <button type="submit" class="bg-[#222] shadow-theme-xs h-14 hover:bg-purple-400 flex w-full items-center justify-center rounded-lg px-4 py-3 text-sm font-medium text-white transition">
-                    Save Billing Info
+                    Save
                 </button>
             </form>
         </div>
@@ -288,6 +274,99 @@
                 </div>
             </div>
         </div>
+
+        <!-- Payment Tab -->
+        <div x-show="tab === 'payment'" 
+            x-cloak 
+            x-data="{ openCardModal: false }" 
+            class="space-y-12 animate-in fade-in duration-300 text-start">
+            
+            <!-- Payouts Section -->
+            <div class="space-y-4">
+                <h3 class="text-lg font-bold text-gray-900 dark:text-white">Payouts</h3>
+                <button @click="openCardModal = true" 
+                        class="w-full md:w-auto px-10 py-4 bg-[#D1FAE5] dark:bg-emerald-900/20 text-[#065F46] dark:text-emerald-400 rounded-xl font-bold text-sm transition hover:opacity-80 active:scale-95 shadow-sm">
+                    Add Payment Card
+                </button>
+            </div>
+
+            <!-- Card Verification Section -->
+            <div class="space-y-4">
+                <div class="flex items-center gap-3">
+                    <h3 class="text-lg font-bold text-gray-900 dark:text-white">Card Verification</h3>
+                    <button class="text-sm font-bold text-blue-500 hover:text-blue-600 transition">Change</button>
+                </div>
+                
+                <div class="flex items-center gap-4 text-gray-700 dark:text-gray-300">
+                    <!-- Simple Card Icon -->
+                    <div class="w-10 h-7 bg-gray-200 dark:bg-gray-800 rounded flex items-center justify-center">
+                        <svg class="w-6 h-6 text-gray-500" fill="currentColor" viewBox="0 0 24 24"><path d="M20 4H4c-1.11 0-1.99.89-1.99 2L2 18c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2zm0 14H4v-6h16v6zm0-10H4V6h16v2z"/></svg>
+                    </div>
+                    <span class="font-medium text-sm md:text-base">Visa **** **** **** 6197 3/29</span>
+                </div>
+            </div>
+
+            <!-- ========================= ADD NEW CARD MODAL ========================= -->
+            <div x-show="openCardModal" 
+                class="fixed inset-0 z-[100] flex items-center justify-center p-4 overflow-hidden" 
+                x-cloak>
+                
+                <!-- Backdrop -->
+                <div x-show="openCardModal" 
+                    x-transition.opacity 
+                    @click="openCardModal = false" 
+                    class="fixed inset-0 bg-black/60 backdrop-blur-sm"></div>
+
+                <!-- Modal Card -->
+                <div x-show="openCardModal"
+                    x-transition:enter="transition ease-out duration-300"
+                    x-transition:enter-start="opacity-0 scale-95"
+                    x-transition:enter-end="opacity-100 scale-100"
+                    x-transition:leave="transition ease-in duration-200"
+                    x-transition:leave-start="opacity-100 scale-100"
+                    x-transition:leave-end="opacity-0 scale-95"
+                    class="relative w-full max-w-xl bg-white dark:bg-gray-900 rounded-[2.5rem] shadow-2xl overflow-hidden p-8 md:p-14">
+                    
+                    <!-- Close Button -->
+                    <button @click="openCardModal = false" class="absolute top-8 right-8 text-gray-400 hover:text-black dark:hover:text-white transition">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" /></svg>
+                    </button>
+
+                    <!-- Title -->
+                    <h2 class="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-10 text-center">Add New Card</h2>
+
+                    <form class="space-y-6">
+                        <!-- Card Number Input with Autofill Badge -->
+                        <div class="relative">
+                            <div class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
+                                <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M20 4H4c-1.11 0-1.99.89-1.99 2L2 18c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2zm0 14H4v-6h16v6zm0-10H4V6h16v2z"/></svg>
+                            </div>
+                            <input type="text" placeholder="Card number" 
+                                class="w-full h-14 rounded-xl border border-gray-200 dark:border-gray-800 bg-transparent pl-14 pr-32 text-base focus:border-purple-400 focus:ring-0 dark:text-white placeholder:text-gray-400 transition-colors">
+                            
+                            <!-- Autofill link badge -->
+                            <div class="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 bg-black rounded-lg px-2 py-1 text-[10px] font-bold text-white cursor-pointer hover:bg-gray-800 transition">
+                                <span>Autofill</span>
+                                <span class="text-emerald-400">link</span>
+                            </div>
+                        </div>
+
+                        <!-- Expiry and CVC Row -->
+                        <div class="grid grid-cols-2 gap-4">
+                            <input type="text" placeholder="MM / YY" 
+                                class="h-14 rounded-xl border border-gray-200 dark:border-gray-800 bg-transparent px-5 text-base focus:border-purple-400 focus:ring-0 dark:text-white placeholder:text-gray-400 transition-colors">
+                            <input type="text" placeholder="CVC" 
+                                class="h-14 rounded-xl border border-gray-200 dark:border-gray-800 bg-transparent px-5 text-base focus:border-purple-400 focus:ring-0 dark:text-white placeholder:text-gray-400 transition-colors">
+                        </div>
+
+                        <button type="button" @click="openCardModal = false" class="w-full bg-[#1A1A1A] hover:bg-black text-white font-bold py-4 rounded-xl text-lg transition shadow-lg active:scale-95">
+                            Save
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
     </div>
 </div>
 

@@ -4,8 +4,7 @@
 
 <div class="min-h-screen" 
      x-data="{ 
-        tab: 'images',
-        selectedCats: ['Beauty', 'Health & Fitness'],
+        tab: 'details',
         
         // Profile Image State
         profileFile: null,
@@ -17,8 +16,6 @@
             { id: 1, preview: '{{ asset('images/creator/creator-profile-01.webp') }}', name: 'img1.png' },
             { id: 2, preview: '{{ asset('images/creator/creator-profile-02.webp') }}', name: 'img2.png' },
             { id: 3, preview: '{{ asset('images/creator/creator-profile-03.webp') }}', name: 'img3.png' },
-            { id: 4, preview: 'https://i.ibb.co/vzB7pLq/4.jpg', name: 'img4.png' },
-            { id: 5, preview: 'https://i.ibb.co/v4x0P5Y/5.jpg', name: 'img5.png' }
         ],
 
         handleProfileUpload(e) {
@@ -95,24 +92,38 @@
                     @enderror
                 </div>
 
-                <!-- City / Country -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-800 dark:text-gray-400 mb-2">City</label>
-                        <input type="text" name="city" value="" placeholder="E.g. New York"
-                            class="dark:bg-dark-900 shadow-theme-xs focus:border-pink-50 focus:ring-gray-500/10 dark:focus:border-gray-800 h-12 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30" />
-                        @error('city')
-                            <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
-                        @enderror
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-800 dark:text-gray-400 mb-2">Country</label>
-                        <input type="text" name="country" value="" placeholder="E.g. United States"
-                            class="dark:bg-dark-900 shadow-theme-xs focus:border-pink-50 focus:ring-gray-500/10 dark:focus:border-gray-800 h-12 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30" />
-                        @error('country')
-                            <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
-                        @enderror
-                    </div>
+                <!-- Title Name -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-800 dark:text-gray-400 mb-1.5">Title Name</label>
+                    <input type="text" placeholder="Enter your title (e.g. Beauty Influencer, Fitness Coach, etc.)"
+                        class="dark:bg-dark-900 shadow-theme-xs focus:border-pink-50 focus:ring-gray-500/10 dark:focus:border-gray-800 h-12 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30"></input>
+                </div>
+
+                <!-- Description -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-800 dark:text-gray-400 mb-2">Description</label>
+                    <textarea name="description" rows="5" placeholder="Tell us about your brand, mission, and what you do... (max 1000 characters)"
+                        class="dark:bg-dark-900 shadow-theme-xs focus:border-pink-50 focus:ring-gray-500/10 dark:focus:border-gray-800 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-3 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 resize-none">{{ old('description', $brand->description ?? ''   ) }}</textarea>
+                    @error('description')
+                        <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <!-- Audience -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-800 dark:text-gray-400 mb-2">Who is your audience?</label>
+                    <textarea name="audience" rows="5" placeholder="Describe your target audience (max 1000 characters)"
+                        class="dark:bg-dark-900 shadow-theme-xs focus:border-pink-50 focus:ring-gray-500/10 dark:focus:border-gray-800 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-3 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 resize-none">{{ old('audience', $brand->audience ?? ''   ) }}</textarea>
+                    @error('audience')
+                        <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <!-- Brands work with -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-800 dark:text-gray-400 mb-1.5">What brands have you worked with?</label>
+                    <input type="text" placeholder="Enter brands you've worked with"
+                        class="dark:bg-dark-900 shadow-theme-xs focus:border-pink-50 focus:ring-gray-500/10 dark:focus:border-gray-800 h-12 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30"></input>
                 </div>
 
                 <!-- Gender -->
@@ -130,32 +141,6 @@
                     @enderror
                 </div>
 
-                <!-- Description -->
-                <div>
-                    <label class="block text-sm font-medium text-gray-800 dark:text-gray-400 mb-2">Description</label>
-                    <textarea name="description" rows="5" placeholder="Tell us about your brand, mission, and what you do... (max 1000 characters)"
-                        class="dark:bg-dark-900 shadow-theme-xs focus:border-pink-50 focus:ring-gray-500/10 dark:focus:border-gray-800 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-3 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 resize-none">{{ old('description', $brand->description ?? ''   ) }}</textarea>
-                    @error('description')
-                        <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
-                    @enderror
-                </div>
-
-                <!-- Categories -->
-                <div>
-                    <label class="mb-4 block text-base font-medium text-gray-800 dark:text-white">Categories</label>
-                    <div class="flex flex-wrap gap-2">
-                        @php
-                            $cats = ['Beauty', 'Fashion', 'Travel', 'Health & Fitness', 'Food & Drink', 'Comedy & Entertainment', 'Art & Photography', 'Family & Children', 'Music & Dance', 'Entrepreneur & Business', 'Education', 'Animals & Pets', 'Gaming', 'Technology', 'Athlete & Sports', 'Adventure & Outdoors', 'Healthcare', 'Automotive', 'Skilled Trades', 'Cannabis'];
-                        @endphp
-                        @foreach($cats as $cat)
-                        <button type="button" @click="toggleCat('{{ $cat }}')"
-                                :class="selectedCats.includes('{{ $cat }}') ? 'bg-black text-white border-transparent' : 'bg-white text-gray-600 border-gray-200 dark:bg-transparent dark:border-gray-800 dark:text-gray-400'"
-                                class="px-4 py-1.5 rounded-lg border text-[13px] font-medium transition-all hover:bg-purple-400 hover:text-white hover:border-transparent">
-                            {{ $cat }}
-                        </button>
-                        @endforeach
-                    </div>
-                </div>
             </div>
 
             <!-- TAB 2: SOCIAL MEDIA -->
@@ -188,6 +173,24 @@
                 </div>
 
                 <div>
+                    <label class="block text-sm font-medium text-gray-800 dark:text-gray-400 mb-2">Facebook</label>
+                    <input type="url" name="facebook" value="{{ old('facebook', $brand?->social_links['facebook'] ?? '') }}" placeholder="https://facebook.com/yourprofile"
+                        class="dark:bg-dark-900 shadow-theme-xs focus:border-pink-50 focus:ring-gray-500/10 dark:focus:border-gray-800 h-12 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30" />
+                    @error('facebook')
+                        <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-800 dark:text-gray-400 mb-2">Twitter</label>
+                    <input type="url" name="twitter" value="{{ old('twitter', $brand?->social_links['twitter'] ?? '') }}" placeholder="https://twitter.com/yourprofile"
+                        class="dark:bg-dark-900 shadow-theme-xs focus:border-pink-50 focus:ring-gray-500/10 dark:focus:border-gray-800 h-12 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30" />
+                    @error('twitter')
+                        <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <div>
                     <label class="block text-sm font-medium text-gray-800 dark:text-gray-400 mb-2">YouTube</label>
                     <input type="url" name="youtube" value="{{ old('youtube', $brand?->social_links['youtube'] ?? '') }}" placeholder="https://youtube.com/c/yourchannel"
                         class="dark:bg-dark-900 shadow-theme-xs focus:border-pink-50 focus:ring-gray-500/10 dark:focus:border-gray-800 h-12 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30" />
@@ -195,6 +198,16 @@
                         <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
                     @enderror
                 </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-800 dark:text-gray-400 mb-2">Others</label>
+                    <input type="url" name="others" value="{{ old('others', $brand?->social_links['others'] ?? '') }}" placeholder="https://yourprofile.com"
+                        class="dark:bg-dark-900 shadow-theme-xs focus:border-pink-50 focus:ring-gray-500/10 dark:focus:border-gray-800 h-12 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30" />
+                    @error('others')
+                        <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
+                    @enderror
+                </div>
+
             </div>
 
             <!-- TAB 3: IMAGES -->
@@ -277,7 +290,7 @@
 
             <!-- Global Save Button -->
             <div class="flex justify-end mt-16">
-                <button type="submit" class="bg-[#1A1A1A] hover:bg-purple-400 w-full sm:w-56 py-4 rounded-2xl text-sm font-medium text-white transition shadow-xl active:scale-95 uppercase">
+                <button type="submit" class="bg-[#1A1A1A] hover:bg-purple-400 w-full sm:w-56 py-4 rounded-xl text-sm font-medium text-white transition shadow-xl active:scale-95 uppercase">
                     Save Changes
                 </button>
             </div>

@@ -38,4 +38,11 @@ class StaticPagesController extends Controller
         ]);
     }
 
+    public function influencers(): View
+    {
+        return view('frontend.pages.influencers', [
+            'title' => 'Influencers',
+        ]);
+    }
+
 }
