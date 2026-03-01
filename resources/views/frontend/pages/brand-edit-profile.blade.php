@@ -80,7 +80,7 @@
         @endif
 
         <!-- Tab Navigation -->
-        <div class="flex gap-8 border-b border-gray-200 dark:border-gray-800 mb-8 overflow-x-auto pb-4 mt-8">
+        <div class="flex gap-8 border-b border-gray-200 dark:border-gray-800 mb-8 overflow-x-auto mt-8">
             <button @click="tab = 'details'" :class="tab === 'details' ? 'border-b-2 border-black dark:border-white text-black dark:text-white' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'" class="pb-4 text-base font-medium transition-all whitespace-nowrap">Details</button>
             <button @click="tab = 'social'" :class="tab === 'social' ? 'border-b-2 border-black dark:border-white text-black dark:text-white' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'" class="pb-4 text-base font-medium transition-all whitespace-nowrap">Social Media</button>
             <button @click="tab = 'images'" :class="tab === 'images' ? 'border-b-2 border-black dark:border-white text-black dark:text-white' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'" class="pb-4 text-base font-medium transition-all whitespace-nowrap">Images</button>
