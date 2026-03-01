@@ -58,7 +58,7 @@
             </a>
         </div>
 
-        <h1 class="text-3xl md:text-4xl font-semibold text-[#222] dark:text-white leading-tight text-left mb-4">Edit Brand Profile</h1>
+        <h1 class="text-3xl md:text-4xl font-semibold text-[#222] dark:text-white leading-tight text-left mb-4">Edit Profile</h1>
         <p class="text-sm text-gray-800 dark:text-gray-400">Manage your brand information and make it stand out</p>
 
         @if (session('status') === 'profile-updated')

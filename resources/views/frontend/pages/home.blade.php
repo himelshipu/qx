@@ -49,7 +49,7 @@
 
             <!-- Existing Lists (Mockup) -->
             <div id="existing-lists" class="space-y-2">
-                <button class="list-item w-full flex items-center gap-4 p-4 rounded-2xl bg-gray-50 dark:bg-gray-800/50 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+                <button class="list-item w-full items-center gap-4 p-4 rounded-2xl bg-gray-50 dark:bg-gray-800/50 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
                     <div class="w-14 h-14 bg-gray-200 dark:bg-gray-700 rounded-xl flex items-center justify-center overflow-hidden">
                         <!-- Creator Profile Picture from the clicked card will go here -->
                         <img src="" class="list-preview-img hidden w-full h-full object-cover">

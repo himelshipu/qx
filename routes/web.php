@@ -36,6 +36,8 @@ Route::middleware(['web'])->group(function () {
     Route::get('/campaigns', [HomeController::class, 'campaigns'])->name('campaigns');
     Route::get('/faq', [StaticPagesController::class, 'faq'])->name('faq');
     Route::get('/support', [StaticPagesController::class, 'support'])->name('support');
+    Route::get('/creator-edit-profile', [StaticPagesController::class, 'creatorEditProfile'])->name('creator-edit-profile');
+    Route::get('/creator-profile', [StaticPagesController::class, 'creatorProfile'])->name('creator-profile');
 });
 
 /*

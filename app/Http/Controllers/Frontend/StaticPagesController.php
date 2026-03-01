@@ -24,6 +24,18 @@ class StaticPagesController extends Controller
         ]);
     }
 
-    
+    public function creatorEditProfile(): View
+    {
+        return view('frontend.pages.creator-edit-profile', [
+            'title' => 'Creator Edit Profile',
+        ]);
+    }
+
+    public function creatorProfile(): View
+    {
+        return view('frontend.pages.creator-profile', [
+            'title' => 'Creator Profile',
+        ]);
+    }
 
 }
