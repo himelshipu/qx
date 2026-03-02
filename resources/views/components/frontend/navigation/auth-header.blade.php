@@ -81,7 +81,20 @@
                     <!-- Profile Dropdown Content -->
                         <div class="absolute right-0 top-full mt-3 w-56 bg-white rounded-[20px] shadow-[0_10px_40px_rgba(0,0,0,0.1)] border border-gray-50 invisible opacity-0 scale-95 group-hover:visible group-hover:opacity-100 group-hover:scale-100 transition-all duration-300 origin-top-right z-50 overflow-hidden">
                             <div class="py-2 flex flex-col">
-                                <a href="#" class="px-7 py-3.5 text-[15px] font-bold text-gray-800 hover:bg-gray-50 transition-colors">Profile</a>
+                                @auth
+                                    @if(Auth::user()->brand)
+                                        @php $b = Auth::user()->brand; @endphp
+                                        <a href="{{ route('brand.profile', ['id' => $b->id]) }}" class="px-7 py-3.5 text-[15px] font-bold text-gray-800 hover:bg-gray-50 transition-colors">View profile</a>
+                                        <a href="{{ route('dashboard.brand.profile.edit') }}" class="px-7 py-3.5 text-[15px] font-medium text-gray-600 hover:bg-gray-50 transition-colors">Edit profile</a>
+                                    @elseif(Auth::user()->creator)
+                                        @php $c = Auth::user()->creator; @endphp
+                                        <a href="{{ route('creator.profile', ['id' => $c->id]) }}" class="px-7 py-3.5 text-[15px] font-bold text-gray-800 hover:bg-gray-50 transition-colors">View profile</a>
+                                        <a href="{{ route('dashboard.creator.profile.edit') }}" class="px-7 py-3.5 text-[15px] font-medium text-gray-600 hover:bg-gray-50 transition-colors">Edit profile</a>
+                                    @else
+                                        <a href="{{ route('dashboard.account.edit') }}" class="px-7 py-3.5 text-[15px] font-bold text-gray-800 hover:bg-gray-50 transition-colors">Profile</a>
+                                    @endif
+                                @endauth
+
                                 <a href="#" class="px-7 py-3.5 text-[15px] font-bold text-gray-800 hover:bg-gray-50 transition-colors">Offers</a>
 
                                 <div class="border-t border-gray-100 my-1 mx-2"></div>

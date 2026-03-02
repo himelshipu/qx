@@ -26,16 +26,19 @@ class StaticPagesController extends Controller
 
     public function creatorEditProfile(): View
     {
-        return view('frontend.pages.creator-edit-profile', [
-            'title' => 'Creator Edit Profile',
-        ]);
+        // Redirect to dashboard edit (authenticated) — creator edit should be handled by CreatorProfileController
+        return redirect()->route('dashboard.index');
     }
 
     public function creatorProfile(): View
     {
-        return view('frontend.pages.creator-profile', [
-            'title' => 'Creator Profile',
-        ]);
+        // Public creator profile should be served by CreatorProfileController
+        return redirect()->route('home');
+    }
+    public function brandProfile(): View
+    {
+        // Public brand profile should be served by BrandProfileController
+        return redirect()->route('home');
     }
 
     public function influencers(): View

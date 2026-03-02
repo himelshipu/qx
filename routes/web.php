@@ -37,9 +37,10 @@ Route::middleware(['web'])->group(function () {
     Route::get('/faq', [StaticPagesController::class, 'faq'])->name('faq');
     Route::get('/support', [StaticPagesController::class, 'support'])->name('support');
 
-    //newly added routes for creator profile and edit profile Fahman
-    Route::get('/creator-edit-profile', [StaticPagesController::class, 'creatorEditProfile'])->name('creator-edit-profile');
-    Route::get('/creator-profile', [StaticPagesController::class, 'creatorProfile'])->name('creator-profile');
+    // Public profile pages
+    Route::get('/creator/{id}', [\App\Http\Controllers\CreatorProfileController::class, 'show'])->name('creator.profile');
+    Route::get('/brand/{id}', [\App\Http\Controllers\BrandProfileController::class, 'show'])->name('brand.profile');
+
     Route::get('/influencers', [StaticPagesController::class, 'influencers'])->name('influencers');
 });
 
@@ -64,13 +65,20 @@ Route::prefix('dashboard') ->name('dashboard.')->middleware(['auth', 'verified']
 
 
 
-  // Brand Profile routes
+    // Brand Profile routes (dashboard)
     Route::get('/brand-profile/edit', [BrandProfileController::class, 'edit'])->name('brand.profile.edit');
     Route::post('/brand-profile/update', [BrandProfileController::class, 'update'])->name('brand.profile.update');
     Route::delete('/brand-profile/profile-image', [BrandProfileController::class, 'deleteProfileImage'])->name('brand.profile.delete-image');
     Route::delete('/brand-profile/cover-image', [BrandProfileController::class, 'deleteCoverImage'])->name('brand.profile.delete-cover');
     Route::post('/brand-profile/toggle-verification', [BrandProfileController::class, 'toggleVerification'])->name('brand.profile.toggle-verification');
     Route::post('/brand-profile/toggle-status', [BrandProfileController::class, 'toggleStatus'])->name('brand.profile.toggle-status');
+
+    // Creator Profile routes (dashboard)
+    Route::get('/creator-profile/edit', [\App\Http\Controllers\CreatorProfileController::class, 'edit'])->name('creator.profile.edit');
+    Route::post('/creator-profile/update', [\App\Http\Controllers\CreatorProfileController::class, 'update'])->name('creator.profile.update');
+    Route::delete('/creator-profile/profile-image', [\App\Http\Controllers\CreatorProfileController::class, 'deleteProfileImage'])->name('creator.profile.delete-image');
+    Route::delete('/creator-profile/cover-image', [\App\Http\Controllers\CreatorProfileController::class, 'deleteCoverImage'])->name('creator.profile.delete-cover');
+    Route::post('/creator-profile/toggle-status', [\App\Http\Controllers\CreatorProfileController::class, 'toggleStatus'])->name('creator.profile.toggle-status');
 
     // Account routes
     Route::get('/account', [AccountController::class, 'edit'])->name('account.edit');

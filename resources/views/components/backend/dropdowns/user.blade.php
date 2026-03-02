@@ -16,17 +16,40 @@
         </div>
 
         <div class="py-1">
-            <a href="{{ route('dashboard.brand.profile.edit') }}" class="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
-                 <x-icons.edit class="w-5 h-5" />
-                Edit profile
-            </a>
-            
-            <a href="{{ route('dashboard.account.edit') }}" class="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
-               
-                <x-icons.settings class="w-5 h-5" />
-                Account settings
-            </a>
-            
+            @auth
+                {{-- View profile (public) and Edit profile (dashboard) links based on user type --}}
+                @if(Auth::user()->brand)
+                    @php $b = Auth::user()->brand; @endphp
+                    <a href="{{ route('brand.profile', ['id' => $b->id]) }}" class="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
+                        <x-icons.user-circle class="w-5 h-5" />
+                        View profile
+                    </a>
+                    <a href="{{ route('dashboard.brand.profile.edit') }}" class="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
+                        <x-icons.edit class="w-5 h-5" />
+                        Edit profile
+                    </a>
+                @elseif(Auth::user()->creator)
+                    @php $c = Auth::user()->creator; @endphp
+                    <a href="{{ route('creator.profile', ['id' => $c->id]) }}" class="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
+                        <x-icons.user-circle class="w-5 h-5" />
+                        View profile
+                    </a>
+                    <a href="{{ route('dashboard.creator.profile.edit') }}" class="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
+                        <x-icons.edit class="w-5 h-5" />
+                        Edit profile
+                    </a>
+                @else
+                    <a href="{{ route('dashboard.account.edit') }}" class="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
+                        <x-icons.user-circle class="w-5 h-5" />
+                        View profile
+                    </a>
+                    <a href="{{ route('dashboard.account.edit') }}" class="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
+                        <x-icons.edit class="w-5 h-5" />
+                        Account settings
+                    </a>
+                @endif
+            @endauth
+
             <a href="{{ route('support') }}" class="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
                 <x-icons.check class="w-5 h-5" />
                 Support

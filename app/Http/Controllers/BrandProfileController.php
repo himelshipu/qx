@@ -204,4 +204,17 @@ class BrandProfileController extends Controller
             $brand->is_active ? 'brand-activated' : 'brand-deactivated'
         );
     }
+
+    /**
+     * Show public brand profile
+     */
+    public function show($id)
+    {
+        $brand = Brand::with('user')->findOrFail($id);
+
+        return view('frontend.pages.brand-profile', [
+            'brand' => $brand,
+            'title' => $brand->brand_name ?? $brand->user->name,
+        ]);
+    }
 }
