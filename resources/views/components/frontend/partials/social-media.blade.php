@@ -1,7 +1,7 @@
  <section class="w-full">
     <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-3">
         <div>
-            <h2 class="text-2xl font-semibold text-[#222] dark:text-white">Featured</h2>
+            <h2 class="text-2xl font-semibold text-[#222] dark:text-white">Social Media</h2>
             <p class="text-gray-500 dark:text-gray-400 leading-relaxed mt-1">Hire top influencers across all platforms</p>
         </div>
         <a href="#" class="text-sm font-medium text-[#222] dark:text-gray-400 hover:underline">

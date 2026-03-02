@@ -1,7 +1,7 @@
 @extends('frontend.layouts.app')
 @section('content')
-    <div class="relative z-1 bg-white p-6 dark:bg-gray-900 py-12">
-        <div class="flex w-full flex-col justify-center sm:p-0 lg:flex-row dark:bg-gray-900">
+    <div class="relative z-1">
+        <div class="flex w-full flex-col justify-center sm:p-0 lg:flex-row">
             <div class="flex w-full flex-1 flex-col lg:w-1/2">
                 <div class="mx-auto flex w-full max-w-md flex-1 flex-col justify-center">
                     <!-- Session Status -->
@@ -11,8 +11,8 @@
                         </div>
                     @endif
 
-                    <div class="mb-5 sm:mb-8">
-                        <h1 class="text-title-sm sm:text-title-md mb-2 font-semibold text-gray-800 dark:text-white/90 text-center">
+                    <div class="mb-4 sm:mb-6">
+                        <h1 class="text-3xl md:text-4xl font-semibold text-[#222] dark:text-white leading-normal text-center">
                             Welcome Back
                         </h1>
                     </div>
@@ -22,11 +22,11 @@
 
                             <!-- Email Address -->
                             <div>
-                                <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
+                                <label class="mb-1.5 block text-sm font-medium text-gray-800 dark:text-gray-400">
                                     Email<span class="text-error-500"> *</span>
                                 </label>
                                 <input type="email" name="email" value="{{ old('email') }}" placeholder="info@gmail.com" required autofocus
-                                    class="dark:bg-dark-900 shadow-theme-xs focus:border-pink-50 focus:ring-gray-500/10 dark:focus:border-gray-800 h-12 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-3 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30" autocomplete="username" />
+                                    class="dark:bg-dark-900 shadow-theme-xs focus:border-pink-50 focus:ring-gray-500/10 dark:focus:border-gray-800 h-12 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30" autocomplete="username" />
                                 @error('email')
                                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                                 @enderror
@@ -34,7 +34,7 @@
 
                             <!-- Password -->
                             <div class="mt-4">
-                                <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
+                                <label class="mb-1.5 block text-sm font-medium text-gray-800 dark:text-gray-400">
                                     Password<span class="text-error-500"> *</span>
                                 </label>
                                 <div x-data="{ showPassword: false }" class="relative">
@@ -42,7 +42,7 @@
                                         name="password"
                                         placeholder="Enter your password"
                                         required autocomplete="current-password"
-                                        class="dark:bg-dark-900 shadow-theme-xs focus:border-pink-50 focus:ring-brand-500/10 dark:focus:border-gray-800 h-12 w-full rounded-lg border border-gray-300 bg-transparent py-2.5 pr-11 pl-4 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-3 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30" />
+                                        class="dark:bg-dark-900 shadow-theme-xs focus:border-pink-50 focus:ring-brand-500/10 dark:focus:border-gray-800 h-12 w-full rounded-lg border border-gray-300 bg-transparent py-2.5 pr-11 pl-4 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30" />
                                     <span @click="showPassword = !showPassword"
                                         class="absolute top-1/2 right-4 z-30 -translate-y-1/2 cursor-pointer text-gray-500 dark:text-gray-400">
                                         <svg x-show="!showPassword" class="fill-current" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -63,11 +63,11 @@
                             <!-- Remember Me -->
                             <div class="mt-4 flex items-center justify-between">
                                 <label for="remember_me" class="inline-flex items-center">
-                                    <input id="remember_me" type="checkbox" name="remember" class="rounded dark:bg-gray-900 border-gray-300 dark:border-gray-700 text-indigo-600 shadow-sm focus:ring-indigo-500 dark:focus:ring-indigo-600 dark:focus:ring-offset-gray-800">
-                                    <span class="ms-2 text-sm text-gray-600 dark:text-gray-400">Keep me logged in</span>
+                                    <input id="remember_me" type="checkbox" name="remember" class="rounded dark:bg-gray-900 border-gray-300 dark:border-gray-700 text-indigo-600 shadow-sm focus:ring-purple-300 dark:focus:ring-purple-600 dark:focus:ring-offset-gray-800">
+                                    <span class="ms-2 text-sm text-gray-800 dark:text-gray-400">Keep me logged in</span>
                                 </label>
                                 @if (Route::has('password.request'))
-                                    <a href="{{ route('password.request') }}" class="text-pink-400 hover:text-pink-500 dark:text-pink-400 text-sm">
+                                    <a href="{{ route('password.request') }}" class="text-purple-400 hover:text-purple-500 dark:text-purple-400 text-sm">
                                         Forgot password?
                                     </a>
                                 @endif
@@ -77,15 +77,15 @@
                             <div class="mt-6">
                                 <button
                                     type="submit"
-                                    class="bg-[#222] shadow-theme-xs hover:bg-[#ff84a3] flex w-full items-center justify-center rounded-lg px-4 py-3 text-sm font-medium text-white transition">
+                                    class="bg-[#222] shadow-theme-xs hover:bg-purple-400 flex w-full items-center justify-center rounded-lg px-4 py-3 text-sm font-medium text-white transition">
                                     Sign In
                                 </button>
                             </div>
                         </form>
                     </div>
 
-                    <p class="mt-6 text-sm text-center text-gray-700 dark:text-gray-400">
-                        Don't have an account? <a href="{{ route('register') }}" class="text-pink-400 font-bold">Sign Up</a>
+                    <p class="mt-6 text-sm text-center text-gray-800 dark:text-gray-400">
+                        Don't have an account? <a href="{{ route('register') }}" class="text-purple-400 font-bold pl-1">Sign Up</a>
                     </p>
                 </div>
             </div>

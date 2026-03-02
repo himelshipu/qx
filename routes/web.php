@@ -36,6 +36,11 @@ Route::middleware(['web'])->group(function () {
     Route::get('/campaigns', [HomeController::class, 'campaigns'])->name('campaigns');
     Route::get('/faq', [StaticPagesController::class, 'faq'])->name('faq');
     Route::get('/support', [StaticPagesController::class, 'support'])->name('support');
+
+    //newly added routes for creator profile and edit profile Fahman
+    Route::get('/creator-edit-profile', [StaticPagesController::class, 'creatorEditProfile'])->name('creator-edit-profile');
+    Route::get('/creator-profile', [StaticPagesController::class, 'creatorProfile'])->name('creator-profile');
+    Route::get('/influencers', [StaticPagesController::class, 'influencers'])->name('influencers');
 });
 
 /*

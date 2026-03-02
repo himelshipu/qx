@@ -5,25 +5,45 @@
         <div class="mx-auto py-6 flex flex-col sm:px-0 px-4 sm:flex-row items-center justify-between space-y-4 sm:space-y-0">
             <div class="flex items-center gap-2">
                 <a href="{{ route('home') }}">
-                    <img src="/images/logo/logo.png" alt="Logo" class="h-11 dark:hidden block">
-                    <img src="/images/logo/logo-dark.png" alt="Logo" class="h-11 dark:block hidden">
+                    <img src="/images/logo/header-logo.png" alt="Logo" class="h-11 dark:hidden block">
+                    <img src="/images/logo/header-logo.png" alt="Logo" class="h-11 dark:block hidden">
                 </a>
             </div>
 
             <div>
-                <nav class="flex flex-wrap items-center justify-center gap-4 md:gap-6 lg:gap-8 text-sm lg:text-[14px] font-medium text-gray-600 dark:text-gray-300">
-                    <a href="{{ route('home') }}" class="hover:text-black dark:hover:text-white py-2 transition-colors border-b-3 border-b-purple-300">Home</a>
-                    <a href="{{ route('dashboard.content-library') }}" class="hover:text-black dark:hover:text-white py-2 transition-colors">Library</a>
-                    <a href="#" class="hover:text-black dark:hover:text-white py-2 transition-colors">Search</a>
-                    <a href="{{ route('faq') }}" class="hover:text-black dark:hover:text-white py-2 transition-colors">Faq</a>
-                    <a href="{{ route('support') }}" class="hover:text-black dark:hover:text-white py-2 transition-colors">Support</a>
+                <nav class="flex flex-wrap items-center justify-center gap-4 md:gap-6 lg:gap-10 text-sm font-medium">
+
+                    <a href="{{ route('home') }}" 
+                    class="nav-link {{ request()->routeIs('home') ? 'active' : '' }}">
+                        Home
+                    </a>
+
+                    <a href="{{ route('dashboard.content-library') }}" 
+                    class="nav-link {{ request()->routeIs('dashboard.content-library') ? 'active' : '' }}">
+                        Library
+                    </a>
+
+                    <a href="{{ route('influencers') }}" class="nav-link">
+                        Search
+                    </a>
+
+                    <a href="{{ route('faq') }}" 
+                    class="nav-link {{ request()->routeIs('faq') ? 'active' : '' }}">
+                        Faq
+                    </a>
+
+                    <a href="{{ route('support') }}" 
+                    class="nav-link {{ request()->routeIs('support') ? 'active' : '' }}">
+                        Support
+                    </a>
+
                 </nav>
             </div>
 
             <div class="flex items-center gap-5">
                 <!-- Shopping Cart Icon -->
                 <div @click="isCartOpen = true" class="relative cursor-pointer hover:opacity-70 transition-opacity">
-                    <svg class="w-7 h-7 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <svg class="w-7 h-7 text-gray-800 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path>
                     </svg>
                     <div class="absolute -bottom-1 left-1/2 -translate-x-1/2 flex items-center gap-0.5">

@@ -1,10 +1,10 @@
 @extends('frontend.layouts.app')
 @section('content')
-<div class="max-w-lg mx-auto px-4 sm:px-0">
+<div class="max-w-lg mx-auto">
     <div class="mb-8">
-        <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-3">Confirm Password</h1>
-        <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-4">
-            <p class="text-sm text-gray-700 dark:text-gray-300">
+        <h1 class="text-3xl md:text-4xl font-semibold text-[#222] dark:text-white leading-tight text-center mb-4">Confirm Password</h1>
+        <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-purple-300 rounded-xl p-4">
+            <p class="text-sm text-gray-700 dark:text-gray-400">
                 <span class="font-medium">Security Check:</span> This is a secure area of the application. Please confirm your password before continuing.
             </p>
         </div>
@@ -29,7 +29,7 @@
                 id="password"
                 name="password"
                 placeholder="Enter your password to continue"
-                class="w-full h-12 px-4 text-base rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:border-pink-400 dark:focus:border-pink-600 focus:ring-2 focus:ring-pink-200 dark:focus:ring-pink-900/30 outline-none transition-all duration-200"
+                class="mt-1.5 dark:bg-dark-900 shadow-theme-xs focus:border-pink-50 focus:ring-gray-500/10 dark:focus:border-gray-800 h-12 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30"
                 required
                 autocomplete="current-password"
                 autofocus
@@ -37,13 +37,13 @@
         </div>
 
         <div class="flex flex-col gap-3">
-            <button type="submit" class="w-full bg-gradient-to-r from-gray-900 to-gray-800 hover:from-pink-600 hover:to-pink-500 text-white font-semibold py-4 px-6 rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200">
+            <button type="submit" class="bg-[#222] shadow-theme-xs hover:bg-purple-400 flex w-full items-center justify-center rounded-lg px-4 py-3 text-sm font-medium text-white transition">
                 Confirm Password
             </button>
         </div>
     </form>
 
-    <div class="mt-8 text-sm text-gray-600 dark:text-gray-400">
+    <div class="mt-8 text-sm text-gray-800 text-center dark:text-gray-400">
         <p>
             You're accessing a sensitive area that requires additional verification. 
             This helps us keep your account secure from unauthorized access.
@@ -53,14 +53,14 @@
     <div class="mt-4 flex items-center justify-center gap-4">
         <form method="POST" action="{{ route('logout') }}">
             @csrf
-            <button type="submit" class="text-pink-600 dark:text-pink-400 hover:text-pink-700 dark:hover:text-pink-300 font-medium hover:underline transition-colors">
+            <button type="submit" class="bg-[#222] shadow-theme-xs hover:bg-purple-400 flex w-full items-center justify-center rounded-lg px-4 py-3 text-sm font-medium text-white transition">
                 Log Out
             </button>
         </form>
         
         <span class="text-gray-300 dark:text-gray-700">|</span>
         
-        <a href="{{ route('dashboard') }}" class="text-pink-600 dark:text-pink-400 hover:text-pink-700 dark:hover:text-pink-300 font-medium hover:underline transition-colors">
+        <a href="{{ route('dashboard') }}" class="bg-[#222] shadow-theme-xs hover:bg-purple-400 flex w-full items-center justify-center rounded-lg px-4 py-3 text-sm font-medium text-white transition">
             Back to Dashboard
         </a>
     </div>

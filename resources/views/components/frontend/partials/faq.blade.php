@@ -1,5 +1,5 @@
  <section class="faq-section-wrapper" x-data="{ activeAccordion: null }">
-            <h2 class="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-6">FAQ</h2>
+            <h2 class="text-3xl md:text-4xl font-semibold text-[#222] dark:text-white mb-6">FAQ</h2>
 
             <div class="divide-y divide-gray-200 dark:divide-gray-800 border-b border-gray-200 dark:border-gray-800">
                 

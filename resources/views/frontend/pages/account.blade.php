@@ -1,11 +1,11 @@
 @extends('frontend.layouts.app')
 
 @section('content')
-<div class="min-h-screen bg-white dark:bg-gray-950 px-4 sm:px-6 lg:px-8 py-16" 
-     x-data="{ tab: 'profile' }">
+<div class="max-w-5xl mx-auto" 
+     x-data="{ tab: 'details' }">
     
-    <div class="max-w-5xl mx-auto">
-        <h1 class="text-4xl font-bold text-gray-900 dark:text-white mb-10">My Account</h1>
+    <div>
+        <h1 class="text-3xl md:text-4xl font-semibold text-[#222] dark:text-white leading-tight text-left mb-4">My Account</h1>
 
         <!-- Status Messages -->
         @if (session('status') === 'profile-updated')
@@ -41,188 +41,65 @@
         @endif
 
         <!-- Tab Navigation -->
-        <div class="flex gap-8 border-b border-gray-200 dark:border-gray-800 mb-10 overflow-x-auto pb-4 md:pb-0">
-            <button @click="tab = 'profile'" 
-                    :class="tab === 'profile' ? 'border-b-2 border-black dark:border-white text-black dark:text-white' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'" 
+        <div class="flex gap-8 border-b border-gray-200 dark:border-gray-800 mb-8 overflow-x-auto mt-8"> 
+            <button @click="tab = 'details'" 
+                    :class="tab === 'details' ? 'border-b-2 border-black dark:border-white text-black dark:text-white' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'" 
                     class="pb-4 text-base font-medium transition-all whitespace-nowrap">
-                Profile
+                Details
             </button>
-            <button @click="tab = 'billing'" 
-                    :class="tab === 'billing' ? 'border-b-2 border-black dark:border-white text-black dark:text-white' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'" 
-                    class="pb-4 text-base font-medium transition-all whitespace-nowrap">
-                Billing
-            </button>
+            
             <button @click="tab = 'password'" 
                     :class="tab === 'password' ? 'border-b-2 border-black dark:border-white text-black dark:text-white' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'" 
                     class="pb-4 text-base font-medium transition-all whitespace-nowrap">
-                Password
+                Update Password
             </button>
-           <button @click="tab = 'security'" 
+
+            <button @click="tab = 'security'" 
                     :class="tab === 'security' ? 'border-b-2 border-black dark:border-white text-black dark:text-white' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'" 
                     class="pb-4 text-base font-medium transition-all whitespace-nowrap">
                 Security
             </button>
+
+           <button @click="tab = 'payment'" 
+                    :class="tab === 'payment' ? 'border-b-2 border-black dark:border-white text-black dark:text-white' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'" 
+                    class="pb-4 text-base font-medium transition-all whitespace-nowrap">
+                Payment
+            </button>
+
         </div>
 
-        <!-- Profile Tab -->
-        <div x-show="tab === 'profile'" x-cloak class="space-y-8 animate-in fade-in duration-300">
-            <form action="{{ route('dashboard.account.details.update') }}" method="POST" enctype="multipart/form-data" class="space-y-8">
+        <!-- Details Tab -->
+        <div x-show="tab === 'details'" x-cloak class="space-y-8 animate-in fade-in duration-300">
+            <form action="{{ route('dashboard.account.details.update') }}" method="POST" class="space-y-8">
                 @csrf
 
-                <!-- Profile Picture Section -->
-                <div class="flex flex-col items-center space-y-4">
-                    <div class="relative group">
-                        <div class="relative w-32 h-32 rounded-full bg-gradient-to-br from-purple-100 to-blue-100 dark:from-purple-900 dark:to-blue-900 flex items-center justify-center border-4 border-white dark:border-gray-800 shadow-lg overflow-hidden cursor-pointer transition hover:shadow-xl" @click="(function(){ const fileInput = $el.closest('.group').querySelector('input[name=profile_image]'); if(fileInput) fileInput.click(); })()">
-                            <input type="file" name="profile_image" class="hidden" accept="image/*" @change="$event.target.form.submit()">
-                            @if ($user->profile_image_path)
-                                <img src="{{ Storage::url($user->profile_image_path) }}" class="w-full h-full object-cover">
-                            @else
-                                <svg class="w-16 h-16 text-gray-400 dark:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 0a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                            @endif
-                        </div>
-                        <div class="absolute bottom-0 right-0 bg-purple-400 text-white p-2 rounded-full shadow-lg hover:bg-purple-500 transition cursor-pointer">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-                        </div>
-                    </div>
-                    <p class="text-sm text-gray-500 dark:text-gray-400">Click to upload profile picture</p>
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="flex flex-col gap-6">
                     <!-- Name -->
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Full Name *</label>
+                        <label class="block text-sm font-medium text-gray-800 dark:text-gray-300 mb-2">Full Name <span class="text-error-500"> *</span></label>
                         <input type="text" name="name" value="{{ old('name', $user->name) }}"
-                            class="w-full h-11 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-4 text-sm text-gray-900 dark:text-white focus:border-purple-400 focus:ring-2 focus:ring-purple-200 dark:focus:ring-purple-800 transition outline-none" 
+                            class="dark:bg-dark-900 shadow-theme-xs focus:border-pink-50 focus:ring-gray-500/10 dark:focus:border-gray-800 h-12 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30" 
                             required />
                         @error('name')
                             <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
                         @enderror
                     </div>
-
                     <!-- Email -->
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Email Address *</label>
+                        <label class="block text-sm font-medium text-gray-800 dark:text-gray-300 mb-2">Email Address <span class="text-error-500"> *</span></label>
                         <input type="email" name="email" value="{{ old('email', $user->email) }}"
-                            class="w-full h-11 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-4 text-sm text-gray-900 dark:text-white focus:border-purple-400 focus:ring-2 focus:ring-purple-200 dark:focus:ring-purple-800 transition outline-none" 
+                            class="dark:bg-dark-900 shadow-theme-xs focus:border-pink-50 focus:ring-gray-500/10 dark:focus:border-gray-800 h-12 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30" 
                             required />
                         @error('email')
                             <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
                         @enderror
                     </div>
 
-                    <!-- Phone -->
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Phone</label>
-                        <input type="tel" name="phone" value="{{ old('phone', $user->phone) }}" placeholder="+1 (555) 123-4567"
-                            class="w-full h-11 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-4 text-sm text-gray-900 dark:text-white focus:border-purple-400 focus:ring-2 focus:ring-purple-200 dark:focus:ring-purple-800 transition outline-none" />
-                        @error('phone')
-                            <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    <!-- Date of Birth -->
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Date of Birth</label>
-                        <input type="date" name="date_of_birth" value="{{ old('date_of_birth', $user->date_of_birth?->format('Y-m-d')) }}"
-                            class="w-full h-11 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-4 text-sm text-gray-900 dark:text-white focus:border-purple-400 focus:ring-2 focus:ring-purple-200 dark:focus:ring-purple-800 transition outline-none" />
-                        @error('date_of_birth')
-                            <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    <!-- Gender -->
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Gender</label>
-                        <select name="gender"
-                            class="w-full h-11 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-4 text-sm text-gray-900 dark:text-white focus:border-purple-400 focus:ring-2 focus:ring-purple-200 dark:focus:ring-purple-800 transition outline-none">
-                            <option value="">Select Gender</option>
-                            <option value="male" {{ old('gender', $user->gender) === 'male' ? 'selected' : '' }}>Male</option>
-                            <option value="female" {{ old('gender', $user->gender) === 'female' ? 'selected' : '' }}>Female</option>
-                            <option value="other" {{ old('gender', $user->gender) === 'other' ? 'selected' : '' }}>Other</option>
-                        </select>
-                        @error('gender')
-                            <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    <!-- Company Name -->
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Company Name</label>
-                        <input type="text" name="company_name" value="{{ old('company_name', $user->company_name) }}"
-                            class="w-full h-11 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-4 text-sm text-gray-900 dark:text-white focus:border-purple-400 focus:ring-2 focus:ring-purple-200 dark:focus:ring-purple-800 transition outline-none" />
-                        @error('company_name')
-                            <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    <!-- Job Title -->
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Job Title</label>
-                        <input type="text" name="job_title" value="{{ old('job_title', $user->job_title) }}"
-                            class="w-full h-11 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-4 text-sm text-gray-900 dark:text-white focus:border-purple-400 focus:ring-2 focus:ring-purple-200 dark:focus:ring-purple-800 transition outline-none" />
-                        @error('job_title')
-                            <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    <!-- Country -->
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Country</label>
-                        <input type="text" name="country" value="{{ old('country', $user->country) }}"
-                            class="w-full h-11 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-4 text-sm text-gray-900 dark:text-white focus:border-purple-400 focus:ring-2 focus:ring-purple-200 dark:focus:ring-purple-800 transition outline-none" />
-                        @error('country')
-                            <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    <!-- City -->
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">City</label>
-                        <input type="text" name="city" value="{{ old('city', $user->city) }}"
-                            class="w-full h-11 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-4 text-sm text-gray-900 dark:text-white focus:border-purple-400 focus:ring-2 focus:ring-purple-200 dark:focus:ring-purple-800 transition outline-none" />
-                        @error('city')
-                            <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    <!-- Postal Code -->
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Postal Code</label>
-                        <input type="text" name="postal_code" value="{{ old('postal_code', $user->postal_code) }}"
-                            class="w-full h-11 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-4 text-sm text-gray-900 dark:text-white focus:border-purple-400 focus:ring-2 focus:ring-purple-200 dark:focus:ring-purple-800 transition outline-none" />
-                        @error('postal_code')
-                            <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
-                        @enderror
-                    </div>
-                </div>
-
-                <!-- Bio -->
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Bio</label>
-                    <textarea name="bio" rows="4" placeholder="Tell us about yourself... (max 1000 characters)"
-                        class="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-4 py-3 text-sm text-gray-900 dark:text-white focus:border-purple-400 focus:ring-2 focus:ring-purple-200 dark:focus:ring-purple-800 transition outline-none resize-none">{{ old('bio', $user->bio) }}</textarea>
-                    @error('bio')
-                        <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
-                    @enderror
-                </div>
-
-                <button type="submit" class="w-full md:w-48 bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white font-bold py-3 rounded-lg transition shadow-lg active:scale-95">
-                    Save Changes
-                </button>
-            </form>
-        </div>
-
-        <!-- Billing Tab -->
-        <div x-show="tab === 'billing'" x-cloak class="space-y-8 animate-in fade-in duration-300">
-            <form action="{{ route('dashboard.account.billing.update') }}" method="POST" class="space-y-8">
-                @csrf
-
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <!-- Legal Company Name -->
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Legal Company Name</label>
-                        <input type="text" name="legal_company_name" value="{{ old('legal_company_name', $brand->setup_data['billing']['legal_company_name'] ?? '') }}"
-                            class="w-full h-11 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-4 text-sm text-gray-900 dark:text-white focus:border-purple-400 focus:ring-2 focus:ring-purple-200 dark:focus:ring-purple-800 transition outline-none" />
+                        <label class="block text-sm font-medium text-gray-800 dark:text-gray-300 mb-2">Legal Company Name</label>
+                        <input type="text" name="legal_company_name" value="{{ old('legal_company_name', $brand->setup_data['details']['legal_company_name'] ?? '') }}" placeholder="Company Name for Invoicing"
+                            class="dark:bg-dark-900 shadow-theme-xs focus:border-pink-50 focus:ring-gray-500/10 dark:focus:border-gray-800 h-12 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30" />
                         @error('legal_company_name')
                             <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
                         @enderror
@@ -230,71 +107,50 @@
 
                     <!-- VAT ID -->
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">VAT ID</label>
-                        <input type="text" name="vat_id" value="{{ old('vat_id', $brand->setup_data['billing']['vat_id'] ?? '') }}" placeholder="Optional"
-                            class="w-full h-11 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-4 text-sm text-gray-900 dark:text-white focus:border-purple-400 focus:ring-2 focus:ring-purple-200 dark:focus:ring-purple-800 transition outline-none" />
+                        <label class="block text-sm font-medium text-gray-800 dark:text-gray-300 mb-2">VAT ID</label>
+                        <input type="text" name="vat_id" value="{{ old('vat_id', $brand->setup_data['details']['vat_id'] ?? '') }}" placeholder="Optional"
+                            class="dark:bg-dark-900 shadow-theme-xs focus:border-pink-50 focus:ring-gray-500/10 dark:focus:border-gray-800 h-12 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30" />
                         @error('vat_id')
                             <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
                         @enderror
                     </div>
 
                     <!-- Billing Address -->
-                    <div class="md:col-span-2">
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Billing Address</label>
-                        <input type="text" name="billing_address" value="{{ old('billing_address', $brand->setup_data['billing']['billing_address'] ?? '') }}"
-                            class="w-full h-11 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-4 text-sm text-gray-900 dark:text-white focus:border-purple-400 focus:ring-2 focus:ring-purple-200 dark:focus:ring-purple-800 transition outline-none" />
+                    <div class="md:col-span-2 flex flex-col gap-2">
+                        <label class="block text-sm font-medium text-gray-800 dark:text-gray-300 mb-2">Billing Address</label>
+                        <input type="text" name="billing_address" value="{{ old('billing_address', $brand->setup_data['details']['billing_address'] ?? '') }}" placeholder="Street address"
+                            class="dark:bg-dark-900 shadow-theme-xs focus:border-pink-50 focus:ring-gray-500/10 dark:focus:border-gray-800 h-12 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30" />
                         @error('billing_address')
                             <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
                         @enderror
+                        <!-- city -->
+                        <input type="text" name="billing_city" value="{{ old('billing_city', $brand->setup_data['details']['billing_city'] ?? '') }}" placeholder="City Name"
+                            class="dark:bg-dark-900 shadow-theme-xs focus:border-pink-50 focus:ring-gray-500/10 dark:focus:border-gray-800 h-12 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30" />
+                        <!-- Postal Code -->
+                        <input type="text" name="billing_postal_code" value="{{ old('billing_postal_code', $brand->setup_data['details']['billing_postal_code'] ?? '') }}" placeholder="The postal or ZIP code for your billing address"
+                        class="dark:bg-dark-900 shadow-theme-xs focus:border-pink-50 focus:ring-gray-500/10 dark:focus:border-gray-800 h-12 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30" />
                     </div>
 
-                    <!-- Billing City -->
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">City</label>
-                        <input type="text" name="billing_city" value="{{ old('billing_city', $brand->setup_data['billing']['billing_city'] ?? '') }}"
-                            class="w-full h-11 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-4 text-sm text-gray-900 dark:text-white focus:border-purple-400 focus:ring-2 focus:ring-purple-200 dark:focus:ring-purple-800 transition outline-none" />
-                        @error('billing_city')
-                            <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    <!-- Billing Country -->
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Country</label>
-                        <input type="text" name="billing_country" value="{{ old('billing_country', $brand->setup_data['billing']['billing_country'] ?? '') }}"
-                            class="w-full h-11 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-4 text-sm text-gray-900 dark:text-white focus:border-purple-400 focus:ring-2 focus:ring-purple-200 dark:focus:ring-purple-800 transition outline-none" />
-                        @error('billing_country')
-                            <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    <!-- Billing Postal Code -->
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Postal Code</label>
-                        <input type="text" name="billing_postal_code" value="{{ old('billing_postal_code', $brand->setup_data['billing']['billing_postal_code'] ?? '') }}"
-                            class="w-full h-11 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-4 text-sm text-gray-900 dark:text-white focus:border-purple-400 focus:ring-2 focus:ring-purple-200 dark:focus:ring-purple-800 transition outline-none" />
-                        @error('billing_postal_code')
-                            <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
-                        @enderror
-                    </div>
+                    
                 </div>
 
-                <button type="submit" class="w-full md:w-48 bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white font-bold py-3 rounded-lg transition shadow-lg active:scale-95">
-                    Save Billing Info
+                <button type="submit" class="bg-[#222] shadow-theme-xs h-14 hover:bg-purple-400 flex w-full items-center justify-center rounded-lg px-4 py-3 text-sm font-medium text-white transition">
+                    Save
                 </button>
             </form>
         </div>
 
+
         <!-- Password Tab -->
         <div x-show="tab === 'password'" x-cloak class="space-y-8 animate-in fade-in duration-300" x-data="{ showPass: { old: false, new: false, confirm: false } }">
-            <form action="{{ route('dashboard.account.password.update') }}" method="POST" class="space-y-6 max-w-md">
+            <form action="{{ route('dashboard.account.password.update') }}" method="POST" class="space-y-6">
                 @csrf
 
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Current Password *</label>
+                    <label class="block text-sm font-medium text-gray-800 dark:text-gray-300 mb-2">Current Password <span class="text-error-500"> *</span></label>
                     <div class="relative">
                         <input :type="showPass.old ? 'text' : 'password'" name="current_password" placeholder="Enter your current password"
-                            class="w-full h-11 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-4 pr-12 text-sm text-gray-900 dark:text-white focus:border-purple-400 focus:ring-2 focus:ring-purple-200 dark:focus:ring-purple-800 transition outline-none" 
+                            class="dark:bg-dark-900 shadow-theme-xs focus:border-pink-50 focus:ring-gray-500/10 dark:focus:border-gray-800 h-12 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30" 
                             required />
                         <button type="button" @click="showPass.old = !showPass.old" class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
@@ -306,10 +162,10 @@
                 </div>
 
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">New Password *</label>
+                    <label class="block text-sm font-medium text-gray-800 dark:text-gray-300 mb-2">New Password <span class="text-error-500"> *</span></label>
                     <div class="relative">
                         <input :type="showPass.new ? 'text' : 'password'" name="password" placeholder="Enter new password"
-                            class="w-full h-11 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-4 pr-12 text-sm text-gray-900 dark:text-white focus:border-purple-400 focus:ring-2 focus:ring-purple-200 dark:focus:ring-purple-800 transition outline-none" 
+                            class="dark:bg-dark-900 shadow-theme-xs focus:border-pink-50 focus:ring-gray-500/10 dark:focus:border-gray-800 h-12 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30" 
                             required />
                         <button type="button" @click="showPass.new = !showPass.new" class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
@@ -322,10 +178,10 @@
                 </div>
 
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Confirm Password *</label>
+                    <label class="block text-sm font-medium text-gray-800 dark:text-gray-300 mb-2">Confirm Password <span class="text-error-500"> *</span></label>
                     <div class="relative">
                         <input :type="showPass.confirm ? 'text' : 'password'" name="password_confirmation" placeholder="Confirm new password"
-                            class="w-full h-11 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-4 pr-12 text-sm text-gray-900 dark:text-white focus:border-purple-400 focus:ring-2 focus:ring-purple-200 dark:focus:ring-purple-800 transition outline-none" 
+                            class="dark:bg-dark-900 shadow-theme-xs focus:border-pink-50 focus:ring-gray-500/10 dark:focus:border-gray-800 h-12 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30" 
                             required />
                         <button type="button" @click="showPass.confirm = !showPass.confirm" class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
@@ -336,7 +192,7 @@
                     @enderror
                 </div>
 
-                <button type="submit" class="w-full md:w-48 bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white font-bold py-3 rounded-lg transition shadow-lg active:scale-95">
+                <button type="submit" class="bg-[#222] shadow-theme-xs h-14 hover:bg-purple-400 flex w-full items-center justify-center rounded-lg px-4 py-3 text-sm font-medium text-white transition">
                     Update Password
                 </button>
             </form>
@@ -397,7 +253,7 @@
                 </div>
 
                 <div x-show="deleteOpen" x-cloak class="mt-4 p-4 bg-white dark:bg-gray-900 rounded-lg border border-red-200 dark:border-red-800">
-                    <p class="text-sm text-gray-700 dark:text-gray-300 mb-4 font-medium">
+                    <p class="text-sm text-gray-800 dark:text-gray-300 mb-4 font-medium">
                         ⚠️ This action cannot be undone. Please enter your password to confirm deletion.
                     </p>
                     <form method="POST" action="{{ route('dashboard.account.destroy') }}" @submit="if(!confirm('Are you absolutely sure? All your data will be permanently deleted.')) $event.preventDefault();">
@@ -418,6 +274,99 @@
                 </div>
             </div>
         </div>
+
+        <!-- Payment Tab -->
+        <div x-show="tab === 'payment'" 
+            x-cloak 
+            x-data="{ openCardModal: false }" 
+            class="space-y-12 animate-in fade-in duration-300 text-start">
+            
+            <!-- Payouts Section -->
+            <div class="space-y-4">
+                <h3 class="text-lg font-bold text-gray-900 dark:text-white">Payouts</h3>
+                <button @click="openCardModal = true" 
+                        class="w-full md:w-auto px-10 py-4 bg-[#D1FAE5] dark:bg-emerald-900/20 text-[#065F46] dark:text-emerald-400 rounded-xl font-bold text-sm transition hover:opacity-80 active:scale-95 shadow-sm">
+                    Add Payment Card
+                </button>
+            </div>
+
+            <!-- Card Verification Section -->
+            <div class="space-y-4">
+                <div class="flex items-center gap-3">
+                    <h3 class="text-lg font-bold text-gray-900 dark:text-white">Card Verification</h3>
+                    <button class="text-sm font-bold text-blue-500 hover:text-blue-600 transition">Change</button>
+                </div>
+                
+                <div class="flex items-center gap-4 text-gray-700 dark:text-gray-300">
+                    <!-- Simple Card Icon -->
+                    <div class="w-10 h-7 bg-gray-200 dark:bg-gray-800 rounded flex items-center justify-center">
+                        <svg class="w-6 h-6 text-gray-500" fill="currentColor" viewBox="0 0 24 24"><path d="M20 4H4c-1.11 0-1.99.89-1.99 2L2 18c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2zm0 14H4v-6h16v6zm0-10H4V6h16v2z"/></svg>
+                    </div>
+                    <span class="font-medium text-sm md:text-base">Visa **** **** **** 6197 3/29</span>
+                </div>
+            </div>
+
+            <!-- ========================= ADD NEW CARD MODAL ========================= -->
+            <div x-show="openCardModal" 
+                class="fixed inset-0 z-[100] flex items-center justify-center p-4 overflow-hidden" 
+                x-cloak>
+                
+                <!-- Backdrop -->
+                <div x-show="openCardModal" 
+                    x-transition.opacity 
+                    @click="openCardModal = false" 
+                    class="fixed inset-0 bg-black/60 backdrop-blur-sm"></div>
+
+                <!-- Modal Card -->
+                <div x-show="openCardModal"
+                    x-transition:enter="transition ease-out duration-300"
+                    x-transition:enter-start="opacity-0 scale-95"
+                    x-transition:enter-end="opacity-100 scale-100"
+                    x-transition:leave="transition ease-in duration-200"
+                    x-transition:leave-start="opacity-100 scale-100"
+                    x-transition:leave-end="opacity-0 scale-95"
+                    class="relative w-full max-w-xl bg-white dark:bg-gray-900 rounded-[2.5rem] shadow-2xl overflow-hidden p-8 md:p-14">
+                    
+                    <!-- Close Button -->
+                    <button @click="openCardModal = false" class="absolute top-8 right-8 text-gray-400 hover:text-black dark:hover:text-white transition">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" /></svg>
+                    </button>
+
+                    <!-- Title -->
+                    <h2 class="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-10 text-center">Add New Card</h2>
+
+                    <form class="space-y-6">
+                        <!-- Card Number Input with Autofill Badge -->
+                        <div class="relative">
+                            <div class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
+                                <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M20 4H4c-1.11 0-1.99.89-1.99 2L2 18c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2zm0 14H4v-6h16v6zm0-10H4V6h16v2z"/></svg>
+                            </div>
+                            <input type="text" placeholder="Card number" 
+                                class="w-full h-14 rounded-xl border border-gray-200 dark:border-gray-800 bg-transparent pl-14 pr-32 text-base focus:border-purple-400 focus:ring-0 dark:text-white placeholder:text-gray-400 transition-colors">
+                            
+                            <!-- Autofill link badge -->
+                            <div class="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 bg-black rounded-lg px-2 py-1 text-[10px] font-bold text-white cursor-pointer hover:bg-gray-800 transition">
+                                <span>Autofill</span>
+                                <span class="text-emerald-400">link</span>
+                            </div>
+                        </div>
+
+                        <!-- Expiry and CVC Row -->
+                        <div class="grid grid-cols-2 gap-4">
+                            <input type="text" placeholder="MM / YY" 
+                                class="h-14 rounded-xl border border-gray-200 dark:border-gray-800 bg-transparent px-5 text-base focus:border-purple-400 focus:ring-0 dark:text-white placeholder:text-gray-400 transition-colors">
+                            <input type="text" placeholder="CVC" 
+                                class="h-14 rounded-xl border border-gray-200 dark:border-gray-800 bg-transparent px-5 text-base focus:border-purple-400 focus:ring-0 dark:text-white placeholder:text-gray-400 transition-colors">
+                        </div>
+
+                        <button type="button" @click="openCardModal = false" class="w-full bg-[#1A1A1A] hover:bg-black text-white font-bold py-4 rounded-xl text-lg transition shadow-lg active:scale-95">
+                            Save
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
     </div>
 </div>
 

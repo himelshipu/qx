@@ -1,25 +1,22 @@
- <!-- Hero Content -->
-    <div class="max-w-6xl mx-auto px-4 pt-4 lg:pt-16 pb-8 text-center">
-        <h1 class="pb-4 text-4xl md:text-5xl font-bold tracking-tight 
-                bg-clip-text text-transparent 
-                bg-[length:200%_100%]
-                bg-[linear-gradient(90deg,rgba(147,51,234,1)_0%,rgba(183,118,241,1)_50%,rgba(205,157,253,1)_100%)]
-                transition-all duration-700 ease-out
-                leading-[1.1]">
-            The Creator Network Built for E-Commerce
+<div class="flex flex-col gap-8 items-center">
+     <!-- Hero Content -->
+    <div class="flex flex-col gap-3 items-center text-center">
+        <h1 class="font-bold text-4xl lg:text-5xl inline-block bg-clip-text text-transparent bg-[length:300%_300%] bg-[linear-gradient(90deg,rgba(175,120,229,1)_1%,rgba(205,157,253,1)_73%,rgba(192,132,252,1)_100%)] transition-all duration-700 ease-out leading-14" >
+            The Creator Network Built 
+            for E-Commerce
         </h1>
 
-        <p class="text-base text-gray-500 dark:text-gray-400 mx-auto leading-relaxed mt-4 max-w-4xl">
+        <p class="text-base text-gray-500 dark:text-gray-400 leading-relaxed max-w-4xl">
             Rockies brings brands and creators together into a single workflow -- talent discovery, task assignments, approvals, timeline tracking, and reporting -- plus automated commissions, payouts, invoices and contracts
         </p>
     </div>
 
     <!-- Search Bar -->
-    <div class="max-w-6xl mx-auto px-4 mb-12">
-        <div class="bg-white dark:bg-gray-800 rounded-md md:rounded-full shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-gray-100 dark:border-gray-700 flex flex-col md:flex-row p-5 md:p-2 md:pl-10 relative items-start md:items-center">
+    <div class="w-full md:w-2/3 mx-auto">
+        <div class="bg-white dark:bg-gray-800 w-full rounded-md md:rounded-full shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-gray-100 dark:border-gray-700 flex flex-col md:flex-row p-5 md:p-2 md:pl-10 relative items-start md:items-center">
             
             <!-- Chooses Platform -->
-            <div class="relative flex-1 w-full md:w-auto">
+            <div class="relative flex-1">
                 <div id="platform-trigger" class="flex flex-col items-start cursor-pointer border-b md:border-b-0 md:border-r border-gray-100 dark:border-gray-700 pb-4 md:pb-0 md:pr-4 group">
                     <span class="text-[11px] font-bold text-gray-900 dark:text-gray-100 uppercase tracking-wider">Platform</span>
                     <span id="selected-platform" class="text-gray-400 text-sm truncate">Choose a platform</span>
@@ -40,11 +37,11 @@
             </div>
 
             <!-- Category Section -->
-            <div class="relative flex-[1.5] flex flex-col items-start pt-4 md:pt-0 md:pl-8 w-full md:w-auto group">
+            <div class="relative flex-[1.5] flex flex-col items-start pt-4 md:pt-0 md:pl-8 group">
                 <div id="category-trigger" class="w-full cursor-pointer">
                     <span class="text-[11px] font-bold text-gray-900 dark:text-gray-100 uppercase tracking-wider">Category</span>
                     <input type="text" id="category-input" placeholder="Enter keywords, niches or categories" 
-                        class="w-full bg-transparent  border-none p-0 outline-none focus:ring-0 text-sm text-gray-900 placeholder-gray-400"
+                        class="w-full bg-transparent  border-none p-0 outline-none focus:ring-0 text-sm text-gray-900 dark:text-white placeholder-gray-400"
                         autocomplete="off">
                 </div>
 
@@ -113,6 +110,7 @@
         </button>
         @endforeach
     </div>
+</div>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -160,12 +158,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
             if (selectedCategories.includes(val)) {
                 selectedCategories = selectedCategories.filter(item => item !== val);
-                option.classList.remove('bg-black', 'text-white', 'dark:bg-white', 'dark:text-black');
-                option.classList.add('bg-gray-50', 'text-gray-700');
+                option.classList.remove('bg-black', 'text-white', 'dark:bg-purple-500', 'dark:text-white');
+                option.classList.add('bg-gray-50', 'text-gray-700', 'dark:bg-gray-700', 'dark:text-white');
             } else {
                 selectedCategories.push(val);
-                option.classList.add('bg-black', 'text-white', 'dark:bg-white', 'dark:text-black');
-                option.classList.remove('bg-gray-50', 'text-gray-700');
+                option.classList.add('bg-black', 'text-white', 'dark:bg-purple-500', 'dark:text-white');
+                option.classList.remove('bg-gray-50', 'text-gray-700', 'dark:bg-gray-700', 'dark:text-white');
             }
             categoryInput.value = selectedCategories.join(', ');
         });

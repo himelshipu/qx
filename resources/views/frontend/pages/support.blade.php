@@ -1,7 +1,7 @@
 @extends('frontend.layouts.app')
 
 @section('content')
-<div class="min-h-screen bg-white dark:bg-gray-950 font-sans px-4 sm:px-6 lg:px-8 py-10 md:py-20"
+<div class="min-h-screen transition-colors duration-200"
      x-data="{ 
         step: 'main', 
         activeQuestion: null,
@@ -16,7 +16,7 @@
         
         <div class="mb-16">
             <div class="bg-pink-50 dark:bg-transparent border border-pink-100 dark:border-gray-200 rounded-xl p-6 text-center">
-                <p class="text-sm font-medium text-[#1F2937] dark:text-white">
+                <p class="text-sm font-medium text-gray-800 dark:text-white">
                     Beware of scams, QX will never contact you on Telegram or WeeChat.
                 </p>
             </div>
@@ -24,7 +24,7 @@
 
         <div x-show="step === 'main'" x-transition:enter="transition ease-out duration-500" x-transition:enter-start="opacity-0 transform scale-95" class="space-y-16">
             <div class="text-center">
-                <h1 class="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-3">What Do You Need Help With Today?</h1>
+                <h1 class="text-3xl md:text-4xl font-semibold text-[#222] dark:text-white leading-tight text-center mb-1">What Do You Need Help With Today?</h1>
                 <p class="mt-4 text-gray-500 dark:text-gray-400  text-base">Choose from our support options below to get the help you need</p>
             </div>
 
@@ -50,7 +50,7 @@
                 <button @click="goBack()" class="w-10 h-10 flex items-center justify-center rounded-lg border border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition">
                     <svg class="w-4 h-4 text-gray-800 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7" stroke-width="2.5"/></svg>
                 </button>
-                <h2 class="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">What category does your question relate to?</h2>
+                <h2 class="text-3xl font-semibold text-[#222] dark:text-white leading-tight text-left mb-4">What category does your question relate to?</h2>
             </div>
 
             <div class="space-y-0 divide-y divide-gray-100 dark:divide-gray-800 border-t border-gray-100 dark:border-gray-800">
@@ -69,7 +69,7 @@
                     <svg class="w-4 h-4 text-gray-800 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7" stroke-width="2.5"/></svg>
                 </button>
                 <div>
-                    <h2 class="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">Common Questions</h2>
+                    <h2 class="text-3xl font-semibold text-[#222] dark:text-white leading-tight text-left mb-1">Common Questions</h2>
                     <p class="text-sm text-gray-400 font-medium mt-1">Don't see your question? <a href="#" class="underline hover:text-black dark:hover:text-purple-400">Contact us</a></p>
                 </div>
             </div>

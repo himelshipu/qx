@@ -1,7 +1,7 @@
  <section class="search-section-wrapper bg-white dark:bg-transparent overflow-hidden">
             <div class="max-w-screen-2xl mx-auto px-2">
                 
-                <div class="flex flex-col lg:flex-row items-center gap-16 lg:gap-24 mb-24">  
+                <div class="flex flex-col lg:flex-row items-center gap-16 lg:gap-12 mb-8">  
                    
                     <div class="w-full lg:w-1/2">
                         <!-- Search Badge -->
@@ -9,11 +9,11 @@
                             Search
                         </span>
 
-                        <h2 class="text-2xl md:text-4xl font-bold text-gray-900 dark:text-white mt-8 leading-[1.1] tracking-tight">
+                        <h2 class="text-3xl md:text-4xl font-semibold text-[#222] dark:text-white leading-tight mt-8">
                             Find and Hire Influencers in Seconds on the Marketplace
                         </h2>
 
-                        <div class="mt-12 space-y-12">          
+                        <div class="mt-8 space-y-8">          
                             <div>
                                 <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-3">Search Influencers</h3>
                                 <p class="text-gray-500 dark:text-gray-400 leading-relaxed max-w-lg">
