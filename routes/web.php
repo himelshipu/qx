@@ -58,6 +58,9 @@ Route::prefix('dashboard') ->name('dashboard.')->middleware(['auth', 'verified']
      Route::get('/brands/details/{id}', [BrandController::class, 'view'])->name('brands.view');
      Route::get('/creators', [CreatorController::class, 'index'])->name('creators.index');
      Route::get('/campaigns', [CampaignController::class, 'index'])->name('campaigns.index');
+     
+     //Create campaign route
+     Route::get('/campaigns/create', [CampaignController::class, 'create'])->name('campaigns.create');
      Route::get('/content-library', [ContentLibraryController::class, 'index'])->name('content-library');
 
 
