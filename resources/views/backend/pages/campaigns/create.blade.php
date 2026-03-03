@@ -177,11 +177,28 @@
                     <!-- Advanced Toggle -->
                     <div class="border-t border-gray-100 dark:border-gray-800 pt-6">
                         <button @click="isAdvancedOpen = !isAdvancedOpen" class="flex items-center justify-between w-full group">
-                            <span class="text-base font-medium text-gray-800 dark:text-gray-400 uppercase tracking-widest">Advanced Filters</span>
+                            <span class="text-base font-bold text-gray-800 dark:text-gray-400 uppercase tracking-widest">Advanced Filters</span>
                             <svg class="w-5 h-5 transition-transform text-purple-500" :class="isAdvancedOpen ? 'rotate-45' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path d="M12 4v16m8-8H4"/></svg>
                         </button>
                         <div x-show="isAdvancedOpen" x-collapse class="mt-6 space-y-6">
-                             <input type="text" placeholder="Target Language" class="w-full h-12 rounded-xl border border-gray-200 dark:border-gray-800 bg-transparent px-4 text-sm dark:text-white outline-none">
+                             <div>
+                                <label class="mb-1.5 block text-base font-medium text-gray-800 dark:text-gray-400">What genders do you want to target?</label>
+                                <select x-model="campaignType" class="dark:bg-dark-900 shadow-theme-xs focus:border-pink-50 focus:ring-gray-500/10 dark:focus:border-gray-800 h-12 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30">
+                                    <option value="any">Any</option>
+                                    <option value="male">Male</option>
+                                    <option value="female">Female</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="mb-1.5 block text-base font-medium text-gray-800 dark:text-gray-400">What ages do you want to target?</label>
+                                <select x-model="campaignType" class="dark:bg-dark-900 shadow-theme-xs focus:border-pink-50 focus:ring-gray-500/10 dark:focus:border-gray-800 h-12 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30">
+                                    <option value="any">Any</option>
+                                    <option value="18-24">18-24</option>
+                                    <option value="25-34">25-34</option>
+                                    <option value="35-44">35-44</option>
+                                    <option value="45+">45+</option>
+                                </select>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -189,71 +206,71 @@
 
             <!-- Right Side: Sticky Estimated Results -->
             <div class="md:sticky md:top-24 space-y-6">
-                <div class="bg-[#EBF7F0] dark:bg-green-950/20 rounded-[2.5rem] p-8 border border-green-100 dark:border-green-900/30 shadow-xl shadow-green-900/5">
-                    <h3 class="text-lg font-medium text-gray-800 dark:text-green-400 mb-8 uppercase tracking-widest">Estimated Results</h3>
+                <div class="bg-gray-100 dark:bg-gray-950/20 rounded-lg p-8 border border-gray-100 dark:border-gray-900/30 shadow-md shadow-gray-900/5">
+                    <h3 class="text-lg font-medium text-gray-800 dark:text-gray-300 mb-8">Estimated Results</h3>
                     
                     <div class="space-y-10">
                         <div class="flex items-center gap-5">
-                            <div class="w-14 h-14 bg-white dark:bg-gray-800 rounded-2xl flex items-center justify-center text-green-600 shadow-sm">
+                            <div class="w-14 h-14 bg-white dark:bg-gray-800 rounded-2xl flex items-center justify-center text-gray-500 shadow-sm">
                                 <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
                             </div>
                             <div>
-                                <p class="text-2xl font-black text-gray-800 dark:text-white leading-none" x-text="getEstimate().influencers"></p>
-                                <p class="text-[10px] font-medium uppercase text-gray-500 mt-1 tracking-widest">Influencers Match</p>
+                                <p class="text-2xl font-bold text-gray-800 dark:text-white leading-none" x-text="getEstimate().influencers"></p>
+                                <p class="text-[10px] font-medium uppercase text-gray-500 mt-1">Influencers Match</p>
                             </div>
                         </div>
 
                         <div class="flex items-center gap-5">
-                            <div class="w-14 h-14 bg-white dark:bg-gray-800 rounded-2xl flex items-center justify-center text-green-600 shadow-sm">
+                            <div class="w-14 h-14 bg-white dark:bg-gray-800 rounded-2xl flex items-center justify-center text-gray-500 shadow-sm">
                                 <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
                             </div>
                             <div>
-                                <p class="text-2xl font-black text-gray-800 dark:text-white leading-none" x-text="getEstimate().reach"></p>
-                                <p class="text-[10px] font-medium uppercase text-gray-500 mt-1 tracking-widest">Followers Reached</p>
+                                <p class="text-2xl font-bold text-gray-800 dark:text-white leading-none" x-text="getEstimate().reach"></p>
+                                <p class="text-[10px] font-medium uppercase text-gray-500 mt-1">Followers Reached</p>
                             </div>
                         </div>
                     </div>
 
-                    <button @click="step = 2" class="w-full mt-12 bg-[#1A1A1A] hover:bg-black text-white py-5 rounded-3xl font-black text-sm uppercase tracking-[0.2em] shadow-2xl transition active:scale-95">
+                    <button @click="step = 2" class="w-full mt-4 bg-[#222] hover:bg-purple-400 text-white py-4 rounded-lg font-bold text-lg shadow-sm transition active:scale-95">
                         Continue
                     </button>
                 </div>
                 
-                <p class="text-[11px] text-center text-gray-400 px-6 leading-relaxed">Adjust your targeting to see real-time updates on potential reach and influencer matches.</p>
+                <p class="text-sm text-center text-gray-400 px-6 leading-relaxed">Adjust your targeting to see real-time updates on potential reach and influencer matches.</p>
             </div>
         </div>
 
         <!-- ========================= STEP 2: CAMPAIGN DETAILS ========================= -->
         <div x-show="step === 2" x-cloak x-transition class="space-y-12 max-w-3xl">
             <header>
-                <h1 class="text-3xl font-black text-gray-800 dark:text-white tracking-tighter">Campaign Details</h1>
-                <p class="text-sm text-gray-500 dark:text-gray-400">Define the specifics of your campaign content.</p>
+                <h1 class="text-2xl font-medium text-gray-800 dark:text-white">Campaign Details</h1>
+                <p class="text-sm text-gray-500 dark:text-gray-400 mt-1 leading-relaxed">Define the specifics of your campaign content.</p>
             </header>
 
-            <div class="space-y-8">
+            <div class="space-y-6">
                 <div>
-                    <label class="block text-sm font-medium dark:text-gray-400 mb-3">Campaign Title</label>
-                    <input type="text" placeholder="Summer 2026 Influencer Push" class="w-full h-14 rounded-2xl border border-gray-200 dark:border-gray-800 bg-transparent px-5 dark:text-white outline-none focus:border-purple-400">
+                    <label class="mb-1.5 block text-base font-medium text-gray-800 dark:text-gray-400">Campaign Title</label>
+                    <input type="text" placeholder="Summer 2026 Influencer Push" class="dark:bg-dark-900 shadow-theme-xs focus:border-pink-50 focus:ring-gray-500/10 dark:focus:border-gray-800 h-12 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30">
                 </div>
 
                 <div>
-                    <label class="block text-sm font-medium dark:text-gray-400 mb-3">Product Description & Instructions</label>
-                    <textarea rows="6" placeholder="Describe your product and what you want creators to do..." class="w-full rounded-2xl border border-gray-200 dark:border-gray-800 bg-transparent p-5 dark:text-white outline-none focus:border-purple-400"></textarea>
+                    <label class="mb-1.5 block text-base font-medium text-gray-800 dark:text-gray-400">Product Description & Instructions</label>
+                    <textarea rows="6" placeholder="Describe your product and what you want creators to do..." class="dark:bg-dark-900 shadow-theme-xs focus:border-pink-50 focus:ring-gray-500/10 dark:focus:border-gray-800 h-12 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30"></textarea>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div class="p-6 bg-gray-50 dark:bg-gray-900 rounded-3xl border border-gray-100 dark:border-gray-800">
-                        <p class="text-xs font-black uppercase text-gray-400 mb-2 tracking-widest">Selected Type</p>
-                        <p class="text-xl font-medium text-gray-800 dark:text-purple-400 capitalize" x-text="campaignType"></p>
+                    <div class="p-4 bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-800">
+                        <p class="text-xs font-bold uppercase text-gray-400 mb-2">Selected Type</p>
+                        <p class="text-xl font-bold text-gray-800 dark:text-purple-400 capitalize" x-text="campaignType"></p>
                     </div>
-                    <div class="p-6 bg-gray-50 dark:bg-gray-900 rounded-3xl border border-gray-100 dark:border-gray-800">
-                        <p class="text-xs font-black uppercase text-gray-400 mb-2 tracking-widest">Hiring Limit</p>
-                        <p class="text-xl font-medium text-gray-800 dark:text-purple-400"><span x-text="influencerCount"></span> Creators</p>
+                    <div class="p-6 bg-gray-50 dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800">
+                        <p class="text-xs font-bold uppercase text-gray-400 mb-2 tracking-widest">Hiring Limit</p>
+                        <p class="text-xl font-bold text-gray-800 dark:text-purple-400"><span x-text="influencerCount"></span> Creators</p>
                     </div>
                 </div>
 
                 <div class="pt-10 flex flex-col gap-4">
-                    <button class="w-full bg-[#1A1A1A] dark:bg-purple-500 text-white dark:text-gray-800 py-6 rounded-3xl font-black text-sm uppercase tracking-[0.2em] shadow-2xl transition hover:opacity-90 active:scale-95">
+                    <button class="w-full bg-[#222] hover:bg-purple-500 dark:bg-purple-400 text-white dark:text-gray-800 py-4 rounded-lg font-bold text-xlg uppercase tracking-[0.2em] shadow-sm transition hover:opacity-90 active:scale-95">
                         Publish Campaign
                     </button>
                     <button @click="step = 1" class="text-sm font-medium text-gray-500 hover:text-gray-800 transition">Back to Edit Targeting</button>
