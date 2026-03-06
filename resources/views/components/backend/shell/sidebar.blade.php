@@ -25,11 +25,15 @@
     x-init="$watch('$store.sidebar.isExpanded', val => { if (!val) openMenus = [] })">
     
     <div class="h-20 flex items-center justify-center px-4 border-b border-gray-100 dark:border-gray-800">
-        <a href="/" class="flex items-center gap-3">
+        <!-- <a href="/" class="flex items-center gap-3">
             <div class="h-10 w-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
                 <span class="text-white font-bold text-xl">Q</span>
             </div>
             <span x-show="$store.sidebar.isExpanded" class="text-xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">QX</span>
+        </a> -->
+        <a href="/">
+            <img src="/images/logo/header-logo.png" alt="Logo" class="h-11 dark:hidden block">
+            <img src="/images/logo/header-logo.png" alt="Logo" class="h-11 dark:block hidden">
         </a>
     </div>
 
