@@ -166,6 +166,15 @@
                 </div>
             </div>
 
+            <!-- Set Status -->
+            <div>
+                <label class="block mb-1.5 text-sm font-medium text-gray-700 dark:text-gray-300">Status</label>
+                <select x-model="form.status" class="w-full h-11 px-4 text-sm rounded-lg border border-gray-200 bg-transparent focus:border-gray-300 focus:ring-2 focus:ring-gray-100 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
+                    <option selected value="Enabled">Enabled</option>
+                    <option value="Disabled">Disabled</option>
+                </select>
+            </div>
+
             <!-- Form Actions -->
             <div class="flex items-center gap-3 pt-4">
                 <button type="button" 
