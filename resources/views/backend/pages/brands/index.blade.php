@@ -265,12 +265,14 @@
                     </div>
                 </div>
 
-                <!-- Address -->
+                <!-- Set Status -->
                 <div class="col-span-2">
-                    <label class="block mb-1.5 text-sm font-medium text-gray-700 dark:text-gray-300">Address</label>
-                    <textarea x-model="form.address" rows="2"
-                        placeholder="Street address, city, country"
-                        class="w-full px-4 py-2 text-sm rounded-lg border border-gray-200 bg-transparent focus:border-gray-300 focus:ring-2 focus:ring-gray-100 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90"></textarea>
+                    <label class="block mb-1.5 text-sm font-medium text-gray-700 dark:text-gray-300">Status</label>
+                    <select x-model="form.status" 
+                        class="w-full h-11 px-4 text-sm rounded-lg border border-gray-200 bg-transparent focus:border-gray-300 focus:ring-2 focus:ring-gray-100 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
+                        <option value="active">Active</option>
+                        <option value="inactive">Inactive</option>
+                    </select>
                 </div>
             </div>
 

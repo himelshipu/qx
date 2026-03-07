@@ -70,11 +70,14 @@ Route::prefix('dashboard') ->name('dashboard.')->middleware(['auth', 'verified']
      //create brand route
      Route::get('/brands/create', [BrandController::class, 'create'])->name('brands.create');
 
+     Route::get('/brands/create-moderator', [BrandController::class, 'createModerator'])->name('create.moderator');
+
      Route::get('/content-library', [ContentLibraryController::class, 'index'])->name('content-library');
 
-
-
-
+    //Moderator routes (dashboard)
+    Route::get('/moderators', [ModeratorController::class, 'index'])->name('moderators.index');
+    Route::get('/moderators/create', [ModeratorController::class, 'create'])->name('moderators.create');
+    Route::post('/moderators', [ModeratorController::class, 'store'])->name('moderators.store');
 
 
     // Brand Profile routes (dashboard)

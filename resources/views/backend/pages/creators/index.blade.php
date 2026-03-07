@@ -101,7 +101,7 @@
                             <!-- Action Icons -->
                             <td class="px-4 py-3">
                                 <div class="flex items-center justify-end gap-2">
-                                    <button class="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition">
+                                    <button @click="viewCreator(creator)" class="p-2 text-gray-500 hover:text-indigo-600 dark:text-gray-400 dark:hover:text-indigo-400 rounded-lg hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition">
                                         <x-icons.eye class="w-4 h-4" />
                                     </button>
                                     <button @click="editCreator(creator)" 
@@ -154,6 +154,15 @@
                     <label class="block mb-1.5 text-sm font-medium text-gray-700 dark:text-gray-300">Avatar URL</label>
                     <input type="text" x-model="form.avatar" placeholder="https://..." class="w-full h-11 px-4 text-sm rounded-lg border border-gray-200 bg-transparent dark:border-gray-700 dark:text-white">
                 </div>
+                <!-- Set Status -->
+                <div class="col-span-2">
+                    <label class="block mb-1.5 text-sm font-medium text-gray-700 dark:text-gray-300">Status</label>
+                    <select x-model="form.status" 
+                        class="w-full h-11 px-4 text-sm rounded-lg border border-gray-200 bg-transparent focus:border-gray-300 focus:ring-2 focus:ring-gray-100 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
+                        <option value="active">Active</option>
+                        <option value="inactive">Inactive</option>
+                    </select>
+                </div>
             </div>
 
             <div class="flex items-center gap-3 pt-4">
@@ -181,6 +190,58 @@
     </div>
 </x-ui.modal>
 
+<x-ui.modal x-data="{ open: false }" @open-view-modal.window="open = true" x-show="open" x-cloak class="max-w-xl">
+    <div class="relative bg-white dark:bg-gray-900 rounded-2xl overflow-hidden shadow-2xl">
+        <!-- Modal Header / Cover Mockup -->
+        <div class="h-24 bg-gradient-to-r from-purple-500 to-indigo-600"></div>
+        
+        <div class="px-8 pb-8">
+            <div class="relative flex justify-between items-end -mt-12 mb-6">
+                <div class="w-24 h-24 rounded-full border-4 border-white dark:border-gray-900 overflow-hidden bg-gray-100 shadow-sm">
+                    <template x-if="selectedCreator?.avatar">
+                        <img :src="selectedCreator.avatar" class="w-full h-full object-cover">
+                    </template>
+                    <template x-if="!selectedCreator?.avatar">
+                        <div class="w-full h-full flex items-center justify-center bg-gray-200 dark:bg-gray-800">
+                             <svg class="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" stroke-width="2" stroke-linecap="round"></path></svg>
+                        </div>
+                    </template>
+                </div>
+            </div>
+
+            <div class="mb-6 text-start">
+                <h2 class="text-2xl font-bold text-gray-900 dark:text-white" x-text="selectedCreator?.name"></h2>
+                <p class="text-indigo-600 dark:text-indigo-400 font-medium" x-text="selectedCreator?.handle"></p>
+            </div>
+
+            <div class="grid grid-cols-2 gap-6 text-start border-t border-gray-100 dark:border-gray-800 pt-6">
+                <div>
+                    <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Category</p>
+                    <p class="text-sm font-semibold text-gray-700 dark:text-gray-300" x-text="selectedCreator?.niche"></p>
+                </div>
+                <div>
+                    <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Followers</p>
+                    <p class="text-sm font-semibold text-gray-700 dark:text-gray-300" x-text="selectedCreator?.followers"></p>
+                </div>
+                <div>
+                    <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Email</p>
+                    <p class="text-sm font-semibold text-gray-700 dark:text-gray-300 truncate" x-text="selectedCreator?.email"></p>
+                </div>
+                <div>
+                    <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Status</p>
+                    <span :class="selectedCreator?.status === 'active' ? 'text-green-500' : 'text-gray-400'" class="text-sm font-bold uppercase" x-text="selectedCreator?.status"></span>
+                </div>
+            </div>
+
+            <div class="mt-10 flex gap-3">
+                <button @click="open = false; editCreator(selectedCreator)" class="flex-1 py-3 bg-gray-900 dark:bg-purple-600 text-white rounded-xl font-bold text-sm hover:opacity-90 transition">Edit Profile</button>
+                <button @click="open = false" class="px-6 py-3 border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 rounded-xl font-bold text-sm hover:bg-gray-50 dark:hover:bg-gray-800 transition">Close</button>
+            </div>
+        </div>
+    </div>
+</x-ui.modal>
+
+
 <script>
 function creatorManager() {
     return {
@@ -195,6 +256,11 @@ function creatorManager() {
         form: { id: null, name: '', niche: '', email: '', followers: '', avatar: '', status: 'active' },
         deleteCreatorName: '',
         deleteCreatorId: null,
+        
+        viewCreator(creator) {
+            this.selectedCreator = { ...creator };
+            this.$dispatch('open-view-modal');
+        },
 
         addCreator() {
             this.modalTitle = 'Add New Creator';

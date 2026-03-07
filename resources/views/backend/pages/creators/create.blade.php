@@ -120,11 +120,11 @@
                         </button>
                     </div>
 
-                    <!-- Send user a notification link -->
+                    <!-- Send Creator a notification link -->
                     <div>
                         <label class="inline-flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
                             <input type="checkbox" name="sendNotification" />
-                            Send user a notification link to set up their account
+                            Send Creator a notification link to set up their account
                         </label>
                     </div>
                 </div>
