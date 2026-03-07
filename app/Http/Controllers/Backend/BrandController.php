@@ -17,4 +17,9 @@ class BrandController extends Controller
         $brand = Brand::with('user')->findOrFail($id);
         return view('backend.pages.brands.view', compact('brand'));
     }
+
+    public function create()
+    {
+        return view('backend.pages.brands.create');
+    }
 }

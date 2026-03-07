@@ -11,4 +11,9 @@ class CampaignController extends Controller
     {
         return view('backend.pages.campaigns.index');
     }
+
+    public function create()
+    {
+        return view('backend.pages.campaigns.create');
+    }
 }
