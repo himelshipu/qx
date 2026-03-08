@@ -8,6 +8,9 @@ use App\Http\Controllers\Backend\CategoryController;
 use App\Http\Controllers\Backend\CampaignController;
 use App\Http\Controllers\Backend\CreatorController;
 use App\Http\Controllers\Backend\DashboardController;
+use App\Http\Controllers\Backend\ModeratorController;
+use App\Http\Controllers\Backend\RoleController;
+use App\Http\Controllers\Backend\PermissionController;
 use App\Http\Controllers\BrandProfileController;
 use App\Http\Controllers\Frontend\HomeController;
 use App\Http\Controllers\Frontend\StaticPagesController;
@@ -78,6 +81,34 @@ Route::prefix('dashboard') ->name('dashboard.')->middleware(['auth', 'verified']
     Route::get('/moderators', [ModeratorController::class, 'index'])->name('moderators.index');
     Route::get('/moderators/create', [ModeratorController::class, 'create'])->name('moderators.create');
     Route::post('/moderators', [ModeratorController::class, 'store'])->name('moderators.store');
+    Route::get('/moderators/{id}', [ModeratorController::class, 'show'])->name('moderators.show');
+    Route::get('/moderators/{id}/edit', [ModeratorController::class, 'edit'])->name('moderators.edit');
+    Route::put('/moderators/{id}', [ModeratorController::class, 'update'])->name('moderators.update');
+    Route::delete('/moderators/{id}', [ModeratorController::class, 'destroy'])->name('moderators.destroy');
+    Route::post('/moderators/{id}/toggle-status', [ModeratorController::class, 'toggleStatus'])->name('moderators.toggle-status');
+
+    //Role routes (dashboard)
+    Route::get('/roles', [RoleController::class, 'index'])->name('roles.index');
+    Route::get('/roles/create', [RoleController::class, 'create'])->name('roles.create');
+    Route::post('/roles', [RoleController::class, 'store'])->name('roles.store');
+    Route::get('/roles/{id}', [RoleController::class, 'show'])->name('roles.show');
+    Route::get('/roles/{id}/edit', [RoleController::class, 'edit'])->name('roles.edit');
+    Route::put('/roles/{id}', [RoleController::class, 'update'])->name('roles.update');
+    Route::delete('/roles/{id}', [RoleController::class, 'destroy'])->name('roles.destroy');
+    Route::post('/roles/{id}/toggle-status', [RoleController::class, 'toggleStatus'])->name('roles.toggle-status');
+    Route::get('/roles/{id}/permissions', [RoleController::class, 'getPermissions'])->name('roles.permissions');
+
+    //Permission routes (dashboard)
+    Route::get('/permissions', [PermissionController::class, 'index'])->name('permissions.index');
+    Route::get('/permissions/create', [PermissionController::class, 'create'])->name('permissions.create');
+    Route::post('/permissions', [PermissionController::class, 'store'])->name('permissions.store');
+    Route::get('/permissions/assign', [PermissionController::class, 'assign'])->name('permissions.assign');
+    Route::post('/permissions/assign', [PermissionController::class, 'assignStore'])->name('permissions.assign.store');
+    Route::get('/permissions/{id}', [PermissionController::class, 'show'])->name('permissions.show');
+    Route::get('/permissions/{id}/edit', [PermissionController::class, 'edit'])->name('permissions.edit');
+    Route::put('/permissions/{id}', [PermissionController::class, 'update'])->name('permissions.update');
+    Route::delete('/permissions/{id}', [PermissionController::class, 'destroy'])->name('permissions.destroy');
+    Route::post('/permissions/{id}/toggle-status', [PermissionController::class, 'toggleStatus'])->name('permissions.toggle-status');
 
 
     // Brand Profile routes (dashboard)
