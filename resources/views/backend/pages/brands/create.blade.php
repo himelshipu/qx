@@ -64,6 +64,14 @@
                             Create Brand
                         </button>
                     </div>
+
+                    <!-- Send Brand a notification link -->
+                    <div>
+                        <label class="inline-flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+                            <input type="checkbox" name="sendNotification" />
+                            Send Brand a notification link to set up their account
+                        </label>
+                    </div>
                 </div>
             </form>
         </div>

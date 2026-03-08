@@ -22,4 +22,9 @@ class BrandController extends Controller
     {
         return view('backend.pages.brands.create');
     }
+
+    public function createModerator()
+    {
+        return view('backend.pages.brands.create-moderator');
+    }
 }

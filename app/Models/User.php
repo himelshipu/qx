@@ -78,6 +78,76 @@ class User extends Authenticatable
     }
 
     /**
+     * The roles that belong to the user.
+     */
+    public function roles()
+    {
+        return $this->belongsToMany(\App\Models\Role::class, 'user_roles');
+    }
+
+    /**
+     * The permissions that belong to the user (through roles).
+     */
+    public function permissions()
+    {
+        return $this->belongsToMany(\App\Models\Permission::class, 'user_permissions');
+    }
+
+    /**
+     * Check if the user has a specific role.
+     */
+    public function hasRole(string $roleSlug): bool
+    {
+        return $this->roles()->where('slug', $roleSlug)->exists();
+    }
+
+    /**
+     * Check if the user has a specific permission (through roles).
+     */
+    public function hasPermission(string $permissionSlug): bool
+    {
+        // Check direct permissions first
+        if ($this->permissions()->where('slug', $permissionSlug)->exists()) {
+            return true;
+        }
+
+        // Check permissions through roles
+        foreach ($this->roles as $role) {
+            if ($role->hasPermission($permissionSlug)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Assign a role to the user.
+     */
+    public function assignRole(\App\Models\Role $role): void
+    {
+        if (!$this->hasRole($role->slug)) {
+            $this->roles()->attach($role);
+        }
+    }
+
+    /**
+     * Remove a role from the user.
+     */
+    public function removeRole(\App\Models\Role $role): void
+    {
+        $this->roles()->detach($role);
+    }
+
+    /**
+     * Sync roles for the user.
+     */
+    public function syncRoles(array $roleIds): void
+    {
+        $this->roles()->sync($roleIds);
+    }
+
+    /**
      * Check if the user has verified their email.
      */
     public function hasVerifiedEmail(): bool
