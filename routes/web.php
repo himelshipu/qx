@@ -73,8 +73,7 @@ Route::prefix('dashboard') ->name('dashboard.')->middleware(['auth', 'verified']
      //create brand route
      Route::get('/brands/create', [BrandController::class, 'create'])->name('brands.create');
 
-     Route::get('/brands/create-moderator', [BrandController::class, 'createModerator'])->name('create.moderator');
-
+    // Content Library
      Route::get('/content-library', [ContentLibraryController::class, 'index'])->name('content-library');
 
     //Moderator routes (dashboard)

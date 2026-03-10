@@ -33,7 +33,7 @@
                        name="name" 
                        id="name" 
                        value="{{ old('name') }}"
-                       class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white"
+                       class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-1 focus:ring-purple-500 focus:border-purple-500 focus:outline-hidden dark:bg-gray-700 dark:text-white"
                        placeholder="Enter full name"
                        required>
                 @error('name')
@@ -50,7 +50,7 @@
                        name="email" 
                        id="email" 
                        value="{{ old('email') }}"
-                       class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white"
+                       class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-1 focus:ring-purple-500 focus:border-purple-500 focus:outline-hidden dark:bg-gray-700 dark:text-white"
                        placeholder="Enter email address"
                        required>
                 @error('email')
@@ -67,7 +67,7 @@
                        name="phone" 
                        id="phone" 
                        value="{{ old('phone') }}"
-                       class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white"
+                       class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-1 focus:ring-purple-500 focus:border-purple-500 focus:outline-hidden dark:bg-gray-700 dark:text-white"
                        placeholder="Enter phone number">
                 @error('phone')
                     <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
@@ -85,7 +85,7 @@
                            id="is_active" 
                            value="1"
                            {{ old('is_active', true) ? 'checked' : '' }}
-                           class="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500">
+                           class="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500 focus:outline-hidden">
                     <label for="is_active" class="ml-2 text-sm text-gray-600 dark:text-gray-400">
                         Active
                     </label>
@@ -100,7 +100,7 @@
                 <input type="password" 
                        name="password" 
                        id="password" 
-                       class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white"
+                       class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-1 focus:ring-purple-500 focus:border-purple-500 focus:outline-hidden dark:bg-gray-700 dark:text-white"
                        placeholder="Enter password"
                        required>
                 @error('password')
@@ -116,7 +116,7 @@
                 <input type="password" 
                        name="password_confirmation" 
                        id="password_confirmation" 
-                       class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white"
+                       class="w-full px-4 py-2 border focus:outline-hidden border-gray-300 dark:border-gray-600 rounded-lg focus:ring-1 focus:ring-purple-500 focus:border-purple-500 dark:bg-gray-700 dark:text-white"
                        placeholder="Confirm password"
                        required>
             </div>
@@ -128,7 +128,7 @@
                 Cancel
             </a>
             <button type="submit" 
-                    class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg transition-colors">
+                    class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium rounded-lg transition-colors">
                 Create Moderator
             </button>
         </div>

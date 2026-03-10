@@ -34,7 +34,7 @@
                        name="name" 
                        id="name" 
                        value="{{ old('name', $role->name) }}"
-                       class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white"
+                       class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-1 focus:ring-purple-500 focus:border-purple-500 dark:bg-gray-700 dark:text-white"
                        placeholder="Enter role name"
                        required>
                 @error('name')
@@ -53,7 +53,7 @@
                            id="is_active" 
                            value="1"
                            {{ old('is_active', $role->is_active) ? 'checked' : '' }}
-                           class="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500">
+                           class="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500">
                     <label for="is_active" class="ml-2 text-sm text-gray-600 dark:text-gray-400">
                         Active
                     </label>
@@ -69,7 +69,7 @@
                     name="description" 
                     id="description" 
                     rows="3"
-                    class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white"
+                    class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-1 focus:ring-purple-500 focus:border-purple-500 dark:bg-gray-700 dark:text-white"
                     placeholder="Enter role description">{{ old('description', $role->description) }}</textarea>
             </div>
         </div>
@@ -92,7 +92,7 @@
                     <div class="flex items-center gap-2 mb-3">
                         <input type="checkbox" 
                                id="module_{{ $loop->index }}"
-                               class="module-checkbox w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
+                               class="module-checkbox w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
                                data-module="{{ $loop->index }}"
                                {{ $allChecked ? 'checked' : '' }}>
                         <label for="module_{{ $loop->index }}" class="text-sm font-medium text-gray-900 dark:text-white">
@@ -111,7 +111,7 @@
                                    id="permission_{{ $permission->id }}"
                                    value="{{ $permission->id }}"
                                    {{ in_array($permission->id, old('permissions', $role->permissions->pluck('id')->toArray())) ? 'checked' : '' }}
-                                   class="permission-checkbox w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
+                                   class="permission-checkbox w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
                                    data-module="{{ $loop->parent->index }}">
                             <label for="permission_{{ $permission->id }}" class="ml-2 text-sm text-gray-600 dark:text-gray-400">
                                 {{ $permission->name }}
@@ -133,7 +133,7 @@
                 Cancel
             </a>
             <button type="submit" 
-                    class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg transition-colors">
+                    class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium rounded-lg transition-colors">
                 Update Role
             </button>
         </div>
