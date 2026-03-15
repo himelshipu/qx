@@ -3,151 +3,208 @@
 @section('title', 'Moderators')
 
 @section('content')
-<div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
-    <div class="p-6 border-b border-gray-200 dark:border-gray-700">
-        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div>
-                <h2 class="text-xl font-semibold text-gray-900 dark:text-white">Moderators</h2>
-                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Manage your platform moderators</p>
-            </div>
-            <a href="{{ route('dashboard.moderators.create') }}" 
-               class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-gray-900 rounded-lg hover:bg-gray-800 dark:bg-gray-700 dark:hover:bg-gray-600">
-                <x-icons.plus class="w-4 h-4" />
-                Add Moderator
-            </a>
-        </div>
-    </div>
+	<x-backend.shell.breadcrumb pageTitle="Moderators" />
 
-    @if(session('success'))
-    <div class="p-4 mb-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
-        <div class="flex items-center gap-2">
-            <svg class="w-5 h-5 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-            </svg>
-            <p class="text-sm text-green-700 dark:text-green-300">{{ session('success') }}</p>
-        </div>
-    </div>
-    @endif
+	<div class="space-y-6">
+		<div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+			<div class="rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-gray-900">
+				<p class="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Total</p>
+				<p class="mt-2 text-2xl font-semibold text-gray-900 dark:text-white">{{ $stats['total'] }}</p>
+			</div>
+			<div class="rounded-xl border border-green-200 bg-green-50 p-4 dark:border-green-900/40 dark:bg-green-900/20">
+				<p class="text-xs font-semibold uppercase tracking-wider text-green-700 dark:text-green-300">Active</p>
+				<p class="mt-2 text-2xl font-semibold text-green-700 dark:text-green-200">{{ $stats['active'] }}</p>
+			</div>
+			<div class="rounded-xl border border-red-200 bg-red-50 p-4 dark:border-red-900/40 dark:bg-red-900/20">
+				<p class="text-xs font-semibold uppercase tracking-wider text-red-700 dark:text-red-300">Inactive</p>
+				<p class="mt-2 text-2xl font-semibold text-red-700 dark:text-red-200">{{ $stats['inactive'] }}</p>
+			</div>
+		</div>
 
-    <div class="overflow-x-auto">
-        <table class="w-full">
-            <thead class="bg-gray-50 dark:bg-gray-800/50">
-                <tr>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Name</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Email</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Phone</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Created At</th>
-                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
-                </tr>
-            </thead>
-            <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
-                @forelse($moderators as $moderator)
-                <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <div class="flex items-center gap-3">
-                            <div class="h-10 w-10 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
-                                <span class="text-purple-600 dark:text-purple-400 font-medium">
-                                    {{ strtoupper(substr($moderator->name, 0, 2)) }}
-                                </span>
-                            </div>
-                            <span class="text-sm font-medium text-gray-900 dark:text-white">{{ $moderator->name }}</span>
-                        </div>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">
-                        {{ $moderator->email }}
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">
-                        {{ $moderator->phone ?? 'N/A' }}
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <button onclick="toggleStatus({{ $moderator->id }})" 
-                                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium transition-colors
-                                {{ $moderator->is_active 
-                                    ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 hover:bg-green-200' 
-                                    : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400 hover:bg-red-200' }}">
-                            {{ $moderator->is_active ? 'Active' : 'Inactive' }}
-                        </button>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                        {{ $moderator->created_at->format('M d, Y') }}
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm">
-                        <div class="flex items-center justify-end gap-2">
-                            <a href="{{ route('dashboard.moderators.show', $moderator->id) }}" 
-                               class="p-2 text-gray-500 hover:text-purple-600 dark:text-gray-400 dark:hover:text-purple-400 transition-colors"
-                               title="View">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
-                                </svg>
-                            </a>
-                            <a href="{{ route('dashboard.moderators.edit', $moderator->id) }}" 
-                               class="p-2 text-gray-500 hover:text-purple-600 dark:text-gray-400 dark:hover:text-purple-400 transition-colors"
-                               title="Edit">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-                                </svg>
-                            </a>
-                            <form action="{{ route('dashboard.moderators.destroy', $moderator->id) }}" method="POST" class="inline">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" 
-                                        class="p-2 text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400 transition-colors"
-                                        title="Delete"
-                                        onclick="return confirm('Are you sure you want to delete this moderator?')">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                                    </svg>
-                                </button>
-                            </form>
-                        </div>
-                    </td>
-                </tr>
-                @empty
-                <tr>
-                    <td colspan="6" class="px-6 py-12 text-center">
-                        <div class="flex flex-col items-center">
-                            <svg class="w-12 h-12 text-gray-300 dark:text-gray-600 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
-                            </svg>
-                            <p class="text-gray-500 dark:text-gray-400">No moderators found</p>
-                            <a href="{{ route('dashboard.moderators.create') }}" class="mt-2 text-purple-600 hover:text-purple-700 dark:text-purple-400 dark:hover:text-purple-300">
-                                Add your first moderator
-                            </a>
-                        </div>
-                    </td>
-                </tr>
-                @endforelse
-            </tbody>
-        </table>
-    </div>
+		<div class="rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
+			<div
+				class="flex flex-col gap-4 border-b border-gray-200 p-5 sm:flex-row sm:items-center sm:justify-between dark:border-gray-800">
+				<div>
+					<h3 class="text-lg font-semibold text-gray-900 dark:text-white">Moderator Management</h3>
+					<p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Manage moderation team accounts and access status.</p>
+				</div>
+				<a href="{{ route('dashboard.moderators.create') }}"
+					class="inline-flex items-center gap-2 rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-gray-800 dark:bg-gray-700 dark:hover:bg-gray-600">
+					<x-icons.plus class="h-4 w-4" />
+					New Moderator
+				</a>
+			</div>
 
-    @if($moderators->hasPages())
-    <div class="px-6 py-4 border-t border-gray-200 dark:border-gray-700">
-        {{ $moderators->links() }}
-    </div>
-    @endif
-</div>
+			<div class="p-5">
+				<form method="GET" action="{{ route('dashboard.moderators.index') }}"
+					class="mb-5 grid grid-cols-1 gap-3 md:grid-cols-5">
+					<div class="md:col-span-3">
+						<label for="q"
+							class="mb-1 block text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Search</label>
+						<div class="relative">
+							<span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
+								<x-icons.search class="h-4 w-4" />
+							</span>
+							<input id="q" name="q" type="text" value="{{ $search }}"
+								placeholder="Search by name, email, or phone"
+								class="h-10 w-full rounded-lg border border-gray-200 bg-transparent pl-10 pr-3 text-sm text-gray-900 focus:border-gray-400 focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-white">
+						</div>
+					</div>
+					<div>
+						<label for="status"
+							class="mb-1 block text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Status</label>
+						<select id="status" name="status"
+							class="h-10 w-full rounded-lg border border-gray-200 bg-transparent px-3 text-sm text-gray-900 focus:border-gray-400 focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-white">
+							<option value="all" {{ $status === 'all' ? 'selected' : '' }}>All</option>
+							<option value="active" {{ $status === 'active' ? 'selected' : '' }}>Active</option>
+							<option value="inactive" {{ $status === 'inactive' ? 'selected' : '' }}>Inactive</option>
+						</select>
+					</div>
+					<div class="flex items-end gap-2">
+						<button type="submit"
+							class="h-10 w-full rounded-lg bg-gray-900 px-3 text-sm font-medium text-white transition hover:bg-gray-800 dark:bg-gray-700 dark:hover:bg-gray-600">
+							Apply
+						</button>
+						<a href="{{ route('dashboard.moderators.index') }}"
+							class="h-10 w-full rounded-lg border border-gray-200 px-3 text-center text-sm font-medium leading-10 text-gray-700 transition hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800">
+							Reset
+						</a>
+					</div>
+				</form>
 
-@push('scripts')
-<script>
-function toggleStatus(id) {
-    fetch(`/dashboard/moderators/${id}/toggle-status`, {
-        method: 'POST',
-        headers: {
-            'X-CSRF-TOKEN': '{{ csrf_token() }}',
-            'Content-Type': 'application/json'
-        }
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            location.reload();
-        }
-    })
-    .catch(error => console.error('Error:', error));
-}
-</script>
-@endpush
+				<div class="overflow-x-auto">
+					<table class="min-w-full divide-y divide-gray-200 dark:divide-gray-800">
+						<thead class="bg-gray-50 dark:bg-gray-800/50">
+							<tr>
+								<th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+									Moderator</th>
+								<th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+									Email</th>
+								<th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+									Phone</th>
+								<th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+									Status</th>
+								<th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+									Created</th>
+								<th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+									Actions</th>
+							</tr>
+						</thead>
+						<tbody class="divide-y divide-gray-100 dark:divide-gray-800">
+							@forelse ($moderators as $moderator)
+								<tr class="transition hover:bg-gray-50/70 dark:hover:bg-gray-800/40">
+									<td class="px-4 py-3">
+										<div class="flex items-center gap-3">
+											<div class="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800">
+												<span
+													class="text-sm font-semibold text-gray-500 dark:text-gray-300">{{ strtoupper(substr($moderator->name, 0, 1)) }}</span>
+											</div>
+											<p class="text-sm font-semibold text-gray-900 dark:text-white">{{ $moderator->name }}</p>
+										</div>
+									</td>
+									<td class="px-4 py-3 text-sm text-gray-700 dark:text-gray-300">{{ $moderator->email }}</td>
+									<td class="px-4 py-3 text-sm text-gray-700 dark:text-gray-300">{{ $moderator->phone ?: 'N/A' }}</td>
+									<td class="px-4 py-3">
+										<button type="button" onclick="toggleModeratorStatus({{ $moderator->id }})"
+											class="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold transition {{ $moderator->is_active ? 'bg-green-100 text-green-700 hover:bg-green-200 dark:bg-green-900/30 dark:text-green-300' : 'bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-300' }}">
+											{{ $moderator->is_active ? 'Active' : 'Inactive' }}
+										</button>
+									</td>
+									<td class="px-4 py-3 text-sm text-gray-600 dark:text-gray-300">{{ $moderator->created_at?->format('M d, Y') }}
+									</td>
+									<td class="px-4 py-3">
+										<div class="flex items-center justify-end gap-2">
+											<a href="{{ route('dashboard.moderators.show', $moderator) }}"
+												class="inline-flex items-center rounded-lg border border-gray-200 p-2 text-gray-600 transition hover:bg-gray-100 hover:text-gray-900 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-white"
+												title="View moderator">
+												<x-icons.eye class="h-4 w-4" />
+											</a>
+											<a href="{{ route('dashboard.moderators.edit', $moderator) }}"
+												class="inline-flex items-center rounded-lg border border-gray-200 p-2 text-gray-600 transition hover:bg-gray-100 hover:text-gray-900 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-white"
+												title="Edit moderator">
+												<x-icons.edit class="h-4 w-4" />
+											</a>
+											<form action="{{ route('dashboard.moderators.destroy', $moderator) }}" method="POST">
+												@csrf
+												@method('DELETE')
+												<button type="submit" onclick="return confirm('Delete this moderator? This action cannot be undone.')"
+													title="Delete moderator"
+													class="inline-flex items-center rounded-lg border border-gray-200 p-2 text-gray-600 transition hover:bg-red-50 hover:text-red-600 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-red-900/20 dark:hover:text-red-300">
+													<x-icons.trash class="h-4 w-4" />
+												</button>
+											</form>
+										</div>
+									</td>
+								</tr>
+							@empty
+								<tr>
+									<td colspan="6" class="px-4 py-12 text-center">
+										<p class="text-sm text-gray-500 dark:text-gray-400">No moderators found for the current filters.</p>
+										<a href="{{ route('dashboard.moderators.create') }}"
+											class="mt-3 inline-flex items-center gap-2 rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-gray-800 dark:bg-gray-700 dark:hover:bg-gray-600">
+											<x-icons.plus class="h-4 w-4" />
+											Create First Moderator
+										</a>
+									</td>
+								</tr>
+							@endforelse
+						</tbody>
+					</table>
+				</div>
+
+				@if ($moderators->hasPages())
+					<div class="mt-5 border-t border-gray-200 pt-4 dark:border-gray-800">
+						{{ $moderators->links() }}
+					</div>
+				@endif
+			</div>
+		</div>
+	</div>
+
+	@push('scripts')
+		<script>
+			function toggleModeratorStatus(moderatorId) {
+				const urlTemplate = @json(route('dashboard.moderators.toggle-status', ['moderator' => '__ID__']));
+				const url = urlTemplate.replace('__ID__', String(moderatorId));
+
+				fetch(url, {
+						method: 'POST',
+						headers: {
+							'X-CSRF-TOKEN': @json(csrf_token()),
+							'Accept': 'application/json',
+							'Content-Type': 'application/json'
+						}
+					})
+					.then((response) => {
+						if (!response.ok) {
+							throw new Error('Failed to update status');
+						}
+
+						return response.json();
+					})
+					.then((data) => {
+						if (data.success) {
+							const message = data.message || 'Moderator status updated successfully.';
+							if (window.toast) {
+								window.toast.success(message);
+							}
+
+							setTimeout(() => {
+								window.location.reload();
+							}, 450);
+							return;
+						}
+
+						throw new Error(data.message || 'Failed to update moderator status.');
+					})
+					.catch((error) => {
+						console.error(error);
+						const message = error?.message || 'Unable to update moderator status right now.';
+						if (window.toast) {
+							window.toast.error(message);
+						}
+					});
+			}
+		</script>
+	@endpush
 @endsection

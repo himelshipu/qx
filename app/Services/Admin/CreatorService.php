@@ -1,0 +1,289 @@
+<?php
+
+declare (strict_types = 1);
+
+namespace App\Services\Admin;
+
+use App\Models\Creator;
+use App\Repositories\Contracts\CreatorRepositoryInterface;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
+
+/**
+ * Class CreatorService
+ *
+ * Handles business rules for dashboard creator management.
+ */
+final class CreatorService
+{
+    public function __construct(
+        private readonly CreatorRepositoryInterface $creatorRepository
+    ) {}
+
+    /**
+     * Build creator listing payload for dashboard index page.
+     *
+     * @return array{creators:\Illuminate\Contracts\Pagination\LengthAwarePaginator,stats:array{total:int,active:int,inactive:int,categorized:int},search:string,status:string}
+     */
+    public function getListingPayload(string $search, string $status): array
+    {
+        return [
+            'creators' => $this->creatorRepository->paginateForDashboard($search, $status),
+            'stats'    => $this->creatorRepository->getStats(),
+            'search'   => $search,
+            'status'   => $status
+        ];
+    }
+
+    /**
+     * Build payload for create/edit forms.
+     *
+     * @return array{categoryOptions:\Illuminate\Support\Collection<int, array{id:int,name:string}>}
+     */
+    public function getFormPayload(): array
+    {
+        return [
+            'categoryOptions' => $this->creatorRepository->getCategoryOptions()
+        ];
+    }
+
+    /**
+     * Build detail payload for a single creator.
+     *
+     * @return array{creator:Creator}
+     */
+    public function getDetailPayload(Creator $creator): array
+    {
+        $creator->load(['user:id,name,email,phone,is_active,created_at', 'categories:id,name'])
+            ->loadCount(['campaignApplications', 'orderItems', 'cartItems', 'conversations']);
+
+        return [
+            'creator' => $creator
+        ];
+    }
+
+    /**
+     * Create a new creator account and profile.
+     *
+     * @param array<string, mixed> $validated
+     */
+    public function createCreator(
+        array         $validated,
+        bool          $isActive,
+        ?UploadedFile $profileImageFile,
+        ?UploadedFile $coverImageFile
+    ): Creator {
+        return DB::transaction(function () use ($validated, $isActive, $profileImageFile, $coverImageFile): Creator {
+            $user = $this->creatorRepository->createUser([
+                'name'              => $validated['full_name'],
+                'email'             => $validated['email'],
+                'password'          => $validated['password'],
+                'phone'             => $this->nullableString($validated['phone'] ?? null),
+                'gender'            => $validated['gender'] ?? null,
+                'city'              => $this->nullableString($validated['city'] ?? null),
+                'country'           => $this->nullableString($validated['country'] ?? null),
+                'postal_code'       => $this->nullableString($validated['postal_code'] ?? null),
+                'user_type'         => 'creator',
+                'is_active'         => $isActive,
+                'email_verified_at' => now()
+            ]);
+
+            $creator = $this->creatorRepository->createCreator([
+                'user_id'            => $user->id,
+                'display_name'       => $this->nullableString($validated['display_name'] ?? null) ?? $validated['full_name'],
+                'title_name'         => $this->nullableString($validated['title_name'] ?? null),
+                'description'        => $this->nullableString($validated['description'] ?? null),
+                'audience'           => $this->nullableString($validated['audience'] ?? null),
+                'location'           => $this->nullableString($validated['location'] ?? null),
+                'city'               => $this->nullableString($validated['city'] ?? null),
+                'country'            => $this->nullableString($validated['country'] ?? null),
+                'postal_code'        => $this->nullableString($validated['postal_code'] ?? null),
+                'gender'             => $validated['gender'] ?? null,
+                'profile_image_path' => $this->storeUploadedAsset($profileImageFile, 'creators/profile-images'),
+                'cover_image_path'   => $this->storeUploadedAsset($coverImageFile, 'creators/cover-images'),
+                'is_active'          => $isActive
+            ]);
+
+            $this->creatorRepository->syncCategories($creator, $this->normalizeCategoryIds($validated['categories'] ?? []));
+
+            return $creator;
+        });
+    }
+
+    /**
+     * Update a creator account and profile.
+     *
+     * @param array<string, mixed> $validated
+     */
+    public function updateCreator(
+        Creator       $creator,
+        array         $validated,
+        bool          $isActive,
+        ?UploadedFile $profileImageFile,
+        ?UploadedFile $coverImageFile
+    ): Creator {
+        return DB::transaction(function () use ($creator, $validated, $isActive, $profileImageFile, $coverImageFile): Creator {
+            $profileImagePath = $creator->profile_image_path;
+            if ($profileImageFile) {
+                $this->deleteStoredAsset($creator->profile_image_path);
+                $profileImagePath = $this->storeUploadedAsset($profileImageFile, 'creators/profile-images');
+            }
+
+            $coverImagePath = $creator->cover_image_path;
+            if ($coverImageFile) {
+                $this->deleteStoredAsset($creator->cover_image_path);
+                $coverImagePath = $this->storeUploadedAsset($coverImageFile, 'creators/cover-images');
+            }
+
+            if ($creator->user) {
+                $userData = [
+                    'name'        => $validated['full_name'],
+                    'email'       => $validated['email'],
+                    'phone'       => $this->nullableString($validated['phone'] ?? null),
+                    'gender'      => $validated['gender'] ?? null,
+                    'city'        => $this->nullableString($validated['city'] ?? null),
+                    'country'     => $this->nullableString($validated['country'] ?? null),
+                    'postal_code' => $this->nullableString($validated['postal_code'] ?? null),
+                    'is_active'   => $isActive
+                ];
+
+                if (!empty($validated['password']) && is_string($validated['password'])) {
+                    $userData['password'] = $validated['password'];
+                }
+
+                $this->creatorRepository->updateUser($creator->user, $userData);
+            }
+
+            $creator = $this->creatorRepository->updateCreator($creator, [
+                'display_name'       => $this->nullableString($validated['display_name'] ?? null) ?? $validated['full_name'],
+                'title_name'         => $this->nullableString($validated['title_name'] ?? null),
+                'description'        => $this->nullableString($validated['description'] ?? null),
+                'audience'           => $this->nullableString($validated['audience'] ?? null),
+                'location'           => $this->nullableString($validated['location'] ?? null),
+                'city'               => $this->nullableString($validated['city'] ?? null),
+                'country'            => $this->nullableString($validated['country'] ?? null),
+                'postal_code'        => $this->nullableString($validated['postal_code'] ?? null),
+                'gender'             => $validated['gender'] ?? null,
+                'profile_image_path' => $profileImagePath,
+                'cover_image_path'   => $coverImagePath,
+                'is_active'          => $isActive
+            ]);
+
+            $this->creatorRepository->syncCategories($creator, $this->normalizeCategoryIds($validated['categories'] ?? []));
+
+            return $creator;
+        });
+    }
+
+    /**
+     * Delete a creator if no critical dependencies exist.
+     *
+     * @return array{deleted:bool,message:string}
+     */
+    public function deleteCreator(Creator $creator): array
+    {
+        $dependencyCount = $this->creatorRepository->getDependencyCount($creator);
+
+        if ($dependencyCount > 0) {
+            return [
+                'deleted' => false,
+                'message' => 'Creator cannot be deleted because it has related applications, orders, or activity records.'
+            ];
+        }
+
+        return DB::transaction(function () use ($creator): array {
+            $this->deleteStoredAsset($creator->profile_image_path);
+            $this->deleteStoredAsset($creator->cover_image_path);
+
+            if ($creator->user) {
+                $this->creatorRepository->deleteUser($creator->user);
+            } else {
+                $this->creatorRepository->deleteCreator($creator);
+            }
+
+            return [
+                'deleted' => true,
+                'message' => 'Creator deleted successfully.'
+            ];
+        });
+    }
+
+    /**
+     * Toggle active status and keep linked user in sync.
+     */
+    public function toggleStatus(Creator $creator): bool
+    {
+        $updatedCreator = $this->creatorRepository->toggleStatus($creator);
+
+        if ($updatedCreator->user) {
+            $this->creatorRepository->updateUser($updatedCreator->user, [
+                'is_active' => $updatedCreator->is_active
+            ]);
+        }
+
+        return $updatedCreator->is_active;
+    }
+
+    /**
+     * Persist uploaded file and return public path.
+     */
+    private function storeUploadedAsset(?UploadedFile $file, string $directory): ?string
+    {
+        if (!$file) {
+            return null;
+        }
+
+        $storedPath = $file->store($directory, 'public');
+
+        return 'storage/' . $storedPath;
+    }
+
+    /**
+     * Delete public storage files only.
+     */
+    private function deleteStoredAsset(?string $path): void
+    {
+        if (!$path || !str_starts_with($path, 'storage/')) {
+            return;
+        }
+
+        Storage::disk('public')->delete(Str::after($path, 'storage/'));
+    }
+
+    /**
+     * Normalize optional string inputs.
+     */
+    private function nullableString(mixed $value): ?string
+    {
+        if (!is_string($value)) {
+            return null;
+        }
+
+        $trimmed = trim($value);
+
+        return $trimmed === '' ? null : $trimmed;
+    }
+
+    /**
+     * Normalize category IDs from request payload.
+     *
+     * @param  mixed      $value
+     * @return array<int, int>
+     */
+    private function normalizeCategoryIds(mixed $value): array
+    {
+        if (!is_array($value)) {
+            return [];
+        }
+
+        $normalized = array_values(array_unique(array_filter(array_map(static function ($item): int {
+            return (int) $item;
+        }, $value), static function (int $id): bool {
+            return $id > 0;
+        })));
+
+        return $normalized;
+    }
+}

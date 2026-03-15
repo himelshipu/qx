@@ -3,134 +3,45 @@
 @section('title', 'Edit Moderator')
 
 @section('content')
-<div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
-    <div class="p-6 border-b border-gray-200 dark:border-gray-700">
-        <div class="flex items-center justify-between">
-            <div>
-                <h2 class="text-xl font-semibold text-gray-900 dark:text-white">Edit Moderator</h2>
-                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Update moderator details</p>
-            </div>
-            <a href="{{ route('dashboard.moderators.index') }}" 
-               class="inline-flex items-center px-4 py-2 text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-sm font-medium rounded-lg transition-colors">
-                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
-                </svg>
-                Back to Moderators
-            </a>
-        </div>
-    </div>
+	<x-backend.shell.breadcrumb pageTitle="Edit Moderator" />
 
-    <form action="{{ route('dashboard.moderators.update', $moderator->id) }}" method="POST" class="p-6">
-        @csrf
-        @method('PUT')
+	<div class="rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
+		<div
+			class="flex flex-col gap-4 border-b border-gray-200 p-5 sm:flex-row sm:items-center sm:justify-between dark:border-gray-800">
+			<div>
+				<h3 class="text-lg font-semibold text-gray-900 dark:text-white">Edit: {{ $moderator->name }}</h3>
+				<p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Update moderator credentials and account state.</p>
+			</div>
+			<a href="{{ route('dashboard.moderators.index') }}"
+				class="inline-flex items-center gap-2 rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800">
+				Back to Moderators
+			</a>
+		</div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <!-- Name -->
-            <div>
-                <label for="name" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Full Name <span class="text-red-500">*</span>
-                </label>
-                <input type="text" 
-                       name="name" 
-                       id="name" 
-                       value="{{ old('name', $moderator->name) }}"
-                       class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-1 focus:ring-purple-500 focus:border-purple-500 dark:bg-gray-700 dark:text-white"
-                       placeholder="Enter full name"
-                       required>
-                @error('name')
-                    <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
-                @enderror
-            </div>
+		<form action="{{ route('dashboard.moderators.update', $moderator) }}" method="POST" class="space-y-6 p-5">
+			@csrf
+			@method('PUT')
 
-            <!-- Email -->
-            <div>
-                <label for="email" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Email Address <span class="text-red-500">*</span>
-                </label>
-                <input type="email" 
-                       name="email" 
-                       id="email" 
-                       value="{{ old('email', $moderator->email) }}"
-                       class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-1 focus:ring-purple-500 focus:border-purple-500 dark:bg-gray-700 dark:text-white"
-                       placeholder="Enter email address"
-                       required>
-                @error('email')
-                    <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
-                @enderror
-            </div>
+			@if ($errors->any())
+				<div
+					class="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-900/20 dark:text-red-300">
+					Please fix the highlighted fields and try again.
+				</div>
+			@endif
 
-            <!-- Phone -->
-            <div>
-                <label for="phone" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Phone Number
-                </label>
-                <input type="text" 
-                       name="phone" 
-                       id="phone" 
-                       value="{{ old('phone', $moderator->phone) }}"
-                       class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-1 focus:ring-purple-500 focus:border-purple-500 dark:bg-gray-700 dark:text-white"
-                       placeholder="Enter phone number">
-                @error('phone')
-                    <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
-                @enderror
-            </div>
+			@include('backend.pages.moderator._form', ['moderator' => $moderator])
 
-            <!-- Status -->
-            <div>
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Status
-                </label>
-                <div class="flex items-center">
-                    <input type="checkbox" 
-                           name="is_active" 
-                           id="is_active" 
-                           value="1"
-                           {{ old('is_active', $moderator->is_active) ? 'checked' : '' }}
-                           class="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500">
-                    <label for="is_active" class="ml-2 text-sm text-gray-600 dark:text-gray-400">
-                        Active
-                    </label>
-                </div>
-            </div>
-
-            <!-- Password -->
-            <div>
-                <label for="password" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    New Password
-                </label>
-                <input type="password" 
-                       name="password" 
-                       id="password" 
-                       class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-1 focus:ring-purple-500 focus:border-purple-500 dark:bg-gray-700 dark:text-white"
-                       placeholder="Leave blank to keep current password">
-                @error('password')
-                    <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
-                @enderror
-            </div>
-
-            <!-- Confirm Password -->
-            <div>
-                <label for="password_confirmation" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Confirm New Password
-                </label>
-                <input type="password" 
-                       name="password_confirmation" 
-                       id="password_confirmation" 
-                       class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-1 focus:ring-purple-500 focus:border-purple-500 dark:bg-gray-700 dark:text-white"
-                       placeholder="Confirm new password">
-            </div>
-        </div>
-
-        <div class="mt-6 flex items-center justify-end gap-3">
-            <a href="{{ route('dashboard.moderators.index') }}" 
-               class="px-4 py-2 text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-sm font-medium rounded-lg transition-colors">
-                Cancel
-            </a>
-            <button type="submit" 
-                    class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium rounded-lg transition-colors">
-                Update Moderator
-            </button>
-        </div>
-    </form>
-</div>
+			<div
+				class="flex flex-col-reverse gap-3 border-t border-gray-200 pt-5 sm:flex-row sm:justify-end dark:border-gray-800">
+				<a href="{{ route('dashboard.moderators.index') }}"
+					class="inline-flex items-center justify-center rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800">
+					Cancel
+				</a>
+				<button type="submit"
+					class="inline-flex items-center justify-center rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-gray-800 dark:bg-gray-700 dark:hover:bg-gray-600">
+					Save Changes
+				</button>
+			</div>
+		</form>
+	</div>
 @endsection

@@ -1,43 +1,42 @@
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="scroll-smooth">
 
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="csrf-token" content="{{ csrf_token() }}">
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>{{ $title ?? 'Admin Dashboard' }} | QX - Admin</title>
+		<title>{{ $title ?? 'Admin Dashboard' }} | QX - Admin</title>
 
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+		@vite(['resources/css/app.css', 'resources/js/app.js'])
 
 
-    <!-- Apply dark mode immediately to prevent flash -->
-    <script>
-        (function() {
-            const apply = () => {
-                const savedTheme = localStorage.getItem('theme');
-                const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-                const theme = savedTheme || systemTheme;
-                if (theme === 'dark') {
-                    document.documentElement.classList.add('dark');
-                    if (document.body) document.body.classList.add('dark', 'bg-gray-900');
-                } else {
-                    document.documentElement.classList.remove('dark');
-                    if (document.body) document.body.classList.remove('dark', 'bg-gray-900');
-                }
-            };
+		<!-- Apply dark mode immediately to prevent flash -->
+		<script>
+			(function() {
+				const apply = () => {
+					const savedTheme = localStorage.getItem('theme');
+					const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+					const theme = savedTheme || systemTheme;
+					if (theme === 'dark') {
+						document.documentElement.classList.add('dark');
+						if (document.body) document.body.classList.add('dark', 'bg-gray-900');
+					} else {
+						document.documentElement.classList.remove('dark');
+						if (document.body) document.body.classList.remove('dark', 'bg-gray-900');
+					}
+				};
 
-            if (document.body) {
-                apply();
-            } else {
-                document.addEventListener('DOMContentLoaded', apply);
-            }
-        })();
-    </script>
-</head>
+				if (document.body) {
+					apply();
+				} else {
+					document.addEventListener('DOMContentLoaded', apply);
+				}
+			})();
+		</script>
+	</head>
 
-<body x-data="{ 'loaded': true }"
-    x-init="$store.sidebar.isExpanded = window.innerWidth >= 1280;
+	<body x-data="{ 'loaded': true }" x-init="$store.sidebar.isExpanded = window.innerWidth >= 1280;
 const checkMobile = () => {
     if (window.innerWidth < 1280) {
         $store.sidebar.setMobileOpen(false);
@@ -47,30 +46,42 @@ const checkMobile = () => {
         $store.sidebar.isExpanded = true;
     }
 };
-window.addEventListener('resize', checkMobile);"
-    class="transition-colors duration-200">
+window.addEventListener('resize', checkMobile);" class="transition-colors duration-200">
 
-    <div class="min-h-screen xl:flex">
-        <x-backend.shell.backdrop />
-        <x-backend.shell.sidebar />
-        <div class="flex-1 transition-all duration-300 ease-in-out"
-            :class="{
-                'xl:ml-[290px]': $store.sidebar.isExpanded,
-                'xl:ml-[90px]': !$store.sidebar.isExpanded,
-                'ml-0': $store.sidebar.isMobileOpen
-            }">
-            <!-- app header start -->
-            <x-backend.shell.header />
-            <!-- app header end -->
-            <main class="max-w-screen-2xl mx-auto px-4 sm:px-6 py-8 ">
-                @yield('content')
-            </main>
-        </div>
+		<div class="min-h-screen xl:flex">
+			<x-backend.shell.backdrop />
+			<x-backend.shell.sidebar />
+			<div class="flex-1 transition-all duration-300 ease-in-out"
+				:class="{
+				    'xl:ml-[290px]': $store.sidebar.isExpanded,
+				    'xl:ml-[90px]': !$store.sidebar.isExpanded,
+				    'ml-0': $store.sidebar.isMobileOpen
+				}">
+				<!-- app header start -->
+				<x-backend.shell.header />
+				<!-- app header end -->
+				<main class="max-w-screen-2xl mx-auto px-4 sm:px-6 py-8 ">
+					@yield('content')
+				</main>
+			</div>
 
-    </div>
+		</div>
 
-</body>
+	</body>
 
-@stack('scripts')
+	@php
+		$toastrFlash = [
+		    'success' => session('success'),
+		    'error' => session('error'),
+		    'info' => session('info'),
+		    'warning' => session('warning'),
+		];
+	@endphp
+
+	<script>
+		window.__toastrFlash = @json($toastrFlash);
+	</script>
+
+	@stack('scripts')
 
 </html>

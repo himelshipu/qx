@@ -3,29 +3,36 @@
 namespace App\Http\Controllers\Backend;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Backend\Moderator\StoreModeratorRequest;
+use App\Http\Requests\Backend\Moderator\UpdateModeratorRequest;
 use App\Models\User;
+use App\Services\Admin\ModeratorService;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\Rules;
+use Illuminate\View\View;
 
 class ModeratorController extends Controller
 {
+    public function __construct(
+        private readonly ModeratorService $moderatorService
+    ) {}
+
     /**
      * Display a listing of the moderators.
      */
-    public function index()
+    public function index(Request $request): View
     {
-        $moderators = User::where('user_type', 'moderator')
-            ->orderBy('created_at', 'desc')
-            ->paginate(10);
-        
-        return view('backend.pages.moderator.index', compact('moderators'));
+        $search = trim((string) $request->string('q', ''));
+        $status = (string) $request->string('status', 'all');
+
+        return view('backend.pages.moderator.index', $this->moderatorService->getListingPayload($search, $status));
     }
 
     /**
      * Show the form for creating a new moderator.
      */
-    public function create()
+    public function create(): View
     {
         return view('backend.pages.moderator.create');
     }
@@ -33,25 +40,12 @@ class ModeratorController extends Controller
     /**
      * Store a newly created moderator in storage.
      */
-    public function store(Request $request)
+    public function store(StoreModeratorRequest $request): RedirectResponse
     {
-        $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
-            'password' => ['required', 'confirmed', Rules\Password::defaults()],
-            'phone' => ['nullable', 'string', 'max:20'],
-            'is_active' => ['boolean'],
-        ]);
-
-        $moderator = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-            'phone' => $request->phone,
-            'user_type' => 'moderator',
-            'is_active' => $request->boolean('is_active', true),
-            'email_verified_at' => now(),
-        ]);
+        $this->moderatorService->createModerator(
+            $request->validated(),
+            $request->boolean('is_active', true)
+        );
 
         return redirect()->route('dashboard.moderators.index')
             ->with('success', 'Moderator created successfully.');
@@ -60,52 +54,35 @@ class ModeratorController extends Controller
     /**
      * Display the specified moderator.
      */
-    public function show(string $id)
+    public function show(User $moderator): View
     {
-        $moderator = User::where('user_type', 'moderator')->findOrFail($id);
-        
+        $moderator = $this->resolveModerator($moderator);
+
         return view('backend.pages.moderator.show', compact('moderator'));
     }
 
     /**
      * Show the form for editing the specified moderator.
      */
-    public function edit(string $id)
+    public function edit(User $moderator): View
     {
-        $moderator = User::where('user_type', 'moderator')->findOrFail($id);
-        
+        $moderator = $this->resolveModerator($moderator);
+
         return view('backend.pages.moderator.edit', compact('moderator'));
     }
 
     /**
      * Update the specified moderator in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(UpdateModeratorRequest $request, User $moderator): RedirectResponse
     {
-        $moderator = User::where('user_type', 'moderator')->findOrFail($id);
+        $moderator = $this->resolveModerator($moderator);
 
-        $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:users,email,'.$moderator->id],
-            'phone' => ['nullable', 'string', 'max:20'],
-            'is_active' => ['boolean'],
-        ]);
-
-        $moderator->update([
-            'name' => $request->name,
-            'email' => $request->email,
-            'phone' => $request->phone,
-            'is_active' => $request->boolean('is_active', true),
-        ]);
-
-        if ($request->filled('password')) {
-            $request->validate([
-                'password' => ['required', 'confirmed', Rules\Password::defaults()],
-            ]);
-            $moderator->update([
-                'password' => Hash::make($request->password),
-            ]);
-        }
+        $this->moderatorService->updateModerator(
+            $moderator,
+            $request->validated(),
+            $request->boolean('is_active', true)
+        );
 
         return redirect()->route('dashboard.moderators.index')
             ->with('success', 'Moderator updated successfully.');
@@ -114,27 +91,37 @@ class ModeratorController extends Controller
     /**
      * Remove the specified moderator from storage.
      */
-    public function destroy(string $id)
+    public function destroy(User $moderator): RedirectResponse
     {
-        $moderator = User::where('user_type', 'moderator')->findOrFail($id);
-        $moderator->delete();
+        $moderator = $this->resolveModerator($moderator);
+        $result    = $this->moderatorService->deleteModerator($moderator);
 
         return redirect()->route('dashboard.moderators.index')
-            ->with('success', 'Moderator deleted successfully.');
+            ->with($result['deleted'] ? 'success' : 'error', $result['message']);
     }
 
     /**
      * Toggle moderator status.
      */
-    public function toggleStatus(Request $request, string $id)
+    public function toggleStatus(User $moderator): JsonResponse
     {
-        $moderator = User::where('user_type', 'moderator')->findOrFail($id);
-        $moderator->update(['is_active' => !$moderator->is_active]);
+        $moderator = $this->resolveModerator($moderator);
+        $isActive  = $this->moderatorService->toggleStatus($moderator);
 
         return response()->json([
-            'success' => true,
-            'message' => 'Status updated successfully.',
-            'is_active' => $moderator->is_active
+            'success'   => true,
+            'message'   => 'Status updated successfully.',
+            'is_active' => $isActive
         ]);
+    }
+
+    /**
+     * Ensure provided user is a moderator.
+     */
+    private function resolveModerator(User $moderator): User
+    {
+        abort_unless($moderator->user_type === 'moderator', 404);
+
+        return $moderator;
     }
 }

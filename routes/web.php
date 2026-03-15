@@ -1,20 +1,20 @@
 <?php
 
-declare(strict_types=1);
+declare (strict_types = 1);
 
 use App\Http\Controllers\AccountController;
 use App\Http\Controllers\Backend\BrandController;
-use App\Http\Controllers\Backend\CategoryController;
 use App\Http\Controllers\Backend\CampaignController;
+use App\Http\Controllers\Backend\CategoryController;
 use App\Http\Controllers\Backend\CreatorController;
 use App\Http\Controllers\Backend\DashboardController;
 use App\Http\Controllers\Backend\ModeratorController;
-use App\Http\Controllers\Backend\RoleController;
 use App\Http\Controllers\Backend\PermissionController;
+use App\Http\Controllers\Backend\RoleController;
 use App\Http\Controllers\BrandProfileController;
+use App\Http\Controllers\Frontend\ContentLibraryController;
 use App\Http\Controllers\Frontend\HomeController;
 use App\Http\Controllers\Frontend\StaticPagesController;
-use App\Http\Controllers\Frontend\ContentLibraryController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -26,13 +26,13 @@ use Illuminate\Support\Facades\Route;
 | routes are loaded by the RouteServiceProvider and all of them will
 | be assigned to the "web" middleware group. Make something great!
 |
-*/
+ */
 
 /*
 |--------------------------------------------------------------------------
 | Public Routes
 |--------------------------------------------------------------------------
-*/
+ */
 Route::middleware(['web'])->group(function () {
     // Home page
     Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -51,40 +51,65 @@ Route::middleware(['web'])->group(function () {
 |--------------------------------------------------------------------------
 | Authenticated Routes (Breeze)
 |--------------------------------------------------------------------------
-*/
-Route::prefix('dashboard') ->name('dashboard.')->middleware(['auth', 'verified'])->group(function () {
+ */
+Route::prefix('dashboard')->name('dashboard.')->middleware(['auth', 'verified'])->group(function () {
     // Dashboard
-   
-     Route::get('/', [DashboardController::class, 'index'])->name('index');
-     Route::get('/categories', [CategoryController::class, 'index'])->name('categories.index');
-     Route::get('/brands', [BrandController::class, 'index'])->name('brands.index');
-     Route::get('/brands/details/{id}', [BrandController::class, 'view'])->name('brands.view');
-     Route::get('/creators', [CreatorController::class, 'index'])->name('creators.index');
-     //Create creator route
-     Route::get('/creators/create', [CreatorController::class, 'create'])->name('creators.create');
-     //view creator route 
-     Route::get('/creators/details/{id}', [CreatorController::class, 'view'])->name('creators.view');
-     
-     Route::get('/campaigns', [CampaignController::class, 'index'])->name('campaigns.index');
-     
-     //Create campaign route
-     Route::get('/campaigns/create', [CampaignController::class, 'create'])->name('campaigns.create');
 
-     //create brand route
-     Route::get('/brands/create', [BrandController::class, 'create'])->name('brands.create');
+    Route::get('/', [DashboardController::class, 'index'])->name('index');
+    Route::get('/categories', [CategoryController::class, 'index'])->name('categories.index');
+    Route::get('/categories/create', [CategoryController::class, 'create'])->name('categories.create');
+    Route::post('/categories', [CategoryController::class, 'store'])->name('categories.store');
+    Route::get('/categories/{category}/edit', [CategoryController::class, 'edit'])->name('categories.edit');
+    Route::put('/categories/{category}', [CategoryController::class, 'update'])->name('categories.update');
+    Route::delete('/categories/{category}', [CategoryController::class, 'destroy'])->name('categories.destroy');
+    Route::post('/categories/{category}/toggle-status', [CategoryController::class, 'toggleStatus'])->name('categories.toggle-status');
+
+    Route::get('/brands', [BrandController::class, 'index'])->name('brands.index');
+    Route::get('/brands/create', [BrandController::class, 'create'])->name('brands.create');
+    Route::post('/brands', [BrandController::class, 'store'])->name('brands.store');
+    Route::get('/brands/details/{brand}', [BrandController::class, 'view'])->name('brands.view');
+    Route::get('/brands/{brand}/edit', [BrandController::class, 'edit'])->name('brands.edit');
+    Route::put('/brands/{brand}', [BrandController::class, 'update'])->name('brands.update');
+    Route::delete('/brands/{brand}', [BrandController::class, 'destroy'])->name('brands.destroy');
+    Route::post('/brands/{brand}/toggle-status', [BrandController::class, 'toggleStatus'])->name('brands.toggle-status');
+
+    Route::get('/creators', [CreatorController::class, 'index'])->name('creators.index');
+    Route::get('/creators/create', [CreatorController::class, 'create'])->name('creators.create');
+    Route::post('/creators', [CreatorController::class, 'store'])->name('creators.store');
+    Route::get('/creators/details/{creator}', [CreatorController::class, 'view'])->name('creators.view');
+    Route::get('/creators/{creator}/edit', [CreatorController::class, 'edit'])->name('creators.edit');
+    Route::put('/creators/{creator}', [CreatorController::class, 'update'])->name('creators.update');
+    Route::delete('/creators/{creator}', [CreatorController::class, 'destroy'])->name('creators.destroy');
+    Route::post('/creators/{creator}/toggle-status', [CreatorController::class, 'toggleStatus'])->name('creators.toggle-status');
+
+    Route::get('/campaigns', [CampaignController::class, 'index'])->name('campaigns.index');
+
+    //Create campaign route
+    Route::get('/campaigns/create', [CampaignController::class, 'create'])->name('campaigns.create');
+
+    // Pending commerce and operations modules (placeholder pages)
+    Route::view('/reviews', 'backend.pages.coming-soon', ['module' => 'Reviews'])->name('reviews.index');
+    Route::view('/packages', 'backend.pages.coming-soon', ['module' => 'Packages'])->name('packages.index');
+    Route::view('/orders', 'backend.pages.coming-soon', ['module' => 'Orders'])->name('orders.index');
+    Route::view('/payments', 'backend.pages.coming-soon', ['module' => 'Payments'])->name('payments.index');
+    Route::view('/payouts', 'backend.pages.coming-soon', ['module' => 'Payouts'])->name('payouts.index');
+    Route::view('/wishlists', 'backend.pages.coming-soon', ['module' => 'Wishlists'])->name('wishlists.index');
+    Route::view('/support-tickets', 'backend.pages.coming-soon', ['module' => 'Support Tickets'])->name('support-tickets.index');
+    Route::view('/conversations', 'backend.pages.coming-soon', ['module' => 'Conversations'])->name('conversations.index');
+    Route::view('/notifications', 'backend.pages.coming-soon', ['module' => 'Notifications'])->name('notifications.index');
 
     // Content Library
-     Route::get('/content-library', [ContentLibraryController::class, 'index'])->name('content-library');
+    Route::get('/content-library', [ContentLibraryController::class, 'index'])->name('content-library');
 
     //Moderator routes (dashboard)
     Route::get('/moderators', [ModeratorController::class, 'index'])->name('moderators.index');
     Route::get('/moderators/create', [ModeratorController::class, 'create'])->name('moderators.create');
     Route::post('/moderators', [ModeratorController::class, 'store'])->name('moderators.store');
-    Route::get('/moderators/{id}', [ModeratorController::class, 'show'])->name('moderators.show');
-    Route::get('/moderators/{id}/edit', [ModeratorController::class, 'edit'])->name('moderators.edit');
-    Route::put('/moderators/{id}', [ModeratorController::class, 'update'])->name('moderators.update');
-    Route::delete('/moderators/{id}', [ModeratorController::class, 'destroy'])->name('moderators.destroy');
-    Route::post('/moderators/{id}/toggle-status', [ModeratorController::class, 'toggleStatus'])->name('moderators.toggle-status');
+    Route::get('/moderators/{moderator}', [ModeratorController::class, 'show'])->name('moderators.show');
+    Route::get('/moderators/{moderator}/edit', [ModeratorController::class, 'edit'])->name('moderators.edit');
+    Route::put('/moderators/{moderator}', [ModeratorController::class, 'update'])->name('moderators.update');
+    Route::delete('/moderators/{moderator}', [ModeratorController::class, 'destroy'])->name('moderators.destroy');
+    Route::post('/moderators/{moderator}/toggle-status', [ModeratorController::class, 'toggleStatus'])->name('moderators.toggle-status');
 
     //Role routes (dashboard)
     Route::get('/roles', [RoleController::class, 'index'])->name('roles.index');
@@ -108,7 +133,6 @@ Route::prefix('dashboard') ->name('dashboard.')->middleware(['auth', 'verified']
     Route::put('/permissions/{id}', [PermissionController::class, 'update'])->name('permissions.update');
     Route::delete('/permissions/{id}', [PermissionController::class, 'destroy'])->name('permissions.destroy');
     Route::post('/permissions/{id}/toggle-status', [PermissionController::class, 'toggleStatus'])->name('permissions.toggle-status');
-
 
     // Brand Profile routes (dashboard)
     Route::get('/brand-profile/edit', [BrandProfileController::class, 'edit'])->name('brand.profile.edit');
@@ -139,7 +163,6 @@ Route::prefix('dashboard') ->name('dashboard.')->middleware(['auth', 'verified']
 |--------------------------------------------------------------------------
 | Admin Routes
 |--------------------------------------------------------------------------
-*/
+ */
 
-
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';

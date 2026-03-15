@@ -14,11 +14,11 @@ class Role extends Model
         'name',
         'slug',
         'description',
-        'is_active',
+        'is_active'
     ];
 
     protected $casts = [
-        'is_active' => 'boolean',
+        'is_active' => 'boolean'
     ];
 
     /**
@@ -26,7 +26,7 @@ class Role extends Model
      */
     public function permissions(): BelongsToMany
     {
-        return $this->belongsToMany(Permission::class, 'role_permissions');
+        return $this->belongsToMany(Permission::class, 'role_permissions')->withTimestamps();
     }
 
     /**
@@ -34,7 +34,7 @@ class Role extends Model
      */
     public function users(): BelongsToMany
     {
-        return $this->belongsToMany(User::class, 'user_roles');
+        return $this->belongsToMany(User::class, 'user_roles')->withTimestamps();
     }
 
     /**

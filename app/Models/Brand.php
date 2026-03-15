@@ -4,56 +4,67 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Brand extends Model
 {
-    /** @use HasFactory<\Database\Factories\BrandFactory> */
     use HasFactory;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var list<string>
-     */
     protected $fillable = [
         'user_id',
         'brand_name',
         'description',
-        'website',
+        'industry',
         'phone',
         'email',
+        'website',
         'location',
         'city',
         'country',
         'postal_code',
         'profile_image_path',
         'cover_image_path',
-        'categories',
-        'social_links',
-        'setup_data',
         'is_verified',
-        'is_active',
+        'is_active'
     ];
 
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
     protected function casts(): array
     {
         return [
-            'setup_data' => 'json',
-            'categories' => 'json',
-            'social_links' => 'json',
+            'is_verified' => 'boolean',
+            'is_active'   => 'boolean'
         ];
     }
 
-    /**
-     * Get the user that owns the brand.
-     */
-    public function user()
+    public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function socialLinks(): HasOne
+    {
+        return $this->hasOne(BrandSocialLink::class);
+    }
+
+    public function billingProfile(): HasOne
+    {
+        return $this->hasOne(BrandBillingProfile::class);
+    }
+
+    public function onboardingProfile(): HasOne
+    {
+        return $this->hasOne(BrandOnboardingProfile::class);
+    }
+
+    public function orders(): HasMany
+    {
+        return $this->hasMany(Order::class);
+    }
+
+    public function reviews(): HasMany
+    {
+        return $this->hasMany(Review::class);
     }
 }

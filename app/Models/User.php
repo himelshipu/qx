@@ -3,12 +3,14 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
 class User extends Authenticatable
 {
-    /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable;
 
     /**
@@ -21,8 +23,8 @@ class User extends Authenticatable
         'email',
         'password',
         'user_type',
-        'verification_code',           
-        'verification_code_expires_at', 
+        'verification_code',
+        'verification_code_expires_at',
         'email_verified_at',
         'phone',
         'date_of_birth',
@@ -35,6 +37,7 @@ class User extends Authenticatable
         'bio',
         'profile_image_path',
         'is_active',
+        'last_login_at'
     ];
 
     /**
@@ -44,7 +47,7 @@ class User extends Authenticatable
      */
     protected $hidden = [
         'password',
-        'remember_token',
+        'remember_token'
     ];
 
     /**
@@ -55,63 +58,91 @@ class User extends Authenticatable
     protected function casts(): array
     {
         return [
-            'email_verified_at' => 'datetime',
+            'email_verified_at'            => 'datetime',
             'verification_code_expires_at' => 'datetime',
-            'password' => 'hashed',
+            'date_of_birth'                => 'date',
+            'is_active'                    => 'boolean',
+            'last_login_at'                => 'datetime',
+            'password'                     => 'hashed'
         ];
     }
 
-    /**
-     * Get the Brand associated with the user.
-     */
-    public function brand()
+    public function brand(): HasOne
     {
-        return $this->hasOne(\App\Models\Brand::class);
+        return $this->hasOne(Brand::class);
     }
 
-    /**
-     * Get the Creator associated with the user.
-     */
-    public function creator()
+    public function creator(): HasOne
     {
-        return $this->hasOne(\App\Models\Creator::class);
+        return $this->hasOne(Creator::class);
     }
 
-    /**
-     * The roles that belong to the user.
-     */
-    public function roles()
+    public function roles(): BelongsToMany
     {
-        return $this->belongsToMany(\App\Models\Role::class, 'user_roles');
+        return $this->belongsToMany(Role::class, 'user_roles')->withTimestamps();
     }
 
-    /**
-     * The permissions that belong to the user (through roles).
-     */
-    public function permissions()
+    public function permissions(): BelongsToMany
     {
-        return $this->belongsToMany(\App\Models\Permission::class, 'user_permissions');
+        return $this->belongsToMany(Permission::class, 'user_permissions')->withTimestamps();
     }
 
-    /**
-     * Check if the user has a specific role.
-     */
+    public function createdPackages(): HasMany
+    {
+        return $this->hasMany(Package::class, 'created_by_user_id');
+    }
+
+    public function carts(): HasMany
+    {
+        return $this->hasMany(Cart::class);
+    }
+
+    public function orders(): HasMany
+    {
+        return $this->hasMany(Order::class, 'buyer_user_id');
+    }
+
+    public function acceptedOrders(): HasMany
+    {
+        return $this->hasMany(Order::class, 'accepted_by_user_id');
+    }
+
+    public function acceptedOrderItems(): HasMany
+    {
+        return $this->hasMany(OrderItem::class, 'accepted_by_user_id');
+    }
+
+    public function brandConversations(): HasMany
+    {
+        return $this->hasMany(Conversation::class, 'brand_user_id');
+    }
+
+    public function handledConversations(): HasMany
+    {
+        return $this->hasMany(Conversation::class, 'handled_by_user_id');
+    }
+
+    public function sentMessages(): HasMany
+    {
+        return $this->hasMany(Message::class, 'sender_user_id');
+    }
+
+    public function conversationParticipants(): HasMany
+    {
+        return $this->hasMany(ConversationParticipant::class);
+    }
+
     public function hasRole(string $roleSlug): bool
     {
         return $this->roles()->where('slug', $roleSlug)->exists();
     }
 
-    /**
-     * Check if the user has a specific permission (through roles).
-     */
     public function hasPermission(string $permissionSlug): bool
     {
-        // Check direct permissions first
         if ($this->permissions()->where('slug', $permissionSlug)->exists()) {
             return true;
         }
 
-        // Check permissions through roles
         foreach ($this->roles as $role) {
             if ($role->hasPermission($permissionSlug)) {
                 return true;
@@ -121,85 +152,58 @@ class User extends Authenticatable
         return false;
     }
 
-    /**
-     * Assign a role to the user.
-     */
-    public function assignRole(\App\Models\Role $role): void
+    public function assignRole(Role $role): void
     {
         if (!$this->hasRole($role->slug)) {
             $this->roles()->attach($role);
         }
     }
 
-    /**
-     * Remove a role from the user.
-     */
-    public function removeRole(\App\Models\Role $role): void
+    public function removeRole(Role $role): void
     {
         $this->roles()->detach($role);
     }
 
-    /**
-     * Sync roles for the user.
-     */
     public function syncRoles(array $roleIds): void
     {
         $this->roles()->sync($roleIds);
     }
 
-    /**
-     * Check if the user has verified their email.
-     */
     public function hasVerifiedEmail(): bool
     {
         return !is_null($this->email_verified_at);
     }
 
-    /**
-     * Mark the user's email as verified.
-     */
     public function markEmailAsVerified(): bool
     {
         return $this->forceFill([
-            'verification_code' => null,
+            'verification_code'            => null,
             'verification_code_expires_at' => null,
-            'email_verified_at' => $this->freshTimestamp(),
+            'email_verified_at'            => $this->freshTimestamp()
         ])->save();
     }
 
-    /**
-     * Send the verification code email notification.
-     */
     public function sendVerificationCodeNotification(): void
     {
-        // Prevent duplicate verification emails sent within 10 seconds
         if ($this->verification_code && $this->verification_code_expires_at) {
             $timeSinceLastCode = now()->diffInSeconds($this->verification_code_expires_at->subMinutes(2));
             if ($timeSinceLastCode < 10) {
-                // Email was already sent recently, skip to prevent duplicates
                 return;
             }
         }
 
-        // Generate a 6-digit verification code
         $verificationCode = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
 
-        // Store the code with 2 minutes expiration
         $this->update([
-            'verification_code' => $verificationCode,
-            'verification_code_expires_at' => now()->addMinutes(2),
+            'verification_code'            => $verificationCode,
+            'verification_code_expires_at' => now()->addMinutes(2)
         ]);
 
-        // Send the verification code via email
         \Illuminate\Support\Facades\Mail::send(
             new \App\Mail\SendVerificationCodeMail($this, $verificationCode)
         );
     }
 
-    /**
-     * Override Laravel's default email verification notification to use our custom verification code method.
-     * This ensures that only one verification email is sent with the same code.
-     */
     public function sendEmailVerificationNotification(): void
     {
         $this->sendVerificationCodeNotification();
