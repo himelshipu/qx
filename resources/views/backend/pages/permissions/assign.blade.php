@@ -42,7 +42,7 @@
             <select 
                 name="role_id" 
                 id="role_id" 
-                class="w-full md:w-1/3 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white"
+                class="w-full md:w-1/3 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-1 focus:ring-purple-500 focus:border-purple-500 dark:bg-gray-700 dark:text-white"
                 required
                 onchange="loadRolePermissions(this.value)">
                 <option value="">-- Select a Role --</option>
@@ -63,7 +63,7 @@
                 <div class="flex items-center gap-2 mb-3">
                     <input type="checkbox" 
                            id="module_select_{{ $loop->index }}"
-                           class="module-checkbox w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
+                           class="module-checkbox w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
                            data-module="{{ $loop->index }}"
                            onchange="toggleModulePermissions({{ $loop->index }})">
                     <label for="module_select_{{ $loop->index }}" class="text-sm font-medium text-gray-900 dark:text-white">
@@ -81,7 +81,7 @@
                                name="permissions[]" 
                                id="perm_{{ $permission->id }}"
                                value="{{ $permission->id }}"
-                               class="permission-checkbox w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
+                               class="permission-checkbox w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
                                data-module="{{ $loop->parent->index }}"
                                onchange="updateModuleCheckbox({{ $loop->parent->index }})">
                         <label for="perm_{{ $permission->id }}" class="ml-2 text-sm text-gray-600 dark:text-gray-400">
@@ -95,7 +95,7 @@
 
             <div class="flex items-center justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
                 <button type="submit" 
-                        class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg transition-colors">
+                        class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium rounded-lg transition-colors">
                     Save Permissions
                 </button>
             </div>
@@ -103,7 +103,7 @@
         @else
         <div class="text-center py-8">
             <p class="text-gray-500 dark:text-gray-400">No permissions available. Please create permissions first.</p>
-            <a href="{{ route('dashboard.permissions.create') }}" class="mt-2 inline-block text-indigo-600 hover:text-indigo-700 dark:text-indigo-400">
+            <a href="{{ route('dashboard.permissions.create') }}" class="mt-2 inline-block text-purple-600 hover:text-purple-700 dark:text-purple-400">
                 Create Permissions
             </a>
         </div>

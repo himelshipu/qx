@@ -33,7 +33,7 @@
                        name="name" 
                        id="name" 
                        value="{{ old('name') }}"
-                       class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white"
+                       class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-1 focus:ring-purple-500 focus:border-purple-500 dark:bg-gray-700 dark:text-white"
                        placeholder="e.g., View Brands"
                        required>
                 @error('name')
@@ -50,7 +50,7 @@
                        name="module" 
                        id="module" 
                        value="{{ old('module') }}"
-                       class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white"
+                       class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-1 focus:ring-purple-500 focus:border-purple-500 dark:bg-gray-700 dark:text-white"
                        placeholder="e.g., Brands"
                        required>
                 <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
@@ -70,7 +70,7 @@
                     name="description" 
                     id="description" 
                     rows="3"
-                    class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white"
+                    class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-1 focus:ring-purple-500 focus:border-purple-500 dark:bg-gray-700 dark:text-white"
                     placeholder="Describe what this permission allows">{{ old('description') }}</textarea>
             </div>
 
@@ -85,7 +85,7 @@
                            id="is_active" 
                            value="1"
                            {{ old('is_active', true) ? 'checked' : '' }}
-                           class="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500">
+                           class="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500">
                     <label for="is_active" class="ml-2 text-sm text-gray-600 dark:text-gray-400">
                         Active
                     </label>
@@ -99,7 +99,7 @@
                 Cancel
             </a>
             <button type="submit" 
-                    class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg transition-colors">
+                    class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium rounded-lg transition-colors">
                 Create Permission
             </button>
         </div>

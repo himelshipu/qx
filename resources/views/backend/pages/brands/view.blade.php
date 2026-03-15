@@ -274,14 +274,14 @@
                 <div class="relative">
                     <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
                     <input type="number" step="0.01" min="0" placeholder="0.00" 
-                        class="w-full h-11 pl-8 pr-4 text-sm rounded-lg border border-gray-200 bg-transparent focus:border-gray-300 focus:ring-2 focus:ring-gray-100 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
+                        class="w-full h-11 pl-8 pr-4 text-sm rounded-lg border border-gray-200 bg-transparent focus:border-gray-300 focus:ring-1 focus:ring-gray-100 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
                 </div>
             </div>
 
             <div>
                 <label class="block mb-1.5 text-sm font-medium text-gray-700 dark:text-gray-300">Remark</label>
                 <textarea rows="3" placeholder="Enter remark..." 
-                    class="w-full px-4 py-2 text-sm rounded-lg border border-gray-200 bg-transparent focus:border-gray-300 focus:ring-2 focus:ring-gray-100 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90"></textarea>
+                    class="w-full px-4 py-2 text-sm rounded-lg border border-gray-200 bg-transparent focus:border-gray-300 focus:ring-1 focus:ring-gray-100 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90"></textarea>
             </div>
 
             <div class="flex items-center gap-3 pt-4">
@@ -314,14 +314,14 @@
                 <div class="relative">
                     <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
                     <input type="number" step="0.01" min="0" placeholder="0.00" 
-                        class="w-full h-11 pl-8 pr-4 text-sm rounded-lg border border-gray-200 bg-transparent focus:border-gray-300 focus:ring-2 focus:ring-gray-100 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
+                        class="w-full h-11 pl-8 pr-4 text-sm rounded-lg border border-gray-200 bg-transparent focus:border-gray-300 focus:ring-1 focus:ring-gray-100 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
                 </div>
             </div>
 
             <div>
                 <label class="block mb-1.5 text-sm font-medium text-gray-700 dark:text-gray-300">Reason</label>
                 <textarea rows="3" placeholder="Enter reason..." 
-                    class="w-full px-4 py-2 text-sm rounded-lg border border-gray-200 bg-transparent focus:border-gray-300 focus:ring-2 focus:ring-gray-100 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90"></textarea>
+                    class="w-full px-4 py-2 text-sm rounded-lg border border-gray-200 bg-transparent focus:border-gray-300 focus:ring-1 focus:ring-gray-100 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90"></textarea>
             </div>
 
             <div class="flex items-center gap-3 pt-4">
@@ -358,7 +358,7 @@
             <div>
                 <label class="block mb-1.5 text-sm font-medium text-gray-700 dark:text-gray-300">Reason for Ban <span class="text-red-500">*</span></label>
                 <textarea rows="4" placeholder="Enter reason..." 
-                    class="w-full px-4 py-2 text-sm rounded-lg border border-gray-200 bg-transparent focus:border-gray-300 focus:ring-2 focus:ring-gray-100 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90"></textarea>
+                    class="w-full px-4 py-2 text-sm rounded-lg border border-gray-200 bg-transparent focus:border-gray-300 focus:ring-1 focus:ring-gray-100 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90"></textarea>
             </div>
 
             <div class="flex items-center gap-3 pt-4">
@@ -402,13 +402,13 @@
             <div x-show="type === 'email'">
                 <label class="block mb-1.5 text-sm font-medium text-gray-700 dark:text-gray-300">Subject</label>
                 <input type="text" placeholder="Notification subject..." 
-                    class="w-full h-11 px-4 text-sm rounded-lg border border-gray-200 bg-transparent focus:border-gray-300 focus:ring-2 focus:ring-gray-100 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
+                    class="w-full h-11 px-4 text-sm rounded-lg border border-gray-200 bg-transparent focus:border-gray-300 focus:ring-1 focus:ring-gray-100 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
             </div>
 
             <div>
                 <label class="block mb-1.5 text-sm font-medium text-gray-700 dark:text-gray-300">Message</label>
                 <textarea rows="4" placeholder="Type your message..." 
-                    class="w-full px-4 py-2 text-sm rounded-lg border border-gray-200 bg-transparent focus:border-gray-300 focus:ring-2 focus:ring-gray-100 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90"></textarea>
+                    class="w-full px-4 py-2 text-sm rounded-lg border border-gray-200 bg-transparent focus:border-gray-300 focus:ring-1 focus:ring-gray-100 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90"></textarea>
             </div>
 
             <div class="flex items-center gap-3 pt-4">

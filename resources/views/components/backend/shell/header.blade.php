@@ -11,8 +11,8 @@
                 </button>
 
                 <a href="/" class="lg:hidden">
-                    <img src="/images/logo/logo.png" alt="Logo" class="dark:hidden">
-                    <img src="/images/logo/logo-dark.png" alt="Logo" class="hidden dark:block">
+                    <img src="/images/logo/header-logo.png" alt="Logo" class="h-12 dark:block hidden">
+                    <img src="/images/logo/header-logo.png" alt="Logo" class="h-12 dark:hidden block">
                 </a>
 
                 <!-- Search Bar (desktop only) - Now positioned after logo/menu on left -->

@@ -13,7 +13,7 @@
             </span>
             <input type="text" 
                 placeholder="Search brands by name or email..." 
-                class="w-full h-10 pl-9 pr-4 text-sm rounded-lg border border-gray-200 bg-transparent focus:border-gray-300 focus:ring-2 focus:ring-gray-100 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:focus:border-gray-600">
+                class="w-full h-10 pl-9 pr-4 text-sm rounded-lg border border-gray-200 bg-transparent focus:border-gray-300 focus:ring-1 focus:ring-gray-100 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:focus:border-gray-600">
         </div>
         
         <div class="flex items-center gap-2">
@@ -197,7 +197,7 @@
                     <input type="text" 
                         x-model="form.name"
                         placeholder="e.g., Nike, Apple"
-                        class="w-full h-11 px-4 text-sm rounded-lg border border-gray-200 bg-transparent focus:border-gray-300 focus:ring-2 focus:ring-gray-100 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
+                        class="w-full h-11 px-4 text-sm rounded-lg border border-gray-200 bg-transparent focus:border-gray-300 focus:ring-1 focus:ring-gray-100 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
                 </div>
 
                 <!-- Industry -->
@@ -206,7 +206,7 @@
                     <input type="text" 
                         x-model="form.industry"
                         placeholder="e.g., Fashion, Technology"
-                        class="w-full h-11 px-4 text-sm rounded-lg border border-gray-200 bg-transparent focus:border-gray-300 focus:ring-2 focus:ring-gray-100 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
+                        class="w-full h-11 px-4 text-sm rounded-lg border border-gray-200 bg-transparent focus:border-gray-300 focus:ring-1 focus:ring-gray-100 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
                 </div>
 
                 <!-- Contact Person -->
@@ -215,7 +215,7 @@
                     <input type="text" 
                         x-model="form.contact"
                         placeholder="Full name"
-                        class="w-full h-11 px-4 text-sm rounded-lg border border-gray-200 bg-transparent focus:border-gray-300 focus:ring-2 focus:ring-gray-100 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
+                        class="w-full h-11 px-4 text-sm rounded-lg border border-gray-200 bg-transparent focus:border-gray-300 focus:ring-1 focus:ring-gray-100 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
                 </div>
 
                 <!-- Email -->
@@ -224,7 +224,7 @@
                     <input type="email" 
                         x-model="form.email"
                         placeholder="contact@brand.com"
-                        class="w-full h-11 px-4 text-sm rounded-lg border border-gray-200 bg-transparent focus:border-gray-300 focus:ring-2 focus:ring-gray-100 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
+                        class="w-full h-11 px-4 text-sm rounded-lg border border-gray-200 bg-transparent focus:border-gray-300 focus:ring-1 focus:ring-gray-100 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
                 </div>
 
                 <!-- Phone -->
@@ -233,7 +233,7 @@
                     <input type="tel" 
                         x-model="form.phone"
                         placeholder="+1 234 567 890"
-                        class="w-full h-11 px-4 text-sm rounded-lg border border-gray-200 bg-transparent focus:border-gray-300 focus:ring-2 focus:ring-gray-100 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
+                        class="w-full h-11 px-4 text-sm rounded-lg border border-gray-200 bg-transparent focus:border-gray-300 focus:ring-1 focus:ring-gray-100 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
                 </div>
 
                 <!-- Website -->
@@ -242,7 +242,7 @@
                     <input type="url" 
                         x-model="form.website"
                         placeholder="https://example.com"
-                        class="w-full h-11 px-4 text-sm rounded-lg border border-gray-200 bg-transparent focus:border-gray-300 focus:ring-2 focus:ring-gray-100 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
+                        class="w-full h-11 px-4 text-sm rounded-lg border border-gray-200 bg-transparent focus:border-gray-300 focus:ring-1 focus:ring-gray-100 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
                 </div>
 
                 <!-- Logo Upload -->
@@ -269,7 +269,7 @@
                 <div class="col-span-2">
                     <label class="block mb-1.5 text-sm font-medium text-gray-700 dark:text-gray-300">Status</label>
                     <select x-model="form.status" 
-                        class="w-full h-11 px-4 text-sm rounded-lg border border-gray-200 bg-transparent focus:border-gray-300 focus:ring-2 focus:ring-gray-100 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
+                        class="w-full h-11 px-4 text-sm rounded-lg border border-gray-200 bg-transparent focus:border-gray-300 focus:ring-1 focus:ring-gray-100 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
                         <option value="active">Active</option>
                         <option value="inactive">Inactive</option>
                     </select>
