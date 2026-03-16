@@ -5,11 +5,13 @@ declare (strict_types = 1);
 namespace App\Providers;
 
 use App\Repositories\Contracts\BrandRepositoryInterface;
+use App\Repositories\Contracts\CampaignRepositoryInterface;
 use App\Repositories\Contracts\CategoryRepositoryInterface;
 use App\Repositories\Contracts\CreatorRepositoryInterface;
 use App\Repositories\Contracts\ModeratorRepositoryInterface;
 use App\Repositories\Contracts\UserRepositoryInterface;
 use App\Repositories\Eloquent\EloquentBrandRepository;
+use App\Repositories\Eloquent\EloquentCampaignRepository;
 use App\Repositories\Eloquent\EloquentCategoryRepository;
 use App\Repositories\Eloquent\EloquentCreatorRepository;
 use App\Repositories\Eloquent\EloquentModeratorRepository;
@@ -48,6 +50,11 @@ class RepositoryServiceProvider extends ServiceProvider
         $this->app->bind(
             CreatorRepositoryInterface::class,
             EloquentCreatorRepository::class
+        );
+
+        $this->app->bind(
+            CampaignRepositoryInterface::class,
+            EloquentCampaignRepository::class
         );
 
         $this->app->bind(

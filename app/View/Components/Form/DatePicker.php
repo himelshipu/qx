@@ -1,12 +1,12 @@
 <?php
 
-namespace App\View\Components\form;
+namespace App\View\Components\Form;
 
 use Closure;
 use Illuminate\Contracts\View\View;
 use Illuminate\View\Component;
 
-class CheckboxComponent extends Component
+class DatePicker extends Component
 {
     /**
      * Create a new component instance.
@@ -21,6 +21,6 @@ class CheckboxComponent extends Component
      */
     public function render(): View|Closure|string
     {
-        return view('components.form.checkbox-component');
+        return view('components.form.date-picker');
     }
 }

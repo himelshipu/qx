@@ -1,12 +1,12 @@
 <?php
 
-namespace App\View\Components\form;
+namespace App\View\Components\Form;
 
 use Closure;
 use Illuminate\Contracts\View\View;
 use Illuminate\View\Component;
 
-class MultipleSelect extends Component
+class TextAreaInputs extends Component
 {
     /**
      * Create a new component instance.
@@ -21,6 +21,6 @@ class MultipleSelect extends Component
      */
     public function render(): View|Closure|string
     {
-        return view('components.form.multiple-select');
+        return view('components.form.text-area-inputs');
     }
 }

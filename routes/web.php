@@ -82,10 +82,17 @@ Route::prefix('dashboard')->name('dashboard.')->middleware(['auth', 'verified'])
     Route::delete('/creators/{creator}', [CreatorController::class, 'destroy'])->name('creators.destroy');
     Route::post('/creators/{creator}/toggle-status', [CreatorController::class, 'toggleStatus'])->name('creators.toggle-status');
 
-    Route::get('/campaigns', [CampaignController::class, 'index'])->name('campaigns.index');
-
-    //Create campaign route
-    Route::get('/campaigns/create', [CampaignController::class, 'create'])->name('campaigns.create');
+    Route::get('/campaigns', [CampaignController::class, 'indexDesigned'])->name('campaigns.index');
+    Route::get('/campaigns/designed', [CampaignController::class, 'indexDesigned'])->name('campaigns.designed');
+    Route::get('/campaigns/standard', [CampaignController::class, 'index'])->name('campaigns.standard');
+    Route::get('/campaigns/create', [CampaignController::class, 'createDesigned'])->name('campaigns.create');
+    Route::get('/campaigns/designed/create', [CampaignController::class, 'createDesigned'])->name('campaigns.designed.create');
+    Route::get('/campaigns/standard/create', [CampaignController::class, 'create'])->name('campaigns.standard.create');
+    Route::post('/campaigns', [CampaignController::class, 'store'])->name('campaigns.store');
+    Route::get('/campaigns/details/{campaign}', [CampaignController::class, 'view'])->name('campaigns.view');
+    Route::get('/campaigns/{campaign}/edit', [CampaignController::class, 'edit'])->name('campaigns.edit');
+    Route::put('/campaigns/{campaign}', [CampaignController::class, 'update'])->name('campaigns.update');
+    Route::delete('/campaigns/{campaign}', [CampaignController::class, 'destroy'])->name('campaigns.destroy');
 
     // Pending commerce and operations modules (placeholder pages)
     Route::view('/reviews', 'backend.pages.coming-soon', ['module' => 'Reviews'])->name('reviews.index');

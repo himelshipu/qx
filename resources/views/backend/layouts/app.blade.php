@@ -69,10 +69,71 @@ window.addEventListener('resize', checkMobile);" class="transition-colors durati
 
 	</body>
 
+	<!-- Toast Container -->
+	<div x-data="window.Alpine.store('toast')" class="fixed top-4 right-4 z-50 flex flex-col gap-2">
+		<template x-for="t in toasts" :key="t.id">
+			<div 
+				class="px-4 py-3 rounded-lg shadow-lg flex items-center gap-3 min-w-[300px] max-w-md animate-slide-in"
+				:class="{
+					'success': 'bg-green-50 dark:bg-green-900 border border-green-200 dark:border-green-700 text-green-800 dark:text-green-100',
+					'error': 'bg-red-50 dark:bg-red-900 border border-red-200 dark:border-red-700 text-red-800 dark:text-red-100',
+					'info': 'bg-blue-50 dark:bg-blue-900 border border-blue-200 dark:border-blue-700 text-blue-800 dark:text-blue-100',
+					'warning': 'bg-yellow-50 dark:bg-yellow-900 border border-yellow-200 dark:border-yellow-700 text-yellow-800 dark:text-yellow-100',
+				}[t.type]"
+			>
+				<!-- Icons -->
+				<div class="flex-shrink-0">
+					<template x-if="t.type === 'success'">
+						<svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+						</svg>
+					</template>
+					<template x-if="t.type === 'error'">
+						<svg class="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+						</svg>
+					</template>
+					<template x-if="t.type === 'info'">
+						<svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+						</svg>
+					</template>
+					<template x-if="t.type === 'warning'">
+						<svg class="w-5 h-5 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+						</svg>
+					</template>
+				</div>
+				<div class="flex-1">
+					<p class="text-sm font-medium whitespace-pre-line" x-text="t.message"></p>
+				</div>
+				<button @click="remove(t.id)" class="text-current opacity-60 hover:opacity-100">
+					<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+					</svg>
+				</button>
+			</div>
+		</template>
+	</div>
+
 	@php
+		// Get validation errors - use session to get errors bag reliably
+		$validationError = null;
+		$errorsBag = session()->get('errors') ?: ($errors ?? null);
+		
+		if ($errorsBag && method_exists($errorsBag, 'any') && $errorsBag->any()) {
+			$messages = $errorsBag->all();
+			if (count($messages) > 1) {
+				$validationError = '• ' . implode("\n• ", $messages);
+			} else {
+				$validationError = $messages[0] ?? null;
+			}
+		}
+
+		// Get flash messages
 		$toastrFlash = [
 		    'success' => session('success'),
-		    'error' => session('error'),
+		    'error' => session('error') ?: $validationError,
 		    'info' => session('info'),
 		    'warning' => session('warning'),
 		];

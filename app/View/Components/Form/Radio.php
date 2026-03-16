@@ -1,12 +1,12 @@
 <?php
 
-namespace App\View\Components\form;
+namespace App\View\Components\Form;
 
 use Closure;
 use Illuminate\Contracts\View\View;
 use Illuminate\View\Component;
 
-class Dropzone extends Component
+class Radio extends Component
 {
     /**
      * Create a new component instance.
@@ -21,6 +21,6 @@ class Dropzone extends Component
      */
     public function render(): View|Closure|string
     {
-        return view('components.form.dropzone');
+        return view('components.form.radio');
     }
 }

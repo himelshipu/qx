@@ -1,12 +1,12 @@
 <?php
 
-namespace App\View\Components\form;
+namespace App\View\Components\Form;
 
 use Closure;
 use Illuminate\Contracts\View\View;
 use Illuminate\View\Component;
 
-class FileInputExample extends Component
+class RadioButtons extends Component
 {
     /**
      * Create a new component instance.
@@ -21,6 +21,6 @@ class FileInputExample extends Component
      */
     public function render(): View|Closure|string
     {
-        return view('components.form.file-input-example');
+        return view('components.form.radio-buttons');
     }
 }

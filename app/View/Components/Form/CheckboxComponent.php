@@ -1,12 +1,12 @@
 <?php
 
-namespace App\View\Components\form;
+namespace App\View\Components\Form;
 
 use Closure;
 use Illuminate\Contracts\View\View;
 use Illuminate\View\Component;
 
-class DefaultInputs extends Component
+class CheckboxComponent extends Component
 {
     /**
      * Create a new component instance.
@@ -21,6 +21,6 @@ class DefaultInputs extends Component
      */
     public function render(): View|Closure|string
     {
-        return view('components.form.default-inputs');
+        return view('components.form.checkbox-component');
     }
 }

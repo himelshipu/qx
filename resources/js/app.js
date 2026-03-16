@@ -3,41 +3,53 @@ import Alpine from "alpinejs";
 import ApexCharts from "apexcharts";
 import flatpickr from "flatpickr";
 import "flatpickr/dist/flatpickr.min.css";
-import toastr from "toastr";
-import "toastr/build/toastr.min.css";
 
 window.Alpine = Alpine;
 window.flatpickr = flatpickr;
 window.ApexCharts = ApexCharts;
 window.createPopper = createPopper;
-window.toastr = toastr;
 
-toastr.options = {
-    closeButton: true,
-    progressBar: true,
-    newestOnTop: true,
-    preventDuplicates: true,
-    positionClass: "toast-top-right",
-    timeOut: 3500,
-    extendedTimeOut: 1000,
-    showDuration: 200,
-    hideDuration: 200,
-    showMethod: "fadeIn",
-    hideMethod: "fadeOut",
-};
+// Custom Toast System using Alpine.js
+Alpine.store("toast", {
+    toasts: [],
+    add(type, message) {
+        const id = Date.now() + Math.random();
+        this.toasts.push({ id, type, message });
+        
+        // Auto remove after 4 seconds
+        setTimeout(() => {
+            this.remove(id);
+        }, 4000);
+    },
+    remove(id) {
+        this.toasts = this.toasts.filter(t => t.id !== id);
+    },
+    success(message) {
+        this.add("success", message);
+    },
+    error(message) {
+        this.add("error", message);
+    },
+    info(message) {
+        this.add("info", message);
+    },
+    warning(message) {
+        this.add("warning", message);
+    },
+});
 
 window.toast = {
-    success(message, title = "") {
-        toastr.success(message, title);
+    success(message) {
+        Alpine.store("toast").success(message);
     },
-    error(message, title = "") {
-        toastr.error(message, title);
+    error(message) {
+        Alpine.store("toast").error(message);
     },
-    info(message, title = "") {
-        toastr.info(message, title);
+    info(message) {
+        Alpine.store("toast").info(message);
     },
-    warning(message, title = "") {
-        toastr.warning(message, title);
+    warning(message) {
+        Alpine.store("toast").warning(message);
     },
 };
 
