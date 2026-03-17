@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Creator;
+use App\Models\Package;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -12,13 +13,40 @@ class CreatorProfileController extends Controller
     /**
      * Show public creator profile
      */
-    public function show($id)
+    public function show(string $slug)
     {
-        $creator = Creator::with('user')->findOrFail($id);
+        $creator = Creator::query()
+            ->with([
+                'user',
+                'categories:id,name',
+                'platformStats' => fn($query) => $query
+                    ->where('is_active', true)
+                    ->orderByDesc('follower_count')
+            ])
+            ->withAvg('reviews', 'rating')
+            ->withCount('reviews')
+            ->whereHas('user', function ($query) use ($slug): void {
+                $query->where('slug', $slug)->where('user_type', 'creator');
+            })
+            ->firstOrFail();
+
+        $packages = Package::query()
+            ->where('is_active', true)
+            ->orderBy('platform')
+            ->orderBy('name')
+            ->get([
+                'id',
+                'platform',
+                'name',
+                'description',
+                'base_price',
+                'currency'
+            ]);
 
         return view('frontend.pages.creator-profile', [
-            'creator' => $creator,
-            'title' => $creator->user->name . ' — Creator',
+            'creator'  => $creator,
+            'packages' => $packages,
+            'title'    => $creator->user->name . ' — Creator'
         ]);
     }
 
@@ -27,14 +55,15 @@ class CreatorProfileController extends Controller
      */
     public function edit()
     {
-        $user = Auth::user();
+        $user    = Auth::user();
         $creator = $user->creator;
 
         // Some views expect $brand variable; to minimize view changes we'll pass creator as brand when needed
+
         return view('frontend.pages.creator-edit-profile', [
-            'user' => $user,
+            'user'    => $user,
             'creator' => $creator,
-            'brand' => $creator, // compatibility for fields referenced as $brand in the blade
+            'brand'   => $creator // compatibility for fields referenced as $brand in the blade
         ]);
     }
 
@@ -43,7 +72,7 @@ class CreatorProfileController extends Controller
      */
     public function update(Request $request)
     {
-        $user = Auth::user();
+        $user    = Auth::user();
         $creator = $user->creator;
 
         if (!$creator) {
@@ -51,20 +80,20 @@ class CreatorProfileController extends Controller
         }
 
         $validated = $request->validate([
-            'display_name' => 'nullable|string|max:255',
-            'description' => 'nullable|string|max:1000',
-            'location' => 'nullable|string|max:255',
-            'city' => 'nullable|string|max:255',
-            'country' => 'nullable|string|max:255',
-            'postal_code' => 'nullable|string|max:20',
-            'website' => 'nullable|url|max:255',
-            'instagram' => 'nullable|url|max:255',
-            'tiktok' => 'nullable|url|max:255',
-            'facebook' => 'nullable|url|max:255',
-            'twitter' => 'nullable|url|max:255',
-            'youtube' => 'nullable|url|max:255',
+            'display_name'  => 'nullable|string|max:255',
+            'description'   => 'nullable|string|max:1000',
+            'location'      => 'nullable|string|max:255',
+            'city'          => 'nullable|string|max:255',
+            'country'       => 'nullable|string|max:255',
+            'postal_code'   => 'nullable|string|max:20',
+            'website'       => 'nullable|url|max:255',
+            'instagram'     => 'nullable|url|max:255',
+            'tiktok'        => 'nullable|url|max:255',
+            'facebook'      => 'nullable|url|max:255',
+            'twitter'       => 'nullable|url|max:255',
+            'youtube'       => 'nullable|url|max:255',
             'profile_image' => 'nullable|image|mimes:jpeg,png,webp|max:2048',
-            'cover_image' => 'nullable|image|mimes:jpeg,png,webp|max:5120',
+            'cover_image'   => 'nullable|image|mimes:jpeg,png,webp|max:5120'
         ]);
 
         // Map validated fields to creator model where appropriate
@@ -72,25 +101,25 @@ class CreatorProfileController extends Controller
             $creator->display_name = $validated['display_name'];
         }
         $creator->description = $validated['description'] ?? $creator->description ?? null;
-        $creator->location = $validated['location'] ?? $creator->location ?? null;
-        $creator->city = $validated['city'] ?? $creator->city ?? null;
-        $creator->country = $validated['country'] ?? $creator->country ?? null;
+        $creator->location    = $validated['location'] ?? $creator->location ?? null;
+        $creator->city        = $validated['city'] ?? $creator->city ?? null;
+        $creator->country     = $validated['country'] ?? $creator->country ?? null;
         $creator->postal_code = $validated['postal_code'] ?? $creator->postal_code ?? null;
 
         $creator->social_links = [
-            'website' => $validated['website'] ?? null,
+            'website'   => $validated['website'] ?? null,
             'instagram' => $validated['instagram'] ?? null,
-            'tiktok' => $validated['tiktok'] ?? null,
-            'youtube' => $validated['youtube'] ?? null,
-            'facebook' => $validated['facebook'] ?? null,
-            'twitter' => $validated['twitter'] ?? null,
+            'tiktok'    => $validated['tiktok'] ?? null,
+            'youtube'   => $validated['youtube'] ?? null,
+            'facebook'  => $validated['facebook'] ?? null,
+            'twitter'   => $validated['twitter'] ?? null
         ];
 
         if ($request->hasFile('profile_image')) {
             if ($creator->profile_image_path && Storage::disk('public')->exists($creator->profile_image_path)) {
                 Storage::disk('public')->delete($creator->profile_image_path);
             }
-            $path = $request->file('profile_image')->store('creators/profile', 'public');
+            $path                        = $request->file('profile_image')->store('creators/profile', 'public');
             $creator->profile_image_path = $path;
         }
 
@@ -98,7 +127,7 @@ class CreatorProfileController extends Controller
             if ($creator->cover_image_path && Storage::disk('public')->exists($creator->cover_image_path)) {
                 Storage::disk('public')->delete($creator->cover_image_path);
             }
-            $path = $request->file('cover_image')->store('creators/cover', 'public');
+            $path                      = $request->file('cover_image')->store('creators/cover', 'public');
             $creator->cover_image_path = $path;
         }
 
@@ -109,7 +138,7 @@ class CreatorProfileController extends Controller
 
     public function deleteProfileImage(Request $request)
     {
-        $user = Auth::user();
+        $user    = Auth::user();
         $creator = $user->creator;
 
         if (!$creator) {
@@ -127,7 +156,7 @@ class CreatorProfileController extends Controller
 
     public function deleteCoverImage(Request $request)
     {
-        $user = Auth::user();
+        $user    = Auth::user();
         $creator = $user->creator;
 
         if (!$creator) {
@@ -145,7 +174,7 @@ class CreatorProfileController extends Controller
 
     public function toggleStatus(Request $request)
     {
-        $user = Auth::user();
+        $user    = Auth::user();
         $creator = $user->creator;
 
         if (!$creator) {

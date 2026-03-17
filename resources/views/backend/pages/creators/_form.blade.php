@@ -343,6 +343,36 @@
 				<p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
 			@enderror
 		</div>
+
+		<div class="rounded-lg border border-amber-200 bg-amber-50 px-3 py-3 dark:border-amber-800/60 dark:bg-amber-900/20"
+			x-data="{ featured: {{ old('is_featured', $creator?->is_featured ?? false) ? 'true' : 'false' }} }">
+			<input type="hidden" name="is_featured" value="0">
+			<label for="is_featured" class="flex cursor-pointer items-center justify-between gap-3">
+				<div>
+					<span class="text-sm font-medium text-amber-800 dark:text-amber-200">Featured Creator</span>
+					<p class="text-xs text-amber-600 dark:text-amber-400 mt-0.5">Show this creator in the homepage Featured section
+						and on /influencer/featured</p>
+				</div>
+				<input id="is_featured" name="is_featured" type="checkbox" value="1"
+					{{ old('is_featured', $creator?->is_featured ?? false) ? 'checked' : '' }} x-model="featured"
+					class="h-4 w-4 rounded border-amber-300 text-amber-600 focus:ring-amber-500 dark:border-amber-600 dark:bg-gray-800">
+			</label>
+
+			<div x-show="featured" x-cloak class="mt-3 border-t border-amber-200 dark:border-amber-800/60 pt-3">
+				<label for="featured_priority" class="mb-1 block text-xs font-medium text-amber-800 dark:text-amber-300">Featured
+					Priority <span class="font-normal opacity-70">(lower = shown first)</span></label>
+				<input id="featured_priority" name="featured_priority" type="number" min="1" max="999"
+					value="{{ old('featured_priority', $creator?->featured_priority) }}" placeholder="e.g. 1, 2, 3 …"
+					class="h-10 w-40 rounded-lg border border-amber-300 bg-transparent px-3 text-sm text-gray-900 focus:border-amber-500 focus:outline-none dark:border-amber-700 dark:bg-gray-800 dark:text-white">
+				@error('featured_priority')
+					<p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+				@enderror
+			</div>
+
+			@error('is_featured')
+				<p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+			@enderror
+		</div>
 	</div>
 </div>
 

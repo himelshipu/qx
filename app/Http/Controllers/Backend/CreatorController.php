@@ -45,6 +45,8 @@ class CreatorController extends Controller
         $this->creatorService->createCreator(
             $request->validated(),
             $request->boolean('is_active', true),
+            $request->boolean('is_featured', false),
+            $request->input('featured_priority') !== null ? (int) $request->input('featured_priority') : null,
             $request->file('profile_image_file'),
             $request->file('cover_image_file')
         );
@@ -82,6 +84,8 @@ class CreatorController extends Controller
             $creator,
             $request->validated(),
             $request->boolean('is_active'),
+            $request->boolean('is_featured', false),
+            $request->input('featured_priority') !== null ? (int) $request->input('featured_priority') : null,
             $request->file('profile_image_file'),
             $request->file('cover_image_file')
         );

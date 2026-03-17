@@ -62,6 +62,7 @@
 							<option value="all" {{ $status === 'all' ? 'selected' : '' }}>All</option>
 							<option value="active" {{ $status === 'active' ? 'selected' : '' }}>Active</option>
 							<option value="inactive" {{ $status === 'inactive' ? 'selected' : '' }}>Inactive</option>
+							<option value="featured" {{ $status === 'featured' ? 'selected' : '' }}>Featured</option>
 						</select>
 					</div>
 					<div class="flex items-end gap-2">
@@ -88,6 +89,8 @@
 									Email</th>
 								<th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
 									Usage</th>
+								<th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+									Featured</th>
 								<th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
 									Status</th>
 								<th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
@@ -149,6 +152,19 @@
 										</div>
 									</td>
 									<td class="px-4 py-3">
+										@if ($creator->is_featured)
+											<span
+												class="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-1 text-xs font-semibold text-amber-700 dark:bg-amber-900/30 dark:text-amber-300">
+												&#9733; Featured
+												@if ($creator->featured_priority)
+													<span class="ml-1 text-[10px] font-normal opacity-70">#{{ $creator->featured_priority }}</span>
+												@endif
+											</span>
+										@else
+											<span class="text-xs text-gray-400 dark:text-gray-600">&mdash;</span>
+										@endif
+									</td>
+									<td class="px-4 py-3">
 										<button type="button" onclick="toggleCreatorStatus({{ $creator->id }})"
 											class="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold transition {{ $creator->is_active ? 'bg-green-100 text-green-700 hover:bg-green-200 dark:bg-green-900/30 dark:text-green-300' : 'bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-300' }}">
 											{{ $creator->is_active ? 'Active' : 'Inactive' }}
@@ -182,7 +198,7 @@
 								</tr>
 							@empty
 								<tr>
-									<td colspan="7" class="px-4 py-12 text-center">
+									<td colspan="8" class="px-4 py-12 text-center">
 										<p class="text-sm text-gray-500 dark:text-gray-400">No creators found for the current filters.</p>
 										<a href="{{ route('dashboard.creators.create') }}"
 											class="mt-3 inline-flex items-center gap-2 rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-gray-800 dark:bg-gray-700 dark:hover:bg-gray-600">

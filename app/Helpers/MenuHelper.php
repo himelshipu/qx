@@ -48,6 +48,38 @@ class MenuHelper
                             ['name' => 'All Moderators', 'route' => 'moderators.index'],
                             ['name' => 'Create Moderator', 'route' => 'moderators.create']
                         ]
+                    ],
+                    [
+                        'icon'     => 'case-studies',
+                        'name'     => 'Case Studies',
+                        'subItems' => [
+                            ['name' => 'All Case Studies', 'route' => 'case-studies.index'],
+                            ['name' => 'Create Case Study', 'route' => 'case-studies.create']
+                        ]
+                    ],
+                    [
+                        'icon'     => 'testimonials',
+                        'name'     => 'Testimonials',
+                        'subItems' => [
+                            ['name' => 'All Testimonials', 'route' => 'testimonials.index'],
+                            ['name' => 'Create Testimonial', 'route' => 'testimonials.create']
+                        ]
+                    ],
+                    [
+                        'icon'     => 'collaborations',
+                        'name'     => 'Collaborations',
+                        'subItems' => [
+                            ['name' => 'All Collaborations', 'route' => 'featured-collaborations.index'],
+                            ['name' => 'Add Collaboration', 'route' => 'featured-collaborations.create']
+                        ]
+                    ],
+                    [
+                        'icon'     => 'faqs',
+                        'name'     => 'FAQs',
+                        'subItems' => [
+                            ['name' => 'FAQ Sections', 'route' => 'faqs.sections.index'],
+                            ['name' => 'Create Section', 'route' => 'faqs.sections.create']
+                        ]
                     ]
                 ]
             ],
@@ -85,9 +117,12 @@ class MenuHelper
                 'name'  => 'COMMERCE',
                 'items' => [
                     [
-                        'icon'  => 'packages',
-                        'name'  => 'Packages',
-                        'route' => 'packages.index'
+                        'icon'     => 'packages',
+                        'name'     => 'Packages',
+                        'subItems' => [
+                            ['name' => 'All Packages', 'route' => 'packages.index'],
+                            ['name' => 'Create Package', 'route' => 'packages.create']
+                        ]
                     ],
                     [
                         'icon'  => 'orders',
@@ -185,7 +220,11 @@ class MenuHelper
 
             'moderators'      => '<svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>',
 
-            'campaigns'       => '<svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M11 3.055A9.001 9.001 0 0120.945 13H11V3.055zM3 13h8v8.945A9.001 9.001 0 013 13zm10-8.945V13h8.945A9.001 9.001 0 0013 4.055zM5 19l4-4m0 4L5 15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>',
+            'case-studies'    => '<svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9 12l2 2 4-4m7-3H8a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2V9a2 2 0 00-2-2z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+
+            'testimonials'    => '<svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8 14s1.5 2 4 2 4-2 4-2M9 9h.01M15 9h.01M3 21h18M5 3h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+
+            'faqs'            => '<svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 8v4m0 4v.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>',
 
             'campaign-new'    => '<svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 4v16m8-8H4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>',
 

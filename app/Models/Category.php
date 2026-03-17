@@ -17,13 +17,16 @@ class Category extends Model
         'icon_path',
         'image_path',
         'is_active',
-        'sort_order'
+        'sort_order',
+        'is_featured',
+        'featured_order'
     ];
 
     protected function casts(): array
     {
         return [
-            'is_active' => 'boolean'
+            'is_active' => 'boolean',
+            'is_featured' => 'boolean'
         ];
     }
 

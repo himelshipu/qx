@@ -11,7 +11,7 @@
 
             <nav class="flex flex-wrap items-center justify-center gap-4 md:gap-6 lg:gap-10 text-sm font-medium">
 
-                <a href="#" class="nav-link">Search</a>
+                <a href="{{ route('influencers') }}" class="nav-link">Search</a>
                 <a href="{{ route('faq') }}" class="nav-link">Faq</a>
                 <a href="{{ route('support') }}" class="nav-link">Support</a>
 

@@ -59,13 +59,15 @@ final class CategoryService
         $slugSeed = (string) ($validated['slug'] ?? $validated['name']);
 
         return $this->categoryRepository->create([
-            'name'        => $validated['name'],
-            'slug'        => $this->buildUniqueSlug($slugSeed),
-            'description' => $this->nullableString($validated['description'] ?? null),
-            'icon_path'   => $this->storeUploadedAsset($iconFile, 'categories/icons'),
-            'image_path'  => $this->storeUploadedAsset($imageFile, 'categories/images'),
-            'sort_order'  => $validated['sort_order'] ?? $this->categoryRepository->getNextSortOrder(),
-            'is_active'   => $isActive
+            'name'            => $validated['name'],
+            'slug'            => $this->buildUniqueSlug($slugSeed),
+            'description'     => $this->nullableString($validated['description'] ?? null),
+            'icon_path'       => $this->storeUploadedAsset($iconFile, 'categories/icons'),
+            'image_path'      => $this->storeUploadedAsset($imageFile, 'categories/images'),
+            'sort_order'      => $validated['sort_order'] ?? $this->categoryRepository->getNextSortOrder(),
+            'is_featured'     => $validated['is_featured'] ?? false,
+            'featured_order'  => $validated['featured_order'] ?? null,
+            'is_active'       => $isActive
         ]);
     }
 
@@ -96,13 +98,15 @@ final class CategoryService
         }
 
         return $this->categoryRepository->update($category, [
-            'name'        => $validated['name'],
-            'slug'        => $this->buildUniqueSlug($slugSeed, $category->id),
-            'description' => $this->nullableString($validated['description'] ?? null),
-            'icon_path'   => $iconPath,
-            'image_path'  => $imagePath,
-            'sort_order'  => $validated['sort_order'] ?? $category->sort_order,
-            'is_active'   => $isActive
+            'name'            => $validated['name'],
+            'slug'            => $this->buildUniqueSlug($slugSeed, $category->id),
+            'description'     => $this->nullableString($validated['description'] ?? null),
+            'icon_path'       => $iconPath,
+            'image_path'      => $imagePath,
+            'sort_order'      => $validated['sort_order'] ?? $category->sort_order,
+            'is_featured'     => $validated['is_featured'] ?? $category->is_featured,
+            'featured_order'  => $validated['featured_order'] ?? $category->featured_order,
+            'is_active'       => $isActive
         ]);
     }
 

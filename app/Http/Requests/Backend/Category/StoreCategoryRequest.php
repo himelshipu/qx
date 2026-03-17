@@ -22,13 +22,15 @@ class StoreCategoryRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name'        => ['required', 'string', 'max:150'],
-            'slug'        => ['nullable', 'string', 'max:180'],
-            'description' => ['nullable', 'string'],
-            'icon_file'   => ['nullable', 'file', 'mimes:svg', 'max:1024'],
-            'image_file'  => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp,avif,gif', 'max:5120'],
-            'sort_order'  => ['nullable', 'integer', 'min:0'],
-            'is_active'   => ['sometimes', 'boolean']
+            'name'           => ['required', 'string', 'max:150'],
+            'slug'           => ['nullable', 'string', 'max:180'],
+            'description'    => ['nullable', 'string'],
+            'icon_file'      => ['nullable', 'file', 'mimes:svg', 'max:1024'],
+            'image_file'     => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp,avif,gif', 'max:5120'],
+            'sort_order'     => ['nullable', 'integer', 'min:0'],
+            'is_featured'    => ['sometimes', 'boolean'],
+            'featured_order' => ['nullable', 'integer', 'min:1', 'max:4'],
+            'is_active'      => ['sometimes', 'boolean']
         ];
     }
 }

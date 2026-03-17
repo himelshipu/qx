@@ -31,16 +31,24 @@ class CatalogSeeder extends Seeder
             'Parenting'
         ];
 
+        // Featured categories (first 4 will be featured)
+        $featuredCategories = ['Fashion', 'Beauty', 'Food', 'Fitness'];
+
         foreach ($categories as $index => $name) {
+            $isFeatured = in_array($name, $featuredCategories);
+            $featuredOrder = $isFeatured ? array_search($name, $featuredCategories) + 1 : null;
+
             Category::updateOrCreate(
                 ['slug' => Str::slug($name)],
                 [
-                    'name'        => $name,
-                    'description' => $name . ' focused campaigns and creator segments',
-                    'icon_path'   => 'images/categories/icons/' . Str::slug($name) . '.svg',
-                    'image_path'  => 'images/categories/' . Str::slug($name) . '.jpg',
-                    'is_active'   => true,
-                    'sort_order'  => $index + 1
+                    'name'            => $name,
+                    'description'     => $name . ' focused campaigns and creator segments',
+                    'icon_path'       => 'images/categories/icons/' . Str::slug($name) . '.svg',
+                    'image_path'      => 'images/categories/' . Str::slug($name) . '.jpg',
+                    'is_active'       => true,
+                    'sort_order'      => $index + 1,
+                    'is_featured'     => $isFeatured,
+                    'featured_order'  => $featuredOrder
                 ]
             );
         }

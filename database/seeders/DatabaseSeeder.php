@@ -17,7 +17,8 @@ class DatabaseSeeder extends Seeder
             UserProfileSeeder::class,
             CampaignSeeder::class,
             CommerceSeeder::class,
-            SupportAndMessagingSeeder::class
+            SupportAndMessagingSeeder::class,
+            ContentSeeder::class
         ]);
     }
 }

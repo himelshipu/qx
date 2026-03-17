@@ -46,6 +46,7 @@ class EloquentCreatorRepository implements CreatorRepositoryInterface
             })
             ->when($status === 'active', fn($query) => $query->where('is_active', true))
             ->when($status === 'inactive', fn($query) => $query->where('is_active', false))
+            ->when($status === 'featured', fn($query) => $query->where('is_featured', true))
             ->orderByDesc('updated_at')
             ->paginate($perPage)
             ->withQueryString();
@@ -62,7 +63,8 @@ class EloquentCreatorRepository implements CreatorRepositoryInterface
             'total'       => Creator::count(),
             'active'      => Creator::where('is_active', true)->count(),
             'inactive'    => Creator::where('is_active', false)->count(),
-            'categorized' => Creator::whereHas('categories')->count()
+            'categorized' => Creator::whereHas('categories')->count(),
+            'featured'    => Creator::where('is_featured', true)->count()
         ];
     }
 

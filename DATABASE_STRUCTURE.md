@@ -6,6 +6,7 @@
 
 - id BIGINT UNSIGNED PK AI
 - name VARCHAR(255) NOT NULL
+- slug VARCHAR(255) NULL UNIQUE
 - email VARCHAR(255) NOT NULL UNIQUE
 - user_type ENUM('brand','creator','moderator','admin') NOT NULL DEFAULT 'brand'
 - verification_code VARCHAR(20) NULL

@@ -153,6 +153,32 @@
 				<p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
 			@enderror
 		</div>
+
+		<div class="rounded-lg border border-gray-200 bg-white px-3 py-3 dark:border-gray-700 dark:bg-gray-900" x-data="{ isFeatured: {{ old('is_featured', $category?->is_featured ?? false) ? 'true' : 'false' }} }">
+			<input type="hidden" name="is_featured" value="0">
+			<label for="is_featured" class="flex cursor-pointer items-center justify-between gap-3">
+				<span class="text-sm font-medium text-gray-700 dark:text-gray-300">Featured Category</span>
+				<input id="is_featured" name="is_featured" type="checkbox" value="1"
+					x-model="isFeatured"
+					{{ old('is_featured', $category?->is_featured) ? 'checked' : '' }}
+					class="h-4 w-4 rounded border-gray-300 text-gray-900 focus:ring-gray-500 dark:border-gray-600 dark:bg-gray-800">
+			</label>
+			@error('is_featured')
+				<p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+			@enderror
+
+			<div x-show="isFeatured" class="mt-3 border-t border-gray-200 pt-3 dark:border-gray-700">
+				<label for="featured_order" class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Featured Order <span class="text-red-500">*</span></label>
+				<input id="featured_order" name="featured_order" type="number" min="1" max="4" 
+					value="{{ old('featured_order', $category?->featured_order) }}"
+					placeholder="1-4"
+					class="h-11 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-900 focus:border-gray-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white">
+				<p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Position 1-4 in featured section (1 = first)</p>
+				@error('featured_order')
+					<p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+				@enderror
+			</div>
+		</div>
 	</div>
 </div>
 

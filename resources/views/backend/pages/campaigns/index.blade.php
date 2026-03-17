@@ -6,6 +6,8 @@
 	<x-backend.shell.breadcrumb pageTitle="Campaigns" />
 
 	<div class="space-y-6">
+		@include('backend.pages.campaigns._alerts')
+
 		<div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
 			<div class="rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-gray-900">
 				<p class="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Total</p>
