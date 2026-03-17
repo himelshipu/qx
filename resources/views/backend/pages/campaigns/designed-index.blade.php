@@ -6,6 +6,10 @@
 	<x-backend.shell.breadcrumb pageTitle="All Campaigns" />
 
 	<div x-data="{ showFilters: {{ $status !== 'all' || $type !== 'all' ? 'true' : 'false' }} }" class="mt-8 px-2">
+		<div class="mb-6">
+			@include('backend.pages.campaigns._alerts')
+		</div>
+
 		<form method="GET" action="{{ route('dashboard.campaigns.designed') }}" class="space-y-4">
 			<div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
 				<div class="relative flex-1 max-w-md">
@@ -36,10 +40,12 @@
 				</div>
 			</div>
 
-			<div x-show="showFilters" x-cloak class="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+			<div x-show="showFilters" x-cloak
+				class="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900">
 				<div class="grid grid-cols-1 gap-3 md:grid-cols-4">
 					<div>
-						<label for="status" class="mb-1 block text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Status</label>
+						<label for="status"
+							class="mb-1 block text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Status</label>
 						<select id="status" name="status"
 							class="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-3 text-sm text-gray-900 focus:border-gray-400 focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-white">
 							@foreach ($statusOptions as $option)
@@ -51,7 +57,8 @@
 					</div>
 
 					<div>
-						<label for="type" class="mb-1 block text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Type</label>
+						<label for="type"
+							class="mb-1 block text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Type</label>
 						<select id="type" name="type"
 							class="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-3 text-sm text-gray-900 focus:border-gray-400 focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-white">
 							@foreach ($typeOptions as $option)
@@ -76,7 +83,8 @@
 			</div>
 		</form>
 
-		<div class="mt-4 flex items-center justify-between px-1 text-xs uppercase tracking-[0.22em] text-gray-400 dark:text-gray-500">
+		<div
+			class="mt-4 flex items-center justify-between px-1 text-xs uppercase tracking-[0.22em] text-gray-400 dark:text-gray-500">
 			<span>Showing {{ $campaigns->count() }} of {{ $campaigns->total() }}</span>
 			<span>Switch to Enhanced View</span>
 		</div>
@@ -91,11 +99,16 @@
 
 					$resolvedImage = asset('images/campaignApply.png');
 					if (!empty($categoryImagePath)) {
-					    $isExternal = str_starts_with($categoryImagePath, 'http://') || str_starts_with($categoryImagePath, 'https://');
+					    $isExternal =
+					        str_starts_with($categoryImagePath, 'http://') || str_starts_with($categoryImagePath, 'https://');
 					    $resolvedImage = $isExternal ? $categoryImagePath : asset($categoryImagePath);
 					}
 
-					$dependencyCount = $campaign->applications_count + $campaign->orders_count + $campaign->order_items_count + $campaign->cart_items_count;
+					$dependencyCount =
+					    $campaign->applications_count +
+					    $campaign->orders_count +
+					    $campaign->order_items_count +
+					    $campaign->cart_items_count;
 					$badgeClass = match ($campaign->status) {
 					    'published' => 'bg-emerald-500 text-white',
 					    'paused' => 'bg-amber-500 text-white',
@@ -105,8 +118,10 @@
 					};
 				@endphp
 
-				<div class="group relative aspect-[4/3] overflow-hidden rounded-[1.8rem] border border-gray-100 bg-gray-100 shadow-sm transition-all duration-500 hover:shadow-2xl dark:border-gray-800 dark:bg-gray-900">
-					<a href="{{ route('dashboard.campaigns.view', $campaign) }}" class="absolute inset-0 z-10" aria-label="View {{ $campaign->title }}"></a>
+				<div
+					class="group relative aspect-[4/3] overflow-hidden rounded-[1.8rem] border border-gray-100 bg-gray-100 shadow-sm transition-all duration-500 hover:shadow-2xl dark:border-gray-800 dark:bg-gray-900">
+					<a href="{{ route('dashboard.campaigns.view', $campaign) }}" class="absolute inset-0 z-10"
+						aria-label="View {{ $campaign->title }}"></a>
 
 					<img src="{{ $resolvedImage }}" alt="Campaign Preview"
 						class="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
@@ -115,7 +130,8 @@
 					<div class="absolute inset-0 z-10 bg-gradient-to-t from-black/95 via-black/30 to-transparent opacity-90"></div>
 
 					<div class="absolute left-5 top-5 z-20 flex items-center gap-2">
-						<span class="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[10px] font-medium uppercase {{ $badgeClass }}">
+						<span
+							class="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[10px] font-medium uppercase {{ $badgeClass }}">
 							{{ \Illuminate\Support\Str::headline($campaign->status) }}
 						</span>
 						@if (!$campaign->is_active)
@@ -168,7 +184,8 @@
 					</div>
 				</div>
 			@empty
-				<div class="col-span-full rounded-[1.8rem] border border-dashed border-gray-300 bg-white p-12 text-center dark:border-gray-700 dark:bg-gray-900">
+				<div
+					class="col-span-full rounded-[1.8rem] border border-dashed border-gray-300 bg-white p-12 text-center dark:border-gray-700 dark:bg-gray-900">
 					<p class="text-sm text-gray-500 dark:text-gray-400">No campaigns found for the current filters.</p>
 					<a href="{{ route('dashboard.campaigns.designed.create') }}"
 						class="mt-4 inline-flex items-center gap-2 rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800 dark:bg-gray-700 dark:hover:bg-gray-600">

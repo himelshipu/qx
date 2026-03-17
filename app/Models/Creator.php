@@ -27,13 +27,17 @@ class Creator extends Model
         'gender',
         'profile_image_path',
         'cover_image_path',
-        'is_active'
+        'is_active',
+        'is_featured',
+        'featured_priority'
     ];
 
     protected function casts(): array
     {
         return [
-            'is_active' => 'boolean'
+            'is_active'         => 'boolean',
+            'is_featured'       => 'boolean',
+            'featured_priority' => 'integer'
         ];
     }
 
@@ -80,5 +84,10 @@ class Creator extends Model
     public function conversations(): HasMany
     {
         return $this->hasMany(Conversation::class);
+    }
+
+    public function reviews(): HasMany
+    {
+        return $this->hasMany(Review::class);
     }
 }

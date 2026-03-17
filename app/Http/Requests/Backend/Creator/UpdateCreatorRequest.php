@@ -52,7 +52,9 @@ class UpdateCreatorRequest extends FormRequest
             'categories.*'       => ['integer', 'exists:categories,id'],
             'profile_image_file' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp,avif,gif', 'max:5120'],
             'cover_image_file'   => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp,avif,gif', 'max:6144'],
-            'is_active'          => ['sometimes', 'boolean']
+            'is_active'          => ['sometimes', 'boolean'],
+            'is_featured'        => ['sometimes', 'boolean'],
+            'featured_priority'  => ['nullable', 'integer', 'min:1', 'max:999']
         ];
     }
 }

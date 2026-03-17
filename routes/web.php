@@ -9,11 +9,13 @@ use App\Http\Controllers\Backend\CategoryController;
 use App\Http\Controllers\Backend\CreatorController;
 use App\Http\Controllers\Backend\DashboardController;
 use App\Http\Controllers\Backend\ModeratorController;
+use App\Http\Controllers\Backend\PackageController;
 use App\Http\Controllers\Backend\PermissionController;
 use App\Http\Controllers\Backend\RoleController;
 use App\Http\Controllers\BrandProfileController;
 use App\Http\Controllers\Frontend\ContentLibraryController;
 use App\Http\Controllers\Frontend\HomeController;
+use App\Http\Controllers\Frontend\InfluencersController;
 use App\Http\Controllers\Frontend\StaticPagesController;
 use Illuminate\Support\Facades\Route;
 
@@ -41,10 +43,11 @@ Route::middleware(['web'])->group(function () {
     Route::get('/support', [StaticPagesController::class, 'support'])->name('support');
 
     // Public profile pages
-    Route::get('/creator/{id}', [\App\Http\Controllers\CreatorProfileController::class, 'show'])->name('creator.profile');
+    Route::get('/creator/{slug}', [\App\Http\Controllers\CreatorProfileController::class, 'show'])->name('creator.profile');
     Route::get('/brand/{id}', [\App\Http\Controllers\BrandProfileController::class, 'show'])->name('brand.profile');
 
-    Route::get('/influencers', [StaticPagesController::class, 'influencers'])->name('influencers');
+    Route::get('/influencer/{platformSlug?}', [InfluencersController::class, 'index'])->name('influencers');
+    Route::redirect('/influencers', '/influencer');
 });
 
 /*
@@ -96,7 +99,13 @@ Route::prefix('dashboard')->name('dashboard.')->middleware(['auth', 'verified'])
 
     // Pending commerce and operations modules (placeholder pages)
     Route::view('/reviews', 'backend.pages.coming-soon', ['module' => 'Reviews'])->name('reviews.index');
-    Route::view('/packages', 'backend.pages.coming-soon', ['module' => 'Packages'])->name('packages.index');
+    Route::get('/packages', [PackageController::class, 'index'])->name('packages.index');
+    Route::get('/packages/create', [PackageController::class, 'create'])->name('packages.create');
+    Route::post('/packages', [PackageController::class, 'store'])->name('packages.store');
+    Route::get('/packages/{package}/edit', [PackageController::class, 'edit'])->name('packages.edit');
+    Route::put('/packages/{package}', [PackageController::class, 'update'])->name('packages.update');
+    Route::delete('/packages/{package}', [PackageController::class, 'destroy'])->name('packages.destroy');
+    Route::post('/packages/{package}/toggle-status', [PackageController::class, 'toggleStatus'])->name('packages.toggle-status');
     Route::view('/orders', 'backend.pages.coming-soon', ['module' => 'Orders'])->name('orders.index');
     Route::view('/payments', 'backend.pages.coming-soon', ['module' => 'Payments'])->name('payments.index');
     Route::view('/payouts', 'backend.pages.coming-soon', ['module' => 'Payouts'])->name('payouts.index');

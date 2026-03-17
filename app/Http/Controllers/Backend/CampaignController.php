@@ -70,16 +70,24 @@ class CampaignController extends Controller
             );
 
             $redirectRoute = $request->input('ui_variant') === 'designed'
-                ? 'dashboard.campaigns.designed'
-                : 'dashboard.campaigns.index';
+            ? 'dashboard.campaigns.designed'
+            : 'dashboard.campaigns.index';
 
             return redirect()
                 ->route($redirectRoute)
-                ->with('success', '✅ Campaign "' . $campaign->title . '" has been created successfully.');
-        } catch (\Exception $e) {
+                ->with('success', 'Campaign "' . $campaign->title . '" has been created successfully.');
+        } catch (ValidationException $e) {
             return redirect()
                 ->back()
-                ->with('error', '❌ Failed to create campaign. Please try again.')
+                ->withErrors($e->errors())
+                ->with('error', 'Please fix the validation errors and try again.')
+                ->withInput();
+        } catch (\Exception $e) {
+            report($e);
+
+            return redirect()
+                ->back()
+                ->with('error', 'Failed to create campaign. Please try again.')
                 ->withInput();
         }
     }
@@ -122,11 +130,19 @@ class CampaignController extends Controller
 
             return redirect()
                 ->route('dashboard.campaigns.index')
-                ->with('success', '✅ Campaign "' . $updatedCampaign->title . '" has been updated successfully.');
-        } catch (\Exception $e) {
+                ->with('success', 'Campaign "' . $updatedCampaign->title . '" has been updated successfully.');
+        } catch (ValidationException $e) {
             return redirect()
                 ->back()
-                ->with('error', '❌ Failed to update campaign. Please try again.')
+                ->withErrors($e->errors())
+                ->with('error', 'Please fix the validation errors and try again.')
+                ->withInput();
+        } catch (\Exception $e) {
+            report($e);
+
+            return redirect()
+                ->back()
+                ->with('error', 'Failed to update campaign. Please try again.')
                 ->withInput();
         }
     }
@@ -138,7 +154,7 @@ class CampaignController extends Controller
     {
         try {
             $campaignTitle = $campaign->title;
-            $result = $this->campaignService->deleteCampaign($campaign);
+            $result        = $this->campaignService->deleteCampaign($campaign);
 
             if (!$result['deleted']) {
                 return redirect()
@@ -148,11 +164,13 @@ class CampaignController extends Controller
 
             return redirect()
                 ->route('dashboard.campaigns.index')
-                ->with('success', '🗑️ Campaign "' . $campaignTitle . '" has been deleted successfully.');
+                ->with('success', 'Campaign "' . $campaignTitle . '" has been deleted successfully.');
         } catch (\Exception $e) {
+            report($e);
+
             return redirect()
                 ->route('dashboard.campaigns.index')
-                ->with('error', '❌ Failed to delete campaign. Please try again.');
+                ->with('error', 'Failed to delete campaign. Please try again.');
         }
     }
 }

@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Str;
 
 class User extends Authenticatable
 {
@@ -20,6 +21,7 @@ class User extends Authenticatable
      */
     protected $fillable = [
         'name',
+        'slug',
         'email',
         'password',
         'user_type',
@@ -65,6 +67,43 @@ class User extends Authenticatable
             'last_login_at'                => 'datetime',
             'password'                     => 'hashed'
         ];
+    }
+
+    protected static function booted(): void
+    {
+        static::creating(function (self $user): void {
+            $source     = $user->name ?: $user->email;
+            $user->slug = static::buildUniqueSlug($source, null);
+        });
+
+        static::updating(function (self $user): void {
+            if ($user->isDirty('name') || empty($user->slug)) {
+                $source     = $user->name ?: $user->email;
+                $user->slug = static::buildUniqueSlug($source, $user->id);
+            }
+        });
+    }
+
+    private static function buildUniqueSlug(?string $source, ?int $ignoreId): string
+    {
+        $base = Str::slug((string) $source);
+
+        if ($base === '') {
+            $base = 'user';
+        }
+
+        $slug   = $base;
+        $suffix = 1;
+
+        while (static::query()
+            ->where('slug', $slug)
+            ->when($ignoreId !== null, fn($query) => $query->where('id', '!=', $ignoreId))
+            ->exists()) {
+            $slug = $base . '-' . $suffix;
+            $suffix++;
+        }
+
+        return $slug;
     }
 
     public function brand(): HasOne

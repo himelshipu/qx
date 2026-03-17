@@ -18,16 +18,9 @@
 			</a>
 		</div>
 
-		<form action="{{ route('dashboard.moderators.update', $moderator) }}" method="POST" class="space-y-6 p-5">
+		<form action="{{ route('dashboard.moderators.update', $moderator) }}" method="POST" novalidate class="space-y-6 p-5">
 			@csrf
 			@method('PUT')
-
-			@if ($errors->any())
-				<div
-					class="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-900/20 dark:text-red-300">
-					Please fix the highlighted fields and try again.
-				</div>
-			@endif
 
 			@include('backend.pages.moderator._form', ['moderator' => $moderator])
 

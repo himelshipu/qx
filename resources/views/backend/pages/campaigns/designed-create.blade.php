@@ -3,11 +3,29 @@
 @section('title', 'Create Campaign')
 
 @section('content')
+	@php
+		$stepTwoFields = [
+			'title',
+			'description',
+			'instructions',
+			'status',
+			'currency',
+			'budget_min',
+			'budget_max',
+			'start_date',
+			'end_date',
+		];
+
+		$requestedStep = (int) old('wizard_step', 1);
+		$hasStepTwoErrors = collect($stepTwoFields)->contains(static fn(string $field): bool => $errors->has($field));
+		$initialStep = $hasStepTwoErrors ? max($requestedStep, 2) : max($requestedStep, 1);
+	@endphp
+
 	<x-backend.shell.breadcrumb pageTitle="Create Campaign" />
 
 	<div class="max-w-6xl px-2 py-2 transition-colors duration-300"
 		x-data="campaignDesignedWizard({
-			step: @js((int) old('wizard_step', 1)),
+			step: @js($initialStep),
 			campaignType: @js(old('campaign_type', 'instagram')),
 			campaignTypeOptions: @js($campaignTypeOptions),
 			statusOptions: @js($statusOptions),
@@ -21,12 +39,9 @@
 			influencerCount: @js((string) old('influencer_count', '1')),
 			isAdvancedOpen: @js(old('target_gender') || old('age_min') || old('age_max') || old('targeting_notes')),
 		})">
-
-		@if ($errors->any())
-			<div class="mb-6 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-900/20 dark:text-red-300">
-				Please fix the highlighted fields and try again.
-			</div>
-		@endif
+		<div class="mb-6">
+			@include('backend.pages.campaigns._alerts')
+		</div>
 
 		<div class="mb-4 flex flex-wrap items-center justify-between gap-3">
 			<div class="flex items-center gap-12 border-b border-gray-100 pb-4 dark:border-gray-800">
@@ -54,7 +69,7 @@
 			</div>
 		</div>
 
-		<form action="{{ route('dashboard.campaigns.store') }}" method="POST">
+		<form action="{{ route('dashboard.campaigns.store') }}" method="POST" novalidate>
 			@csrf
 			<input type="hidden" name="ui_variant" value="designed">
 			<input type="hidden" name="wizard_step" x-model="step">
@@ -504,18 +519,18 @@
 						const nicheFactor = Math.max(this.selectedCategoryIds.length, 1);
 						const rangeFactor = Math.max(this.selectedFollowerRangeIds.length, 1);
 						const countryFactor = Math.max(this.selectedCountryCodes.length, 1);
-						
+
 						// Realistic estimation based on typical creator marketplace data
 						// Average: 15-45 creators per niche, adjusted by targeting specificity
 						const baseCreatorsPerNiche = 25;
 						const nicheMultiplier = Math.min(nicheFactor, 3); // Diminishing returns after 3 niches
 						const rangeMultiplier = Math.min(rangeFactor, 2); // Diminishing returns after 2 ranges
 						const countryMultiplier = Math.min(countryFactor, 5); // Cap at 5 major markets
-						
+
 						// Calculate estimated matches
 						const minCreators = Math.round(count * baseCreatorsPerNiche * nicheMultiplier * 0.4);
 						const maxCreators = Math.round(count * baseCreatorsPerNiche * nicheMultiplier * rangeMultiplier * countryMultiplier * 0.9);
-						
+
 						// Average followers per creator: 35K-280K depending on range
 						const avgFollowersMin = 35000;
 						const avgFollowersMax = 280000;

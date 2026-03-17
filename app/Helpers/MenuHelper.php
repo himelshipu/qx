@@ -85,9 +85,12 @@ class MenuHelper
                 'name'  => 'COMMERCE',
                 'items' => [
                     [
-                        'icon'  => 'packages',
-                        'name'  => 'Packages',
-                        'route' => 'packages.index'
+                        'icon'     => 'packages',
+                        'name'     => 'Packages',
+                        'subItems' => [
+                            ['name' => 'All Packages', 'route' => 'packages.index'],
+                            ['name' => 'Create Package', 'route' => 'packages.create']
+                        ]
                     ],
                     [
                         'icon'  => 'orders',

@@ -20,17 +20,10 @@
 			</a>
 		</div>
 
-		<form action="{{ route('dashboard.creators.update', $creator) }}" method="POST" enctype="multipart/form-data"
+		<form action="{{ route('dashboard.creators.update', $creator) }}" method="POST" enctype="multipart/form-data" novalidate
 			class="space-y-6 p-5">
 			@csrf
 			@method('PUT')
-
-			@if ($errors->any())
-				<div
-					class="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-900/20 dark:text-red-300">
-					Please fix the highlighted fields and try again.
-				</div>
-			@endif
 
 			@include('backend.pages.creators._form', ['creator' => $creator, 'categoryOptions' => $categoryOptions])
 

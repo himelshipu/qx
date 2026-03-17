@@ -72,10 +72,12 @@ final class CreatorService
     public function createCreator(
         array         $validated,
         bool          $isActive,
+        bool          $isFeatured,
+        ?int          $featuredPriority,
         ?UploadedFile $profileImageFile,
         ?UploadedFile $coverImageFile
     ): Creator {
-        return DB::transaction(function () use ($validated, $isActive, $profileImageFile, $coverImageFile): Creator {
+        return DB::transaction(function () use ($validated, $isActive, $isFeatured, $featuredPriority, $profileImageFile, $coverImageFile): Creator {
             $user = $this->creatorRepository->createUser([
                 'name'              => $validated['full_name'],
                 'email'             => $validated['email'],
@@ -103,7 +105,9 @@ final class CreatorService
                 'gender'             => $validated['gender'] ?? null,
                 'profile_image_path' => $this->storeUploadedAsset($profileImageFile, 'creators/profile-images'),
                 'cover_image_path'   => $this->storeUploadedAsset($coverImageFile, 'creators/cover-images'),
-                'is_active'          => $isActive
+                'is_active'          => $isActive,
+                'is_featured'        => $isFeatured,
+                'featured_priority'  => $isFeatured ? $featuredPriority : null
             ]);
 
             $this->creatorRepository->syncCategories($creator, $this->normalizeCategoryIds($validated['categories'] ?? []));
@@ -121,10 +125,12 @@ final class CreatorService
         Creator       $creator,
         array         $validated,
         bool          $isActive,
+        bool          $isFeatured,
+        ?int          $featuredPriority,
         ?UploadedFile $profileImageFile,
         ?UploadedFile $coverImageFile
     ): Creator {
-        return DB::transaction(function () use ($creator, $validated, $isActive, $profileImageFile, $coverImageFile): Creator {
+        return DB::transaction(function () use ($creator, $validated, $isActive, $isFeatured, $featuredPriority, $profileImageFile, $coverImageFile): Creator {
             $profileImagePath = $creator->profile_image_path;
             if ($profileImageFile) {
                 $this->deleteStoredAsset($creator->profile_image_path);
@@ -168,7 +174,9 @@ final class CreatorService
                 'gender'             => $validated['gender'] ?? null,
                 'profile_image_path' => $profileImagePath,
                 'cover_image_path'   => $coverImagePath,
-                'is_active'          => $isActive
+                'is_active'          => $isActive,
+                'is_featured'        => $isFeatured,
+                'featured_priority'  => $isFeatured ? $featuredPriority : null
             ]);
 
             $this->creatorRepository->syncCategories($creator, $this->normalizeCategoryIds($validated['categories'] ?? []));
