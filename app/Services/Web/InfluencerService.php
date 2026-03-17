@@ -198,7 +198,7 @@ final class InfluencerService
         return $paginator;
     }
 
-    public function paginateInfluencers(?string $platformKey, int $perPage = 20, array $options = []): LengthAwarePaginator
+    public function paginateInfluencers(?string $platformKey, int $perPage = 20): LengthAwarePaginator
     {
         $normalizedPlatformKey = $platformKey !== null
         ? $this->normalizePlatformKey($platformKey)
@@ -208,10 +208,7 @@ final class InfluencerService
             return $this->paginateFeaturedInfluencers($perPage);
         }
 
-        $categoryIds = $options['categories'] ?? [];
-        $sort        = $options['sort'] ?? 'followers_desc';
-
-        $query = CreatorPlatformStat::query()
+        $paginator = CreatorPlatformStat::query()
             ->with([
                 'creator:id,user_id,display_name,title_name,description,location,city,country,profile_image_path,is_active',
                 'creator.user:id,name,slug,is_active'
@@ -221,17 +218,10 @@ final class InfluencerService
                 $query->where('is_active', true)
                     ->whereHas('user', fn($userQuery) => $userQuery->where('is_active', true));
             })
-            ->when($normalizedPlatformKey !== null, fn($q) => $q->where('platform', $normalizedPlatformKey))
-            ->when(!empty($categoryIds), fn($q) => $q->whereHas('creator.categories', fn($catQuery) => $catQuery->whereIn('categories.id', $categoryIds)));
-
-        // Apply sorting
-        if ($sort === 'followers_asc') {
-            $query->orderBy('follower_count');
-        } else {
-            $query->orderByDesc('follower_count');
-        }
-
-        $paginator = $query->paginate($perPage)->withQueryString();
+            ->when($normalizedPlatformKey !== null, fn($query) => $query->where('platform', $normalizedPlatformKey))
+            ->orderByDesc('follower_count')
+            ->paginate($perPage)
+            ->withQueryString();
 
         $creatorIds = $paginator->getCollection()
             ->pluck('creator_id')
