@@ -6,7 +6,6 @@
 		    trim((string) ($creator->display_name ?? '')) !== ''
 		        ? (string) $creator->display_name
 		        : (string) ($creator->user->name ?? 'Creator');
-
 		$locationParts = array_values(
 		    array_filter([
 		        trim((string) ($creator->location ?? '')),
@@ -14,16 +13,21 @@
 		        trim((string) ($creator->country ?? '')),
 		    ]),
 		);
-
 		$locationText = $locationParts !== [] ? implode(', ', $locationParts) : 'Los Angeles, CA, United States';
 
 		$categoryNames = $creator->categories->pluck('name')->filter()->take(5)->values();
-
 		if ($categoryNames->isEmpty()) {
 		    $categoryNames = collect(['Tech', 'Tesla', 'Health & Fitness', 'Car', 'Pet']);
 		}
 
-		$gridImages = [image_url($creator->cover_image_path), asset('default.webp'), asset('default.webp')];
+		// Get first 3 portfolio images for grid display
+		$portfolioItems = $creator->portfolios->where('media_type', 'image')->take(3);
+		$gridImages = $portfolioItems->pluck('file_path')->map(fn($path) => asset('storage/' . $path))->values();
+
+		// Fill with defaults if not enough images
+		while ($gridImages->count() < 3) {
+		    $gridImages->push(asset('default.webp'));
+		}
 
 		$profileImageUrl = image_url($creator->profile_image_path);
 
@@ -37,7 +41,6 @@
 		                : ($followers >= 1000
 		                    ? number_format($followers / 1000, 1) . 'K'
 		                    : (string) $followers);
-
 		        $platformLabel = match ($platformStat->platform) {
 		            'ugc' => 'UGC',
 		            'x' => 'X',
@@ -46,14 +49,12 @@
 		            'linkedin' => 'LinkedIn',
 		            default => \Illuminate\Support\Str::headline((string) $platformStat->platform),
 		        };
-
 		        $icon = match ($platformStat->platform) {
 		            'instagram' => 'instagram',
 		            'tiktok' => 'tiktok',
 		            'ugc' => 'camera',
 		            default => 'group',
 		        };
-
 		        return [
 		            'icon' => $icon,
 		            'label' => $platformLabel,
@@ -82,16 +83,13 @@
 		            'ugc' => 'UGC',
 		            default => 'Others',
 		        };
-
 		        $icon = match ($package->platform) {
 		            'instagram' => 'instagram',
 		            'tiktok' => 'tiktok',
 		            'ugc' => 'camera',
 		            default => 'group',
 		        };
-
 		        $description = trim((string) ($package->description ?? ''));
-
 		        return [
 		            'key' => 'package-' . (int) $package->id,
 		            'name' => (string) $package->name,
@@ -186,41 +184,113 @@
     selectedPackageKey: @js($initialPackageKey),
     activeTab: 'All',
     packages: @js($packageCards),
+
+    // Portfolio Lightbox
+    portfolioItems: @js(
+    $creator->portfolios
+        ->map(
+            fn($p) => [
+                'id' => $p->id,
+                'title' => $p->title,
+                'description' => $p->description,
+                'url' => asset('storage/' . $p->file_path),
+                'type' => $p->media_type,
+            ],
+        )
+        ->values()
+        ->toArray(),
+),
+    showGallery: false,
+    currentGalleryIndex: 0,
+
+    openGallery(itemId) {
+        this.currentGalleryIndex = this.portfolioItems.findIndex(p => p.id === itemId);
+        this.showGallery = true;
+        document.body.style.overflow = 'hidden';
+    },
+
+    closeGallery() {
+        this.showGallery = false;
+        document.body.style.overflow = 'auto';
+    },
+
+    nextGalleryItem() {
+        this.currentGalleryIndex = (this.currentGalleryIndex + 1) % this.portfolioItems.length;
+    },
+
+    prevGalleryItem() {
+        this.currentGalleryIndex = (this.currentGalleryIndex - 1 + this.portfolioItems.length) % this.portfolioItems.length;
+    },
+
+    get currentGalleryItem() {
+        return this.portfolioItems[this.currentGalleryIndex] || null;
+    },
+
     get filteredPackages() {
         if (this.activeTab === 'All') return this.packages;
         return this.packages.filter((p) => p.category === this.activeTab);
     },
+
     get selectedPackage() {
         return this.packages.find((p) => p.key === this.selectedPackageKey) || this.packages[0] || null;
     },
+
     get selectedPackageName() {
         return this.selectedPackage ? this.selectedPackage.name : 'No package available';
     },
+
     get price() {
         return this.selectedPackage ? this.selectedPackage.price : '$0.00';
     },
+
     get selectedPackageDescription() {
-        return this.selectedPackage ?
-            this.selectedPackage.description :
-            'Package details are not available right now.';
+        return this.selectedPackage ? this.selectedPackage.description : 'Package details are not available right now.';
     },
+
     selectPackage(key) {
         this.selectedPackageKey = key;
         this.openDropdown = false;
+    },
+
+    // Touch swipe support
+    touchStartX: 0,
+    touchEndX: 0,
+
+    getTouchPosition(e) {
+        this.touchStartX = e.changedTouches[0].clientX;
+    },
+
+    handleTouchEnd(e) {
+        this.touchEndX = e.changedTouches[0].clientX;
+        this.handleSwipe();
+    },
+
+    handleSwipe() {
+        const swipeThreshold = 50;
+        const diff = this.touchStartX - this.touchEndX;
+        if (Math.abs(diff) > swipeThreshold) {
+            if (diff > 0) {
+                // Swiped left, show next item
+                this.nextGalleryItem();
+            } else {
+                // Swiped right, show previous item
+                this.prevGalleryItem();
+            }
+        }
     }
 }">
-		<main class="max-w-screen-2xl mx-auto">
 
+		<main class="max-w-screen-2xl mx-auto">
 			<!-- 1. TOP CATEGORIES & EDIT -->
 			<div class="flex items-center justify-between mb-4">
 				<div class="flex flex-wrap gap-2 text-xl font-semibold text-gray-800 dark:text-gray-300 tracking-tight">
 					@foreach ($categoryNames as $categoryName)
 						<span>{{ $categoryName }}@if (!$loop->last)
 								,
-							@endif
-						</span>
+							@endif </span>
 					@endforeach
 				</div>
+
 				@auth
 					@if (optional(Auth::user()->creator)->id === optional($creator)->id)
 						<a href="{{ route('dashboard.creator.profile.edit') }}"
@@ -247,32 +317,34 @@
 				<div class="col-span-4 rounded-xl overflow-hidden relative border border-gray-100 dark:border-gray-800">
 					<img src="{{ $gridImages[2] }}" class="w-full h-full object-cover hover:scale-105 transition-transform duration-700"
 						alt="Creator showcase image">
+
 					<!-- Show All Photos Overlay -->
-					<button
-						class="absolute bottom-6 right-6 flex items-center gap-2 bg-white/90 backdrop-blur-md px-5 py-2.5 rounded-2xl text-sm font-bold text-gray-900 border border-gray-100 shadow-xl hover:bg-white transition active:scale-95">
-						<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
-							<path
-								d="M10 7C10 8.65685 8.65685 10 7 10C5.34315 10 4 8.65685 4 7C4 5.34315 5.34315 4 7 4C8.65685 4 10 5.34315 10 7Z"
-								stroke="#28303F" stroke-width="1.5" />
-							<path
-								d="M20 17C20 18.6569 18.6569 20 17 20C15.3431 20 14 18.6569 14 17C14 15.3431 15.3431 14 17 14C18.6569 14 20 15.3431 20 17Z"
-								stroke="#28303F" stroke-width="1.5" />
-							<path
-								d="M14 6C14 4.89543 14.8954 4 16 4H18C19.1046 4 20 4.89543 20 6V8C20 9.10457 19.1046 10 18 10H16C14.8954 10 14 9.10457 14 8V6Z"
-								stroke="#28303F" stroke-width="1.5" />
-							<path
-								d="M4 16C4 14.8954 4.89543 14 6 14H8C9.10457 14 10 14.8954 10 16V18C10 19.1046 9.10457 20 8 20H6C4.89543 20 4 19.1046 4 18V16Z"
-								stroke="#28303F" stroke-width="1.5" />
-						</svg>
-						Show All Photos
-					</button>
+					@if ($creator->portfolios->count() > 3)
+						<a href="#portfolio-gallery"
+							class="absolute bottom-6 right-6 flex items-center gap-2 bg-white/90 backdrop-blur-md px-5 py-2.5 rounded-2xl text-sm font-bold text-gray-900 border border-gray-100 shadow-xl hover:bg-white transition active:scale-95">
+							<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
+								<path
+									d="M10 7C10 8.65685 8.65685 10 7 10C5.34315 10 4 8.65685 4 7C4 5.34315 5.34315 4 7 4C8.65685 4 10 5.34315 10 7Z"
+									stroke="#28303F" stroke-width="1.5" />
+								<path
+									d="M20 17C20 18.6569 18.6569 20 17 20C15.3431 20 14 18.6569 14 17C14 15.3431 15.3431 14 17 14C18.6569 14 20 15.3431 20 17Z"
+									stroke="#28303F" stroke-width="1.5" />
+								<path
+									d="M14 6C14 4.89543 14.8954 4 16 4H18C19.1046 4 20 4.89543 20 6V8C20 9.10457 19.1046 10 18 10H16C14.8954 10 14 9.10457 14 8V6Z"
+									stroke="#28303F" stroke-width="1.5" />
+								<path
+									d="M4 16C4 14.8954 4.89543 14 6 14H8C9.10457 14 10 14.8954 10 16V18C10 19.1046 9.10457 20 8 20H6C4.89543 20 4 19.1046 4 18V16Z"
+									stroke="#28303F" stroke-width="1.5" />
+							</svg>
+							Show All Photos
+						</a>
+					@endif
 				</div>
 			</div>
 
 			<div class="flex flex-col lg:flex-row gap-16">
 				<!-- LEFT COLUMN: CREATOR INFO -->
 				<div class="flex-1 space-y-6">
-
 					<!-- Profile Identity -->
 					<div class="flex items-center gap-6">
 						<img src="{{ $profileImageUrl }}" class="w-24 h-24 rounded-full border-2 border-gray-50 shadow-md object-cover"
@@ -322,7 +394,6 @@
 									multiple orders and have a high rating from brands.</p>
 							</div>
 						</div>
-
 						<div class="flex items-start gap-6 group">
 							<div class="w-12 h-12 shrink-0 text-gray-300 transition-colors group-hover:text-purple-300">
 								<svg class="w-full h-full" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
@@ -434,7 +505,6 @@
 									<path d="M19 9l-7 7-7-7" />
 								</svg>
 							</button>
-
 							<div x-show="openDropdown" x-cloak @click.away="openDropdown = false"
 								class="absolute top-full left-0 w-full mt-2 bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-2xl shadow-2xl z-50 overflow-y-auto max-h-96">
 								<template x-for="p in packages" :key="p.key">
@@ -462,5 +532,131 @@
 				</div>
 			</div>
 		</main>
+
+		<!-- PORTFOLIO SECTION (now inside the main Alpine component) -->
+		@if ($creator->portfolios->count() > 0)
+			<section id="portfolio-gallery" class="py-20 px-4 sm:px-6 lg:px-8 max-w-screen-2xl mx-auto scroll-mt-24">
+				<div class="mb-12">
+					<h2 class="text-3xl font-bold text-gray-900 dark:text-white mb-2">Portfolio</h2>
+					<p class="text-gray-600 dark:text-gray-400">Check out the latest work exhibited by {{ $displayName }}</p>
+				</div>
+
+				<!-- Portfolio Grid -->
+				<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+					@foreach ($creator->portfolios as $item)
+						<button @click="openGallery({{ $item->id }})" type="button"
+							class="portfolio-item group relative rounded-2xl overflow-hidden border border-gray-100 dark:border-gray-800 hover:shadow-xl transition-all duration-300 cursor-pointer w-full text-left bg-transparent p-0">
+							@if ($item->media_type === 'image')
+								<img src="{{ asset('storage/' . $item->file_path) }}" alt="{{ $item->title }}"
+									class="w-full h-80 object-cover group-hover:scale-105 transition-transform duration-500">
+							@else
+								<div
+									class="w-full h-80 bg-gray-200 dark:bg-gray-700 flex items-center justify-center group-hover:bg-gray-300 transition-colors">
+									<svg class="w-16 h-16 text-gray-400" fill="currentColor" viewBox="0 0 24 24">
+										<path d="M8 5v14l11-7z" />
+									</svg>
+								</div>
+							@endif
+							<!-- Overlay -->
+							<div
+								class="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all duration-300 flex items-center justify-center">
+								<div class="opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+									<svg class="w-16 h-16 text-white" fill="currentColor" viewBox="0 0 24 24">
+										<path d="M8 5v14l11-7z" />
+									</svg>
+								</div>
+							</div>
+							<!-- Title Badge -->
+							@if ($item->title)
+								<div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-4">
+									<p class="text-white font-semibold text-sm">{{ Str::limit($item->title, 40) }}</p>
+								</div>
+							@endif
+						</button>
+					@endforeach
+				</div>
+
+				<!-- Lightbox Modal Overlay -->
+				<div x-show="showGallery" x-cloak @click.outside="closeGallery()" @keydown.escape.window="closeGallery()"
+					@keydown.arrow-right.window="nextGalleryItem()" @keydown.arrow-left.window="prevGalleryItem()"
+					@touchstart="getTouchPosition($event)" @touchmove.prevent @touchend="handleTouchEnd($event)"
+					class="fixed inset-0 z-50 bg-black/95 flex items-center justify-center p-4" role="dialog" aria-modal="true">
+
+					<!-- Loading state -->
+					<template x-if="!currentGalleryItem">
+						<div class="flex items-center justify-center">
+							<div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-white"></div>
+						</div>
+					</template>
+
+					<!-- Modal Content -->
+					<template x-if="currentGalleryItem">
+						<div class="relative w-full h-full flex flex-col items-center justify-center" @click.stop>
+							<!-- Media Display -->
+							<div class="flex-1 flex items-center justify-center w-full max-w-5xl">
+								<!-- Image -->
+								<template x-if="currentGalleryItem.type === 'image'">
+									<img :src="currentGalleryItem.url" :alt="currentGalleryItem.title"
+										class="max-w-full max-h-[80vh] object-contain rounded-lg">
+								</template>
+								<!-- Video -->
+								<template x-if="currentGalleryItem.type === 'video'">
+									<video :src="currentGalleryItem.url" controls autoplay
+										class="max-w-full max-h-[80vh] object-contain rounded-lg" controlsList="nodownload">
+									</video>
+								</template>
+							</div>
+
+							<!-- Bottom Info Bar -->
+							<div class="mt-6 w-full max-w-5xl flex items-center justify-between">
+								<!-- Left: Title and Description -->
+								<div class="flex-1">
+									<h3 class="text-white font-bold text-lg" x-text="currentGalleryItem.title"></h3>
+									<p class="text-gray-300 text-sm mt-1" x-text="currentGalleryItem.description"></p>
+								</div>
+								<!-- Right: Counter -->
+								<div class="text-white text-sm px-4">
+									<span x-text="`${currentGalleryIndex + 1} / ${portfolioItems.length}`"></span>
+								</div>
+							</div>
+
+							<!-- Navigation Controls -->
+							<div class="mt-6 flex items-center gap-4">
+								<!-- Previous Button -->
+								<button @click="prevGalleryItem()" type="button"
+									class="p-3 rounded-full bg-white/10 hover:bg-white/20 transition text-white"
+									:disabled="portfolioItems.length <= 1">
+									<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+									</svg>
+								</button>
+								<!-- Next Button -->
+								<button @click="nextGalleryItem()" type="button"
+									class="p-3 rounded-full bg-white/10 hover:bg-white/20 transition text-white"
+									:disabled="portfolioItems.length <= 1">
+									<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+									</svg>
+								</button>
+							</div>
+
+							<!-- Close Button -->
+							<button @click="closeGallery()" type="button"
+								class="absolute top-4 right-4 p-3 rounded-full bg-white/10 hover:bg-white/20 transition text-white"
+								aria-label="Close gallery">
+								<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+								</svg>
+							</button>
+
+							<!-- Touch swipe hint (mobile) -->
+							<div class="absolute bottom-4 left-4 text-gray-400 text-xs md:hidden">
+								Swipe to navigate
+							</div>
+						</div>
+					</template>
+				</div>
+			</section>
+		@endif
 	</section>
 @endsection

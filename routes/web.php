@@ -8,6 +8,7 @@ use App\Http\Controllers\Backend\CampaignController;
 use App\Http\Controllers\Backend\CaseStudyController;
 use App\Http\Controllers\Backend\CategoryController;
 use App\Http\Controllers\Backend\CreatorController;
+use App\Http\Controllers\Backend\CreatorPortfolioController;
 use App\Http\Controllers\Backend\DashboardController;
 use App\Http\Controllers\Backend\FaqController;
 use App\Http\Controllers\Backend\FeaturedCollaborationController;
@@ -97,6 +98,16 @@ Route::prefix('dashboard')->name('dashboard.')->middleware(['auth', 'verified'])
     Route::put('/creators/{creator}', [CreatorController::class, 'update'])->name('creators.update');
     Route::delete('/creators/{creator}', [CreatorController::class, 'destroy'])->name('creators.destroy');
     Route::post('/creators/{creator}/toggle-status', [CreatorController::class, 'toggleStatus'])->name('creators.toggle-status');
+
+    // Creator Portfolio Management
+    Route::get('/creators/{creator}/portfolio', [CreatorPortfolioController::class, 'index'])->name('creators.portfolio.index');
+    Route::get('/creators/{creator}/portfolio/create', [CreatorPortfolioController::class, 'create'])->name('creators.portfolio.create');
+    Route::post('/creators/{creator}/portfolio', [CreatorPortfolioController::class, 'store'])->name('creators.portfolio.store');
+    Route::get('/creators/{creator}/portfolio/{portfolio}/edit', [CreatorPortfolioController::class, 'edit'])->name('creators.portfolio.edit');
+    Route::put('/creators/{creator}/portfolio/{portfolio}', [CreatorPortfolioController::class, 'update'])->name('creators.portfolio.update');
+    Route::delete('/creators/{creator}/portfolio/{portfolio}', [CreatorPortfolioController::class, 'destroy'])->name('creators.portfolio.destroy');
+    Route::post('/creators/{creator}/portfolio/reorder', [CreatorPortfolioController::class, 'reorder'])->name('creators.portfolio.reorder');
+    Route::post('/creators/{creator}/portfolio/{portfolio}/toggle', [CreatorPortfolioController::class, 'toggle'])->name('creators.portfolio.toggle');
 
     Route::get('/campaigns', [CampaignController::class, 'indexDesigned'])->name('campaigns.index');
     Route::get('/campaigns/designed', [CampaignController::class, 'indexDesigned'])->name('campaigns.designed');

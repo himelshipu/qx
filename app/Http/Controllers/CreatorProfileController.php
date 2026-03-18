@@ -19,6 +19,7 @@ class CreatorProfileController extends Controller
             ->with([
                 'user',
                 'categories:id,name',
+                'portfolios'    => fn($query)    => $query->where('is_active', true)->orderBy('sort_order'),
                 'platformStats' => fn($query) => $query
                     ->where('is_active', true)
                     ->orderByDesc('follower_count')

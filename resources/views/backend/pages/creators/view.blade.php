@@ -34,8 +34,11 @@
 						<p class="text-sm text-gray-500 dark:text-gray-400">{{ $creator->title_name ?: 'No title set' }}</p>
 					</div>
 				</div>
-				<div class="flex items-center gap-2">
-					<a href="{{ route('dashboard.creators.edit', $creator) }}"
+				<div class="flex items-center gap-2"> <a href="{{ route('dashboard.creators.portfolio.index', $creator) }}"
+						class="inline-flex items-center gap-2 rounded-lg border border-blue-200 bg-blue-50 px-4 py-2 text-sm font-medium text-blue-700 transition hover:bg-blue-100 dark:border-blue-900/50 dark:bg-blue-900/20 dark:text-blue-300 dark:hover:bg-blue-900/30">
+						<x-icons.camera class="h-4 w-4" />
+						Manage Portfolio
+					</a> <a href="{{ route('dashboard.creators.edit', $creator) }}"
 						class="inline-flex items-center gap-2 rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800">
 						<x-icons.edit class="h-4 w-4" />
 						Edit Creator

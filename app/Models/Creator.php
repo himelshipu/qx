@@ -90,4 +90,9 @@ class Creator extends Model
     {
         return $this->hasMany(Review::class);
     }
+
+    public function portfolios(): HasMany
+    {
+        return $this->hasMany(CreatorPortfolio::class)->orderBy('sort_order');
+    }
 }
