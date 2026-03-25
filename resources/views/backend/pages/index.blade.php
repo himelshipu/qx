@@ -10,18 +10,19 @@
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         @php
             $userStats = [
-                ['label' => 'Total Users', 'value' => '455', 'color' => 'gray', 'icon' => 'user-circle'],
-                ['label' => 'Active Users', 'value' => '443', 'color' => 'gray', 'icon' => 'user-check'],
-                ['label' => 'Email Unverified Users', 'value' => '11', 'color' => 'gray', 'icon' => 'mail'],
-                ['label' => 'Mobile Unverified Users', 'value' => '3', 'color' => 'gray', 'icon' => 'phone-off'],
-                ['label' => 'Total Influencers', 'value' => '490', 'color' => 'gray', 'icon' => 'users'],
-                ['label' => 'Active Influencers', 'value' => '481', 'color' => 'gray', 'icon' => 'user-check'],
-                ['label' => 'Email Unverified Influencers', 'value' => '1', 'color' => 'gray', 'icon' => 'mail'],
-                ['label' => 'Mobile Unverified Influencers', 'value' => '2', 'color' => 'gray', 'icon' => 'phone-off'],
+                ['label' => 'Total Users', 'value' => $totalUsers, 'color' => 'gray', 'icon' => 'user-circle', 'link' => route('dashboard.brands.index')],
+                ['label' => 'Active Users', 'value' => $activeUsers, 'color' => 'gray', 'icon' => 'user-check', 'link' => route('dashboard.brands.index')],
+                ['label' => 'Email Unverified Users', 'value' => $emailUnverifiedUsers, 'color' => 'gray', 'icon' => 'mail', 'link' => '#'],
+                ['label' => 'Mobile Unverified Users', 'value' => $mobileUnverifiedUsers, 'color' => 'gray', 'icon' => 'phone-off', 'link' => '#'],
+                ['label' => 'Total Influencers', 'value' => $totalCreators, 'color' => 'gray', 'icon' => 'users', 'link' => route('dashboard.creators.index')],
+                ['label' => 'Active Influencers', 'value' => $activeCreators, 'color' => 'gray', 'icon' => 'user-check', 'link' => route('dashboard.creators.index')],
+                ['label' => 'Email Unverified Influencers', 'value' => $emailUnverifiedCreators, 'color' => 'gray', 'icon' => 'mail', 'link' => '#'],
+                ['label' => 'Mobile Unverified Influencers', 'value' => $mobileUnverifiedCreators, 'color' => 'gray', 'icon' => 'phone-off', 'link' => '#'],
             ];
         @endphp
 
-        @foreach($userStats as $stat)
+        @foreach($userStats as $index => $stat)
+        <a href="{{ $stat['link'] ?? '#' }}" class="block">
         <div class="bg-white dark:bg-gray-900 border border-{{ $stat['color'] }}-200 dark:border-{{ $stat['color'] }}-900/50 rounded-lg p-5 flex items-center justify-between group cursor-pointer hover:shadow-md transition-all">
             <div class="flex items-center gap-4">
                 <div class="w-12 h-12 rounded-lg flex items-center justify-center bg-{{ $stat['color'] }}-50 dark:bg-{{ $stat['color'] }}-500/10 text-{{ $stat['color'] }}-500">
@@ -37,6 +38,7 @@
             </div>
             <svg class="w-5 h-5 text-gray-300 group-hover:text-gray-500 dark:group-hover:text-purple-400 dark:text-purple-200 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </div>
+        </a>
         @endforeach
     </div>
 
@@ -44,15 +46,16 @@
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         @php
             $campaignStats = [
-                ['l' => 'Total Campaign', 'v' => '375', 'bg' => 'bg-[#4F46E5]', 'icon' => 'chart'],
-                ['l' => 'Pending Campaign', 'v' => '289', 'bg' => 'bg-[#F59E0B]', 'icon' => 'clock'],
-                ['l' => 'Approved Campaign', 'v' => '26', 'bg' => 'bg-[#10B981]', 'icon' => 'check'],
-                ['l' => 'Rejected Campaign', 'v' => '3', 'bg' => 'bg-[#EF4444]', 'icon' => 'x'],
+                ['l' => 'Total Campaign', 'v' => $totalCampaigns, 'bg' => 'bg-[#4F46E5]', 'icon' => 'chart'],
+                ['l' => 'Pending Campaign', 'v' => $pendingCampaigns, 'bg' => 'bg-[#F59E0B]', 'icon' => 'clock'],
+                ['l' => 'Approved Campaign', 'v' => $approvedCampaigns, 'bg' => 'bg-[#10B981]', 'icon' => 'check'],
+                ['l' => 'Rejected Campaign', 'v' => $rejectedCampaigns, 'bg' => 'bg-[#EF4444]', 'icon' => 'x'],
             ];
         @endphp
 
         @foreach($campaignStats as $c)
-        <div class="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl p-5 relative overflow-hidden flex items-center gap-5 shadow-sm">
+        <a href="{{ route('dashboard.campaigns.index') }}" class="block">
+        <div class="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl p-5 relative overflow-hidden flex items-center gap-5 shadow-sm hover:shadow-md transition-shadow">
             <div class="absolute top-2 right-3">
                 <span class="text-[10px] font-bold text-purple-500 bg-blue-50 dark:bg-purple-900/20 px-2 py-0.5 rounded border border-blue-100 dark:border-purple-600 uppercase">View All</span>
             </div>
@@ -68,22 +71,23 @@
                 <svg class="w-20 h-20" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
             </div>
         </div>
+        </a>
         @endforeach
     </div>
 
     <!-- SECTION 3: DEPOSITS & WITHDRAWALS -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        
+
         <!-- Deposits Box -->
         <div class="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl p-6 shadow-sm">
             <h2 class="text-lg font-bold text-gray-700 dark:text-white mb-6">Deposits</h2>
             <div class="grid grid-cols-2 gap-px bg-gray-100 dark:bg-gray-800 overflow-hidden rounded-xl border border-gray-100 dark:border-gray-800">
                 <!-- Sub Item -->
                 @foreach([
-                    ['l' => 'Total Deposited', 'v' => '$11,936.00 USD', 'c' => 'purple'],
-                    ['l' => 'Pending Deposits', 'v' => '8', 'c' => 'gray'],
-                    ['l' => 'Rejected Deposits', 'v' => '0', 'c' => 'red'],
-                    ['l' => 'Deposited Charge', 'v' => '$131.36 USD', 'c' => 'black'],
+                    ['l' => 'Total Deposited', 'v' => '$' . number_format($totalDeposited, 2) . ' USD', 'c' => 'purple'],
+                    ['l' => 'Pending Deposits', 'v' => $pendingDeposits, 'c' => 'gray'],
+                    ['l' => 'Rejected Deposits', 'v' => $rejectedDeposits, 'c' => 'red'],
+                    ['l' => 'Deposited Charge', 'v' => '$' . number_format($depositedCharge, 2) . ' USD', 'c' => 'black'],
                 ] as $item)
                 <div class="bg-white dark:bg-gray-900 p-6 flex items-center justify-between group cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/50">
                     <div class="flex items-center gap-3">
@@ -106,10 +110,10 @@
             <h2 class="text-lg font-bold text-gray-700 dark:text-white mb-6">Withdrawals</h2>
             <div class="grid grid-cols-2 gap-px bg-gray-100 dark:bg-gray-800 overflow-hidden rounded-xl border border-gray-100 dark:border-gray-800">
                 @foreach([
-                    ['l' => 'Total Withdrawn', 'v' => '$10.00 USD', 'c' => 'purple'],
-                    ['l' => 'Pending Withdrawals', 'v' => '21', 'c' => 'gray'],
-                    ['l' => 'Rejected Withdrawals', 'v' => '0', 'c' => 'red'],
-                    ['l' => 'Withdrawal Charge', 'v' => '$0.00 USD', 'c' => 'black'],
+                    ['l' => 'Total Withdrawn', 'v' => '$' . number_format($totalWithdrawn, 2) . ' USD', 'c' => 'purple'],
+                    ['l' => 'Pending Withdrawals', 'v' => $pendingWithdrawals, 'c' => 'gray'],
+                    ['l' => 'Rejected Withdrawals', 'v' => $rejectedWithdrawals, 'c' => 'red'],
+                    ['l' => 'Withdrawal Charge', 'v' => '$' . number_format($withdrawalCharge, 2) . ' USD', 'c' => 'black'],
                 ] as $item)
                 <div class="bg-white dark:bg-gray-900 p-6 flex items-center justify-between group cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/50">
                     <div class="flex items-center gap-3">
@@ -130,9 +134,8 @@
     </div>
 
     <div class="w-fit flex flex-col gap-6">
-        <x-backend.shell.chart />
-        <x-backend.shell.statistics-chart />
-        <x-backend.shell.calender-area />
+        <x-backend.shell.chart :chartData="$monthlyUsers" title="Monthly User Registrations" />
+        <x-backend.shell.statistics-chart :monthlyOrders="$monthlyOrders" :monthlyCampaigns="$monthlyCampaigns" />
     </div>
 
 </div>
@@ -141,3 +144,4 @@
     [x-cloak] { display: none !important; }
 </style>
 @endsection
+

@@ -1,16 +1,51 @@
-
 export const initChartThree = () => {
     const chartElement = document.querySelector('#chartThree');
 
     if (chartElement) {
+        // Use real data if available, otherwise fallback
+        const data = window.chartThreeData || {
+            monthlyOrders: [
+                { month: 'Jan 2025', total: 180 },
+                { month: 'Feb 2025', total: 190 },
+                { month: 'Mar 2025', total: 170 },
+                { month: 'Apr 2025', total: 160 },
+                { month: 'May 2025', total: 175 },
+                { month: 'Jun 2025', total: 165 },
+                { month: 'Jul 2025', total: 170 },
+                { month: 'Aug 2025', total: 205 },
+                { month: 'Sep 2025', total: 230 },
+                { month: 'Oct 2025', total: 210 },
+                { month: 'Nov 2025', total: 240 },
+                { month: 'Dec 2025', total: 235 },
+            ],
+            monthlyCampaigns: [
+                { month: 'Jan 2025', count: 40 },
+                { month: 'Feb 2025', count: 30 },
+                { month: 'Mar 2025', count: 50 },
+                { month: 'Apr 2025', count: 40 },
+                { month: 'May 2025', count: 55 },
+                { month: 'Jun 2025', count: 40 },
+                { month: 'Jul 2025', count: 70 },
+                { month: 'Aug 2025', count: 100 },
+                { month: 'Sep 2025', count: 110 },
+                { month: 'Oct 2025', count: 120 },
+                { month: 'Nov 2025', count: 150 },
+                { month: 'Dec 2025', count: 140 },
+            ]
+        };
+
+        const categories = data.monthlyOrders.map(item => item.month);
+        const ordersData = data.monthlyOrders.map(item => item.total);
+        const campaignsData = data.monthlyCampaigns.map(item => item.count);
+
         const chartThreeOptions = {
             series: [{
-                name: "Sales",
-                data: [180, 190, 170, 160, 175, 165, 170, 205, 230, 210, 240, 235],
+                name: "Orders Total ($)",
+                data: ordersData,
             },
             {
-                name: "Revenue",
-                data: [40, 30, 50, 40, 55, 40, 70, 100, 110, 120, 150, 140],
+                name: "Campaigns Created",
+                data: campaignsData,
             },
             ],
             legend: {
@@ -67,20 +102,7 @@ export const initChartThree = () => {
             },
             xaxis: {
                 type: "category",
-                categories: [
-                    "Jan",
-                    "Feb",
-                    "Mar",
-                    "Apr",
-                    "May",
-                    "Jun",
-                    "Jul",
-                    "Aug",
-                    "Sep",
-                    "Oct",
-                    "Nov",
-                    "Dec",
-                ],
+                categories: categories,
                 axisBorder: {
                     show: false,
                 },
@@ -100,7 +122,6 @@ export const initChartThree = () => {
 
         const chart = new ApexCharts(chartElement, chartThreeOptions);
         chart.render();
-        return chart;
     }
 }
 

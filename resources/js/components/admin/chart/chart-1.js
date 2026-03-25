@@ -1,13 +1,30 @@
-
-
 export const initChartOne = () => {
     const chartElement = document.querySelector('#chartOne');
     if (!chartElement) return;
 
+    // Use real data if available, otherwise fallback to dummy
+    const chartData = window.chartOneData || [
+        { month: 'Jan 2025', count: 168 },
+        { month: 'Feb 2025', count: 385 },
+        { month: 'Mar 2025', count: 201 },
+        { month: 'Apr 2025', count: 298 },
+        { month: 'May 2025', count: 187 },
+        { month: 'Jun 2025', count: 195 },
+        { month: 'Jul 2025', count: 291 },
+        { month: 'Aug 2025', count: 110 },
+        { month: 'Sep 2025', count: 215 },
+        { month: 'Oct 2025', count: 390 },
+        { month: 'Nov 2025', count: 280 },
+        { month: 'Dec 2025', count: 112 },
+    ];
+
+    const categories = chartData.map(item => item.month);
+    const data = chartData.map(item => item.count);
+
     const chartOneOptions = {
         series: [{
-            name: "Sales",
-            data: [168, 385, 201, 298, 187, 195, 291, 110, 215, 390, 280, 112],
+            name: "Registrations",
+            data: data,
         },],
         colors: ["#465fff"],
         chart: {
@@ -35,20 +52,7 @@ export const initChartOne = () => {
             colors: ["transparent"],
         },
         xaxis: {
-            categories: [
-                "Jan",
-                "Feb",
-                "Mar",
-                "Apr",
-                "May",
-                "Jun",
-                "Jul",
-                "Aug",
-                "Sep",
-                "Oct",
-                "Nov",
-                "Dec",
-            ],
+            categories: categories,
             axisBorder: {
                 show: false,
             },

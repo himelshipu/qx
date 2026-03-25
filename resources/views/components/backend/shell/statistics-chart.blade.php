@@ -1,3 +1,5 @@
+@props(['monthlyOrders' => [], 'monthlyCampaigns' => []])
+
 <div
     class="rounded-2xl border border-gray-200 bg-white px-5 pb-5 pt-5 dark:border-gray-800 dark:bg-white/[0.03] sm:px-6 sm:pt-6">
     <div class="flex flex-col gap-5 mb-6 sm:flex-row sm:justify-between">
@@ -6,7 +8,7 @@
                 Statistics
             </h3>
             <p class="mt-1 text-gray-500 text-theme-sm dark:text-gray-400">
-                Target you’ve set for each month
+                Monthly data for campaigns and orders
             </p>
         </div>
 
@@ -17,8 +19,8 @@
                 @php
                     $options = [
                         ['value' => 'overview', 'label' => 'Overview'],
-                        ['value' => 'sales', 'label' => 'Sales'],
-                        ['value' => 'revenue', 'label' => 'Revenue'],
+                        ['value' => 'campaigns', 'label' => 'Campaigns'],
+                        ['value' => 'orders', 'label' => 'Orders'],
                     ];
                 @endphp
 
@@ -77,3 +79,9 @@
     </div>
 </div>
 
+<script>
+    window.chartThreeData = {
+        monthlyOrders: @json($monthlyOrders),
+        monthlyCampaigns: @json($monthlyCampaigns)
+    };
+</script>
