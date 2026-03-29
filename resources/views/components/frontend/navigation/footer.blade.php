@@ -1,5 +1,5 @@
 <footer class="w-full border-t border-gray-100 dark:border-gray-800">
-    <div class="max-w-screen-2xl mx-auto px-8 py-8">
+    <div class="max-w-screen-2xl mx-auto px-4 py-4">
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 lg:gap-16">
             <div class="flex flex-col items-start">
                 <h4 class="text-sm font-semibold text-gray-800 dark:text-white mb-6">Resources</h4>
@@ -24,7 +24,7 @@
             <div class="flex flex-col items-start">
                 <h4 class="text-sm font-semibold text-gray-800 dark:text-white mb-6">Support</h4>
                 <ul class="space-y-4 text-sm text-gray-600 dark:text-gray-400">
-                    <li><a href="#" class="hover:text-gray-800 dark:hover:text-white">Contact Us</a></li>
+                    <li><a href="{{ route('support') }}" class="hover:text-gray-800 dark:hover:text-white">Contact Us</a></li>
                     <li><a href="#" class="hover:text-gray-800 dark:hover:text-white">How It Works</a></li>
                     <li><a href="#" class="hover:text-gray-800 dark:hover:text-white">Frequently Asked Questions</a></li>
                 </ul>

@@ -1,4 +1,4 @@
-<section class="w-full py-4">
+<section>
 	<div class="flex flex-col gap-8 mt-8">
 		<div>
 			<h2 class="text-2xl font-semibold text-[#222] dark:text-white mb-4">

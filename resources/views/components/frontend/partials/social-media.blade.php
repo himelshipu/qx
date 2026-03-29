@@ -16,13 +16,13 @@
 		<div class="space-y-5">
 
 
-			<div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+			<div class="flex flex-row items-end justify-between mb-6 gap-3">
 				<div>
 					<h2 class="text-2xl font-semibold text-[#222] dark:text-white">{{ $platformLabel }} Influencers</h2>
 					<p class="text-gray-500 dark:text-gray-400 leading-relaxed mt-1">Hire {{ $platformLabel }} influencers </p>
 				</div>
 				<a href="{{ route('influencers', ['platformSlug' => $platformSlug]) }}"
-					class="text-sm font-medium text-[#222] dark:text-gray-400 hover:underline">
+					class="text-sm font-medium text-[#222] dark:text-gray-400 hover:underline hover:text-purple-300 pb-1">
 					See All
 				</a>
 			</div>
@@ -33,12 +33,12 @@
 						now.</p>
 				</div>
 			@else
-				<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+				<div class="flex overflow-x-auto gap-4 pb-2 lg:grid lg:grid-cols-4 sm:grid-cols-2 lg:gap-8 lg:px-0 scroll-smooth">
 					@foreach ($creators as $creator)
 						@php
 							$profileUrl = !empty($creator['slug']) ? route('creator.profile', ['slug' => $creator['slug']]) : '#';
 						@endphp
-						<a href="{{ $profileUrl }}" class="group overflow-hidden font-sans cursor-pointer creator-card block"
+						<a href="{{ $profileUrl }}" class="flex-shrink-0 w-[80%] sm:w-[60%] lg:w-auto group overflow-hidden font-sans cursor-pointer creator-card block"
 							data-creator-id="{{ $creator['id'] }}">
 							<div class="relative overflow-hidden rounded-xl">
 								<button type="button"
