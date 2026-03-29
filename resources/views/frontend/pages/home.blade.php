@@ -2,7 +2,7 @@
 
 @section('content')
 	<div class="min-h-screen transition-colors duration-200">
-		<main class="container mx-auto px-4 flex flex-col gap-16">
+		<main class="container mx-auto flex flex-col gap-14">
 
 			<x-frontend.navigation.hero />
 			<x-frontend.partials.featured :featuredInfluencers="$featuredInfluencers" />

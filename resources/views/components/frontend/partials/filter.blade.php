@@ -14,7 +14,7 @@
 
 				<!-- Platform Dropdown Menu -->
 				<div id="platform-menu"
-					class="hidden absolute top-14 left-[-24px] mt-2 w-full md:w-[420px] px-3 bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-2xl shadow-xl z-50 py-2 overflow-hidden overflow-y-scroll max-h-60">
+					class="hidden absolute top-14 left-[-24px] mt-2 w-[320px] md:w-[420px] px-3 bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-2xl shadow-xl z-50 py-2 overflow-hidden overflow-y-scroll max-h-60">
 					<div
 						class="platform-option px-4 py-3 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl cursor-pointer transition-colors"
 						data-value="">
@@ -69,9 +69,9 @@
 
 				<!-- Category Dropdown -->
 				<div id="category-menu"
-					class="hidden absolute top-full left-0 md:left-24 right-0 mt-4 w-[90vw] md:w-[600px] bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-[2rem] shadow-2xl z-50 p-6 transition-all">
+					class="hidden absolute top-full left-0 right-0 mt-4 w-[250px] md:w-[420px] xl:w-[500px] bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-4xl shadow-2xl z-50 p-6 transition-all">
 					<p class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Popular Categories</p>
-					<div id="category-list" class="flex flex-wrap gap-2">
+					<div id="category-list" class="flex flex-wrap overflow-x-hidden gap-2">
 						<!-- Populated dynamically by JavaScript -->
 					</div>
 				</div>
@@ -81,9 +81,9 @@
 			</div>
 
 			<!-- Search Button -->
-			<div class="flex justify-end mt-6 md:mt-0 md:ml-3 w-full md:w-auto">
+			<div class="flex items-center mt-6 md:mt-0 md:ml-3 w-full md:w-auto">
 				<button type="submit"
-					class="bg-[#222] hover:opacity-80 transition-all p-4 md:p-5 rounded-full text-white shadow-lg">
+					class="bg-[#222] hover:opacity-80 transition-all p-4 md:p-5 rounded-full w-full flex justify-center items-center text-white shadow-lg">
 					<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
 						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
 							d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -93,51 +93,62 @@
 		</form>
 	</div>
 
-	<!-- Quick Filters / Badges -->
-	<div class="max-w-6xl flex flex-wrap items-center gap-3 justify-center mx-auto px-4 mt-6">
-		<!-- Rising Instagram Stars -->
-		<a href="{{ route('influencers.platform', ['platformSlug' => 'instagram']) }}?sort=followers_asc"
-			class="flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-full text-sm font-semibold text-gray-700 dark:text-gray-200 shadow-sm hover:shadow-md hover:border-transparent transition-all group relative overflow-hidden">
-			<div
-				class="absolute inset-0 opacity-0 group-hover:opacity-10 bg-gradient-to-r from-[#cd9dfd] via-[#C084FC] to-[#c084fc] transition-opacity">
-			</div>
-			<span class="relative z-10">
-				@include('components.icons.star', ['class' => 'w-4 h-4 text-gray-900 dark:text-gray-100'])
-			</span>
-			<span class="relative z-10 group-hover:text-black dark:group-hover:text-white">Rising Instagram Stars</span>
-		</a>
+	<div class="w-full p-4 overflow-x-auto">
+    
+		<div class="flex justify-start lg:justify-center flex-nowrap gap-3 w-[320px] lg:w-full">
 
-		<!-- Rising TikTok Stars -->
-		<a href="{{ route('influencers.platform', ['platformSlug' => 'tiktok']) }}?sort=followers_asc"
-			class="flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-full text-sm font-semibold text-gray-700 dark:text-gray-200 shadow-sm hover:shadow-md hover:border-transparent transition-all group relative overflow-hidden">
-			<div
-				class="absolute inset-0 opacity-0 group-hover:opacity-10 bg-gradient-to-r from-[#cd9dfd] via-[#C084FC] to-[#c084fc] transition-opacity">
-			</div>
-			<span class="relative z-10">
-				@include('components.icons.star', ['class' => 'w-4 h-4 text-gray-900 dark:text-gray-100'])
-			</span>
-			<span class="relative z-10 group-hover:text-black dark:group-hover:text-white">Rising TikTok Stars</span>
-		</a>
+			<!-- Rising Instagram Stars -->
+			<a href="{{ route('influencers.platform', ['platformSlug' => 'instagram']) }}?sort=followers_asc"
+				class="flex-shrink-0 flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-full text-sm font-semibold text-gray-700 dark:text-gray-200 shadow-sm hover:shadow-md hover:border-transparent transition-all group relative overflow-hidden whitespace-nowrap">
 
-		<!-- Featured Categories (Dynamic) -->
-		@php
-			$featuredCategories = \App\Models\Category::where('is_featured', true)
-				->where('is_active', true)
-				->orderBy('featured_order')
-				->limit(4)
-				->get();
-		@endphp
+				<div class="absolute inset-0 opacity-0 group-hover:opacity-10 bg-gradient-to-r from-[#cd9dfd] via-[#C084FC] to-[#c084fc] transition-opacity"></div>
 
-		@foreach($featuredCategories as $category)
-			<a href="{{ route('influencers.category', ['categorySlug' => $category->slug]) }}"
-				class="flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-full text-sm font-semibold text-gray-700 dark:text-gray-200 shadow-sm hover:shadow-md hover:border-transparent transition-all group relative overflow-hidden">
-				<div
-					class="absolute inset-0 opacity-0 group-hover:opacity-10 bg-gradient-to-r from-[#cd9dfd] via-[#C084FC] to-[#c084fc] transition-opacity">
-				</div>
-				<span class="relative z-10 group-hover:text-black dark:group-hover:text-white">{{ $category->name }}</span>
+				<span class="relative z-10">
+					@include('components.icons.star', ['class' => 'w-4 h-4 text-gray-900 dark:text-gray-100'])
+				</span>
+
+				<span class="relative z-10 group-hover:text-black dark:group-hover:text-white">
+					Rising Instagram Stars
+				</span>
 			</a>
-		@endforeach
 
+			<!-- Rising TikTok Stars -->
+			<a href="{{ route('influencers.platform', ['platformSlug' => 'tiktok']) }}?sort=followers_asc"
+				class="flex-shrink-0 flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-full text-sm font-semibold text-gray-700 dark:text-gray-200 shadow-sm hover:shadow-md hover:border-transparent transition-all group relative overflow-hidden whitespace-nowrap">
+
+				<div class="absolute inset-0 opacity-0 group-hover:opacity-10 bg-gradient-to-r from-[#cd9dfd] via-[#C084FC] to-[#c084fc] transition-opacity"></div>
+
+				<span class="relative z-10">
+					@include('components.icons.star', ['class' => 'w-4 h-4 text-gray-900 dark:text-gray-100'])
+				</span>
+
+				<span class="relative z-10 group-hover:text-black dark:group-hover:text-white">
+					Rising TikTok Stars
+				</span>
+			</a>
+
+				<!-- Featured Categories -->
+				@php
+					$featuredCategories = \App\Models\Category::where('is_featured', true)
+						->where('is_active', true)
+						->orderBy('featured_order')
+						->limit(4)
+						->get();
+				@endphp
+
+				@foreach($featuredCategories as $category)
+				<a href="{{ route('influencers.category', ['categorySlug' => $category->slug]) }}"
+					class="flex-shrink-0 flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-full text-sm font-semibold text-gray-700 dark:text-gray-200 shadow-sm hover:shadow-md hover:border-transparent transition-all group relative overflow-hidden whitespace-nowrap">
+
+					<div class="absolute inset-0 opacity-0 group-hover:opacity-10 bg-gradient-to-r from-[#cd9dfd] via-[#C084FC] to-[#c084fc] transition-opacity"></div>
+
+					<span class="relative z-10 group-hover:text-black dark:group-hover:text-white">
+						{{ $category->name }}
+					</span>
+				</a>
+				@endforeach
+			
+		</div>
 	</div>
 </div>
 

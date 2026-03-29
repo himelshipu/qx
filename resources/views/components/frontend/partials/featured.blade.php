@@ -3,13 +3,13 @@
 ])
 
 <section class="w-full">
-	<div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-3">
+	<div class="flex flex-row items-end justify-between mb-6 gap-3">
 		<div>
 			<h2 class="text-2xl font-semibold text-[#222] dark:text-white">Featured</h2>
 			<p class="text-gray-500 dark:text-gray-400 leading-relaxed mt-1">Hire top influencers across all platforms</p>
 		</div>
 		<a href="{{ route('influencers', ['platformSlug' => 'featured']) }}"
-			class="text-sm font-medium text-[#222] dark:text-gray-400 hover:underline">
+			class="text-sm font-medium text-[#222] dark:text-gray-400 hover:text-purple-300 hover:underline pb-1">
 			See All
 		</a>
 	</div>

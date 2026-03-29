@@ -16,13 +16,13 @@
 		<div class="space-y-5">
 
 
-			<div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+			<div class="flex flex-row items-end justify-between mb-6 gap-3">
 				<div>
 					<h2 class="text-2xl font-semibold text-[#222] dark:text-white">{{ $platformLabel }} Influencers</h2>
 					<p class="text-gray-500 dark:text-gray-400 leading-relaxed mt-1">Hire {{ $platformLabel }} influencers </p>
 				</div>
 				<a href="{{ route('influencers', ['platformSlug' => $platformSlug]) }}"
-					class="text-sm font-medium text-[#222] dark:text-gray-400 hover:underline">
+					class="text-sm font-medium text-[#222] dark:text-gray-400 hover:underline hover:text-purple-300 pb-1">
 					See All
 				</a>
 			</div>

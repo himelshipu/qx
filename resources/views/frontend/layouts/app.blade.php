@@ -90,7 +90,7 @@
 
 
 		<!-- Main Content -->
-		<main class="max-w-screen-2xl mx-auto px-4 sm:px-6 pt-8 pb-20">
+		<main class="max-w-screen-2xl mx-auto px-4 pt-4 pb-14">
 			@yield('content')
 		</main>
 		<x-frontend.navigation.footer />
