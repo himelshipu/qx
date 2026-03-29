@@ -37,7 +37,7 @@
         </a>
     </div>
 
-    <nav class="p-4 h-[calc(100vh-4rem)] overflow-scroll ">
+    <nav class="p-4 h-[calc(100vh-4rem)] overflow-scroll custom-scrollbar">
         <ul class="space-y-6">
             @foreach ($menuItems as $key => $item)
                 @if($key === 'dashboard')
@@ -146,6 +146,32 @@
             @endforeach
         </ul>
     </nav>
+
+    <style>
+        /* Custom scrollbar */
+        .custom-scrollbar::-webkit-scrollbar {
+        width: 3px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-track {
+        background: transparent;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 10px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+        background: #94a3b8;
+        }
+
+        /* Firefox */
+        .custom-scrollbar {
+        scrollbar-width: thin;
+        scrollbar-color: #cbd5e1 transparent;
+        }
+    </style>
 </aside>
 
 <div x-show="$store.sidebar.isMobileOpen" 

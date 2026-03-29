@@ -60,7 +60,7 @@ window.addEventListener('resize', checkMobile);" class="transition-colors durati
 				<!-- app header start -->
 				<x-backend.shell.header />
 				<!-- app header end -->
-				<main class="max-w-screen-2xl mx-auto px-4 sm:px-6 py-8 ">
+				<main class="max-w-screen-2xl mx-auto px-4 sm:px-6 py-8 bg-white dark:bg-gray-900 ">
 					@yield('content')
 				</main>
 			</div>
