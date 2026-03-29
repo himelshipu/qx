@@ -31,6 +31,7 @@
 				<nav class="flex flex-wrap items-center justify-center gap-4 md:gap-6 lg:gap-10 text-sm font-medium">
 					<a href="{{ route('home') }}" class="nav-link {{ request()->routeIs('home') ? 'active' : '' }}">Home</a>
 					<a href="{{ route('dashboard.content-library') }}" class="nav-link {{ request()->routeIs('dashboard.content-library') ? 'active' : '' }}">Library</a>
+					<a href="#how-it-works" class="nav-link">How it Works</a>
 					<a href="{{ route('influencers') }}" class="nav-link">Search</a>
 					<a href="{{ route('faq') }}" class="nav-link {{ request()->routeIs('faq') ? 'active' : '' }}">Faq</a>
 					<a href="{{ route('support') }}" class="nav-link {{ request()->routeIs('support') ? 'active' : '' }}">Support</a>

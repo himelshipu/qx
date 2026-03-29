@@ -1,4 +1,4 @@
- <section class="search-section-wrapper bg-white dark:bg-transparent overflow-hidden">
+ <section id="how-it-works" class="search-section-wrapper bg-white dark:bg-transparent overflow-hidden">
             <div class="max-w-screen-2xl mx-auto px-2">
 
                 <div class="flex flex-col lg:flex-row items-center gap-16 lg:gap-12 mb-8">
