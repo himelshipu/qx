@@ -1,9 +1,9 @@
 @extends('frontend.layouts.app')
 
 @section('content')
-<div class="max-w-5xl mx-auto" 
+<div class="max-w-5xl mx-auto"
      x-data="{
-        tab: 'details',
+        tab: @js(old('active_tab', 'details')),
         selectedCats: @json(old('categories') ?? $brand?->categories ?? []),
         profileFile: null,
         profilePreview: null,
@@ -48,11 +48,11 @@
             if (this.$refs.coverInput) this.$refs.coverInput.value = '';
         }
      }"
-     @load="init()">
-    
+     x-init="init()">
+
     <div class="max-w-4xl mx-auto">
         <div class="mb-8 text-start">
-            <a href="/dashboard/brand-profile/edit" class="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-800 rounded-full text-sm font-medium text-gray-800 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+            <a href="{{ route('dashboard.brand.profile.edit', ['slug' => $slug]) }}" class="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-800 rounded-full text-sm font-medium text-gray-800 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
                 Back
             </a>
@@ -61,24 +61,6 @@
         <h1 class="text-3xl md:text-4xl font-semibold text-[#222] dark:text-white leading-tight text-left mb-4">Edit Profile</h1>
         <p class="text-sm text-gray-800 dark:text-gray-400">Manage your brand information and make it stand out</p>
 
-        @if (session('status') === 'profile-updated')
-            <div class="mb-6 p-4 bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 rounded-xl font-medium flex items-center gap-3">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                Profile updated successfully!
-            </div>
-        @endif
-
-        @if ($errors->any())
-            <div class="mb-6 p-4 bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300 rounded-xl">
-                <div class="font-bold mb-2">Please fix the following errors:</div>
-                <ul class="list-disc list-inside space-y-1 text-sm">
-                    @foreach ($errors->all() as $error)
-                        <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
-            </div>
-        @endif
-
         <!-- Tab Navigation -->
         <div class="flex gap-8 border-b border-gray-200 dark:border-gray-800 mb-8 overflow-x-auto mt-8">
             <button @click="tab = 'details'" :class="tab === 'details' ? 'border-b-2 border-black dark:border-white text-black dark:text-white' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'" class="pb-4 text-base font-medium transition-all whitespace-nowrap">Details</button>
@@ -86,15 +68,26 @@
             <button @click="tab = 'images'" :class="tab === 'images' ? 'border-b-2 border-black dark:border-white text-black dark:text-white' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'" class="pb-4 text-base font-medium transition-all whitespace-nowrap">Images</button>
         </div>
 
-        <form action="{{ route('dashboard.brand.profile.update') }}" method="POST" enctype="multipart/form-data">
+        <form action="{{ route('dashboard.brand.profile.update', ['slug' => $slug]) }}" method="POST" enctype="multipart/form-data">
             @csrf
-            
+            <input type="hidden" name="active_tab" :value="tab">
+
             <template x-for="cat in selectedCats" :key="cat">
                 <input type="hidden" name="categories[]" :value="cat">
             </template>
-            
+
             <!-- Details Tab -->
             <div x-show="tab === 'details'" x-cloak class="space-y-8 text-start animate-in fade-in duration-300">
+                <!-- Brand Name -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-800 dark:text-gray-400 mb-2">Brand Name <span class="text-red-500">*</span></label>
+                    <input type="text" name="brand_name" required value="{{ old('brand_name', $brand->brand_name ?? '') }}" placeholder="Enter your brand name"
+                        class="dark:bg-dark-900 shadow-theme-xs focus:border-pink-50 focus:ring-gray-500/10 dark:focus:border-gray-800 h-12 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30" />
+                    @error('brand_name')
+                        <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
+                    @enderror
+                </div>
+
                 <!-- Location -->
                 <div>
                     <label class="block text-sm font-medium text-gray-800 dark:text-gray-400 mb-2">Location</label>
@@ -144,7 +137,7 @@
 
                 <div>
                     <label class="block text-sm font-medium text-gray-800 dark:text-gray-400 mb-2">Instagram</label>
-                    <input type="url" name="instagram" value="{{ old('instagram', $brand?->social_links['instagram'] ?? '') }}" placeholder="https://instagram.com/yourprofile"
+                    <input type="url" name="instagram" value="{{ old('instagram', $brand?->socialLinks?->instagram_url ?? ($brand?->social_links['instagram'] ?? '')) }}" placeholder="https://instagram.com/yourprofile"
                         class="dark:bg-dark-900 shadow-theme-xs focus:border-pink-50 focus:ring-gray-500/10 dark:focus:border-gray-800 h-12 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30" />
                     @error('instagram')
                         <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
@@ -153,7 +146,7 @@
 
                 <div>
                     <label class="block text-sm font-medium text-gray-800 dark:text-gray-400 mb-2">TikTok</label>
-                    <input type="url" name="tiktok" value="{{ old('tiktok', $brand?->social_links['tiktok'] ?? '') }}" placeholder="https://tiktok.com/@yourprofile"
+                    <input type="url" name="tiktok" value="{{ old('tiktok', $brand?->socialLinks?->tiktok_url ?? ($brand?->social_links['tiktok'] ?? '')) }}" placeholder="https://tiktok.com/@yourprofile"
                         class="dark:bg-dark-900 shadow-theme-xs focus:border-pink-50 focus:ring-gray-500/10 dark:focus:border-gray-800 h-12 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30" />
                     @error('tiktok')
                         <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
@@ -162,7 +155,7 @@
 
                 <div>
                     <label class="block text-sm font-medium text-gray-800 dark:text-gray-400 mb-2">Facebook</label>
-                    <input type="url" name="facebook" value="{{ old('facebook', $brand?->social_links['facebook'] ?? '') }}" placeholder="https://facebook.com/yourprofile"
+                    <input type="url" name="facebook" value="{{ old('facebook', $brand?->socialLinks?->facebook_url ?? ($brand?->social_links['facebook'] ?? '')) }}" placeholder="https://facebook.com/yourprofile"
                         class="dark:bg-dark-900 shadow-theme-xs focus:border-pink-50 focus:ring-gray-500/10 dark:focus:border-gray-800 h-12 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30" />
                     @error('facebook')
                         <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
@@ -171,7 +164,7 @@
 
                 <div>
                     <label class="block text-sm font-medium text-gray-800 dark:text-gray-400 mb-2">Twitter</label>
-                    <input type="url" name="twitter" value="{{ old('twitter', $brand?->social_links['twitter'] ?? '') }}" placeholder="https://twitter.com/yourprofile"
+                    <input type="url" name="twitter" value="{{ old('twitter', $brand?->socialLinks?->x_url ?? ($brand?->social_links['twitter'] ?? '')) }}" placeholder="https://twitter.com/yourprofile"
                         class="dark:bg-dark-900 shadow-theme-xs focus:border-pink-50 focus:ring-gray-500/10 dark:focus:border-gray-800 h-12 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30" />
                     @error('twitter')
                         <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
@@ -180,7 +173,7 @@
 
                 <div>
                     <label class="block text-sm font-medium text-gray-800 dark:text-gray-400 mb-2">YouTube</label>
-                    <input type="url" name="youtube" value="{{ old('youtube', $brand?->social_links['youtube'] ?? '') }}" placeholder="https://youtube.com/c/yourchannel"
+                    <input type="url" name="youtube" value="{{ old('youtube', $brand?->socialLinks?->youtube_url ?? ($brand?->social_links['youtube'] ?? '')) }}" placeholder="https://youtube.com/c/yourchannel"
                         class="dark:bg-dark-900 shadow-theme-xs focus:border-pink-50 focus:ring-gray-500/10 dark:focus:border-gray-800 h-12 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30" />
                     @error('youtube')
                         <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
@@ -189,7 +182,7 @@
 
                 <div>
                     <label class="block text-sm font-medium text-gray-800 dark:text-gray-400 mb-2">Others</label>
-                    <input type="url" name="others" value="{{ old('others', $brand?->social_links['others'] ?? '') }}" placeholder="https://yourprofile.com"
+                    <input type="url" name="others" value="{{ old('others', $brand?->socialLinks?->other_url ?? ($brand?->social_links['others'] ?? '')) }}" placeholder="https://yourprofile.com"
                         class="dark:bg-dark-900 shadow-theme-xs focus:border-pink-50 focus:ring-gray-500/10 dark:focus:border-gray-800 h-12 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30" />
                     @error('others')
                         <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
@@ -234,13 +227,13 @@
                     <div @click="$el.querySelector('input[name=cover_image]').click()"
                          :class="isDraggingCover ? 'border-purple-400 bg-purple-50 dark:bg-purple-900/20' : 'border-gray-300 dark:border-gray-700'"
                          class="relative w-full aspect-video rounded-2xl border-2 border-dashed flex flex-col items-center justify-center cursor-pointer transition-all hover:border-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20 overflow-hidden">
-                        
+
                         <input x-ref="coverInput" type="file" name="cover_image" class="hidden" @change="handleCoverFiles($event.target.files)" accept="image/*">
-                        
+
                         <template x-if="coverPreview">
                             <img :src="coverPreview" class="absolute inset-0 w-full h-full object-cover rounded-2xl z-0">
                         </template>
-                        
+
                         <template x-if="!coverPreview && {{ !is_null($brand?->cover_image_path) ? 'true' : 'false' }}">
                             <img src="{{ $brand?->cover_image_path ? Storage::url($brand->cover_image_path) : '' }}" class="absolute inset-0 w-full h-full object-cover rounded-2xl z-0">
                         </template>

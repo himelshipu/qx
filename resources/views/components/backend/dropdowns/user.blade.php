@@ -22,13 +22,12 @@
 			@auth
 				{{-- View profile (public) and Edit profile (dashboard) links based on user type --}}
 				@if (Auth::user()->brand)
-					@php $b = Auth::user()->brand; @endphp
-					<a href="{{ route('brand.profile', ['id' => $b->id]) }}"
+					<a href="{{ route('brand.profile', ['slug' => Auth::user()->slug]) }}"
 						class="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
 						<x-icons.user-circle class="w-5 h-5" />
 						View profile
 					</a>
-					<a href="{{ route('dashboard.brand.profile.edit') }}"
+					<a href="{{ route('dashboard.brand.profile.edit', ['slug' => Auth::user()->slug]) }}"
 						class="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
 						<x-icons.edit class="w-5 h-5" />
 						Edit profile

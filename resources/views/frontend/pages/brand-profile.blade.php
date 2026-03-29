@@ -11,15 +11,15 @@
             <div class="max-w-2xl">
                 <h1 class="text-2xl font-bold mb-2">Complete Your Profile</h1>
                 <p class="text-gray-400 text-sm leading-relaxed">
-                    Your profile is the first thing creators view to learn about your brand. 
+                    Your profile is the first thing creators view to learn about your brand.
                     Having a complete, detailed profile helps creators decide if you're a fit to collaborate with.
                 </p>
             </div>
 
             @auth
                 @if(optional(Auth::user()->brand)->id === optional($brand)->id)
-                    <a href="{{ route('dashboard.brand.profile.edit') }}"
-                        class="bg-white text-black px-6 py-2.5 rounded-xl font-bold text-sm 
+                    <a href="{{ route('dashboard.brand.profile.edit', ['slug' => Auth::user()->slug]) }}"
+                        class="bg-white text-black px-6 py-2.5 rounded-xl font-bold text-sm
                                 hover:bg-gray-100 transition shadow-md whitespace-nowrap">
                         Complete Profile
                     </a>
@@ -37,7 +37,7 @@
             <div class="flex justify-end mb-6">
                 @auth
                     @if(optional(Auth::user()->brand)->id === optional($brand)->id)
-                        <a href="{{ route('dashboard.brand.profile.edit') }}" class="flex items-center gap-2 text-sm font-semibold text-gray-600 dark:text-gray-50 hover:text-black transition">
+                        <a href="{{ route('dashboard.brand.profile.edit', ['slug' => Auth::user()->slug]) }}" class="flex items-center gap-2 text-sm font-semibold text-gray-600 dark:text-gray-50 hover:text-black transition">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                       d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
@@ -68,7 +68,7 @@
                 <h2 class="text-3xl font-bold text-gray-900 mb-4">Script Notion</h2>
 
                 <p class="text-sm text-gray-500 dark:text-white max-w-2xl mx-auto leading-relaxed">
-                    A quality description, logo and adding your social channels results in 
+                    A quality description, logo and adding your social channels results in
                     <span class="font-semibold text-gray-800 dark:text-gray-100">3x more influencer collaborations</span> on QX.
                     <a href="#" class="font-semibold text-black dark:text-gray-100 underline hover:opacity-70 transition">
                         Complete your profile now.
@@ -84,7 +84,7 @@
 
             <h3 class="text-xl font-medium text-[#222] dark:text-white mb-4">Campaigns</h3>
 
-            <div class="max-w-xl relative group overflow-hidden rounded-2xl 
+            <div class="max-w-xl relative group overflow-hidden rounded-2xl
                         bg-gray-200 aspect-video flex items-center justify-center
                         hover:shadow-xl transition duration-300 cursor-pointer">
 

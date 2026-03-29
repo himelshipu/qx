@@ -1,5 +1,5 @@
-<div x-data="{ 
-		isCartOpen: false, 
+<div x-data="{
+		isCartOpen: false,
 		isProfileOpen: false,
 		// DUMMY DATA FROM REFERENCE
 		cartItems: [
@@ -17,7 +17,7 @@
 	<div x-data="{ isCartOpen: false, isProfileOpen: false }" class="relative">
 		<!-- After login menu -->
 		<div class="max-w-screen-2xl mx-auto py-3 flex flex-col sm:px-0 sm:flex-row items-center justify-between space-y-4 sm:space-y-0">
-			
+
 			<!-- Logo Section -->
 			<div class="flex items-center gap-2">
 				<a href="{{ route('home') }}">
@@ -39,7 +39,7 @@
 
 			<!-- Action Icons Section -->
 			<div class="flex items-center justify-between gap-3 sm:gap-5 w-full sm:w-auto">
-				
+
 				<!-- Shopping Cart Icon (THIS ONLY opens the Cart Modal) -->
 				<div @click="isCartOpen = true" class="relative cursor-pointer hover:opacity-70 transition-opacity p-2">
 					<svg class="w-7 h-7 text-gray-800 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -55,7 +55,7 @@
 				<div class="relative" @click.away="isProfileOpen = false">
 					<button @click="isProfileOpen = !isProfileOpen"
 						class="flex items-center gap-3 border border-gray-100 dark:border-gray-800 rounded-full p-1 pl-4 bg-white dark:bg-gray-900 hover:shadow-md transition-all duration-300 active:scale-95">
-						
+
 						<!-- Hamburger Icon (Now toggles Profile, NOT Cart) -->
 						<svg class="w-5 h-5 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 6h16M4 12h16M4 18h16"></path>
@@ -76,7 +76,7 @@
 					</button>
 
 					<!-- Profile Dropdown Content (Converted from group-hover to Alpine show for mobile reliability) -->
-					<div x-show="isProfileOpen" 
+					<div x-show="isProfileOpen"
 						x-cloak
 						x-transition:enter="transition ease-out duration-200"
 						x-transition:enter-start="opacity-0 scale-95"
@@ -85,8 +85,8 @@
 						<div class="py-2 flex flex-col">
 							@auth
 								@if (Auth::user()->brand)
-									<a href="{{ route('brand.profile', Auth::user()->brand->id) }}" class="px-7 py-3.5 text-[15px] font-bold text-gray-800 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">View profile</a>
-									<a href="{{ route('dashboard.brand.profile.edit') }}" class="px-7 py-3.5 text-[15px] font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">Edit profile</a>
+									<a href="{{ route('brand.profile', Auth::user()->slug) }}" class="px-7 py-3.5 text-[15px] font-bold text-gray-800 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">View profile</a>
+									<a href="{{ route('dashboard.brand.profile.edit', ['slug' => Auth::user()->slug]) }}" class="px-7 py-3.5 text-[15px] font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">Edit profile</a>
 								@elseif(Auth::user()->creator)
 									<a href="{{ route('creator.profile', Auth::user()->slug) }}" class="px-7 py-3.5 text-[15px] font-bold text-gray-800 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">View profile</a>
 									<a href="{{ route('dashboard.creator.profile.edit') }}" class="px-7 py-3.5 text-[15px] font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">Edit profile</a>
@@ -109,16 +109,16 @@
 
 		<!-- ========================= CART SIDEBAR MODAL ========================= -->
 		<div x-show="isCartOpen" x-cloak class="fixed inset-0 z-[200] overflow-hidden" role="dialog" aria-modal="true">
-			
+
 			<!-- Backdrop Blur -->
 			<div x-show="isCartOpen" x-transition.opacity @click="isCartOpen = false" class="absolute inset-0 bg-black/40 backdrop-blur-[2px]"></div>
 
 			<div class="fixed inset-y-0 right-0 flex max-w-full">
-				<div x-show="isCartOpen" 
-					x-transition:enter="transform transition ease-in-out duration-500" x-transition:enter-start="translate-x-full" x-transition:enter-end="translate-x-0" 
-					x-transition:leave="transform transition ease-in-out duration-500" x-transition:leave-start="translate-x-0" x-transition:leave-end="translate-x-full" 
+				<div x-show="isCartOpen"
+					x-transition:enter="transform transition ease-in-out duration-500" x-transition:enter-start="translate-x-full" x-transition:enter-end="translate-x-0"
+					x-transition:leave="transform transition ease-in-out duration-500" x-transition:leave-start="translate-x-0" x-transition:leave-end="translate-x-full"
 					class="w-screen max-w-5xl flex shadow-2xl">
-					
+
 					<!-- LEFT PANEL (Estimated Results) -->
 					<div class="hidden md:flex flex-col w-[38%] bg-black p-4 lg:p-12 text-white justify-between">
 						<div>
@@ -210,7 +210,7 @@
 								<div class="flex justify-between text-sm"><span class="text-gray-500 font-medium">Subtotal</span><span class="font-bold text-gray-900" x-text="'$' + subtotal.toLocaleString() + '.00'"></span></div>
 								<div class="flex justify-between text-sm items-center"><div class="flex items-center gap-1.5 text-gray-900 font-bold">Projected Spend <svg class="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke-width="2"/><path d="M12 16v-4m0-4h.01" stroke-width="2" stroke-linecap="round"/></svg></div><span class="font-bold text-gray-900" x-text="'$' + projectedSpend.toLocaleString() + '.00'"></span></div>
 							</div>
-							
+
 							<button x-show="cartItems.length > 0" class="w-full bg-[#1A1A1A] text-white py-5 rounded-2xl font-bold text-sm tracking-widest hover:bg-black transition-all shadow-xl active:scale-95 uppercase">Checkout</button>
 							<button x-show="cartItems.length === 0" @click="isCartOpen = false" class="w-full bg-[#1A1A1A] text-white py-5 rounded-2xl font-bold text-sm tracking-widest hover:bg-black transition-all uppercase">Discover Influencers</button>
 						</div>
