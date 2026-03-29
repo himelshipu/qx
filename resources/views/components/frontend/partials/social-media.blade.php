@@ -33,12 +33,12 @@
 						now.</p>
 				</div>
 			@else
-				<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+				<div class="flex overflow-x-auto gap-4 pb-2 lg:grid lg:grid-cols-4 sm:grid-cols-2 lg:gap-8 lg:px-0 scroll-smooth">
 					@foreach ($creators as $creator)
 						@php
 							$profileUrl = !empty($creator['slug']) ? route('creator.profile', ['slug' => $creator['slug']]) : '#';
 						@endphp
-						<a href="{{ $profileUrl }}" class="group overflow-hidden font-sans cursor-pointer creator-card block"
+						<a href="{{ $profileUrl }}" class="flex-shrink-0 w-[80%] sm:w-[60%] lg:w-auto group overflow-hidden font-sans cursor-pointer creator-card block"
 							data-creator-id="{{ $creator['id'] }}">
 							<div class="relative overflow-hidden rounded-xl">
 								<button type="button"

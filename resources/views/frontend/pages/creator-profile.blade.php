@@ -304,45 +304,62 @@
 				@endauth
 			</div>
 
-			<!-- 2. PORTRAIT IMAGE GRID -->
-			<div class="grid grid-cols-12 gap-4 mb-16 h-[450px] md:h-[600px]">
-				<div class="col-span-4 rounded-xl overflow-hidden border border-gray-100 dark:border-gray-800">
-					<img src="{{ $gridImages[0] }}" class="w-full h-full object-cover hover:scale-105 transition-transform duration-700"
-						alt="Creator showcase image">
+			<!-- 2. PORTRAIT IMAGE GRID & MOBILE SLIDER -->
+			<div class="relative -mx-4 sm:-mx-6 lg:mx-0 mb-10 lg:mb-16" 
+				x-data="{ 
+					activeImage: 1, 
+					total: {{ count($gridImages) }},
+					handleScroll(e) {
+						const width = e.target.offsetWidth;
+						this.activeImage = Math.round(e.target.scrollLeft / width) + 1;
+					}
+				}">
+				
+				<!-- Container: Flex on mobile (for scroll), Grid on desktop -->
+				<div @scroll.debounce.100ms="handleScroll($event)"
+					class="flex lg:grid lg:grid-cols-12 overflow-x-auto lg:overflow-x-visible snap-x snap-mandatory no-scrollbar h-[450px] lg:h-[600px] gap-0 lg:gap-4">
+					
+					@foreach($gridImages as $index => $image)
+						<!-- Removed 'hidden' class. min-w-full handles the mobile layout -->
+						<div class="min-w-full lg:min-w-0 lg:col-span-4 snap-center relative overflow-hidden lg:rounded-xl border-gray-100 dark:border-gray-800">
+							<img src="{{ $image }}" 
+								class="w-full h-full object-cover lg:hover:scale-105 transition-transform duration-700"
+								alt="Creator showcase image {{ $index + 1 }}">
+						</div>
+					@endforeach
 				</div>
-				<div class="col-span-4 rounded-xl overflow-hidden border border-gray-100 dark:border-gray-800">
-					<img src="{{ $gridImages[1] }}" class="w-full h-full object-cover hover:scale-105 transition-transform duration-700"
-						alt="Creator showcase image">
-				</div>
-				<div class="col-span-4 rounded-xl overflow-hidden relative border border-gray-100 dark:border-gray-800">
-					<img src="{{ $gridImages[2] }}" class="w-full h-full object-cover hover:scale-105 transition-transform duration-700"
-						alt="Creator showcase image">
 
-					<!-- Show All Photos Overlay -->
-					@if ($creator->portfolios->count() > 3)
-						<a href="#portfolio-gallery"
-							class="absolute bottom-6 right-6 flex items-center gap-2 bg-white/90 backdrop-blur-md px-5 py-2.5 rounded-2xl text-sm font-bold text-gray-900 border border-gray-100 shadow-xl hover:bg-white transition active:scale-95">
-							<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
-								<path
-									d="M10 7C10 8.65685 8.65685 10 7 10C5.34315 10 4 8.65685 4 7C4 5.34315 5.34315 4 7 4C8.65685 4 10 5.34315 10 7Z"
-									stroke="#28303F" stroke-width="1.5" />
-								<path
-									d="M20 17C20 18.6569 18.6569 20 17 20C15.3431 20 14 18.6569 14 17C14 15.3431 15.3431 14 17 14C18.6569 14 20 15.3431 20 17Z"
-									stroke="#28303F" stroke-width="1.5" />
-								<path
-									d="M14 6C14 4.89543 14.8954 4 16 4H18C19.1046 4 20 4.89543 20 6V8C20 9.10457 19.1046 10 18 10H16C14.8954 10 14 9.10457 14 8V6Z"
-									stroke="#28303F" stroke-width="1.5" />
-								<path
-									d="M4 16C4 14.8954 4.89543 14 6 14H8C9.10457 14 10 14.8954 10 16V18C10 19.1046 9.10457 20 8 20H6C4.89543 20 4 19.1046 4 18V16Z"
-									stroke="#28303F" stroke-width="1.5" />
-							</svg>
-							Show All Photos
-						</a>
-					@endif
+				<!-- Show All Photos Button (Desktop Only) -->
+				@if ($creator->portfolios->count() > 3)
+				<div class="hidden lg:block absolute bottom-6 right-6 z-10">
+					<a href="#portfolio-gallery"
+						class="flex items-center gap-2 bg-white/90 backdrop-blur-md px-5 py-2.5 rounded-2xl text-sm font-bold text-gray-900 border border-gray-100 shadow-xl hover:bg-white transition active:scale-95">
+						<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+							<path d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>
+						</svg>
+						Show All Photos
+					</a>
+				</div>
+				@endif
+
+				<!-- Dynamic Mobile Image Counter Badge (1/3) -->
+				<div class="lg:hidden absolute bottom-4 right-4 bg-black/60 backdrop-blur-md text-white px-3 py-1 rounded-md text-[10px] font-medium tracking-widest z-20 pointer-events-none">
+					<span x-text="activeImage"></span> / <span x-text="total"></span>
 				</div>
 			</div>
 
-			<div class="flex flex-col lg:flex-row gap-16">
+			<style>
+				/* Critical for clean mobile experience */
+				.no-scrollbar::-webkit-scrollbar {
+					display: none;
+				}
+				.no-scrollbar {
+					-ms-overflow-style: none;
+					scrollbar-width: none;
+				}
+			</style>
+
+			<div class="flex flex-col lg:flex-row gap-4 lg:gap-16">
 				<!-- LEFT COLUMN: CREATOR INFO -->
 				<div class="flex-1 space-y-6">
 					<!-- Profile Identity -->
@@ -357,7 +374,7 @@
 							<div class="flex gap-3">
 								@foreach ($platformBadges as $platformBadge)
 									<span
-										class="px-4 py-1.5 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-full text-[12px] font-medium text-gray-500 flex items-center gap-2 shadow-sm">
+										class="px-2 md:px-4 py-1.5 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-full text-[10px] md:text-sm font-medium text-gray-500 flex items-center gap-2 shadow-sm">
 										@if ($platformBadge['icon'] === 'instagram')
 											<x-icons.instagram class="w-5 h-5 text-[#28303F] dark:text-white" />
 										@elseif ($platformBadge['icon'] === 'tiktok')
@@ -455,10 +472,10 @@
 												<x-icons.group class="w-6 h-6" />
 											</template>
 										</div>
-										<span class="text-base font-bold text-gray-800 dark:text-gray-200" x-text="p.name"></span>
+										<span class="text-sm md:text-base font-bold text-gray-800 dark:text-gray-200" x-text="p.name"></span>
 									</div>
 									<div class="flex items-center gap-6">
-										<span class="text-lg font-bold text-gray-900 dark:text-white" x-text="p.price"></span>
+										<span class="text-sm md:text-lg font-bold text-gray-900 dark:text-white" x-text="p.price"></span>
 										<div class="w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all"
 											:class="selectedPackageKey === p.key ? 'border-black bg-black dark:border-white dark:bg-white' : 'border-gray-200'">
 											<div x-show="selectedPackageKey === p.key" class="w-2 h-2 rounded-full"
@@ -472,7 +489,7 @@
 				</div>
 
 				<!-- RIGHT COLUMN: PRICING CARD (Synced) -->
-				<div class="w-2/5">
+				<div class="w-auto lg:w-2/5">
 					<div
 						class="sticky top-24 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-[2.5rem] p-10 shadow-2xl shadow-purple-900/5">
 						<div class="flex items-center justify-between mb-4">

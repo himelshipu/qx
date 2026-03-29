@@ -93,7 +93,7 @@
 		</form>
 	</div>
 
-	<div class="w-full p-4 overflow-x-auto">
+	<div class="w-full px-2 py-4 overflow-x-auto">
     
 		<div class="flex justify-start lg:justify-center flex-nowrap gap-3 w-[320px] lg:w-full">
 

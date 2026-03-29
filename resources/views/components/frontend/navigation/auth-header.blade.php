@@ -16,7 +16,7 @@
 
 	<div x-data="{ isCartOpen: false, isProfileOpen: false }" class="relative">
 		<!-- After login menu -->
-		<div class="max-w-screen-2xl mx-auto py-6 flex flex-col sm:px-0 px-4 sm:flex-row items-center justify-between space-y-4 sm:space-y-0">
+		<div class="max-w-screen-2xl mx-auto py-3 flex flex-col sm:px-0 sm:flex-row items-center justify-between space-y-4 sm:space-y-0">
 			
 			<!-- Logo Section -->
 			<div class="flex items-center gap-2">
@@ -27,14 +27,13 @@
 			</div>
 
 			<!-- Desktop Navigation (Hidden on mobile if needed, or flex-wrap) -->
-			<div>
-				<nav class="flex flex-wrap items-center justify-center gap-4 md:gap-6 lg:gap-10 text-sm font-medium">
+			<div class="mb-0">
+				<nav class="flex flex-wrap items-center justify-center gap-4 md:gap-6 lg:gap-10 text-sm font-medium mb-0">
 					<a href="{{ route('home') }}" class="nav-link {{ request()->routeIs('home') ? 'active' : '' }}">Home</a>
 					<a href="{{ route('dashboard.content-library') }}" class="nav-link {{ request()->routeIs('dashboard.content-library') ? 'active' : '' }}">Library</a>
 					<a href="#how-it-works" class="nav-link">How it Works</a>
 					<a href="{{ route('influencers') }}" class="nav-link">Search</a>
 					<a href="{{ route('faq') }}" class="nav-link {{ request()->routeIs('faq') ? 'active' : '' }}">Faq</a>
-					<a href="{{ route('support') }}" class="nav-link {{ request()->routeIs('support') ? 'active' : '' }}">Support</a>
 				</nav>
 			</div>
 
