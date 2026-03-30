@@ -1,7 +1,7 @@
 # Model Relationships - Fixes Applied
 
 ## Summary
-Fixed all model relationships in the QX platform between User, Brand, Creator, Package, Campaign, and related models to ensure proper one-to-one, one-to-many, and many-to-many relationships with correct foreign key references.
+Fixed all model relationships in the ROCKIES platform between User, Brand, Creator, Package, Campaign, and related models to ensure proper one-to-one, one-to-many, and many-to-many relationships with correct foreign key references.
 
 ## Changes Made
 

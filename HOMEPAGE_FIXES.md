@@ -1,7 +1,7 @@
 # Homepage Console Errors - Fixed
 
 ## Summary
-Fixed all console errors on the homepage (http://qx.local/):
+Fixed all console errors on the homepage (http://rockies.local/):
 1. ✅ 403 Forbidden errors for missing images/videos
 2. ✅ Alpine Collapse plugin warnings
 
@@ -12,12 +12,12 @@ Fixed all console errors on the homepage (http://qx.local/):
 ### 1. 403 Forbidden Storage Errors
 **Errors:**
 ```
-GET http://qx.local/storage/images/case-studies/travel-offseason.webp 403 (Forbidden)
-GET http://qx.local/storage/images/case-studies/fintech-education.webp 403 (Forbidden)
-GET http://qx.local/storage/images/case-studies/skincare-ugc.webp 403 (Forbidden)
-GET http://qx.local/storage/images/featured-collaborations/glownest-spring.webp 403 (Forbidden)
-GET http://qx.local/storage/images/featured-collaborations/fitmode-ugc.webp 403 (Forbidden)
-GET http://qx.local/storage/videos/featured-collaborations/trailpeak-launch.mp4 403 (Forbidden)
+GET http://rockies.local/storage/images/case-studies/travel-offseason.webp 403 (Forbidden)
+GET http://rockies.local/storage/images/case-studies/fintech-education.webp 403 (Forbidden)
+GET http://rockies.local/storage/images/case-studies/skincare-ugc.webp 403 (Forbidden)
+GET http://rockies.local/storage/images/featured-collaborations/glownest-spring.webp 403 (Forbidden)
+GET http://rockies.local/storage/images/featured-collaborations/fitmode-ugc.webp 403 (Forbidden)
+GET http://rockies.local/storage/videos/featured-collaborations/trailpeak-launch.mp4 403 (Forbidden)
 ```
 
 **Root Cause:**
@@ -133,7 +133,7 @@ Or upload files directly to:
 
 Clear browser cache and hard refresh: `Ctrl+Shift+R` (or `Cmd+Shift+R` on Mac)
 
-Visit http://qx.local/ and verify:
+Visit http://rockies.local/ and verify:
 - ✅ No 403 errors in console
 - ✅ No Alpine warnings in console
 - ✅ Case studies load with gradient fallback backgrounds

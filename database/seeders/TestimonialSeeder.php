@@ -14,7 +14,7 @@ class TestimonialSeeder extends Seeder
                 'author_name' => 'Maya Rodriguez',
                 'author_role' => 'Growth Lead',
                 'company_name' => 'GlowNest Beauty',
-                'quote' => 'QX helped us find creators who actually match our customer profile. We went from one-off posts to a repeatable creator pipeline in under a month.',
+                'quote' => 'ROCKIES helped us find creators who actually match our customer profile. We went from one-off posts to a repeatable creator pipeline in under a month.',
                 'rating' => 5,
                 'is_published' => true,
                 'sort_order' => 1,

@@ -9,7 +9,7 @@ This document provides a comprehensive overview of the project folder and file s
 ## 1. Project Root Structure
 
 ```
-/var/www/qx/
+/var/www/rockies/
 ├── app/                          # Main application code
 ├── bootstrap/                    # Application bootstrapping
 ├── config/                       # Configuration files

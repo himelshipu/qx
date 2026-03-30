@@ -134,7 +134,7 @@
 
 ## 🎉 Ready to Use!
 
-Visit: **http://qx.local/dashboard/featured-collaborations/1/edit**
+Visit: **http://rockies.local/dashboard/featured-collaborations/1/edit**
 
 Test upload, delete, and update operations!
 

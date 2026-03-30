@@ -6,7 +6,7 @@
 		<meta name="viewport" content="width=device-width, initial-scale=1">
 		<meta name="csrf-token" content="{{ csrf_token() }}">
 
-		<title>{{ $title ?? 'Welcome' }} | QX - Influencer Hiring Platform</title>
+		<title>{{ $title ?? 'Welcome' }} | ROCKIES - Influencer Hiring Platform</title>
 
 		<!-- Apply theme before CSS loads to avoid first-paint flash -->
 		<script>

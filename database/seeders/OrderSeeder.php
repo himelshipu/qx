@@ -39,7 +39,7 @@ class OrderSeeder extends Seeder
                 $cancelledAt = in_array($status, ['cancelled', 'refunded'], true) ? $placedAt->copy()->addDays(random_int(2, 7)) : null;
 
                 DB::table('orders')->updateOrInsert(
-                    ['order_number' => sprintf('QX-ORD-%06d', $counter)],
+                    ['order_number' => sprintf('ROCKIES-ORD-%06d', $counter)],
                     [
                         'buyer_user_id' => $buyerUserId,
                         'brand_id' => $brand->id,

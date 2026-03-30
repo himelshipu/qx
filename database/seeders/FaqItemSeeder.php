@@ -14,8 +14,8 @@ class FaqItemSeeder extends Seeder
         $items = [
             'general' => [
                 [
-                    'question' => 'What is QX and who is it for?',
-                    'answer' => 'QX is a collaboration platform that helps brands discover and work with creators for campaigns, UGC content, and long-term partnerships.',
+                    'question' => 'What is ROCKIES and who is it for?',
+                    'answer' => 'ROCKIES is a collaboration platform that helps brands discover and work with creators for campaigns, UGC content, and long-term partnerships.',
                 ],
                 [
                     'question' => 'Do I need to pay to create an account?',
@@ -44,7 +44,7 @@ class FaqItemSeeder extends Seeder
             ],
             'payments-and-safety' => [
                 [
-                    'question' => 'How are payments handled on QX?',
+                    'question' => 'How are payments handled on ROCKIES?',
                     'answer' => 'Payments are tracked through the platform workflow. Brands can review deliverables before final approval according to campaign terms.',
                 ],
                 [

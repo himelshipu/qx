@@ -16,7 +16,7 @@ class UserSeeder extends Seeder
         $users = [
             [
                 'name' => 'System Administrator',
-                'email' => 'admin@qx.local',
+                'email' => 'admin@rockies.local',
                 'user_type' => 'admin',
                 'phone' => '+1-415-555-0100',
                 'gender' => 'other',
@@ -27,7 +27,7 @@ class UserSeeder extends Seeder
             ],
             [
                 'name' => 'Community Moderator',
-                'email' => 'moderator@qx.local',
+                'email' => 'moderator@rockies.local',
                 'user_type' => 'moderator',
                 'phone' => '+1-646-555-0112',
                 'gender' => 'female',
@@ -41,7 +41,7 @@ class UserSeeder extends Seeder
         for ($i = 1; $i <= 12; $i++) {
             $users[] = [
                 'name' => $faker->company() . ' Team',
-                'email' => sprintf('brand%02d@qx.local', $i),
+                'email' => sprintf('brand%02d@rockies.local', $i),
                 'user_type' => 'brand',
                 'phone' => $faker->numerify('+1-###-555-####'),
                 'gender' => $faker->randomElement(['male', 'female', 'other']),
@@ -55,7 +55,7 @@ class UserSeeder extends Seeder
         for ($i = 1; $i <= 12; $i++) {
             $users[] = [
                 'name' => $faker->name(),
-                'email' => sprintf('creator%02d@qx.local', $i),
+                'email' => sprintf('creator%02d@rockies.local', $i),
                 'user_type' => 'creator',
                 'phone' => $faker->numerify('+1-###-555-####'),
                 'gender' => $faker->randomElement(['male', 'female', 'other']),

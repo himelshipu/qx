@@ -1,6 +1,6 @@
 =========================================
 DETAILED MIGRATION COLUMN ANALYSIS
-Generated: 2026-03-30 06:34:36
+Generated: 2026-03-30 14:44:32
 =========================================
 
 ---------------------------------------------------
@@ -135,12 +135,13 @@ Table: brand_social_links
 COLUMN DEFINITIONS:
 -------------------
   - brand_id (foreignId)
+  - facebook_url (string)
   - instagram_url (string)
   - tiktok_url (string)
-  - facebook_url (string)
+  - linkedin_url (string)
   - x_url (string)
   - youtube_url (string)
-  - linkedin_url (string)
+  - other_url (string)
 
 FOREIGN KEY CONSTRAINTS:
 -----------------------
@@ -217,12 +218,13 @@ Table: creator_social_links
 COLUMN DEFINITIONS:
 -------------------
   - creator_id (foreignId)
+  - facebook_url (string)
   - instagram_url (string)
   - tiktok_url (string)
   - youtube_url (string)
-  - facebook_url (string)
   - linkedin_url (string)
   - x_url (string)
+  - other_url (string)
 
 FOREIGN KEY CONSTRAINTS:
 -----------------------
@@ -394,6 +396,7 @@ Table: campaigns
 COLUMN DEFINITIONS:
 -------------------
   - brand_id (foreignId)
+  - created_by (foreignId)
   - title (string)
   - campaign_type (enum)
   - description (text)
@@ -410,6 +413,7 @@ COLUMN DEFINITIONS:
 FOREIGN KEY CONSTRAINTS:
 -----------------------
   - brand_id → brands
+  - created_by → users
 
 
 ---------------------------------------------------
@@ -564,6 +568,7 @@ Table: packages
 COLUMN DEFINITIONS:
 -------------------
   - creator_id (foreignId)
+  - created_by (foreignId)
   - platform (enum)
   - name (string)
   - description (text)
@@ -576,6 +581,7 @@ COLUMN DEFINITIONS:
 FOREIGN KEY CONSTRAINTS:
 -----------------------
   - creator_id → creators
+  - created_by → users
 
 
 ---------------------------------------------------
@@ -1260,5 +1266,5 @@ UNIQUE CONSTRAINTS:
 SUMMARY
 =========================================
 Total Migration Files: 60
-Generated on: 2026-03-30 06:34:36
+Generated on: 2026-03-30 14:44:32
 =========================================

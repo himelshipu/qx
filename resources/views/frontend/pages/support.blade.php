@@ -61,7 +61,7 @@
 			<div class="mb-16">
 				<div class="bg-pink-50 dark:bg-transparent border border-pink-100 dark:border-gray-200 rounded-xl p-6 text-center">
 					<p class="text-sm font-medium text-gray-800 dark:text-white">
-						Beware of scams, QX will never contact you on Telegram or WeeChat.
+						Beware of scams, ROCKIES will never contact you on Telegram or WeeChat.
 					</p>
 				</div>
 			</div>

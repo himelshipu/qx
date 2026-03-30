@@ -1,7 +1,7 @@
-# Complete QX Platform Fixes - Session Summary
+# Complete ROCKIES Platform Fixes - Session Summary
 
 ## Overview
-Fixed multiple critical issues across the QX influencer platform, including model relationships, UI/UX problems, and console errors.
+Fixed multiple critical issues across the ROCKIES influencer platform, including model relationships, UI/UX problems, and console errors.
 
 ---
 
@@ -85,9 +85,9 @@ Fixed multiple critical issues across the QX influencer platform, including mode
 
 ### Problem A: 403 Forbidden Storage Errors
 ```
-GET http://qx.local/storage/images/case-studies/travel-offseason.webp 403 (Forbidden)
-GET http://qx.local/storage/images/featured-collaborations/glownest-spring.webp 403 (Forbidden)
-GET http://qx.local/storage/videos/featured-collaborations/trailpeak-launch.mp4 403 (Forbidden)
+GET http://rockies.local/storage/images/case-studies/travel-offseason.webp 403 (Forbidden)
+GET http://rockies.local/storage/images/featured-collaborations/glownest-spring.webp 403 (Forbidden)
+GET http://rockies.local/storage/videos/featured-collaborations/trailpeak-launch.mp4 403 (Forbidden)
 ```
 
 **Root Cause:** Database entries referenced non-existent image/video files
