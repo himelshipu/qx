@@ -38,6 +38,7 @@ class User extends Authenticatable
         'job_title',
         'bio',
         'profile_image_path',
+        'cover_image_path',
         'is_active',
         'last_login_at'
     ];

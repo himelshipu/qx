@@ -33,6 +33,7 @@ class CreatorProfileController extends Controller
             ->firstOrFail();
 
         $packages = Package::query()
+            ->where('creator_id', $creator->id)
             ->where('is_active', true)
             ->orderBy('platform')
             ->orderBy('name')

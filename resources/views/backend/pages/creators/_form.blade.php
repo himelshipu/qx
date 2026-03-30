@@ -17,8 +17,8 @@
 	    return $isExternal ? $path : asset($path);
 	};
 
-	$initialProfilePreview = $resolvePreviewUrl($creator?->profile_image_path);
-	$initialCoverPreview = $resolvePreviewUrl($creator?->cover_image_path);
+	$initialProfilePreview = $resolvePreviewUrl($user?->profile_image_path);
+	$initialCoverPreview = $resolvePreviewUrl($user?->cover_image_path);
 @endphp
 
 <div x-data="creatorUploader({

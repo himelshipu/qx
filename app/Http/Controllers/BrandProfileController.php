@@ -246,8 +246,13 @@ class BrandProfileController extends Controller
                 'socialLinks:id,brand_id,instagram_url,tiktok_url,facebook_url,x_url,youtube_url,linkedin_url',
                 'campaigns' => fn($query) => $query->where('is_active', true)->where('status', '!=', 'draft')->orderBy('published_at', 'desc')
             ])
-            ->whereHas('user', fn($query) => $query->where('slug', $slug)->where('is_active', true))
+            ->whereHas('user', fn($query) => $query->where('slug', $slug))
             ->firstOrFail();
+
+        $isOwner = Auth::check() && Auth::user()->slug === $slug;
+        if (!$isOwner && !$brand->user?->is_active) {
+            abort(404);
+        }
 
         return view('frontend.pages.brand-profile', [
             'brand' => $brand,

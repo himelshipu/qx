@@ -102,7 +102,7 @@
 						<tbody class="divide-y divide-gray-100 dark:divide-gray-800">
 							@forelse ($creators as $creator)
 								@php
-									$previewPath = $creator->profile_image_path ?: $creator->cover_image_path;
+									$previewPath = $creator->user?->profile_image_path ?: $creator->user?->cover_image_path;
 									$previewUrl = null;
 
 									if (!empty($previewPath)) {

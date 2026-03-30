@@ -25,7 +25,7 @@ class EloquentCreatorRepository implements CreatorRepositoryInterface
     public function paginateForDashboard(string $search, string $status, int $perPage = 12): LengthAwarePaginator
     {
         return Creator::query()
-            ->with(['user:id,name,email,is_active', 'categories:id,name'])
+            ->with(['user:id,name,email,is_active,profile_image_path,cover_image_path', 'categories:id,name'])
             ->withCount(['categories', 'campaignApplications', 'orderItems'])
             ->when($search !== '', function ($query) use ($search) {
                 $query->where(function ($subQuery) use ($search) {

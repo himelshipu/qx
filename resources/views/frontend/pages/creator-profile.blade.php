@@ -29,7 +29,7 @@
 		    $gridImages->push(asset('default.webp'));
 		}
 
-		$profileImageUrl = image_url($creator->profile_image_path);
+		$profileImageUrl = image_url($creator->user?->profile_image_path);
 
 		$platformBadges = $creator->platformStats
 		    ->take(2)
@@ -106,75 +106,7 @@
 		    })
 		    ->values();
 
-		if ($packageCards->isEmpty()) {
-		    $packageCards = collect([
-		        [
-		            'key' => 'sample-instagram-photo-feed-post',
-		            'name' => '1 Instagram Photo Feed Post',
-		            'icon' => 'instagram',
-		            'category' => 'Instagram',
-		            'price' => '$200',
-		            'description' =>
-		                'This package includes 1 Instagram Photo Feed Post. The content will be created in collaboration with the brand, ensuring it aligns with creator style and audience.',
-		        ],
-		        [
-		            'key' => 'sample-instagram-reel-60-seconds',
-		            'name' => '1 Instagram Reel (60 Seconds)',
-		            'icon' => 'instagram',
-		            'category' => 'Instagram',
-		            'price' => '$200',
-		            'description' => 'This package includes 1 Instagram Reel (60 seconds).',
-		        ],
-		        [
-		            'key' => 'sample-instagram-story',
-		            'name' => '1 Instagram Story',
-		            'icon' => 'instagram',
-		            'category' => 'Instagram',
-		            'price' => '$200',
-		            'description' => 'This package includes 1 Instagram Story.',
-		        ],
-		        [
-		            'key' => 'sample-instagram-live-60-seconds',
-		            'name' => '1 Instagram Live (60 Seconds)',
-		            'icon' => 'instagram',
-		            'category' => 'Instagram',
-		            'price' => '$200',
-		            'description' => 'This package includes 1 Instagram Live (60 seconds).',
-		        ],
-		        [
-		            'key' => 'sample-tiktok-video-60-seconds',
-		            'name' => '1 TikTok Video (60 Seconds)',
-		            'icon' => 'tiktok',
-		            'category' => 'TikTok',
-		            'price' => '$200',
-		            'description' => 'This package includes 1 TikTok Video (60 seconds).',
-		        ],
-		        [
-		            'key' => 'sample-tiktok-story',
-		            'name' => '1 TikTok Story',
-		            'icon' => 'tiktok',
-		            'category' => 'TikTok',
-		            'price' => '$200',
-		            'description' => 'This package includes 1 TikTok Story.',
-		        ],
-		        [
-		            'key' => 'sample-ugc-product-video-60-seconds',
-		            'name' => '1 UGC Product Video (60 Seconds)',
-		            'icon' => 'camera',
-		            'category' => 'UGC',
-		            'price' => '$200',
-		            'description' => 'This package includes 1 UGC product video (60 seconds).',
-		        ],
-		        [
-		            'key' => 'sample-ugc-product-photo',
-		            'name' => '1 UGC Product Photo',
-		            'icon' => 'camera',
-		            'category' => 'UGC',
-		            'price' => '$200',
-		            'description' => 'This package includes 1 UGC product photo.',
-		        ],
-		    ]);
-		}
+		$packageTabs = collect(['All'])->merge($packageCards->pluck('category')->unique()->values())->values();
 
 		$initialPackageKey = $packageCards->first()['key'] ?? null;
 	@endphp
@@ -183,7 +115,8 @@
     openDropdown: false,
     selectedPackageKey: @js($initialPackageKey),
     activeTab: 'All',
-    packages: @js($packageCards),
+	packages: @js($packageCards),
+	packageTabs: @js($packageTabs),
 
     // Portfolio Lightbox
     portfolioItems: @js(
@@ -305,24 +238,24 @@
 			</div>
 
 			<!-- 2. PORTRAIT IMAGE GRID & MOBILE SLIDER -->
-			<div class="relative -mx-4 sm:-mx-6 lg:mx-0 mb-10 lg:mb-16" 
-				x-data="{ 
-					activeImage: 1, 
+			<div class="relative -mx-4 sm:-mx-6 lg:mx-0 mb-10 lg:mb-16"
+				x-data="{
+					activeImage: 1,
 					total: {{ count($gridImages) }},
 					handleScroll(e) {
 						const width = e.target.offsetWidth;
 						this.activeImage = Math.round(e.target.scrollLeft / width) + 1;
 					}
 				}">
-				
+
 				<!-- Container: Flex on mobile (for scroll), Grid on desktop -->
 				<div @scroll.debounce.100ms="handleScroll($event)"
 					class="flex lg:grid lg:grid-cols-12 overflow-x-auto lg:overflow-x-visible snap-x snap-mandatory no-scrollbar h-[450px] lg:h-[600px] gap-0 lg:gap-4">
-					
+
 					@foreach($gridImages as $index => $image)
 						<!-- Removed 'hidden' class. min-w-full handles the mobile layout -->
 						<div class="min-w-full lg:min-w-0 lg:col-span-4 snap-center relative overflow-hidden lg:rounded-xl border-gray-100 dark:border-gray-800">
-							<img src="{{ $image }}" 
+							<img src="{{ $image }}"
 								class="w-full h-full object-cover lg:hover:scale-105 transition-transform duration-700"
 								alt="Creator showcase image {{ $index + 1 }}">
 						</div>
@@ -441,7 +374,7 @@
 
 						<!-- Tabs -->
 						<div class="flex gap-8 border-b border-gray-100 dark:border-gray-800 mb-8">
-							<template x-for="tabName in ['All', 'Instagram', 'TikTok', 'UGC', 'Others']">
+							<template x-for="tabName in packageTabs" :key="tabName">
 								<button @click="activeTab = tabName"
 									:class="activeTab === tabName ? 'border-b-2 border-black dark:border-white text-black dark:text-white' :
 									    'text-gray-400 hover:text-gray-600'"
@@ -482,6 +415,11 @@
 												:class="selectedPackageKey === p.key ? 'bg-white dark:bg-black' : ''"></div>
 										</div>
 									</div>
+								</div>
+							</template>
+							<template x-if="filteredPackages.length === 0">
+								<div class="p-5 border border-gray-100 dark:border-gray-800 rounded-2xl bg-white dark:bg-transparent text-sm text-gray-500 dark:text-gray-400">
+									No active packages available for this creator.
 								</div>
 							</template>
 						</div>

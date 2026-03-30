@@ -20,8 +20,6 @@ class Creator extends Model
         'description',
         'audience',
         'brands_worked_with',
-        'profile_image_path',
-        'cover_image_path',
         'is_active',
         'is_featured',
         'featured_priority'
