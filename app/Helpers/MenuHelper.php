@@ -80,6 +80,14 @@ class MenuHelper
                             ['name' => 'FAQ Sections', 'route' => 'faqs.sections.index'],
                             ['name' => 'Create Section', 'route' => 'faqs.sections.create']
                         ]
+                    ],
+                    [
+                        'icon'     => 'knowledge-base',
+                        'name'     => 'Knowledge Base',
+                        'subItems' => [
+                            ['name' => 'All Articles', 'route' => 'knowledge-base.index'],
+                            ['name' => 'Create Article', 'route' => 'knowledge-base.create']
+                        ]
                     ]
                 ]
             ],
@@ -225,6 +233,8 @@ class MenuHelper
             'testimonials'    => '<svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8 14s1.5 2 4 2 4-2 4-2M9 9h.01M15 9h.01M3 21h18M5 3h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>',
 
             'faqs'            => '<svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 8v4m0 4v.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+
+            'knowledge-base'  => '<svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 6a2 2 0 012-2h5a3 3 0 013 3v11a3 3 0 00-3-3H6a2 2 0 01-2-2V6zm16 0a2 2 0 00-2-2h-5a3 3 0 00-3 3v11a3 3 0 013-3h5a2 2 0 002-2V6z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>',
 
             'campaign-new'    => '<svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 4v16m8-8H4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>',
 

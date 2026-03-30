@@ -77,7 +77,7 @@
 
 				<div class="grid grid-cols-1 md:grid-cols-2 gap-8">
 					<!-- Card 1: Knowledge Base -->
-					<a href="#"
+					<a href="{{ route('knowledge-base.index') }}"
 						class="group relative flex flex-col items-center text-center bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 p-14 rounded-xl shadow-sm hover:shadow-xl transition-all">
 						<div class="w-16 h-16 bg-pink-50 dark:bg-purple-400/10 rounded-full flex items-center justify-center mb-8"><svg
 								class="w-7 h-7 text-pink-500 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -55,6 +55,7 @@ class DatabaseSeeder extends Seeder
             \Database\Seeders\TestimonialSeeder::class,
             \Database\Seeders\FaqSectionSeeder::class,
             \Database\Seeders\FaqItemSeeder::class,
+            \Database\Seeders\KnowledgeBaseSeeder::class,
             \Database\Seeders\FeaturedCollaborationSeeder::class,
         ]);
     }

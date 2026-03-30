@@ -12,6 +12,7 @@ use App\Http\Controllers\Backend\CreatorPortfolioController;
 use App\Http\Controllers\Backend\DashboardController;
 use App\Http\Controllers\Backend\FaqController;
 use App\Http\Controllers\Backend\FeaturedCollaborationController;
+use App\Http\Controllers\Backend\KnowledgeBaseController;
 use App\Http\Controllers\Backend\ModeratorController;
 use App\Http\Controllers\Backend\OrderController;
 use App\Http\Controllers\Backend\PackageController;
@@ -24,6 +25,7 @@ use App\Http\Controllers\BrandProfileController;
 use App\Http\Controllers\Frontend\ContentLibraryController;
 use App\Http\Controllers\Frontend\HomeController;
 use App\Http\Controllers\Frontend\InfluencersController;
+use App\Http\Controllers\Frontend\KnowledgeBaseController as FrontendKnowledgeBaseController;
 use App\Http\Controllers\Frontend\StaticPagesController;
 use App\Http\Controllers\Frontend\SupportTicketController as FrontendSupportTicketController;
 use Illuminate\Support\Facades\Route;
@@ -49,6 +51,8 @@ Route::middleware(['web'])->group(function () {
     Route::get('/', [HomeController::class, 'index'])->name('home');
     Route::get('/campaigns', [HomeController::class, 'campaigns'])->name('campaigns');
     Route::get('/faq', [StaticPagesController::class, 'faq'])->name('faq');
+    Route::get('/knowledge-base', [FrontendKnowledgeBaseController::class, 'index'])->name('knowledge-base.index');
+    Route::get('/knowledge-base/{article:slug}', [FrontendKnowledgeBaseController::class, 'show'])->name('knowledge-base.show');
     Route::get('/support', [FrontendSupportTicketController::class, 'index'])->name('support');
     Route::post('/support-tickets', [FrontendSupportTicketController::class, 'store'])->name('support-tickets.store');
 
@@ -229,6 +233,15 @@ Route::prefix('dashboard')->name('dashboard.')->middleware(['auth', 'verified'])
     Route::put('/faqs/sections/{section}/items/{item}', [FaqController::class, 'updateItem'])->name('faqs.items.update');
     Route::delete('/faqs/sections/{section}/items/{item}', [FaqController::class, 'destroyItem'])->name('faqs.items.destroy');
     Route::post('/faqs/sections/{section}/items/{item}/toggle-status', [FaqController::class, 'toggleItemStatus'])->name('faqs.items.toggle-status');
+
+    // Knowledge Base routes
+    Route::get('/knowledge-base', [KnowledgeBaseController::class, 'index'])->name('knowledge-base.index');
+    Route::get('/knowledge-base/create', [KnowledgeBaseController::class, 'create'])->name('knowledge-base.create');
+    Route::post('/knowledge-base', [KnowledgeBaseController::class, 'store'])->name('knowledge-base.store');
+    Route::get('/knowledge-base/{article}/edit', [KnowledgeBaseController::class, 'edit'])->name('knowledge-base.edit');
+    Route::put('/knowledge-base/{article}', [KnowledgeBaseController::class, 'update'])->name('knowledge-base.update');
+    Route::delete('/knowledge-base/{article}', [KnowledgeBaseController::class, 'destroy'])->name('knowledge-base.destroy');
+    Route::post('/knowledge-base/{article}/toggle-status', [KnowledgeBaseController::class, 'toggleStatus'])->name('knowledge-base.toggle-status');
 
     // Brand Profile routes (dashboard)
     Route::get('/brand-profile/{slug}/edit', [BrandProfileController::class, 'edit'])->name('brand.profile.edit');
