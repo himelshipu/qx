@@ -32,12 +32,12 @@ class EloquentCreatorRepository implements CreatorRepositoryInterface
                     $subQuery
                         ->where('display_name', 'like', '%' . $search . '%')
                         ->orWhere('title_name', 'like', '%' . $search . '%')
-                        ->orWhere('city', 'like', '%' . $search . '%')
-                        ->orWhere('country', 'like', '%' . $search . '%')
                         ->orWhereHas('user', function ($userQuery) use ($search) {
                             $userQuery
                                 ->where('name', 'like', '%' . $search . '%')
-                                ->orWhere('email', 'like', '%' . $search . '%');
+                                ->orWhere('email', 'like', '%' . $search . '%')
+                                ->orWhere('city', 'like', '%' . $search . '%')
+                                ->orWhere('country', 'like', '%' . $search . '%');
                         })
                         ->orWhereHas('categories', function ($categoryQuery) use ($search) {
                             $categoryQuery->where('name', 'like', '%' . $search . '%');
@@ -176,6 +176,18 @@ class EloquentCreatorRepository implements CreatorRepositoryInterface
     {
         $creator->update([
             'is_active' => !$creator->is_active
+        ]);
+
+        return $creator->refresh();
+    }
+
+    /**
+     * Toggle creator featured status and return updated record.
+     */
+    public function toggleFeatured(Creator $creator): Creator
+    {
+        $creator->update([
+            'is_featured' => !$creator->is_featured
         ]);
 
         return $creator->refresh();

@@ -40,11 +40,9 @@
 			</div>
 
 			<div class="p-5">
-				<form method="GET" action="{{ route('dashboard.creators.index') }}"
+				<form id="creator-filters-form" method="GET" action="{{ route('dashboard.creators.index') }}"
 					class="mb-5 grid grid-cols-1 gap-3 md:grid-cols-5">
 					<div class="md:col-span-3">
-						<label for="q"
-							class="mb-1 block text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Search</label>
 						<div class="relative">
 							<span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
 								<x-icons.search class="h-4 w-4" />
@@ -55,8 +53,6 @@
 						</div>
 					</div>
 					<div>
-						<label for="status"
-							class="mb-1 block text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Status</label>
 						<select id="status" name="status"
 							class="h-10 w-full rounded-lg border border-gray-200 bg-transparent px-3 text-sm text-gray-900 focus:border-gray-400 focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-white">
 							<option value="all" {{ $status === 'all' ? 'selected' : '' }}>All</option>
@@ -66,18 +62,15 @@
 						</select>
 					</div>
 					<div class="flex items-end gap-2">
-						<button type="submit"
-							class="h-10 w-full rounded-lg bg-gray-900 px-3 text-sm font-medium text-white transition hover:bg-gray-800 dark:bg-gray-700 dark:hover:bg-gray-600">
-							Apply
-						</button>
 						<a href="{{ route('dashboard.creators.index') }}"
-							class="h-10 w-full rounded-lg border border-gray-200 px-3 text-center text-sm font-medium leading-10 text-gray-700 transition hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800">
+							class="h-10 w-full rounded-lg bg-gray-900 px-3 text-center text-sm font-medium leading-10 text-white transition hover:bg-gray-800 dark:bg-gray-700 dark:hover:bg-gray-600">
 							Reset
 						</a>
 					</div>
 				</form>
 
-				<div class="overflow-x-auto">
+				<div id="creators-results">
+					<div class="overflow-x-auto">
 					<table class="min-w-full divide-y divide-gray-200 dark:divide-gray-800">
 						<thead class="bg-gray-50 dark:bg-gray-800/50">
 							<tr>
@@ -152,17 +145,15 @@
 										</div>
 									</td>
 									<td class="px-4 py-3">
-										@if ($creator->is_featured)
-											<span
-												class="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-1 text-xs font-semibold text-amber-700 dark:bg-amber-900/30 dark:text-amber-300">
-												&#9733; Featured
-												@if ($creator->featured_priority)
-													<span class="ml-1 text-[10px] font-normal opacity-70">#{{ $creator->featured_priority }}</span>
-												@endif
-											</span>
-										@else
-											<span class="text-xs text-gray-400 dark:text-gray-600">&mdash;</span>
-										@endif
+										<div class="flex items-center gap-2">
+											<label class="relative inline-flex cursor-pointer items-center">
+												<input type="checkbox" {{ $creator->is_featured ? 'checked' : '' }} onchange="toggleCreatorFeatured({{ $creator->id }}, this)"
+													class="peer sr-only" />
+												<div class="h-6 w-11 rounded-full bg-gray-200 transition-colors duration-200 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-amber-400 peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:ring-4 peer-focus:ring-amber-300 dark:bg-gray-700 dark:peer-focus:ring-amber-800">
+												</div>
+											</label>
+											
+										</div>
 									</td>
 									<td class="px-4 py-3">
 										<div class="flex items-center">
@@ -214,19 +205,94 @@
 							@endforelse
 						</tbody>
 					</table>
-				</div>
-
-				@if ($creators->hasPages())
-					<div class="mt-5 border-t border-gray-200 pt-4 dark:border-gray-800">
-						{{ $creators->links() }}
 					</div>
-				@endif
+
+					@if ($creators->hasPages())
+						<div class="mt-5 border-t border-gray-200 pt-4 dark:border-gray-800">
+							{{ $creators->links() }}
+						</div>
+					@endif
+				</div>
 			</div>
 		</div>
 	</div>
 
 	@push('scripts')
 		<script>
+			document.addEventListener('DOMContentLoaded', function() {
+				const form = document.getElementById('creator-filters-form');
+				const resultsId = 'creators-results';
+				const searchInput = document.getElementById('q');
+				const statusSelect = document.getElementById('status');
+				let debounceTimer;
+				let activeRequestController = null;
+
+				if (!form) {
+					return;
+				}
+
+				const buildQueryString = () => {
+					const params = new URLSearchParams(new FormData(form));
+					if (!params.get('q')) params.delete('q');
+					if (!params.get('status') || params.get('status') === 'all') params.delete('status');
+					return params.toString();
+				};
+
+				const applyFilters = async (explicitUrl = null) => {
+					const query = buildQueryString();
+					const requestUrl = explicitUrl || `${form.action}${query ? `?${query}` : ''}`;
+
+					if (activeRequestController) {
+						activeRequestController.abort();
+					}
+
+					activeRequestController = new AbortController();
+
+					try {
+						const response = await fetch(requestUrl, {
+							headers: {
+								'X-Requested-With': 'XMLHttpRequest'
+							},
+							signal: activeRequestController.signal,
+						});
+
+						const html = await response.text();
+						const parser = new DOMParser();
+						const doc = parser.parseFromString(html, 'text/html');
+
+						const newResults = doc.getElementById(resultsId);
+						const currentResults = document.getElementById(resultsId);
+
+						if (newResults && currentResults) {
+							currentResults.outerHTML = newResults.outerHTML;
+							window.history.replaceState({}, '', requestUrl);
+						}
+					} catch (error) {
+						if (error.name !== 'AbortError') {
+							window.location.href = requestUrl;
+						}
+					}
+				};
+
+				searchInput?.addEventListener('input', function() {
+					clearTimeout(debounceTimer);
+					debounceTimer = setTimeout(() => applyFilters(), 350);
+				});
+
+				statusSelect?.addEventListener('change', () => applyFilters());
+
+				document.addEventListener('click', function(event) {
+					const link = event.target.closest(`#${resultsId} a[href*="page="]`);
+					if (!link) return;
+
+					event.preventDefault();
+					const href = link.getAttribute('href');
+					if (href) {
+						applyFilters(href);
+					}
+				});
+			});
+
 			function toggleCreatorStatus(creatorId, checkbox) {
 				if (checkbox?.disabled) {
 					return;
@@ -273,6 +339,67 @@
 					.catch((error) => {
 						console.error(error);
 						const message = error?.message || 'Unable to update creator status right now.';
+						if (window.toast) {
+							window.toast.error(message);
+						}
+
+						if (checkbox) {
+							checkbox.checked = !checkbox.checked;
+						}
+					})
+					.finally(() => {
+						if (checkbox) {
+							checkbox.disabled = false;
+						}
+					});
+			}
+
+			function toggleCreatorFeatured(creatorId, checkbox) {
+				if (checkbox?.disabled) {
+					return;
+				}
+
+				if (checkbox) {
+					checkbox.disabled = true;
+				}
+
+				const urlTemplate = @json(route('dashboard.creators.toggle-featured', ['creator' => '__ID__']));
+				const url = urlTemplate.replace('__ID__', String(creatorId));
+
+				fetch(url, {
+						method: 'POST',
+						headers: {
+							'X-CSRF-TOKEN': @json(csrf_token()),
+							'Accept': 'application/json',
+							'Content-Type': 'application/json'
+						}
+					})
+					.then((response) => {
+						if (!response.ok) {
+							throw new Error('Failed to update featured status');
+						}
+
+						return response.json();
+					})
+					.then((data) => {
+						if (data.success) {
+							if (checkbox && typeof data.is_featured !== 'undefined') {
+								checkbox.checked = Boolean(data.is_featured);
+							}
+
+							const message = data.message || 'Creator featured status updated successfully.';
+							if (window.toast) {
+								window.toast.success(message);
+							}
+
+							return;
+						}
+
+						throw new Error(data.message || 'Failed to update creator featured status.');
+					})
+					.catch((error) => {
+						console.error(error);
+						const message = error?.message || 'Unable to update creator featured status right now.';
 						if (window.toast) {
 							window.toast.error(message);
 						}

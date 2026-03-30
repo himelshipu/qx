@@ -241,6 +241,16 @@ final class CreatorService
     }
 
     /**
+     * Toggle featured status.
+     */
+    public function toggleFeatured(Creator $creator): bool
+    {
+        $updatedCreator = $this->creatorRepository->toggleFeatured($creator);
+
+        return $updatedCreator->is_featured;
+    }
+
+    /**
      * Persist uploaded file and return public path.
      */
     private function storeUploadedAsset(?UploadedFile $file, string $directory): ?string

@@ -41,11 +41,9 @@
 			</div>
 
 			<div class="p-5">
-				<form method="GET" action="{{ route('dashboard.brands.index') }}"
+				<form id="brand-filters-form" method="GET" action="{{ route('dashboard.brands.index') }}"
 					class="mb-5 grid grid-cols-1 gap-3 md:grid-cols-5">
 					<div class="md:col-span-3">
-						<label for="q"
-							class="mb-1 block text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Search</label>
 						<div class="relative">
 							<span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
 								<x-icons.search class="h-4 w-4" />
@@ -56,8 +54,6 @@
 						</div>
 					</div>
 					<div>
-						<label for="status"
-							class="mb-1 block text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Status</label>
 						<select id="status" name="status"
 							class="h-10 w-full rounded-lg border border-gray-200 bg-transparent px-3 text-sm text-gray-900 focus:border-gray-400 focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-white">
 							<option value="all" {{ $status === 'all' ? 'selected' : '' }}>All</option>
@@ -66,18 +62,15 @@
 						</select>
 					</div>
 					<div class="flex items-end gap-2">
-						<button type="submit"
-							class="h-10 w-full rounded-lg bg-gray-900 px-3 text-sm font-medium text-white transition hover:bg-gray-800 dark:bg-gray-700 dark:hover:bg-gray-600">
-							Apply
-						</button>
 						<a href="{{ route('dashboard.brands.index') }}"
-							class="h-10 w-full rounded-lg border border-gray-200 px-3 text-center text-sm font-medium leading-10 text-gray-700 transition hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800">
+							class="h-10 w-full rounded-lg bg-gray-900 px-3 text-center text-sm font-medium leading-10 text-white transition hover:bg-gray-800 dark:bg-gray-700 dark:hover:bg-gray-600">
 							Reset
 						</a>
 					</div>
 				</form>
 
-				<div class="overflow-x-auto">
+				<div id="brands-results">
+					<div class="overflow-x-auto">
 					<table class="min-w-full divide-y divide-gray-200 dark:divide-gray-800">
 						<thead class="bg-gray-50 dark:bg-gray-800/50">
 							<tr>
@@ -203,19 +196,94 @@
 							@endforelse
 						</tbody>
 					</table>
-				</div>
-
-				@if ($brands->hasPages())
-					<div class="mt-5 border-t border-gray-200 pt-4 dark:border-gray-800">
-						{{ $brands->links() }}
 					</div>
-				@endif
+
+					@if ($brands->hasPages())
+						<div class="mt-5 border-t border-gray-200 pt-4 dark:border-gray-800">
+							{{ $brands->links() }}
+						</div>
+					@endif
+				</div>
 			</div>
 		</div>
 	</div>
 
 	@push('scripts')
 		<script>
+			document.addEventListener('DOMContentLoaded', function() {
+				const form = document.getElementById('brand-filters-form');
+				const resultsId = 'brands-results';
+				const searchInput = document.getElementById('q');
+				const statusSelect = document.getElementById('status');
+				let debounceTimer;
+				let activeRequestController = null;
+
+				if (!form) {
+					return;
+				}
+
+				const buildQueryString = () => {
+					const params = new URLSearchParams(new FormData(form));
+					if (!params.get('q')) params.delete('q');
+					if (!params.get('status') || params.get('status') === 'all') params.delete('status');
+					return params.toString();
+				};
+
+				const applyFilters = async (explicitUrl = null) => {
+					const query = buildQueryString();
+					const requestUrl = explicitUrl || `${form.action}${query ? `?${query}` : ''}`;
+
+					if (activeRequestController) {
+						activeRequestController.abort();
+					}
+
+					activeRequestController = new AbortController();
+
+					try {
+						const response = await fetch(requestUrl, {
+							headers: {
+								'X-Requested-With': 'XMLHttpRequest'
+							},
+							signal: activeRequestController.signal,
+						});
+
+						const html = await response.text();
+						const parser = new DOMParser();
+						const doc = parser.parseFromString(html, 'text/html');
+
+						const newResults = doc.getElementById(resultsId);
+						const currentResults = document.getElementById(resultsId);
+
+						if (newResults && currentResults) {
+							currentResults.outerHTML = newResults.outerHTML;
+							window.history.replaceState({}, '', requestUrl);
+						}
+					} catch (error) {
+						if (error.name !== 'AbortError') {
+							window.location.href = requestUrl;
+						}
+					}
+				};
+
+				searchInput?.addEventListener('input', function() {
+					clearTimeout(debounceTimer);
+					debounceTimer = setTimeout(() => applyFilters(), 350);
+				});
+
+				statusSelect?.addEventListener('change', () => applyFilters());
+
+				document.addEventListener('click', function(event) {
+					const link = event.target.closest(`#${resultsId} a[href*="page="]`);
+					if (!link) return;
+
+					event.preventDefault();
+					const href = link.getAttribute('href');
+					if (href) {
+						applyFilters(href);
+					}
+				});
+			});
+
 			function toggleBrandStatus(brandId, checkbox) {
 				if (checkbox?.disabled) {
 					return;

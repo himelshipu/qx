@@ -104,6 +104,7 @@ Route::prefix('dashboard')->name('dashboard.')->middleware(['auth', 'verified'])
     Route::put('/creators/{creator}', [CreatorController::class, 'update'])->name('creators.update');
     Route::delete('/creators/{creator}', [CreatorController::class, 'destroy'])->name('creators.destroy');
     Route::post('/creators/{creator}/toggle-status', [CreatorController::class, 'toggleStatus'])->name('creators.toggle-status');
+    Route::post('/creators/{creator}/toggle-featured', [CreatorController::class, 'toggleFeatured'])->name('creators.toggle-featured');
 
     // Creator Portfolio Management
     Route::get('/creators/{creator}/portfolio', [CreatorPortfolioController::class, 'index'])->name('creators.portfolio.index');

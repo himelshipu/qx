@@ -29,13 +29,12 @@ class EloquentBrandRepository implements BrandRepositoryInterface
                     $subQuery
                         ->where('brand_name', 'like', '%' . $search . '%')
                         ->orWhere('industry', 'like', '%' . $search . '%')
-                        ->orWhere('email', 'like', '%' . $search . '%')
-                        ->orWhere('city', 'like', '%' . $search . '%')
-                        ->orWhere('country', 'like', '%' . $search . '%')
                         ->orWhereHas('user', function ($userQuery) use ($search) {
                             $userQuery
                                 ->where('name', 'like', '%' . $search . '%')
-                                ->orWhere('email', 'like', '%' . $search . '%');
+                                ->orWhere('email', 'like', '%' . $search . '%')
+                                ->orWhere('city', 'like', '%' . $search . '%')
+                                ->orWhere('country', 'like', '%' . $search . '%');
                         });
                 });
             })

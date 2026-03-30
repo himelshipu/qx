@@ -89,4 +89,9 @@ interface CreatorRepositoryInterface
      * Toggle creator status and return updated record.
      */
     public function toggleStatus(Creator $creator): Creator;
+
+    /**
+     * Toggle creator featured status and return updated record.
+     */
+    public function toggleFeatured(Creator $creator): Creator;
 }

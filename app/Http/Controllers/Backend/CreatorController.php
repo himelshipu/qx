@@ -120,4 +120,18 @@ class CreatorController extends Controller
             'is_active' => $isActive
         ]);
     }
+
+    /**
+     * Toggle creator featured status.
+     */
+    public function toggleFeatured(Creator $creator): JsonResponse
+    {
+        $isFeatured = $this->creatorService->toggleFeatured($creator);
+
+        return response()->json([
+            'success'     => true,
+            'message'     => 'Creator featured status updated successfully.',
+            'is_featured' => $isFeatured
+        ]);
+    }
 }
