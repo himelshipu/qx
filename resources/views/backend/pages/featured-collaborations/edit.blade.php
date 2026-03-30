@@ -2,7 +2,7 @@
 
 @section('content')
 	<div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 p-6">
-		<div class="max-w-4xl mx-auto">
+		<div class=" mx-auto">
 			<!-- Header -->
 			<div class="mb-8">
 				<a href="{{ route('dashboard.featured-collaborations.index') }}"
@@ -22,6 +22,12 @@
 					enctype="multipart/form-data" class="p-8">
 					@csrf
 					@method('PATCH')
+
+					@error('media_upload')
+						<div class="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-900/40 dark:bg-red-900/20 dark:text-red-300">
+							{{ $message }}
+						</div>
+					@enderror
 
 					<!-- Brand Name -->
 					<div class="mb-6">
@@ -61,31 +67,45 @@
 							Upload Image
 						</label>
 
-						@if ($featuredCollaboration->image_path)
-							<div class="mb-4 relative inline-block">
-								<img src="{{ $featuredCollaboration->getImageUrl() }}" alt="{{ $featuredCollaboration->brand_name }}"
-									class="h-32 w-32 object-cover rounded-lg shadow-md">
-								<p class="text-xs text-gray-500 dark:text-gray-400 mt-2">Current image</p>
+						@if (filled($featuredCollaboration->image_path) && $featuredCollaboration->image_path !== '0')
+							<div class="mb-4 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+								<div class="flex items-center justify-between">
+									<div class="flex items-center gap-3">
+										<img src="{{ image_url($featuredCollaboration->image_path) }}" alt="{{ $featuredCollaboration->brand_name }}"
+											class="h-16 w-16 object-cover rounded-lg shadow-md">
+										<div>
+											<p class="text-xs font-medium text-green-700 dark:text-green-400">✓ Current image</p>
+											<p class="text-xs text-gray-600 dark:text-gray-400">{{ basename($featuredCollaboration->image_path) }}</p>
+											<p class="text-xs text-gray-500 dark:text-gray-500">Updated: {{ $featuredCollaboration->updated_at->format('M d, Y H:i') }}</p>
+										</div>
+									</div>
+									<button type="button" onclick="if(confirm('Delete current image?')) { document.getElementById('deleteImage').value = '1'; this.closest('.mb-4').style.display='none'; }"
+										class="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 text-xs font-semibold px-3 py-1 hover:bg-red-50 dark:hover:bg-red-900/20 rounded">
+										Remove
+									</button>
+								</div>
 							</div>
+							<input type="hidden" id="deleteImage" name="delete_image" value="0">
 						@endif
 
 						<div class="mt-2">
 							<div
 								class="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl px-6 py-8 text-center hover:border-indigo-500 dark:hover:border-indigo-400 transition-colors duration-200"
-								x-data="{ dragover: false }" @dragover="dragover = true" @dragleave="dragover = false"
-								@drop="dragover = false; $refs.imageInput.click()" :class="dragover && 'bg-indigo-50 dark:bg-indigo-900/10'">
+								x-data="{ dragover: false, fileName: '' }" @dragover.prevent="dragover = true" @dragleave.prevent="dragover = false"
+								@drop.prevent="dragover = false; $refs.imageInput.click()" :class="dragover && 'bg-indigo-50 dark:bg-indigo-900/10 border-indigo-500'">
 								<svg class="w-12 h-12 text-gray-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
 										d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z">
 									</path>
 								</svg>
-								<p class="text-gray-600 dark:text-gray-400 text-sm mb-1">
-									Drag and drop or <button type="button"
-										onclick="this.closest('div').parentElement.querySelector('input[type=file]').click()"
+								<p class="text-gray-600 dark:text-gray-400 text-sm mb-1" x-show="!fileName">
+									Drag and drop or <button type="button" onclick="document.getElementById('image_path').click()"
 										class="text-indigo-600 dark:text-indigo-400 font-semibold hover:underline">click to select</button>
 								</p>
-								<p class="text-gray-500 dark:text-gray-500 text-xs">JPEG, PNG, WebP up to 5MB (Leave empty to keep current)</p>
-								<input type="file" id="image_path" name="image_path" class="hidden" accept="image/*" x-ref="imageInput">
+								<p class="text-indigo-600 dark:text-indigo-400 text-sm font-medium" x-show="fileName" x-text="'✓ Selected: ' + fileName"></p>
+								<p class="text-gray-500 dark:text-gray-500 text-xs">JPEG, PNG, WebP up to 5MB</p>
+								<input type="file" id="image_path" name="image_path" class="hidden" accept="image/jpeg,image/png,image/webp" x-ref="imageInput"
+									@change="fileName = $event.target.files[0]?.name || ''">
 							</div>
 						</div>
 						@error('image_path')
@@ -100,29 +120,41 @@
 						</label>
 
 						@if ($featuredCollaboration->video_path)
-							<div class="mb-4">
-								<p class="text-xs text-gray-500 dark:text-gray-400">Current video stored</p>
+							<div class="mb-4 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+								<div class="flex items-center justify-between">
+									<div>
+										<p class="text-xs font-medium text-green-700 dark:text-green-400">✓ Current video</p>
+										<p class="text-xs text-gray-600 dark:text-gray-400">{{ basename($featuredCollaboration->video_path) }}</p>
+										<p class="text-xs text-gray-500 dark:text-gray-500">Updated: {{ $featuredCollaboration->updated_at->format('M d, Y H:i') }}</p>
+									</div>
+									<button type="button" onclick="if(confirm('Delete current video?')) { document.getElementById('deleteVideo').value = '1'; this.closest('.mb-4').style.display='none'; }"
+										class="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 text-xs font-semibold px-3 py-1 hover:bg-red-50 dark:hover:bg-red-900/20 rounded">
+										Remove
+									</button>
+								</div>
 							</div>
+							<input type="hidden" id="deleteVideo" name="delete_video" value="0">
 						@endif
 
 						<div class="mt-2">
 							<div
 								class="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl px-6 py-8 text-center hover:border-indigo-500 dark:hover:border-indigo-400 transition-colors duration-200"
-								x-data="{ dragover: false }" @dragover="dragover = true" @dragleave="dragover = false"
-								@drop="dragover = false; $refs.videoInput.click()" :class="dragover && 'bg-indigo-50 dark:bg-indigo-900/10'">
+								x-data="{ dragover: false, fileName: '' }" @dragover.prevent="dragover = true" @dragleave.prevent="dragover = false"
+								@drop.prevent="dragover = false; $refs.videoInput.click()" :class="dragover && 'bg-indigo-50 dark:bg-indigo-900/10 border-indigo-500'">
 								<svg class="w-12 h-12 text-gray-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
 										d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path>
 									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z">
 									</path>
 								</svg>
-								<p class="text-gray-600 dark:text-gray-400 text-sm mb-1">
-									Drag and drop or <button type="button"
-										onclick="this.closest('div').parentElement.querySelector('input[type=file]').click()"
+								<p class="text-gray-600 dark:text-gray-400 text-sm mb-1" x-show="!fileName">
+									Drag and drop or <button type="button" onclick="document.getElementById('video_path').click()"
 										class="text-indigo-600 dark:text-indigo-400 font-semibold hover:underline">click to select</button>
 								</p>
-								<p class="text-gray-500 dark:text-gray-500 text-xs">MP4, WebM, MOV up to 100MB (Leave empty to keep current)</p>
-								<input type="file" id="video_path" name="video_path" class="hidden" accept="video/*" x-ref="videoInput">
+								<p class="text-indigo-600 dark:text-indigo-400 text-sm font-medium" x-show="fileName" x-text="'✓ Selected: ' + fileName"></p>
+								<p class="text-gray-500 dark:text-gray-500 text-xs">MP4, WebM, MOV up to 100MB</p>
+								<input type="file" id="video_path" name="video_path" class="hidden" accept="video/mp4,video/webm,video/quicktime" x-ref="videoInput"
+									@change="fileName = $event.target.files[0]?.name || ''">
 							</div>
 						</div>
 						@error('video_path')
@@ -131,14 +163,15 @@
 					</div>
 
 					<!-- Thumbnail Upload -->
-					<div class="mb-6">
+					<div id="thumbnailSection" class="mb-6 hidden">
 						<label for="thumbnail_path" class="block text-sm font-semibold text-gray-900 dark:text-white mb-2">
 							Thumbnail (Optional)
 						</label>
+						<p class="text-xs text-gray-500 dark:text-gray-400 mb-2">Thumbnail is used only for video assets.</p>
 
-						@if ($featuredCollaboration->thumbnail_path)
+						@if (filled($featuredCollaboration->thumbnail_path) && $featuredCollaboration->thumbnail_path !== '0')
 							<div class="mb-4 relative inline-block">
-								<img src="{{ $featuredCollaboration->getThumbnailUrl() }}" alt="Thumbnail"
+								<img src="{{ image_url($featuredCollaboration->thumbnail_path) }}" alt="Thumbnail"
 									class="h-24 w-24 object-cover rounded-lg shadow-md">
 								<p class="text-xs text-gray-500 dark:text-gray-400 mt-2">Current thumbnail</p>
 							</div>
@@ -157,7 +190,7 @@
 								</svg>
 								<p class="text-gray-600 dark:text-gray-400 text-sm mb-1">
 									Drag and drop or <button type="button"
-										onclick="this.closest('div').parentElement.querySelector('input[type=file]').click()"
+										onclick="document.getElementById('thumbnail_path').click()"
 										class="text-indigo-600 dark:text-indigo-400 font-semibold hover:underline">click to select</button>
 								</p>
 								<p class="text-gray-500 dark:text-gray-500 text-xs">JPEG, PNG, WebP up to 2MB</p>
@@ -217,6 +250,12 @@
 			const assetType = document.getElementById('asset_type').value;
 			document.getElementById('imageSection').classList.toggle('hidden', assetType !== 'image');
 			document.getElementById('videoSection').classList.toggle('hidden', assetType !== 'video');
+			document.getElementById('thumbnailSection').classList.toggle('hidden', assetType !== 'video');
+
+			const thumbnailInput = document.getElementById('thumbnail_path');
+			if (thumbnailInput) {
+				thumbnailInput.disabled = assetType !== 'video';
+			}
 		}
 
 		// Initialize on page load

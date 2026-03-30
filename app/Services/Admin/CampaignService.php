@@ -55,7 +55,7 @@ final class CampaignService
     /**
      * @var array<int, string>
      */
-    private const TYPE_VALUES = ['instagram', 'tiktok', 'ugc', 'youtube', 'twitch', 'other'];
+    private const TYPE_VALUES = ['facebook', 'instagram', 'tiktok', 'linkedin', 'x', 'youtube', 'ugc', 'other'];
 
     /**
      * @var array<int, string>

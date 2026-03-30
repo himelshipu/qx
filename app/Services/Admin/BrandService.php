@@ -88,8 +88,7 @@ final class BrandService
                 'postal_code'        => $this->nullableString($validated['postal_code'] ?? null),
                 'profile_image_path' => $this->storeUploadedAsset($profileImageFile, 'brands/profile-images'),
                 'cover_image_path'   => $this->storeUploadedAsset($coverImageFile, 'brands/cover-images'),
-                'is_verified'        => (bool) ($validated['is_verified'] ?? false),
-                'is_active'          => $isActive
+                'is_verified'        => (bool) ($validated['is_verified'] ?? false)
             ]);
         });
     }
@@ -147,8 +146,7 @@ final class BrandService
                 'postal_code'        => $this->nullableString($validated['postal_code'] ?? null),
                 'profile_image_path' => $profileImagePath,
                 'cover_image_path'   => $coverImagePath,
-                'is_verified'        => (bool) ($validated['is_verified'] ?? false),
-                'is_active'          => $isActive
+                'is_verified'        => (bool) ($validated['is_verified'] ?? false)
             ]);
         });
     }
@@ -193,13 +191,7 @@ final class BrandService
     {
         $updatedBrand = $this->brandRepository->toggleStatus($brand);
 
-        if ($updatedBrand->user) {
-            $this->brandRepository->updateUser($updatedBrand->user, [
-                'is_active' => $updatedBrand->is_active
-            ]);
-        }
-
-        return $updatedBrand->is_active;
+        return (bool) ($updatedBrand->user?->is_active ?? false);
     }
 
     /**

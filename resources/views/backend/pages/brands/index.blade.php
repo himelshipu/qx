@@ -100,6 +100,7 @@
 						<tbody class="divide-y divide-gray-100 dark:divide-gray-800">
 							@forelse ($brands as $brand)
 								@php
+									$isActive = (bool) ($brand->user?->is_active ?? false);
 									$previewPath = $brand->profile_image_path ?: $brand->cover_image_path;
 									$previewUrl = null;
 
@@ -140,12 +141,29 @@
 												{{ $brand->reviews_count }}</span>
 										</div>
 									</td>
+
 									<td class="px-4 py-3">
-										<button type="button" onclick="toggleBrandStatus({{ $brand->id }})"
-											class="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold transition {{ $brand->is_active ? 'bg-green-100 text-green-700 hover:bg-green-200 dark:bg-green-900/30 dark:text-green-300' : 'bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-300' }}">
-											{{ $brand->is_active ? 'Active' : 'Inactive' }}
-										</button>
+										<div class="flex items-center">
+											<label class="relative inline-flex items-center cursor-pointer">
+												<input type="checkbox" 
+													{{ $isActive ? 'checked' : '' }} 
+													onchange="toggleBrandStatus({{ $brand->id }}, this)"
+													class="sr-only peer" />
+												
+												<div class="w-11 h-6 bg-gray-200 rounded-full peer 
+													dark:bg-gray-700 
+													peer-checked:bg-green-400 
+													peer-focus:ring-4 peer-focus:ring-green-300 dark:peer-focus:ring-green-800
+													after:content-[''] after:absolute after:top-[2px] after:left-[2px] 
+													after:bg-white after:border-gray-300 after:border after:rounded-full 
+													after:h-5 after:w-5 after:transition-all 
+													peer-checked:after:translate-x-full peer-checked:after:border-white
+													transition-colors duration-200">
+												</div>
+											</label>
+										</div>
 									</td>
+									
 									<td class="px-4 py-3 text-sm text-gray-600 dark:text-gray-300">{{ $brand->updated_at?->format('M d, Y') }}</td>
 									<td class="px-4 py-3">
 										<div class="flex items-center justify-end gap-2">
@@ -198,7 +216,15 @@
 
 	@push('scripts')
 		<script>
-			function toggleBrandStatus(brandId) {
+			function toggleBrandStatus(brandId, checkbox) {
+				if (checkbox?.disabled) {
+					return;
+				}
+
+				if (checkbox) {
+					checkbox.disabled = true;
+				}
+
 				const urlTemplate = @json(route('dashboard.brands.toggle-status', ['brand' => '__ID__']));
 				const url = urlTemplate.replace('__ID__', String(brandId));
 
@@ -219,14 +245,15 @@
 					})
 					.then((data) => {
 						if (data.success) {
+							if (checkbox && typeof data.is_active !== 'undefined') {
+								checkbox.checked = Boolean(data.is_active);
+							}
+
 							const message = data.message || 'Brand status updated successfully.';
 							if (window.toast) {
 								window.toast.success(message);
 							}
 
-							setTimeout(() => {
-								window.location.reload();
-							}, 450);
 							return;
 						}
 
@@ -237,6 +264,16 @@
 						const message = error?.message || 'Unable to update brand status right now.';
 						if (window.toast) {
 							window.toast.error(message);
+						}
+						
+						// Revert checkbox state on error
+						if (checkbox) {
+							checkbox.checked = !checkbox.checked;
+						}
+					})
+					.finally(() => {
+						if (checkbox) {
+							checkbox.disabled = false;
 						}
 					});
 			}

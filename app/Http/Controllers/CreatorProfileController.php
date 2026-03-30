@@ -6,6 +6,7 @@ use App\Models\Creator;
 use App\Models\Package;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 
 class CreatorProfileController extends Controller
@@ -32,6 +33,7 @@ class CreatorProfileController extends Controller
             ->firstOrFail();
 
         $packages = Package::query()
+            ->where('creator_id', $creator->id)
             ->where('is_active', true)
             ->orderBy('platform')
             ->orderBy('name')
@@ -82,61 +84,73 @@ class CreatorProfileController extends Controller
 
         $validated = $request->validate([
             'display_name'  => 'nullable|string|max:255',
+            'title_name'    => 'nullable|string|max:255',
             'description'   => 'nullable|string|max:1000',
-            'location'      => 'nullable|string|max:255',
+            'audience'      => 'nullable|string',
+            'brands_worked_with' => 'nullable|string',
             'city'          => 'nullable|string|max:255',
             'country'       => 'nullable|string|max:255',
             'postal_code'   => 'nullable|string|max:20',
+            'bio'           => 'nullable|string|max:500',
+            'phone'         => 'nullable|string|max:20',
             'website'       => 'nullable|url|max:255',
             'instagram'     => 'nullable|url|max:255',
             'tiktok'        => 'nullable|url|max:255',
             'facebook'      => 'nullable|url|max:255',
-            'twitter'       => 'nullable|url|max:255',
+            'x'             => 'nullable|url|max:255',
             'youtube'       => 'nullable|url|max:255',
+            'linkedin'      => 'nullable|url|max:255',
             'profile_image' => 'nullable|image|mimes:jpeg,png,webp|max:2048',
-            'cover_image'   => 'nullable|image|mimes:jpeg,png,webp|max:5120'
         ]);
 
-        // Map validated fields to creator model where appropriate
-        if (array_key_exists('display_name', $validated)) {
-            $creator->display_name = $validated['display_name'];
-        }
-        $creator->description = $validated['description'] ?? $creator->description ?? null;
-        $creator->location    = $validated['location'] ?? $creator->location ?? null;
-        $creator->city        = $validated['city'] ?? $creator->city ?? null;
-        $creator->country     = $validated['country'] ?? $creator->country ?? null;
-        $creator->postal_code = $validated['postal_code'] ?? $creator->postal_code ?? null;
-
-        $creator->social_links = [
-            'website'   => $validated['website'] ?? null,
-            'instagram' => $validated['instagram'] ?? null,
-            'tiktok'    => $validated['tiktok'] ?? null,
-            'youtube'   => $validated['youtube'] ?? null,
-            'facebook'  => $validated['facebook'] ?? null,
-            'twitter'   => $validated['twitter'] ?? null
-        ];
-
-        if ($request->hasFile('profile_image')) {
-            if ($creator->profile_image_path && Storage::disk('public')->exists($creator->profile_image_path)) {
-                Storage::disk('public')->delete($creator->profile_image_path);
-            }
-            $path                        = $request->file('profile_image')->store('creators/profile', 'public');
-            $creator->profile_image_path = $path;
-        }
-
-        if ($request->hasFile('cover_image')) {
-            if ($creator->cover_image_path && Storage::disk('public')->exists($creator->cover_image_path)) {
-                Storage::disk('public')->delete($creator->cover_image_path);
-            }
-            $path                      = $request->file('cover_image')->store('creators/cover', 'public');
-            $creator->cover_image_path = $path;
-        }
-
+        // Update creator fields
+        $creator->display_name = $validated['display_name'] ?? $creator->display_name;
+        $creator->title_name = $validated['title_name'] ?? $creator->title_name;
+        $creator->description = $validated['description'] ?? $creator->description;
+        $creator->audience = $validated['audience'] ?? $creator->audience;
+        $creator->brands_worked_with = $validated['brands_worked_with'] ?? $creator->brands_worked_with;
         $creator->save();
+
+        // Update user fields
+        $user->city = $validated['city'] ?? $user->city;
+        $user->country = $validated['country'] ?? $user->country;
+        $user->postal_code = $validated['postal_code'] ?? $user->postal_code;
+        $user->bio = $validated['bio'] ?? $user->bio;
+        $user->phone = $validated['phone'] ?? $user->phone;
+        $user->save();
+
+        // Handle social links via creator_social_links table
+        if (Schema::hasTable('creator_social_links')) {
+            $creator->socialLinks()->updateOrCreate(
+                ['creator_id' => $creator->id],
+                [
+                    'instagram_url' => $validated['instagram'] ?? null,
+                    'tiktok_url' => $validated['tiktok'] ?? null,
+                    'facebook_url' => $validated['facebook'] ?? null,
+                    'x_url' => $validated['x'] ?? null,
+                    'youtube_url' => $validated['youtube'] ?? null,
+                    'linkedin_url' => $validated['linkedin'] ?? null,
+                ]
+            );
+        }
+
+        // Handle profile image upload (on user model)
+        if ($request->hasFile('profile_image')) {
+            // Delete old profile image if exists
+            if ($user->profile_image_path && Storage::disk('public')->exists($user->profile_image_path)) {
+                Storage::disk('public')->delete($user->profile_image_path);
+            }
+            $path = $request->file('profile_image')->store('users/profile', 'public');
+            $user->profile_image_path = $path;
+            $user->save();
+        }
 
         return redirect()->route('dashboard.creator.profile.edit')->with('status', 'profile-updated');
     }
 
+    /**
+     * Delete creator profile image
+     */
     public function deleteProfileImage(Request $request)
     {
         $user    = Auth::user();
@@ -146,15 +160,18 @@ class CreatorProfileController extends Controller
             return response()->json(['error' => 'Creator not found'], 404);
         }
 
-        if ($creator->profile_image_path && Storage::disk('public')->exists($creator->profile_image_path)) {
-            Storage::disk('public')->delete($creator->profile_image_path);
+        if ($user->profile_image_path && Storage::disk('public')->exists($user->profile_image_path)) {
+            Storage::disk('public')->delete($user->profile_image_path);
         }
 
-        $creator->update(['profile_image_path' => null]);
+        $user->update(['profile_image_path' => null]);
 
         return redirect()->route('dashboard.creator.profile.edit')->with('status', 'profile-image-deleted');
     }
 
+    /**
+     * Delete creator cover image (kept for backward compatibility)
+     */
     public function deleteCoverImage(Request $request)
     {
         $user    = Auth::user();
@@ -164,13 +181,7 @@ class CreatorProfileController extends Controller
             return response()->json(['error' => 'Creator not found'], 404);
         }
 
-        if ($creator->cover_image_path && Storage::disk('public')->exists($creator->cover_image_path)) {
-            Storage::disk('public')->delete($creator->cover_image_path);
-        }
-
-        $creator->update(['cover_image_path' => null]);
-
-        return redirect()->route('dashboard.creator.profile.edit')->with('status', 'cover-image-deleted');
+        return redirect()->route('dashboard.creator.profile.edit')->with('status', 'cover-image-message');
     }
 
     public function toggleStatus(Request $request)

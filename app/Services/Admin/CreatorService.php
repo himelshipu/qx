@@ -56,7 +56,7 @@ final class CreatorService
      */
     public function getDetailPayload(Creator $creator): array
     {
-        $creator->load(['user:id,name,email,phone,is_active,created_at', 'categories:id,name'])
+        $creator->load(['user:id,name,email,phone,is_active,created_at,profile_image_path,cover_image_path', 'categories:id,name'])
             ->loadCount(['campaignApplications', 'orderItems', 'cartItems', 'conversations']);
 
         return [
@@ -87,6 +87,8 @@ final class CreatorService
                 'city'              => $this->nullableString($validated['city'] ?? null),
                 'country'           => $this->nullableString($validated['country'] ?? null),
                 'postal_code'       => $this->nullableString($validated['postal_code'] ?? null),
+                'profile_image_path' => $this->storeUploadedAsset($profileImageFile, 'users/profile'),
+                'cover_image_path'   => $this->storeUploadedAsset($coverImageFile, 'users/cover'),
                 'user_type'         => 'creator',
                 'is_active'         => $isActive,
                 'email_verified_at' => now()
@@ -103,8 +105,6 @@ final class CreatorService
                 'country'            => $this->nullableString($validated['country'] ?? null),
                 'postal_code'        => $this->nullableString($validated['postal_code'] ?? null),
                 'gender'             => $validated['gender'] ?? null,
-                'profile_image_path' => $this->storeUploadedAsset($profileImageFile, 'creators/profile-images'),
-                'cover_image_path'   => $this->storeUploadedAsset($coverImageFile, 'creators/cover-images'),
                 'is_active'          => $isActive,
                 'is_featured'        => $isFeatured,
                 'featured_priority'  => $isFeatured ? $featuredPriority : null
@@ -131,16 +131,16 @@ final class CreatorService
         ?UploadedFile $coverImageFile
     ): Creator {
         return DB::transaction(function () use ($creator, $validated, $isActive, $isFeatured, $featuredPriority, $profileImageFile, $coverImageFile): Creator {
-            $profileImagePath = $creator->profile_image_path;
+            $profileImagePath = $creator->user?->profile_image_path;
             if ($profileImageFile) {
-                $this->deleteStoredAsset($creator->profile_image_path);
-                $profileImagePath = $this->storeUploadedAsset($profileImageFile, 'creators/profile-images');
+                $this->deleteStoredAsset($creator->user?->profile_image_path);
+                $profileImagePath = $this->storeUploadedAsset($profileImageFile, 'users/profile');
             }
 
-            $coverImagePath = $creator->cover_image_path;
+            $coverImagePath = $creator->user?->cover_image_path;
             if ($coverImageFile) {
-                $this->deleteStoredAsset($creator->cover_image_path);
-                $coverImagePath = $this->storeUploadedAsset($coverImageFile, 'creators/cover-images');
+                $this->deleteStoredAsset($creator->user?->cover_image_path);
+                $coverImagePath = $this->storeUploadedAsset($coverImageFile, 'users/cover');
             }
 
             if ($creator->user) {
@@ -154,6 +154,14 @@ final class CreatorService
                     'postal_code' => $this->nullableString($validated['postal_code'] ?? null),
                     'is_active'   => $isActive
                 ];
+
+                if ($profileImageFile) {
+                    $userData['profile_image_path'] = $profileImagePath;
+                }
+
+                if ($coverImageFile) {
+                    $userData['cover_image_path'] = $coverImagePath;
+                }
 
                 if (!empty($validated['password']) && is_string($validated['password'])) {
                     $userData['password'] = $validated['password'];
@@ -172,8 +180,6 @@ final class CreatorService
                 'country'            => $this->nullableString($validated['country'] ?? null),
                 'postal_code'        => $this->nullableString($validated['postal_code'] ?? null),
                 'gender'             => $validated['gender'] ?? null,
-                'profile_image_path' => $profileImagePath,
-                'cover_image_path'   => $coverImagePath,
                 'is_active'          => $isActive,
                 'is_featured'        => $isFeatured,
                 'featured_priority'  => $isFeatured ? $featuredPriority : null
@@ -202,8 +208,8 @@ final class CreatorService
         }
 
         return DB::transaction(function () use ($creator): array {
-            $this->deleteStoredAsset($creator->profile_image_path);
-            $this->deleteStoredAsset($creator->cover_image_path);
+            $this->deleteStoredAsset($creator->user?->profile_image_path);
+            $this->deleteStoredAsset($creator->user?->cover_image_path);
 
             if ($creator->user) {
                 $this->creatorRepository->deleteUser($creator->user);

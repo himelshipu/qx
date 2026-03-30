@@ -14,7 +14,7 @@ final class ImageHelper
 
         $normalizedPath = trim((string) $path);
 
-        if ($normalizedPath === '') {
+        if ($normalizedPath === '' || $normalizedPath === '0' || strtolower($normalizedPath) === 'null') {
             return $fallbackUrl;
         }
 

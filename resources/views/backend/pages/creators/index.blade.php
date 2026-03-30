@@ -102,7 +102,7 @@
 						<tbody class="divide-y divide-gray-100 dark:divide-gray-800">
 							@forelse ($creators as $creator)
 								@php
-									$previewPath = $creator->profile_image_path ?: $creator->cover_image_path;
+									$previewPath = $creator->user?->profile_image_path ?: $creator->user?->cover_image_path;
 									$previewUrl = null;
 
 									if (!empty($previewPath)) {
@@ -165,10 +165,14 @@
 										@endif
 									</td>
 									<td class="px-4 py-3">
-										<button type="button" onclick="toggleCreatorStatus({{ $creator->id }})"
-											class="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold transition {{ $creator->is_active ? 'bg-green-100 text-green-700 hover:bg-green-200 dark:bg-green-900/30 dark:text-green-300' : 'bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-300' }}">
-											{{ $creator->is_active ? 'Active' : 'Inactive' }}
-										</button>
+										<div class="flex items-center">
+											<label class="relative inline-flex cursor-pointer items-center">
+												<input type="checkbox" {{ $creator->is_active ? 'checked' : '' }} onchange="toggleCreatorStatus({{ $creator->id }}, this)"
+													class="peer sr-only" />
+												<div class="h-6 w-11 rounded-full bg-gray-200 transition-colors duration-200 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-green-400 peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:ring-4 peer-focus:ring-green-300 dark:bg-gray-700 dark:peer-focus:ring-green-800">
+												</div>
+											</label>
+										</div>
 									</td>
 									<td class="px-4 py-3 text-sm text-gray-600 dark:text-gray-300">{{ $creator->updated_at?->format('M d, Y') }}
 									</td>
@@ -223,7 +227,15 @@
 
 	@push('scripts')
 		<script>
-			function toggleCreatorStatus(creatorId) {
+			function toggleCreatorStatus(creatorId, checkbox) {
+				if (checkbox?.disabled) {
+					return;
+				}
+
+				if (checkbox) {
+					checkbox.disabled = true;
+				}
+
 				const urlTemplate = @json(route('dashboard.creators.toggle-status', ['creator' => '__ID__']));
 				const url = urlTemplate.replace('__ID__', String(creatorId));
 
@@ -244,14 +256,15 @@
 					})
 					.then((data) => {
 						if (data.success) {
+							if (checkbox && typeof data.is_active !== 'undefined') {
+								checkbox.checked = Boolean(data.is_active);
+							}
+
 							const message = data.message || 'Creator status updated successfully.';
 							if (window.toast) {
 								window.toast.success(message);
 							}
 
-							setTimeout(() => {
-								window.location.reload();
-							}, 450);
 							return;
 						}
 
@@ -262,6 +275,15 @@
 						const message = error?.message || 'Unable to update creator status right now.';
 						if (window.toast) {
 							window.toast.error(message);
+						}
+
+						if (checkbox) {
+							checkbox.checked = !checkbox.checked;
+						}
+					})
+					.finally(() => {
+						if (checkbox) {
+							checkbox.disabled = false;
 						}
 					});
 			}

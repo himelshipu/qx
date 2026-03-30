@@ -13,10 +13,11 @@ class CreatorSocialLink extends Model
     protected $fillable = [
         'creator_id',
         'facebook_url',
-        'youtube_url',
+        'instagram_url',
         'tiktok_url',
         'linkedin_url',
         'x_url',
+        'youtube_url',
         'other_url'
     ];
 

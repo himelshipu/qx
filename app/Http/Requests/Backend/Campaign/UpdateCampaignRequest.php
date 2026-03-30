@@ -24,7 +24,7 @@ class UpdateCampaignRequest extends FormRequest
     {
         return [
             'title'              => ['required', 'string', 'max:255'],
-            'campaign_type'      => ['required', Rule::in(['instagram', 'tiktok', 'ugc', 'youtube', 'twitch', 'other'])],
+            'campaign_type'      => ['required', Rule::in(['facebook', 'instagram', 'tiktok', 'linkedin', 'x', 'youtube', 'ugc', 'other'])],
             'description'        => ['nullable', 'string'],
             'instructions'       => ['nullable', 'string'],
             'status'             => ['required', Rule::in(['draft', 'published', 'paused', 'closed', 'archived'])],
@@ -55,22 +55,22 @@ class UpdateCampaignRequest extends FormRequest
     {
         $validator->after(function ($validator): void {
             $data = $validator->getData();
-            
+
             // Check if budget_max is greater than or equal to budget_min when both are provided
             if (!empty($data['budget_min']) && !empty($data['budget_max'])) {
                 $budgetMin = (float) $data['budget_min'];
                 $budgetMax = (float) $data['budget_max'];
-                
+
                 if ($budgetMax < $budgetMin) {
                     $validator->errors()->add('budget_max', 'Maximum budget must be greater than or equal to minimum budget.');
                 }
             }
-            
+
             // Check if age_max is greater than or equal to age_min when both are provided
             if (!empty($data['age_min']) && !empty($data['age_max'])) {
                 $ageMin = (int) $data['age_min'];
                 $ageMax = (int) $data['age_max'];
-                
+
                 if ($ageMax < $ageMin) {
                     $validator->errors()->add('age_max', 'Maximum age must be greater than or equal to minimum age.');
                 }

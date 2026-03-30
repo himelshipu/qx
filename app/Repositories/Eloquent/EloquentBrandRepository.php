@@ -39,8 +39,8 @@ class EloquentBrandRepository implements BrandRepositoryInterface
                         });
                 });
             })
-            ->when($status === 'active', fn($query) => $query->where('is_active', true))
-            ->when($status === 'inactive', fn($query) => $query->where('is_active', false))
+            ->when($status === 'active', fn($query) => $query->whereHas('user', fn($userQuery) => $userQuery->where('is_active', true)))
+            ->when($status === 'inactive', fn($query) => $query->whereHas('user', fn($userQuery) => $userQuery->where('is_active', false)))
             ->orderByDesc('updated_at')
             ->paginate($perPage)
             ->withQueryString();
@@ -55,8 +55,8 @@ class EloquentBrandRepository implements BrandRepositoryInterface
     {
         return [
             'total'    => Brand::count(),
-            'active'   => Brand::where('is_active', true)->count(),
-            'inactive' => Brand::where('is_active', false)->count(),
+            'active'   => Brand::whereHas('user', fn($userQuery) => $userQuery->where('is_active', true))->count(),
+            'inactive' => Brand::whereHas('user', fn($userQuery) => $userQuery->where('is_active', false))->count(),
             'verified' => Brand::where('is_verified', true)->count()
         ];
     }
@@ -134,10 +134,12 @@ class EloquentBrandRepository implements BrandRepositoryInterface
      */
     public function toggleStatus(Brand $brand): Brand
     {
-        $brand->update([
-            'is_active' => !$brand->is_active
-        ]);
+        if ($brand->user) {
+            $brand->user->update([
+                'is_active' => !$brand->user->is_active
+            ]);
+        }
 
-        return $brand->refresh();
+        return $brand->refresh()->load('user:id,is_active');
     }
 }

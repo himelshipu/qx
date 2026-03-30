@@ -17,24 +17,20 @@ class Brand extends Model
         'brand_name',
         'description',
         'industry',
-        'phone',
-        'email',
         'website',
-        'location',
-        'city',
-        'country',
-        'postal_code',
-        'profile_image_path',
-        'cover_image_path',
         'is_verified',
-        'is_active'
+        'is_active',
+        'profile_image_path',
+        'cover_image_path'
     ];
 
     protected function casts(): array
     {
         return [
             'is_verified' => 'boolean',
-            'is_active'   => 'boolean'
+            'is_active'   => 'boolean',
+            'created_at'  => 'datetime',
+            'updated_at'  => 'datetime'
         ];
     }
 
@@ -66,5 +62,10 @@ class Brand extends Model
     public function reviews(): HasMany
     {
         return $this->hasMany(Review::class);
+    }
+
+    public function campaigns(): HasMany
+    {
+        return $this->hasMany(Campaign::class);
     }
 }

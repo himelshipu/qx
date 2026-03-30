@@ -11,14 +11,14 @@
                 <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Manage system permissions</p>
             </div>
             <div class="flex items-center gap-3">
-                <a href="{{ route('dashboard.permissions.assign') }}" 
+                <a href="{{ route('dashboard.permissions.assign') }}"
                    class="inline-flex items-center px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium rounded-lg transition-colors">
                     <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
                     </svg>
                     Assign Permissions
                 </a>
-                <a href="{{ route('dashboard.permissions.create') }}" 
+                <a href="{{ route('dashboard.permissions.create') }}"
                    class="inline-flex items-center px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium rounded-lg transition-colors">
                     <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
@@ -108,17 +108,18 @@
                         </div>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap">
-                        <button onclick="toggleStatus({{ $permission->id }})" 
-                                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium transition-colors
-                                {{ $permission->is_active 
-                                    ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 hover:bg-green-200' 
-                                    : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400 hover:bg-red-200' }}">
-                            {{ $permission->is_active ? 'Active' : 'Inactive' }}
-                        </button>
+                        <div class="flex items-center">
+                            <label class="relative inline-flex cursor-pointer items-center">
+                                <input type="checkbox" {{ $permission->is_active ? 'checked' : '' }} onchange="toggleStatus({{ $permission->id }}, this)"
+                                    class="peer sr-only" />
+                                <div class="h-6 w-11 rounded-full bg-gray-200 transition-colors duration-200 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-green-400 peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:ring-4 peer-focus:ring-green-300 dark:bg-gray-700 dark:peer-focus:ring-green-800">
+                                </div>
+                            </label>
+                        </div>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-right text-sm">
                         <div class="flex items-center justify-end gap-2">
-                            <a href="{{ route('dashboard.permissions.show', $permission->id) }}" 
+                            <a href="{{ route('dashboard.permissions.show', $permission->id) }}"
                                class="p-2 text-gray-500 hover:text-purple-600 dark:text-gray-400 dark:hover:text-purple-400 transition-colors"
                                title="View">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -126,7 +127,7 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
                                 </svg>
                             </a>
-                            <a href="{{ route('dashboard.permissions.edit', $permission->id) }}" 
+                            <a href="{{ route('dashboard.permissions.edit', $permission->id) }}"
                                class="p-2 text-gray-500 hover:text-purple-600 dark:text-gray-400 dark:hover:text-purple-400 transition-colors"
                                title="Edit">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -136,7 +137,7 @@
                             <form action="{{ route('dashboard.permissions.destroy', $permission->id) }}" method="POST" class="inline">
                                 @csrf
                                 @method('DELETE')
-                                <button type="submit" 
+                                <button type="submit"
                                         class="p-2 text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400 transition-colors"
                                         title="Delete"
                                         onclick="return confirm('Are you sure you want to delete this permission?')">
@@ -176,7 +177,15 @@
 
 @push('scripts')
 <script>
-function toggleStatus(id) {
+function toggleStatus(id, checkbox) {
+    if (checkbox?.disabled) {
+        return;
+    }
+
+    if (checkbox) {
+        checkbox.disabled = true;
+    }
+
     fetch(`/dashboard/permissions/${id}/toggle-status`, {
         method: 'POST',
         headers: {
@@ -184,13 +193,42 @@ function toggleStatus(id) {
             'Content-Type': 'application/json'
         }
     })
-    .then(response => response.json())
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Failed to update status');
+        }
+
+        return response.json();
+    })
     .then(data => {
         if (data.success) {
-            location.reload();
+            if (checkbox && typeof data.is_active !== 'undefined') {
+                checkbox.checked = Boolean(data.is_active);
+            }
+
+            if (window.toast) {
+                window.toast.success(data.message || 'Permission status updated successfully.');
+            }
+            return;
+        }
+
+        throw new Error(data.message || 'Failed to update permission status.');
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        if (window.toast) {
+            window.toast.error(error?.message || 'Unable to update permission status right now.');
+        }
+
+        if (checkbox) {
+            checkbox.checked = !checkbox.checked;
         }
     })
-    .catch(error => console.error('Error:', error));
+    .finally(() => {
+        if (checkbox) {
+            checkbox.disabled = false;
+        }
+    });
 }
 </script>
 @endpush

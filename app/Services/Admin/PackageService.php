@@ -19,7 +19,7 @@ final class PackageService
     /**
      * @var array<int, string>
      */
-    private const PLATFORM_VALUES = ['instagram', 'tiktok', 'youtube', 'ugc', 'other'];
+    private const PLATFORM_VALUES = ['facebook', 'instagram', 'tiktok', 'linkedin', 'x', 'youtube', 'ugc', 'other'];
 
     public function __construct(
         private readonly PackageRepositoryInterface $packageRepository
@@ -71,7 +71,7 @@ final class PackageService
             'currency'           => $this->normalizeCurrency((string) $validated['currency']),
             'delivery_days'      => $this->nullableInteger($validated['delivery_days'] ?? null),
             'revisions_included' => $this->nullableInteger($validated['revisions_included'] ?? null),
-            'created_by_user_id' => $createdByUserId,
+            'created_by'         => $createdByUserId,
             'is_active'          => $isActive
         ]);
     }
