@@ -21,6 +21,7 @@ use App\Http\Controllers\Backend\ReviewController;
 use App\Http\Controllers\Backend\RoleController;
 use App\Http\Controllers\Backend\SupportTicketController;
 use App\Http\Controllers\Backend\TestimonialController;
+use App\Http\Controllers\Backend\UserController;
 use App\Http\Controllers\BrandProfileController;
 use App\Http\Controllers\Frontend\ContentLibraryController;
 use App\Http\Controllers\Frontend\HomeController;
@@ -190,6 +191,10 @@ Route::prefix('dashboard')->name('dashboard.')->middleware(['auth', 'verified'])
     Route::put('/permissions/{id}', [PermissionController::class, 'update'])->name('permissions.update');
     Route::delete('/permissions/{id}', [PermissionController::class, 'destroy'])->name('permissions.destroy');
     Route::post('/permissions/{id}/toggle-status', [PermissionController::class, 'toggleStatus'])->name('permissions.toggle-status');
+
+    // Users routes (dashboard)
+    Route::get('/users', [UserController::class, 'index'])->name('users.index');
+    Route::post('/users/{user}/toggle-status', [UserController::class, 'toggleStatus'])->name('users.toggle-status');
 
     // Case Studies routes
     Route::get('/case-studies', [CaseStudyController::class, 'index'])->name('case-studies.index');

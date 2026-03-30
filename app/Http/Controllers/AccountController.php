@@ -38,6 +38,7 @@ class AccountController extends Controller
             'company_name' => 'nullable|string|max:255',
             'job_title' => 'nullable|string|max:255',
             'bio' => 'nullable|string|max:1000',
+            'address_line' => 'nullable|string|max:255',
             'country' => 'nullable|string|max:255',
             'city' => 'nullable|string|max:255',
             'postal_code' => 'nullable|string|max:20',

@@ -21,6 +21,7 @@
 
 	$budgetMin = old('budget_min', $campaign?->budget_min !== null ? (string) $campaign->budget_min : '');
 	$budgetMax = old('budget_max', $campaign?->budget_max !== null ? (string) $campaign->budget_max : '');
+	$selectedBrandId = (int) old('brand_id', $campaign?->brand_id ?? ($defaultBrandId ?? 0));
 @endphp
 
 <div x-data="{
@@ -44,6 +45,28 @@
 	    }
 	}" class="grid grid-cols-1 gap-6 lg:grid-cols-3">
 	<div class="space-y-5 lg:col-span-2">
+		@if (($canSelectBrand ?? false) === true)
+			<div>
+				<label for="brand_id" class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+					Creating For <span class="text-red-500">*</span>
+				</label>
+				<select id="brand_id" name="brand_id" required
+					class="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-3 text-sm text-gray-900 focus:border-gray-500 focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-white">
+					<option value="">Select a brand</option>
+					@foreach (($brandOptions ?? collect()) as $brandOption)
+						<option value="{{ $brandOption['id'] }}" {{ $selectedBrandId === (int) $brandOption['id'] ? 'selected' : '' }}>
+							{{ $brandOption['name'] }}
+						</option>
+					@endforeach
+				</select>
+				@error('brand_id')
+					<p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+				@enderror
+			</div>
+		@else
+			<input type="hidden" name="brand_id" value="{{ $selectedBrandId > 0 ? $selectedBrandId : (int) ($defaultBrandId ?? 0) }}">
+		@endif
+
 		<div>
 			<label for="title" class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
 				Campaign Title <span class="text-red-500">*</span>

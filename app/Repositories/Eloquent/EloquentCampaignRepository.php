@@ -5,6 +5,7 @@ declare (strict_types = 1);
 namespace App\Repositories\Eloquent;
 
 use App\Models\Campaign;
+use App\Models\Brand;
 use App\Models\Category;
 use App\Models\FollowerRange;
 use App\Repositories\Contracts\CampaignRepositoryInterface;
@@ -21,11 +22,12 @@ class EloquentCampaignRepository implements CampaignRepositoryInterface
     /**
      * Get paginated campaigns for dashboard listing.
      */
-    public function paginateForDashboard(string $search, string $status, string $type, int $perPage = 12): LengthAwarePaginator
+    public function paginateForDashboard(string $search, string $status, string $type, ?int $brandId = null, int $perPage = 12): LengthAwarePaginator
     {
         return Campaign::query()
-            ->with(['targeting:id,campaign_id,influencer_count', 'categories:id,name,image_path'])
+            ->with(['brand:id,brand_name,user_id', 'targeting:id,campaign_id,influencer_count', 'categories:id,name,image_path'])
             ->withCount(['categories', 'applications', 'assets', 'orders', 'orderItems', 'cartItems'])
+            ->when($brandId !== null, fn($query) => $query->where('brand_id', $brandId))
             ->when($search !== '', function ($query) use ($search) {
                 $query->where(function ($subQuery) use ($search) {
                     $subQuery
@@ -48,14 +50,35 @@ class EloquentCampaignRepository implements CampaignRepositoryInterface
      *
      * @return array{total:int,published:int,draft:int,active:int}
      */
-    public function getStats(): array
+    public function getStats(?int $brandId = null): array
     {
+        $baseQuery = Campaign::query()
+            ->when($brandId !== null, fn($query) => $query->where('brand_id', $brandId));
+
         return [
-            'total'     => Campaign::count(),
-            'published' => Campaign::where('status', 'published')->count(),
-            'draft'     => Campaign::where('status', 'draft')->count(),
-            'active'    => Campaign::where('is_active', true)->count()
+            'total'     => (clone $baseQuery)->count(),
+            'published' => (clone $baseQuery)->where('status', 'published')->count(),
+            'draft'     => (clone $baseQuery)->where('status', 'draft')->count(),
+            'active'    => (clone $baseQuery)->where('is_active', true)->count()
         ];
+    }
+
+    /**
+     * Get active brands for admin campaign assignment.
+     *
+     * @return Collection<int, array{id:int,name:string}>
+     */
+    public function getBrandOptions(): Collection
+    {
+        return Brand::query()
+            ->with('user:id,is_active')
+            ->whereHas('user', fn($query) => $query->where('is_active', true))
+            ->orderBy('brand_name')
+            ->get(['id', 'brand_name'])
+            ->map(fn(Brand $brand) => [
+                'id'   => $brand->id,
+                'name' => $brand->brand_name
+            ]);
     }
 
     /**
@@ -151,7 +174,7 @@ class EloquentCampaignRepository implements CampaignRepositoryInterface
     /**
      * Sync campaign target countries.
      *
-     * @param array<int, array{country_code:string,country_name:string}> $countries
+    * @param array<int, array{country_code:string}> $countries
      */
     public function syncTargetCountries(Campaign $campaign, array $countries): void
     {
@@ -171,13 +194,9 @@ class EloquentCampaignRepository implements CampaignRepositoryInterface
             ->delete();
 
         foreach ($countries as $country) {
-            $countryName = trim($country['country_name']) !== ''
-            ? trim($country['country_name'])
-            : $country['country_code'];
-
             $campaign->targetCountries()->updateOrCreate(
                 ['country_code' => $country['country_code']],
-                ['country_name' => $countryName]
+                []
             );
         }
     }

@@ -116,11 +116,11 @@
 				<select id="gender" name="gender"
 					class="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-3 text-sm text-gray-900 focus:border-gray-500 focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-white">
 					<option value="">Select gender</option>
-					<option value="male" {{ old('gender', $creator?->gender ?? $user?->gender) === 'male' ? 'selected' : '' }}>Male
+					<option value="male" {{ old('gender', $user?->gender) === 'male' ? 'selected' : '' }}>Male
 					</option>
-					<option value="female" {{ old('gender', $creator?->gender ?? $user?->gender) === 'female' ? 'selected' : '' }}>
+					<option value="female" {{ old('gender', $user?->gender) === 'female' ? 'selected' : '' }}>
 						Female</option>
-					<option value="other" {{ old('gender', $creator?->gender ?? $user?->gender) === 'other' ? 'selected' : '' }}>
+					<option value="other" {{ old('gender', $user?->gender) === 'other' ? 'selected' : '' }}>
 						Other</option>
 				</select>
 				@error('gender')
@@ -213,7 +213,7 @@
 		<div class="grid grid-cols-1 gap-5 md:grid-cols-2">
 			<div>
 				<label for="location" class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Address Line</label>
-				<input id="location" name="location" type="text" value="{{ old('location', $creator?->location) }}"
+				<input id="location" name="location" type="text" value="{{ old('location', $user?->address_line) }}"
 					placeholder="Street address"
 					class="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-3 text-sm text-gray-900 focus:border-gray-500 focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-white">
 				@error('location')
@@ -223,7 +223,7 @@
 
 			<div>
 				<label for="city" class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">City</label>
-				<input id="city" name="city" type="text" value="{{ old('city', $creator?->city) }}"
+				<input id="city" name="city" type="text" value="{{ old('city', $user?->city) }}"
 					class="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-3 text-sm text-gray-900 focus:border-gray-500 focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-white">
 				@error('city')
 					<p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
@@ -232,7 +232,7 @@
 
 			<div>
 				<label for="country" class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Country</label>
-				<input id="country" name="country" type="text" value="{{ old('country', $creator?->country) }}"
+				<input id="country" name="country" type="text" value="{{ old('country', $user?->country) }}"
 					class="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-3 text-sm text-gray-900 focus:border-gray-500 focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-white">
 				@error('country')
 					<p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
@@ -243,7 +243,7 @@
 				<label for="postal_code" class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Postal
 					Code</label>
 				<input id="postal_code" name="postal_code" type="text"
-					value="{{ old('postal_code', $creator?->postal_code) }}"
+					value="{{ old('postal_code', $user?->postal_code) }}"
 					class="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-3 text-sm text-gray-900 focus:border-gray-500 focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-white">
 				@error('postal_code')
 					<p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>

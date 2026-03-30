@@ -5,8 +5,8 @@ declare (strict_types = 1);
 namespace App\Repositories\Contracts;
 
 use App\Models\Campaign;
-use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
 /**
  * Interface CampaignRepositoryInterface
@@ -18,14 +18,21 @@ interface CampaignRepositoryInterface
     /**
      * Get paginated campaigns for dashboard listing.
      */
-    public function paginateForDashboard(string $search, string $status, string $type, int $perPage = 12): LengthAwarePaginator;
+    public function paginateForDashboard(string $search, string $status, string $type, ?int $brandId = null, int $perPage = 12): LengthAwarePaginator;
 
     /**
      * Get campaign summary stats for dashboard.
      *
      * @return array{total:int,published:int,draft:int,active:int}
      */
-    public function getStats(): array;
+    public function getStats(?int $brandId = null): array;
+
+    /**
+     * Get active brand options for campaign assignment.
+     *
+     * @return Collection<int, array{id:int,name:string}>
+     */
+    public function getBrandOptions(): Collection;
 
     /**
      * Get active categories for campaign assignment.
@@ -79,7 +86,7 @@ interface CampaignRepositoryInterface
     /**
      * Sync campaign target countries.
      *
-     * @param array<int, array{country_code:string,country_name:string}> $countries
+     * @param array<int, array{country_code:string}> $countries
      */
     public function syncTargetCountries(Campaign $campaign, array $countries): void;
 

@@ -7,6 +7,7 @@ use App\Http\Requests\Backend\Campaign\StoreCampaignRequest;
 use App\Http\Requests\Backend\Campaign\UpdateCampaignRequest;
 use App\Models\Campaign;
 use App\Services\Admin\CampaignService;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
@@ -97,6 +98,8 @@ class CampaignController extends Controller
      */
     public function view(Campaign $campaign): View
     {
+        $this->ensureCampaignAccess($campaign);
+
         return view('backend.pages.campaigns.view', $this->campaignService->getDetailPayload($campaign));
     }
 
@@ -105,12 +108,14 @@ class CampaignController extends Controller
      */
     public function edit(Campaign $campaign): View
     {
+        $this->ensureCampaignAccess($campaign);
+
         return view('backend.pages.campaigns.edit', [
             'campaign' => $campaign->load([
                 'targeting',
                 'categories:id,name',
                 'followerRanges:id,label',
-                'targetCountries:id,campaign_id,country_code,country_name'
+                'targetCountries:id,campaign_id,country_code'
             ]),
             ...$this->campaignService->getFormPayload()
         ]);
@@ -121,6 +126,8 @@ class CampaignController extends Controller
      */
     public function update(UpdateCampaignRequest $request, Campaign $campaign): RedirectResponse
     {
+        $this->ensureCampaignAccess($campaign);
+
         try {
             $updatedCampaign = $this->campaignService->updateCampaign(
                 $campaign,
@@ -152,6 +159,8 @@ class CampaignController extends Controller
      */
     public function destroy(Campaign $campaign): RedirectResponse
     {
+        $this->ensureCampaignAccess($campaign);
+
         try {
             $campaignTitle = $campaign->title;
             $result        = $this->campaignService->deleteCampaign($campaign);
@@ -172,5 +181,21 @@ class CampaignController extends Controller
                 ->route('dashboard.campaigns.index')
                 ->with('error', 'Failed to delete campaign. Please try again.');
         }
+    }
+
+    private function ensureCampaignAccess(Campaign $campaign): void
+    {
+        $authUser = Auth::user();
+
+        if (!$authUser) {
+            abort(403);
+        }
+
+        if ((string) $authUser->user_type !== 'brand') {
+            return;
+        }
+
+        $brandId = (int) ($authUser->brand?->id ?? 0);
+        abort_unless($brandId > 0 && $campaign->brand_id === $brandId, 403);
     }
 }

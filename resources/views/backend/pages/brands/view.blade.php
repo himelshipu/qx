@@ -31,6 +31,8 @@
 						<h2 class="text-xl font-semibold text-gray-900 dark:text-white">{{ $brand->brand_name }}</h2>
 						<p class="text-sm text-gray-500 dark:text-gray-400">{{ $brand->industry ?: 'No industry set' }}</p>
 					</div>
+
+
 				</div>
 				<div class="flex items-center gap-2">
 					<a href="{{ route('dashboard.brands.edit', $brand) }}"
@@ -44,37 +46,18 @@
 					</a>
 				</div>
 			</div>
+
+			<div>
+				<p class="mt-3 text-sm leading-6 text-gray-700 dark:text-gray-300">
+					{{ $brand->description ?: 'No description provided.' }}</p>
+
+			</div>
 		</div>
 
-		<div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-			<div class="rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-gray-900">
-				<p class="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Orders</p>
-				<p class="mt-2 text-2xl font-semibold text-gray-900 dark:text-white">{{ $brand->orders_count }}</p>
-			</div>
-			<div class="rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-gray-900">
-				<p class="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Reviews</p>
-				<p class="mt-2 text-2xl font-semibold text-gray-900 dark:text-white">{{ $brand->reviews_count }}</p>
-			</div>
-			<div class="rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-gray-900">
-				<p class="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Verification</p>
-				<p
-					class="mt-2 text-sm font-semibold {{ $brand->is_verified ? 'text-green-700 dark:text-green-300' : 'text-gray-600 dark:text-gray-300' }}">
-					{{ $brand->is_verified ? 'Verified' : 'Not Verified' }}
-				</p>
-			</div>
-			<div class="rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-gray-900">
-				<p class="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Status</p>
-				@php($isActive = (bool) ($brand->user?->is_active ?? false))
-				<p
-					class="mt-2 text-sm font-semibold {{ $isActive ? 'text-green-700 dark:text-green-300' : 'text-red-700 dark:text-red-300' }}">
-					{{ $isActive ? 'Active' : 'Inactive' }}
-				</p>
-			</div>
-		</div>
 
 		<div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
 			<div class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900">
-				<h3 class="text-sm font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Account</h3>
+				<h3 class="text-sm font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Account & Brand Info</h3>
 				<dl class="mt-4 space-y-3 text-sm">
 					<div class="flex justify-between gap-4">
 						<dt class="text-gray-500 dark:text-gray-400">Contact Name</dt>
@@ -82,46 +65,179 @@
 					</div>
 					<div class="flex justify-between gap-4">
 						<dt class="text-gray-500 dark:text-gray-400">Email</dt>
-						<dd class="font-medium text-gray-900 dark:text-white">{{ $brand->user?->email ?? ($brand->email ?? 'N/A') }}</dd>
+						<dd class="font-medium text-gray-900 dark:text-white">{{ $brand->user?->email ?? 'N/A' }}</dd>
 					</div>
 					<div class="flex justify-between gap-4">
 						<dt class="text-gray-500 dark:text-gray-400">Phone</dt>
-						<dd class="font-medium text-gray-900 dark:text-white">{{ $brand->phone ?: ($brand->user?->phone ?: 'N/A') }}</dd>
+						<dd class="font-medium text-gray-900 dark:text-white">{{ $brand->user?->phone ?? 'N/A' }}</dd>
+					</div>
+					<div class="flex justify-between gap-4">
+						<dt class="text-gray-500 dark:text-gray-400">Company Name</dt>
+						<dd class="font-medium text-gray-900 dark:text-white">{{ $brand->user?->company_name ?? 'N/A' }}</dd>
+					</div>
+					<div class="flex justify-between gap-4">
+						<dt class="text-gray-500 dark:text-gray-400">Job Title</dt>
+						<dd class="font-medium text-gray-900 dark:text-white">{{ $brand->user?->job_title ?? 'N/A' }}</dd>
 					</div>
 					<div class="flex justify-between gap-4">
 						<dt class="text-gray-500 dark:text-gray-400">Website</dt>
 						<dd class="font-medium text-gray-900 dark:text-white">{{ $brand->website ?: 'N/A' }}</dd>
 					</div>
+					<div class="flex justify-between gap-4">
+						<dt class="text-gray-500 dark:text-gray-400">Industry</dt>
+						<dd class="font-medium text-gray-900 dark:text-white">{{ $brand->industry ?: 'N/A' }}</dd>
+					</div>
+					<div class="flex justify-between gap-4">
+						<dt class="text-gray-500 dark:text-gray-400">Created At</dt>
+						<dd class="font-medium text-gray-900 dark:text-white">{{ $brand->created_at?->format('M d, Y') ?? 'N/A' }}</dd>
+					</div>
 				</dl>
 			</div>
 
 			<div class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900">
-				<h3 class="text-sm font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Location</h3>
+				<h3 class="text-sm font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Location & Social</h3>
 				<dl class="mt-4 space-y-3 text-sm">
 					<div class="flex justify-between gap-4">
-						<dt class="text-gray-500 dark:text-gray-400">Address</dt>
-						<dd class="font-medium text-gray-900 dark:text-white">{{ $brand->location ?: 'N/A' }}</dd>
-					</div>
-					<div class="flex justify-between gap-4">
 						<dt class="text-gray-500 dark:text-gray-400">City</dt>
-						<dd class="font-medium text-gray-900 dark:text-white">{{ $brand->city ?: 'N/A' }}</dd>
+						<dd class="font-medium text-gray-900 dark:text-white">{{ $brand->user?->city ?? 'N/A' }}</dd>
 					</div>
 					<div class="flex justify-between gap-4">
 						<dt class="text-gray-500 dark:text-gray-400">Country</dt>
-						<dd class="font-medium text-gray-900 dark:text-white">{{ $brand->country ?: 'N/A' }}</dd>
+						<dd class="font-medium text-gray-900 dark:text-white">{{ $brand->user?->country ?? 'N/A' }}</dd>
 					</div>
 					<div class="flex justify-between gap-4">
 						<dt class="text-gray-500 dark:text-gray-400">Postal Code</dt>
-						<dd class="font-medium text-gray-900 dark:text-white">{{ $brand->postal_code ?: 'N/A' }}</dd>
+						<dd class="font-medium text-gray-900 dark:text-white">{{ $brand->user?->postal_code ?? 'N/A' }}</dd>
 					</div>
+					@if ($brand->socialLinks)
+						<div class="flex justify-between gap-4">
+							<dt class="text-gray-500 dark:text-gray-400">Facebook</dt>
+							<dd class="font-medium text-gray-900 dark:text-white">
+								@if ($brand->socialLinks->facebook_url)
+									<a href="{{ $brand->socialLinks->facebook_url }}" target="_blank" class="text-blue-600 underline">Facebook</a>
+								@else
+									N/A
+								@endif
+							</dd>
+						</div>
+						<div class="flex justify-between gap-4">
+							<dt class="text-gray-500 dark:text-gray-400">Instagram</dt>
+							<dd class="font-medium text-gray-900 dark:text-white">
+								@if ($brand->socialLinks->instagram_url)
+									<a href="{{ $brand->socialLinks->instagram_url }}" target="_blank" class="text-pink-600 underline">Instagram</a>
+								@else
+									N/A
+								@endif
+							</dd>
+						</div>
+						<div class="flex justify-between gap-4">
+							<dt class="text-gray-500 dark:text-gray-400">TikTok</dt>
+							<dd class="font-medium text-gray-900 dark:text-white">
+								@if ($brand->socialLinks->tiktok_url)
+									<a href="{{ $brand->socialLinks->tiktok_url }}" target="_blank" class="text-black underline">TikTok</a>
+								@else
+									N/A
+								@endif
+							</dd>
+						</div>
+						<div class="flex justify-between gap-4">
+							<dt class="text-gray-500 dark:text-gray-400">LinkedIn</dt>
+							<dd class="font-medium text-gray-900 dark:text-white">
+								@if ($brand->socialLinks->linkedin_url)
+									<a href="{{ $brand->socialLinks->linkedin_url }}" target="_blank" class="text-blue-700 underline">LinkedIn</a>
+								@else
+									N/A
+								@endif
+							</dd>
+						</div>
+						<div class="flex justify-between gap-4">
+							<dt class="text-gray-500 dark:text-gray-400">YouTube</dt>
+							<dd class="font-medium text-gray-900 dark:text-white">
+								@if ($brand->socialLinks->youtube_url)
+									<a href="{{ $brand->socialLinks->youtube_url }}" target="_blank" class="text-red-600 underline">YouTube</a>
+								@else
+									N/A
+								@endif
+							</dd>
+						</div>
+					@endif
 				</dl>
 			</div>
 		</div>
 
-		<div class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900">
-			<h3 class="text-sm font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Description</h3>
-			<p class="mt-3 text-sm leading-6 text-gray-700 dark:text-gray-300">
-				{{ $brand->description ?: 'No description provided.' }}</p>
+		<div class="grid grid-cols-1 gap-6 lg:grid-cols-2 mt-6">
+			<div class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+				<h3 class="text-sm font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Billing Profile</h3>
+				@if ($brand->billingProfile)
+					<dl class="mt-4 space-y-3 text-sm">
+						<div class="flex justify-between gap-4">
+							<dt class="text-gray-500 dark:text-gray-400">Legal Company Name</dt>
+							<dd class="font-medium text-gray-900 dark:text-white">{{ $brand->billingProfile->legal_company_name ?: 'N/A' }}</dd>
+						</div>
+						<div class="flex justify-between gap-4">
+							<dt class="text-gray-500 dark:text-gray-400">VAT ID</dt>
+							<dd class="font-medium text-gray-900 dark:text-white">{{ $brand->billingProfile->vat_id ?: 'N/A' }}</dd>
+						</div>
+						<div class="flex justify-between gap-4">
+							<dt class="text-gray-500 dark:text-gray-400">Billing Address</dt>
+							<dd class="font-medium text-gray-900 dark:text-white">{{ $brand->billingProfile->billing_address ?: 'N/A' }}</dd>
+						</div>
+						<div class="flex justify-between gap-4">
+							<dt class="text-gray-500 dark:text-gray-400">Billing City</dt>
+							<dd class="font-medium text-gray-900 dark:text-white">{{ $brand->billingProfile->billing_city ?: 'N/A' }}</dd>
+						</div>
+						<div class="flex justify-between gap-4">
+							<dt class="text-gray-500 dark:text-gray-400">Billing Country</dt>
+							<dd class="font-medium text-gray-900 dark:text-white">{{ $brand->billingProfile->billing_country ?: 'N/A' }}</dd>
+						</div>
+						<div class="flex justify-between gap-4">
+							<dt class="text-gray-500 dark:text-gray-400">Billing Postal Code</dt>
+							<dd class="font-medium text-gray-900 dark:text-white">{{ $brand->billingProfile->billing_postal_code ?: 'N/A' }}</dd>
+						</div>
+					</dl>
+				@else
+					<p class="text-gray-500 dark:text-gray-400">No billing profile available.</p>
+				@endif
+			</div>
+			<div class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+				<h3 class="text-sm font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Onboarding Profile</h3>
+				@if ($brand->onboardingProfile)
+					<dl class="mt-4 space-y-3 text-sm">
+						<div class="flex justify-between gap-4">
+							<dt class="text-gray-500 dark:text-gray-400">Objective</dt>
+							<dd class="font-medium text-gray-900 dark:text-white">{{ $brand->onboardingProfile->objective ?: 'N/A' }}</dd>
+						</div>
+						<div class="flex justify-between gap-4">
+							<dt class="text-gray-500 dark:text-gray-400">Budget Range</dt>
+							<dd class="font-medium text-gray-900 dark:text-white">{{ $brand->onboardingProfile->budget_range ?: 'N/A' }}</dd>
+						</div>
+						<div class="flex justify-between gap-4">
+							<dt class="text-gray-500 dark:text-gray-400">Business Type</dt>
+							<dd class="font-medium text-gray-900 dark:text-white">{{ $brand->onboardingProfile->business_type ?: 'N/A' }}</dd>
+						</div>
+						<div class="flex justify-between gap-4">
+							<dt class="text-gray-500 dark:text-gray-400">Company Size</dt>
+							<dd class="font-medium text-gray-900 dark:text-white">{{ $brand->onboardingProfile->company_size ?: 'N/A' }}</dd>
+						</div>
+						<div class="flex justify-between gap-4">
+							<dt class="text-gray-500 dark:text-gray-400">Completed</dt>
+							<dd class="font-medium text-gray-900 dark:text-white">{{ $brand->onboardingProfile->is_completed ? 'Yes' : 'No' }}</dd>
+						</div>
+						<div class="flex justify-between gap-4">
+							<dt class="text-gray-500 dark:text-gray-400">Completed At</dt>
+							<dd class="font-medium text-gray-900 dark:text-white">{{ $brand->onboardingProfile->completed_at?->format('M d, Y') ?? 'N/A' }}</dd>
+						</div>
+					</dl>
+				@else
+					<p class="text-gray-500 dark:text-gray-400">No onboarding profile available.</p>
+				@endif
+			</div>
 		</div>
+					</div>
+				</dl>
+			</div>
+
+		</div>
+
 	</div>
 @endsection

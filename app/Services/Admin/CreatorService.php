@@ -56,7 +56,7 @@ final class CreatorService
      */
     public function getDetailPayload(Creator $creator): array
     {
-        $creator->load(['user:id,name,email,phone,is_active,created_at,profile_image_path,cover_image_path', 'categories:id,name'])
+        $creator->load(['user:id,name,email,phone,gender,city,country,postal_code,address_line,is_active,created_at,profile_image_path,cover_image_path', 'categories:id,name'])
             ->loadCount(['campaignApplications', 'orderItems', 'cartItems', 'conversations']);
 
         return [
@@ -87,6 +87,7 @@ final class CreatorService
                 'city'              => $this->nullableString($validated['city'] ?? null),
                 'country'           => $this->nullableString($validated['country'] ?? null),
                 'postal_code'       => $this->nullableString($validated['postal_code'] ?? null),
+                'address_line'      => $this->nullableString($validated['location'] ?? null),
                 'profile_image_path' => $this->storeUploadedAsset($profileImageFile, 'users/profile'),
                 'cover_image_path'   => $this->storeUploadedAsset($coverImageFile, 'users/cover'),
                 'user_type'         => 'creator',
@@ -95,19 +96,14 @@ final class CreatorService
             ]);
 
             $creator = $this->creatorRepository->createCreator([
-                'user_id'            => $user->id,
-                'display_name'       => $this->nullableString($validated['display_name'] ?? null) ?? $validated['full_name'],
-                'title_name'         => $this->nullableString($validated['title_name'] ?? null),
-                'description'        => $this->nullableString($validated['description'] ?? null),
-                'audience'           => $this->nullableString($validated['audience'] ?? null),
-                'location'           => $this->nullableString($validated['location'] ?? null),
-                'city'               => $this->nullableString($validated['city'] ?? null),
-                'country'            => $this->nullableString($validated['country'] ?? null),
-                'postal_code'        => $this->nullableString($validated['postal_code'] ?? null),
-                'gender'             => $validated['gender'] ?? null,
-                'is_active'          => $isActive,
-                'is_featured'        => $isFeatured,
-                'featured_priority'  => $isFeatured ? $featuredPriority : null
+                'user_id'           => $user->id,
+                'display_name'      => $this->nullableString($validated['display_name'] ?? null) ?? $validated['full_name'],
+                'title_name'        => $this->nullableString($validated['title_name'] ?? null),
+                'description'       => $this->nullableString($validated['description'] ?? null),
+                'audience'          => $this->nullableString($validated['audience'] ?? null),
+                'is_active'         => $isActive,
+                'is_featured'       => $isFeatured,
+                'featured_priority' => $isFeatured ? $featuredPriority : null
             ]);
 
             $this->creatorRepository->syncCategories($creator, $this->normalizeCategoryIds($validated['categories'] ?? []));
@@ -152,6 +148,7 @@ final class CreatorService
                     'city'        => $this->nullableString($validated['city'] ?? null),
                     'country'     => $this->nullableString($validated['country'] ?? null),
                     'postal_code' => $this->nullableString($validated['postal_code'] ?? null),
+                    'address_line' => $this->nullableString($validated['location'] ?? null),
                     'is_active'   => $isActive
                 ];
 
@@ -171,18 +168,13 @@ final class CreatorService
             }
 
             $creator = $this->creatorRepository->updateCreator($creator, [
-                'display_name'       => $this->nullableString($validated['display_name'] ?? null) ?? $validated['full_name'],
-                'title_name'         => $this->nullableString($validated['title_name'] ?? null),
-                'description'        => $this->nullableString($validated['description'] ?? null),
-                'audience'           => $this->nullableString($validated['audience'] ?? null),
-                'location'           => $this->nullableString($validated['location'] ?? null),
-                'city'               => $this->nullableString($validated['city'] ?? null),
-                'country'            => $this->nullableString($validated['country'] ?? null),
-                'postal_code'        => $this->nullableString($validated['postal_code'] ?? null),
-                'gender'             => $validated['gender'] ?? null,
-                'is_active'          => $isActive,
-                'is_featured'        => $isFeatured,
-                'featured_priority'  => $isFeatured ? $featuredPriority : null
+                'display_name'      => $this->nullableString($validated['display_name'] ?? null) ?? $validated['full_name'],
+                'title_name'        => $this->nullableString($validated['title_name'] ?? null),
+                'description'       => $this->nullableString($validated['description'] ?? null),
+                'audience'          => $this->nullableString($validated['audience'] ?? null),
+                'is_active'         => $isActive,
+                'is_featured'       => $isFeatured,
+                'featured_priority' => $isFeatured ? $featuredPriority : null
             ]);
 
             $this->creatorRepository->syncCategories($creator, $this->normalizeCategoryIds($validated['categories'] ?? []));

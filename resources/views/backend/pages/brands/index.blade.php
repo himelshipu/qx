@@ -94,7 +94,7 @@
 							@forelse ($brands as $brand)
 								@php
 									$isActive = (bool) ($brand->user?->is_active ?? false);
-									$previewPath = $brand->profile_image_path ?: $brand->cover_image_path;
+									$previewPath = $brand->user?->profile_image_path ?: $brand->user?->cover_image_path;
 									$previewUrl = null;
 
 									if (!empty($previewPath)) {

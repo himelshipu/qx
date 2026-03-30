@@ -12,8 +12,7 @@ class CampaignTargetCountry extends Model
 
     protected $fillable = [
         'campaign_id',
-        'country_code',
-        'country_name'
+        'country_code'
     ];
 
     public function campaign(): BelongsTo

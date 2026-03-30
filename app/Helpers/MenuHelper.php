@@ -163,6 +163,11 @@ class MenuHelper
                 'name'  => 'ACCESS CONTROL',
                 'items' => [
                     [
+                        'icon'  => 'group',
+                        'name'  => 'Users',
+                        'route' => 'users.index'
+                    ],
+                    [
                         'icon'  => 'roles',
                         'name'  => 'Roles',
                         'route' => 'roles.index'

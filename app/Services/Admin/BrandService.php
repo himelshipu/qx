@@ -44,7 +44,7 @@ final class BrandService
      */
     public function getDetailPayload(Brand $brand): array
     {
-        $brand->load(['user:id,name,email,phone,is_active,created_at', 'socialLinks', 'billingProfile', 'onboardingProfile'])
+        $brand->load(['user:id,name,email,phone,city,country,postal_code,address_line,profile_image_path,cover_image_path,is_active,created_at', 'socialLinks', 'billingProfile', 'onboardingProfile'])
             ->loadCount(['orders', 'reviews']);
 
         return [
@@ -69,26 +69,24 @@ final class BrandService
                 'email'             => $validated['email'],
                 'password'          => $validated['password'],
                 'phone'             => $this->nullableString($validated['phone'] ?? null),
+                'city'              => $this->nullableString($validated['city'] ?? null),
+                'country'           => $this->nullableString($validated['country'] ?? null),
+                'postal_code'       => $this->nullableString($validated['postal_code'] ?? null),
+                'address_line'      => $this->nullableString($validated['location'] ?? null),
+                'profile_image_path' => $this->storeUploadedAsset($profileImageFile, 'brands/profile-images'),
+                'cover_image_path'   => $this->storeUploadedAsset($coverImageFile, 'brands/cover-images'),
                 'user_type'         => 'brand',
                 'is_active'         => $isActive,
                 'email_verified_at' => now()
             ]);
 
             return $this->brandRepository->createBrand([
-                'user_id'            => $user->id,
-                'brand_name'         => $validated['brand_name'],
-                'description'        => $this->nullableString($validated['description'] ?? null),
-                'industry'           => $this->nullableString($validated['industry'] ?? null),
-                'phone'              => $this->nullableString($validated['phone'] ?? null),
-                'email'              => $validated['email'],
-                'website'            => $this->nullableString($validated['website'] ?? null),
-                'location'           => $this->nullableString($validated['location'] ?? null),
-                'city'               => $this->nullableString($validated['city'] ?? null),
-                'country'            => $this->nullableString($validated['country'] ?? null),
-                'postal_code'        => $this->nullableString($validated['postal_code'] ?? null),
-                'profile_image_path' => $this->storeUploadedAsset($profileImageFile, 'brands/profile-images'),
-                'cover_image_path'   => $this->storeUploadedAsset($coverImageFile, 'brands/cover-images'),
-                'is_verified'        => (bool) ($validated['is_verified'] ?? false)
+                'user_id'     => $user->id,
+                'brand_name'  => $validated['brand_name'],
+                'description' => $this->nullableString($validated['description'] ?? null),
+                'industry'    => $this->nullableString($validated['industry'] ?? null),
+                'website'     => $this->nullableString($validated['website'] ?? null),
+                'is_verified' => (bool) ($validated['is_verified'] ?? false)
             ]);
         });
     }
@@ -106,24 +104,30 @@ final class BrandService
         ?UploadedFile $coverImageFile
     ): Brand {
         return DB::transaction(function () use ($brand, $validated, $isActive, $profileImageFile, $coverImageFile): Brand {
-            $profileImagePath = $brand->profile_image_path;
+            $profileImagePath = $brand->user?->profile_image_path;
             if ($profileImageFile) {
-                $this->deleteStoredAsset($brand->profile_image_path);
+                $this->deleteStoredAsset($brand->user?->profile_image_path);
                 $profileImagePath = $this->storeUploadedAsset($profileImageFile, 'brands/profile-images');
             }
 
-            $coverImagePath = $brand->cover_image_path;
+            $coverImagePath = $brand->user?->cover_image_path;
             if ($coverImageFile) {
-                $this->deleteStoredAsset($brand->cover_image_path);
+                $this->deleteStoredAsset($brand->user?->cover_image_path);
                 $coverImagePath = $this->storeUploadedAsset($coverImageFile, 'brands/cover-images');
             }
 
             if ($brand->user) {
                 $userData = [
-                    'name'      => $validated['contact_name'],
-                    'email'     => $validated['email'],
-                    'phone'     => $this->nullableString($validated['phone'] ?? null),
-                    'is_active' => $isActive
+                    'name'               => $validated['contact_name'],
+                    'email'              => $validated['email'],
+                    'phone'              => $this->nullableString($validated['phone'] ?? null),
+                    'city'               => $this->nullableString($validated['city'] ?? null),
+                    'country'            => $this->nullableString($validated['country'] ?? null),
+                    'postal_code'        => $this->nullableString($validated['postal_code'] ?? null),
+                    'address_line'       => $this->nullableString($validated['location'] ?? null),
+                    'profile_image_path' => $profileImagePath,
+                    'cover_image_path'   => $coverImagePath,
+                    'is_active'          => $isActive
                 ];
 
                 if (!empty($validated['password']) && is_string($validated['password'])) {
@@ -134,19 +138,11 @@ final class BrandService
             }
 
             return $this->brandRepository->updateBrand($brand, [
-                'brand_name'         => $validated['brand_name'],
-                'description'        => $this->nullableString($validated['description'] ?? null),
-                'industry'           => $this->nullableString($validated['industry'] ?? null),
-                'phone'              => $this->nullableString($validated['phone'] ?? null),
-                'email'              => $validated['email'],
-                'website'            => $this->nullableString($validated['website'] ?? null),
-                'location'           => $this->nullableString($validated['location'] ?? null),
-                'city'               => $this->nullableString($validated['city'] ?? null),
-                'country'            => $this->nullableString($validated['country'] ?? null),
-                'postal_code'        => $this->nullableString($validated['postal_code'] ?? null),
-                'profile_image_path' => $profileImagePath,
-                'cover_image_path'   => $coverImagePath,
-                'is_verified'        => (bool) ($validated['is_verified'] ?? false)
+                'brand_name'  => $validated['brand_name'],
+                'description' => $this->nullableString($validated['description'] ?? null),
+                'industry'    => $this->nullableString($validated['industry'] ?? null),
+                'website'     => $this->nullableString($validated['website'] ?? null),
+                'is_verified' => (bool) ($validated['is_verified'] ?? false)
             ]);
         });
     }
@@ -168,8 +164,8 @@ final class BrandService
         }
 
         return DB::transaction(function () use ($brand): array {
-            $this->deleteStoredAsset($brand->profile_image_path);
-            $this->deleteStoredAsset($brand->cover_image_path);
+            $this->deleteStoredAsset($brand->user?->profile_image_path);
+            $this->deleteStoredAsset($brand->user?->cover_image_path);
 
             if ($brand->user) {
                 $this->brandRepository->deleteUser($brand->user);

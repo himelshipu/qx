@@ -133,7 +133,7 @@ final class InfluencerService
     {
         $creators = Creator::query()
             ->with([
-                'user:id,name,slug,is_active',
+                'user:id,name,slug,city,country,profile_image_path,is_active',
                 'platformStats' => fn($q) => $q->where('is_active', true)->orderByDesc('follower_count')
             ])
             ->where('is_featured', true)
@@ -168,7 +168,7 @@ final class InfluencerService
     {
         $paginator = Creator::query()
             ->with([
-                'user:id,name,slug,is_active',
+                'user:id,name,slug,city,country,profile_image_path,is_active',
                 'platformStats' => fn($q) => $q->where('is_active', true)->orderByDesc('follower_count')
             ])
             ->where('is_featured', true)

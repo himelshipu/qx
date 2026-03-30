@@ -20,6 +20,7 @@ return new class extends Migration
             $table->enum('gender', ['male', 'female', 'other'])->nullable();
             $table->string('country', 120)->nullable();
             $table->string('city', 120)->nullable();
+            $table->string('address_line', 255)->nullable();
             $table->string('postal_code', 30)->nullable();
             $table->text('bio')->nullable();
             $table->string('profile_image_path', 500)->nullable();

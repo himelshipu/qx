@@ -6,8 +6,10 @@ namespace App\Services\Admin;
 
 use App\Models\Campaign;
 use App\Repositories\Contracts\CampaignRepositoryInterface;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 
 /**
  * Class CampaignService
@@ -78,9 +80,11 @@ final class CampaignService
      */
     public function getListingPayload(string $search, string $status, string $type): array
     {
+        $brandScopeId = $this->resolveScopedBrandIdForListing();
+
         return [
-            'campaigns'     => $this->campaignRepository->paginateForDashboard($search, $status, $type),
-            'stats'         => $this->campaignRepository->getStats(),
+            'campaigns'     => $this->campaignRepository->paginateForDashboard($search, $status, $type, $brandScopeId),
+            'stats'         => $this->campaignRepository->getStats($brandScopeId),
             'search'        => $search,
             'status'        => $status,
             'type'          => $type,
@@ -92,17 +96,25 @@ final class CampaignService
     /**
      * Build form payload for create/edit pages.
      *
-     * @return array{categoryOptions:\Illuminate\Support\Collection<int, array{id:int,name:string}>,followerRangeOptions:\Illuminate\Support\Collection<int, array{id:int,label:string}>,campaignTypeOptions:array<int, array{value:string,label:string}>,statusOptions:array<int, array{value:string,label:string}>,genderOptions:array<int, array{value:string,label:string}>,countryOptions:array<int, array{code:string,name:string}>}
+     * @return array{categoryOptions:\Illuminate\Support\Collection<int, array{id:int,name:string}>,followerRangeOptions:\Illuminate\Support\Collection<int, array{id:int,label:string}>,campaignTypeOptions:array<int, array{value:string,label:string}>,statusOptions:array<int, array{value:string,label:string}>,genderOptions:array<int, array{value:string,label:string}>,countryOptions:array<int, array{code:string,name:string}>,brandOptions:\Illuminate\Support\Collection<int, array{id:int,name:string}>,canSelectBrand:bool,defaultBrandId:?int}
      */
     public function getFormPayload(): array
     {
+        $authUser = Auth::user();
+        $canSelectBrand = (string) ($authUser?->user_type ?? '') === 'admin';
+        $defaultBrandId = $canSelectBrand ? null : $authUser?->brand?->id;
+    $brandOptions = $canSelectBrand ? $this->campaignRepository->getBrandOptions() : collect();
+
         return [
             'categoryOptions'      => $this->campaignRepository->getCategoryOptions(),
             'followerRangeOptions' => $this->campaignRepository->getFollowerRangeOptions(),
             'campaignTypeOptions'  => $this->getTypeOptions(),
             'statusOptions'        => $this->getStatusOptions(),
             'genderOptions'        => $this->getGenderOptions(),
-            'countryOptions'       => $this->getCountryOptions()
+            'countryOptions'       => $this->getCountryOptions(),
+            'brandOptions'         => $brandOptions,
+            'canSelectBrand'       => $canSelectBrand,
+            'defaultBrandId'       => $defaultBrandId
         ];
     }
 
@@ -115,9 +127,11 @@ final class CampaignService
     {
         $campaign->load([
             'targeting',
+            'brand:id,brand_name',
+            'createdBy:id,name,email,user_type',
             'categories:id,name',
             'followerRanges:id,label',
-            'targetCountries:id,campaign_id,country_code,country_name'
+            'targetCountries:id,campaign_id,country_code'
         ])->loadCount(['applications', 'assets', 'orders', 'orderItems', 'cartItems']);
 
         return [
@@ -133,10 +147,19 @@ final class CampaignService
     public function createCampaign(array $validated, bool $isActive): Campaign
     {
         return DB::transaction(function () use ($validated, $isActive): Campaign {
+            $authUser = Auth::user();
+            if (!$authUser) {
+                throw ValidationException::withMessages(['auth' => 'You must be authenticated to create a campaign.']);
+            }
+
+            $brandId = $this->resolveBrandIdForMutation($validated);
+
             $campaign = $this->campaignRepository->create($this->buildCampaignData(
                 validated: $validated,
                 isActive: $isActive,
-                publishedAt: $this->resolvePublishedAt(status: (string) $validated['status'])
+                publishedAt: $this->resolvePublishedAt(status: (string) $validated['status']),
+                brandId: $brandId,
+                createdByUserId: (int) $authUser->id
             ));
 
             $this->persistRelations($campaign, $validated);
@@ -153,6 +176,8 @@ final class CampaignService
     public function updateCampaign(Campaign $campaign, array $validated, bool $isActive): Campaign
     {
         return DB::transaction(function () use ($campaign, $validated, $isActive): Campaign {
+            $brandId = $this->resolveBrandIdForMutation($validated, $campaign);
+
             $updatedCampaign = $this->campaignRepository->update(
                 $campaign,
                 $this->buildCampaignData(
@@ -161,7 +186,8 @@ final class CampaignService
                     publishedAt: $this->resolvePublishedAt(
                         status: (string) $validated['status'],
                         currentPublishedAt: $campaign->published_at
-                    )
+                    ),
+                    brandId: $brandId
                 )
             );
 
@@ -199,9 +225,10 @@ final class CampaignService
      * @param  array<string, mixed>   $validated
      * @return array<string, mixed>
      */
-    private function buildCampaignData(array $validated, bool $isActive, mixed $publishedAt): array
+    private function buildCampaignData(array $validated, bool $isActive, mixed $publishedAt, int $brandId, ?int $createdByUserId = null): array
     {
-        return [
+        $data = [
+            'brand_id'      => $brandId,
             'title'         => $validated['title'],
             'campaign_type' => $validated['campaign_type'],
             'description'   => $this->nullableString($validated['description'] ?? null),
@@ -215,6 +242,12 @@ final class CampaignService
             'published_at'  => $publishedAt,
             'is_active'     => $isActive
         ];
+
+        if ($createdByUserId !== null) {
+            $data['created_by'] = $createdByUserId;
+        }
+
+        return $data;
     }
 
     /**
@@ -435,7 +468,7 @@ final class CampaignService
      * Normalize selected target countries from request payload.
      *
      * @param  mixed      $value
-     * @return array<int, array{country_code:string,country_name:string}>
+    * @return array<int, array{country_code:string}>
      */
     private function normalizeTargetCountries(mixed $value): array
     {
@@ -456,11 +489,53 @@ final class CampaignService
             }
 
             $countries[$code] = [
-                'country_code' => $code,
-                'country_name' => self::COUNTRY_OPTIONS[$code] ?? $code
+                'country_code' => $code
             ];
         }
 
         return array_values($countries);
+    }
+
+    private function resolveScopedBrandIdForListing(): ?int
+    {
+        $authUser = Auth::user();
+
+        if (!$authUser) {
+            return null;
+        }
+
+        return (string) $authUser->user_type === 'brand' ? (int) ($authUser->brand?->id ?? 0) : null;
+    }
+
+    /**
+     * @param array<string, mixed> $validated
+     */
+    private function resolveBrandIdForMutation(array $validated, ?Campaign $campaign = null): int
+    {
+        $authUser = Auth::user();
+
+        if (!$authUser) {
+            throw ValidationException::withMessages(['auth' => 'You must be authenticated to manage campaigns.']);
+        }
+
+        $userType = (string) ($authUser->user_type ?? '');
+
+        if ($userType === 'admin') {
+            $requestedBrandId = (int) ($validated['brand_id'] ?? $campaign?->brand_id ?? 0);
+
+            if ($requestedBrandId <= 0) {
+                throw ValidationException::withMessages(['brand_id' => 'Please select a brand in “Creating For”.']);
+            }
+
+            return $requestedBrandId;
+        }
+
+        $brandId = (int) ($authUser->brand?->id ?? 0);
+
+        if ($brandId <= 0) {
+            throw ValidationException::withMessages(['brand_id' => 'Current user is not linked to an active brand profile.']);
+        }
+
+        return $brandId;
     }
 }

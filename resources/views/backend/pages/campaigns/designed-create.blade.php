@@ -75,6 +75,32 @@
 			<input type="hidden" name="wizard_step" x-model="step">
 			<input type="hidden" name="is_active" value="0">
 
+			@php
+				$selectedBrandId = (int) old('brand_id', $defaultBrandId ?? 0);
+			@endphp
+
+			@if (($canSelectBrand ?? false) === true)
+				<div class="mb-6 rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+					<label for="brand_id" class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
+						Creating For <span class="text-red-500">*</span>
+					</label>
+					<select id="brand_id" name="brand_id" required
+						class="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-3 text-sm text-gray-900 focus:border-gray-500 focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-white">
+						<option value="">Select a brand</option>
+						@foreach (($brandOptions ?? collect()) as $brandOption)
+							<option value="{{ $brandOption['id'] }}" {{ $selectedBrandId === (int) $brandOption['id'] ? 'selected' : '' }}>
+								{{ $brandOption['name'] }}
+							</option>
+						@endforeach
+					</select>
+					@error('brand_id')
+						<p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+					@enderror
+				</div>
+			@else
+				<input type="hidden" name="brand_id" value="{{ $selectedBrandId > 0 ? $selectedBrandId : (int) ($defaultBrandId ?? 0) }}">
+			@endif
+
 			<div x-show="step === 1" x-cloak x-transition class="grid grid-cols-1 items-start gap-8 md:grid-cols-[1fr_380px]">
 				<div class="space-y-6">
 					<header>

@@ -104,6 +104,14 @@
 						<dd class="font-medium text-gray-900 dark:text-white">
 							{{ $campaign->published_at?->format('M d, Y h:i A') ?? 'N/A' }}</dd>
 					</div>
+					<div class="flex justify-between gap-4">
+						<dt class="text-gray-500 dark:text-gray-400">Brand</dt>
+						<dd class="font-medium text-gray-900 dark:text-white">{{ $campaign->brand?->brand_name ?? 'N/A' }}</dd>
+					</div>
+					<div class="flex justify-between gap-4">
+						<dt class="text-gray-500 dark:text-gray-400">Created By</dt>
+						<dd class="font-medium text-gray-900 dark:text-white">{{ $campaign->createdBy?->name ?? 'N/A' }}</dd>
+					</div>
 				</dl>
 			</div>
 
@@ -167,7 +175,7 @@
 				@forelse ($campaign->targetCountries as $country)
 					<span
 						class="inline-flex rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-700 dark:bg-gray-800 dark:text-gray-300">
-						{{ $country->country_name }} ({{ $country->country_code }})
+						{{ $country->country_code }}
 					</span>
 				@empty
 					<span class="text-sm text-gray-500 dark:text-gray-400">No countries selected.</span>

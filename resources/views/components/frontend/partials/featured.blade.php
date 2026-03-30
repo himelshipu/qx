@@ -24,6 +24,22 @@
 			@foreach ($featuredInfluencers as $creator)
 				@php
 					$profileUrl = !empty($creator['slug']) ? route('creator.profile', ['slug' => $creator['slug']]) : '#';
+					$city = trim((string) ($creator['city'] ?? ''));
+					$country = trim((string) ($creator['country'] ?? ''));
+
+					if ($city !== '' || $country !== '') {
+						$locationDisplay = implode(', ', array_values(array_filter([$city, $country])));
+					} else {
+						$location = trim((string) ($creator['location'] ?? ''));
+						if ($location === '') {
+							$locationDisplay = 'Location not provided';
+						} else {
+							$parts = array_values(array_filter(array_map('trim', explode(',', $location))));
+							$locationDisplay = count($parts) >= 2
+								? implode(', ', array_slice($parts, -2))
+								: $location;
+						}
+					}
 				@endphp
 
 			<a href="{{ $profileUrl }}"
@@ -83,11 +99,11 @@
 						<h3 class="text-gray-800 dark:text-gray-300 text-[15px] leading-tight font-medium line-clamp-1">
 							{{ $creator['title'] }}
 						</h3>
-						<span class="text-[#222] dark:text-white font-medium text-sm leading-none">
-							{{ $creator['handle'] }}
+						<span class="text-[#222] dark:text-white font-medium text-sm leading-none max-w-[120px] inline-block truncate" title="{{ $creator['slug'] ?? '' }}">
+							 {{ '@'.$creator['slug'] ?? '-' }}
 						</span>
 					</div>
-					<p class="text-sm text-gray-400 font-normal mt-1">{{ $creator['location'] }}</p>
+					<p class="text-sm text-gray-400 font-normal mt-1">{{ $locationDisplay }}</p>
 				</div>
 
 			</a>

@@ -27,6 +27,11 @@
 		</script>
 
 		<!-- Tailwind CSS & Alpine.js via Vite -->
+		<style>
+			[x-cloak] {
+				display: none !important;
+			}
+		</style>
 		@vite(['resources/css/app.css', 'resources/js/app.js'])
 	</head>
 

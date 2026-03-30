@@ -7,13 +7,14 @@
 		        ? (string) $creator->display_name
 		        : (string) ($creator->user->name ?? 'Creator');
 		$locationParts = array_values(
-		    array_filter([
-		        trim((string) ($creator->location ?? '')),
-		        trim((string) ($creator->city ?? '')),
-		        trim((string) ($creator->country ?? '')),
-		    ]),
+			array_filter([
+				trim((string) ($creator->user->address_line ?? '')),
+				trim((string) ($creator->user->city ?? '')),
+				trim((string) ($creator->user->postal_code ?? '')),
+				trim((string) ($creator->user->country ?? '')),
+			]),
 		);
-		$locationText = $locationParts !== [] ? implode(', ', $locationParts) : 'Los Angeles, CA, United States';
+		$locationText = $locationParts !== [] ? implode(', ', $locationParts) : '';
 
 		$categoryNames = $creator->categories->pluck('name')->filter()->take(5)->values();
 		if ($categoryNames->isEmpty()) {
@@ -71,9 +72,11 @@
 		}
 
 		$bioText =
-		    trim((string) ($creator->description ?? '')) !== ''
-		        ? (string) $creator->description
-		        : 'As a passionate blogger focusing on the intersection of technology, Tesla innovations, health and fitness, automotive insights, and pet care, I strive to create authentic content that resonates with my audience. My mission is to share my genuine experiences and recommendations, collaborating only with brands that align with my interests and values...';
+			trim((string) ($creator->description ?? '')) !== ''
+				? (string) $creator->description
+				: (trim((string) ($creator->user->bio ?? '')) !== ''
+					? (string) $creator->user->bio
+					: '');
 
 		$packageCards = $packages
 		    ->map(static function ($package): array {
@@ -223,19 +226,59 @@
 							@endif </span>
 					@endforeach
 				</div>
-
-				@auth
-					@if (optional(Auth::user()->creator)->id === optional($creator)->id)
-						<a href="{{ route('dashboard.creator.profile.edit') }}"
-							class="flex items-center gap-2 px-5 py-2 border border-gray-200 dark:border-gray-800 rounded-lg text-sm font-bold text-[#222] hover:bg-purple-50 transition active:scale-95">
-							<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
-								<path d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-							</svg>
-							Edit
-						</a>
-					@endif
-				@endauth
+				<div class="flex items-center gap-2">
+					<button id="share-btn" type="button" class="flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm font-semibold text-purple-700 dark:text-purple-300 hover:bg-purple-50 dark:hover:bg-gray-800 transition" onclick="copyProfileUrl(event); return false;">
+						<x-icons.share class="w-5 h-5" />
+						Share
+					</button>
+					@auth
+						@if (optional(Auth::user()->creator)->id === optional($creator)->id)
+							<a href="{{ route('dashboard.creator.profile.edit') }}"
+								class="flex items-center gap-2 px-5 py-2 border border-gray-200 dark:border-gray-800 rounded-lg text-sm font-bold text-[#222] hover:bg-purple-50 transition active:scale-95">
+								<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+									<path d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+								</svg>
+								Edit
+							</a>
+						@endif
+					@endauth
+				</div>
 			</div>
+@push('scripts')
+<script>
+	function copyProfileUrl(e) {
+		if (e) e.preventDefault();
+		const url = window.location.href;
+		if (navigator.clipboard) {
+			navigator.clipboard.writeText(url).then(function() {
+				showLinkCopied();
+			}, function() {
+				fallbackCopyTextToClipboard(url);
+			});
+		} else {
+			fallbackCopyTextToClipboard(url);
+		}
+		return false;
+	}
+	function fallbackCopyTextToClipboard(text) {
+		const textArea = document.createElement("textarea");
+		textArea.value = text;
+		document.body.appendChild(textArea);
+		textArea.focus();
+		textArea.select();
+		try {
+			document.execCommand('copy');
+			showLinkCopied();
+		} catch (err) {}
+		document.body.removeChild(textArea);
+	}
+	function showLinkCopied() {
+		if (window.toast) {
+			window.toast.success('Link copied.');
+		}
+	}
+</script>
+@endpush
 
 			<!-- 2. PORTRAIT IMAGE GRID & MOBILE SLIDER -->
 			<div class="relative -mx-4 sm:-mx-6 lg:mx-0 mb-10 lg:mb-16"

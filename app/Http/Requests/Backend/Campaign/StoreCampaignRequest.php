@@ -23,6 +23,7 @@ class StoreCampaignRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'brand_id'           => ['nullable', 'integer', 'exists:brands,id'],
             'title'              => ['required', 'string', 'max:255'],
             'campaign_type'      => ['required', Rule::in(['facebook', 'instagram', 'tiktok', 'linkedin', 'x', 'youtube', 'ugc', 'other'])],
             'description'        => ['nullable', 'string'],
@@ -87,6 +88,7 @@ class StoreCampaignRequest extends FormRequest
     {
         return [
             'title.required' => 'Campaign title is required.',
+            'brand_id.exists' => 'Selected brand is invalid.',
             'title.max' => 'Campaign title cannot exceed 255 characters.',
             'campaign_type.required' => 'Please select a campaign type.',
             'campaign_type.in' => 'Please select a valid campaign type.',
