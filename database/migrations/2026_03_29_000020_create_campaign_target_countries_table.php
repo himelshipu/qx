@@ -14,7 +14,7 @@ return new class extends Migration
             $table->char('country_code', 2);
             $table->timestamps();
 
-            $table->unique(['campaign_id', 'country_code']);
+            $table->unique(['campaign_id', 'country_code'], 'campaign_country_unique');
         });
     }
 

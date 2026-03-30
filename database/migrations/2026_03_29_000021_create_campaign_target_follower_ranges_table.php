@@ -14,7 +14,7 @@ return new class extends Migration
             $table->foreignId('follower_range_id')->constrained('follower_ranges')->cascadeOnDelete();
             $table->timestamps();
 
-            $table->unique(['campaign_id', 'follower_range_id']);
+            $table->unique(['campaign_id', 'follower_range_id'], 'campaign_follower_range_unique');
         });
     }
 

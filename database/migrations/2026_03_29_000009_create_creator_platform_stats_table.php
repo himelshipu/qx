@@ -17,7 +17,7 @@ return new class extends Migration
             $table->unsignedBigInteger('follower_count')->nullable();
             $table->unsignedBigInteger('avg_views')->nullable();
             $table->decimal('engagement_rate', 5, 2)->nullable();
-            $table->boolean('is_primary')->default(false);
+            $table->boolean('is_active')->default(true);
             $table->timestamps();
 
             $table->unique(['creator_id', 'platform']);

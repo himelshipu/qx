@@ -14,7 +14,7 @@ return new class extends Migration
             $table->foreignId('category_id')->constrained('categories')->cascadeOnDelete();
             $table->timestamps();
 
-            $table->unique(['brand_onboarding_profile_id', 'category_id']);
+            $table->unique(['brand_onboarding_profile_id', 'category_id'], 'brand_onboarding_profile_category_unique');
         });
     }
 
