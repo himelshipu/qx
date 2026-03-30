@@ -2,6 +2,9 @@
 
 namespace App\Helpers;
 
+use Illuminate\Support\Facades\Blade;
+use Illuminate\Support\Facades\Route;
+
 class MenuHelper
 {
     public static function getMainNavItems()
@@ -21,72 +24,72 @@ class MenuHelper
                         'icon'     => 'categories',
                         'name'     => 'Categories',
                         'subItems' => [
-                            ['name' => 'All Categories', 'route' => 'categories.index'],
-                            ['name' => 'Create Category', 'route' => 'categories.create']
+                            ['name' => 'All Categories', 'route' => 'categories.index', 'icon' => 'categories'],
+                            ['name' => 'Create Category', 'route' => 'categories.create', 'icon' => 'campaign-new']
                         ]
                     ],
                     [
                         'icon'     => 'brands',
                         'name'     => 'Brands',
                         'subItems' => [
-                            ['name' => 'All Brands', 'route' => 'brands.index'],
-                            ['name' => 'Create Brand', 'route' => 'brands.create']
+                            ['name' => 'All Brands', 'route' => 'brands.index', 'icon' => 'brands'],
+                            ['name' => 'Create Brand', 'route' => 'brands.create', 'icon' => 'campaign-new']
                         ]
                     ],
                     [
                         'icon'     => 'creators',
                         'name'     => 'Creators',
                         'subItems' => [
-                            ['name' => 'All Creators', 'route' => 'creators.index'],
-                            ['name' => 'Create Creator', 'route' => 'creators.create']
+                            ['name' => 'All Creators', 'route' => 'creators.index', 'icon' => 'creators'],
+                            ['name' => 'Create Creator', 'route' => 'creators.create', 'icon' => 'campaign-new']
                         ]
                     ],
                     [
                         'icon'     => 'moderators',
                         'name'     => 'Moderators',
                         'subItems' => [
-                            ['name' => 'All Moderators', 'route' => 'moderators.index'],
-                            ['name' => 'Create Moderator', 'route' => 'moderators.create']
+                            ['name' => 'All Moderators', 'route' => 'moderators.index', 'icon' => 'moderators'],
+                            ['name' => 'Create Moderator', 'route' => 'moderators.create', 'icon' => 'campaign-new']
                         ]
                     ],
                     [
                         'icon'     => 'case-studies',
                         'name'     => 'Case Studies',
                         'subItems' => [
-                            ['name' => 'All Case Studies', 'route' => 'case-studies.index'],
-                            ['name' => 'Create Case Study', 'route' => 'case-studies.create']
+                            ['name' => 'All Case Studies', 'route' => 'case-studies.index', 'icon' => 'case-studies'],
+                            ['name' => 'Create Case Study', 'route' => 'case-studies.create', 'icon' => 'campaign-new']
                         ]
                     ],
                     [
                         'icon'     => 'testimonials',
                         'name'     => 'Testimonials',
                         'subItems' => [
-                            ['name' => 'All Testimonials', 'route' => 'testimonials.index'],
-                            ['name' => 'Create Testimonial', 'route' => 'testimonials.create']
+                            ['name' => 'All Testimonials', 'route' => 'testimonials.index', 'icon' => 'testimonials'],
+                            ['name' => 'Create Testimonial', 'route' => 'testimonials.create', 'icon' => 'campaign-new']
                         ]
                     ],
                     [
                         'icon'     => 'collaborations',
                         'name'     => 'Collaborations',
                         'subItems' => [
-                            ['name' => 'All Collaborations', 'route' => 'featured-collaborations.index'],
-                            ['name' => 'Add Collaboration', 'route' => 'featured-collaborations.create']
+                            ['name' => 'All Collaborations', 'route' => 'featured-collaborations.index', 'icon' => 'collaborations'],
+                            ['name' => 'Add Collaboration', 'route' => 'featured-collaborations.create', 'icon' => 'campaign-new']
                         ]
                     ],
                     [
                         'icon'     => 'faqs',
                         'name'     => 'FAQs',
                         'subItems' => [
-                            ['name' => 'FAQ Sections', 'route' => 'faqs.sections.index'],
-                            ['name' => 'Create Section', 'route' => 'faqs.sections.create']
+                            ['name' => 'FAQ Sections', 'route' => 'faqs.sections.index', 'icon' => 'faqs'],
+                            ['name' => 'Create Section', 'route' => 'faqs.sections.create', 'icon' => 'campaign-new']
                         ]
                     ],
                     [
                         'icon'     => 'knowledge-base',
                         'name'     => 'Knowledge Base',
                         'subItems' => [
-                            ['name' => 'All Articles', 'route' => 'knowledge-base.index'],
-                            ['name' => 'Create Article', 'route' => 'knowledge-base.create']
+                            ['name' => 'All Articles', 'route' => 'knowledge-base.index', 'icon' => 'knowledge-base'],
+                            ['name' => 'Create Article', 'route' => 'knowledge-base.create', 'icon' => 'campaign-new']
                         ]
                     ]
                 ]
@@ -97,7 +100,7 @@ class MenuHelper
                 'name'  => 'CAMPAIGNS',
                 'items' => [
                     [
-                        'icon'  => 'campaigns',
+                        'icon'  => 'campaign',
                         'name'  => 'All Campaigns',
                         'route' => 'campaigns.index'
                     ],
@@ -128,8 +131,8 @@ class MenuHelper
                         'icon'     => 'packages',
                         'name'     => 'Packages',
                         'subItems' => [
-                            ['name' => 'All Packages', 'route' => 'packages.index'],
-                            ['name' => 'Create Package', 'route' => 'packages.create']
+                            ['name' => 'All Packages', 'route' => 'packages.index', 'icon' => 'packages'],
+                            ['name' => 'Create Package', 'route' => 'packages.create', 'icon' => 'campaign-new']
                         ]
                     ],
                     [
@@ -215,11 +218,152 @@ class MenuHelper
         return request()->is(ltrim($path, '/'));
     }
 
+    public static function buildSidebarMenu(string $currentRoute): array
+    {
+        $menuItems = self::getMainNavItems();
+        $preparedItems = [];
+        $activeAccordion = null;
+
+        foreach ($menuItems as $key => $item) {
+            if ($key === 'dashboard') {
+                [$routeName, $url] = self::resolveRouteMeta($item['route'] ?? null, false);
+                $preparedItems[$key] = [
+                    ...$item,
+                    'route_name' => $routeName,
+                    'url' => $url,
+                    'active' => self::isRouteMatch($currentRoute, $routeName),
+                ];
+                continue;
+            }
+
+            if (($item['type'] ?? null) === 'group') {
+                $groupItems = [];
+                $groupActive = false;
+
+                foreach ($item['items'] as $index => $subItem) {
+                    $menuId = $key . '_' . $index;
+                    $hasSubItems = isset($subItem['subItems']);
+
+                    if ($hasSubItems) {
+                        $nestedItems = [];
+                        $subItemActive = false;
+
+                        foreach ($subItem['subItems'] as $nestedItem) {
+                            [$routeName, $url] = self::resolveRouteMeta($nestedItem['route'] ?? null, true);
+                            $isActive = self::isRouteMatch($currentRoute, $routeName);
+                            $subItemActive = $subItemActive || $isActive;
+
+                            $nestedItems[] = [
+                                ...$nestedItem,
+                                'route_name' => $routeName,
+                                'url' => $url,
+                                'active' => $isActive,
+                            ];
+                        }
+
+                        if ($subItemActive && $activeAccordion === null) {
+                            $activeAccordion = $menuId;
+                        }
+
+                        $groupItems[] = [
+                            ...$subItem,
+                            'menu_id' => $menuId,
+                            'has_sub_items' => true,
+                            'sub_items' => $nestedItems,
+                            'default_url' => $nestedItems[0]['url'] ?? '#',
+                            'active' => $subItemActive,
+                        ];
+
+                        $groupActive = $groupActive || $subItemActive;
+                        continue;
+                    }
+
+                    [$routeName, $url] = self::resolveRouteMeta($subItem['route'] ?? null, true);
+                    $isActive = self::isRouteMatch($currentRoute, $routeName);
+                    $groupActive = $groupActive || $isActive;
+
+                    $groupItems[] = [
+                        ...$subItem,
+                        'has_sub_items' => false,
+                        'route_name' => $routeName,
+                        'url' => $url,
+                        'active' => $isActive,
+                    ];
+                }
+
+                $preparedItems[$key] = [
+                    ...$item,
+                    'items' => $groupItems,
+                    'active' => $groupActive,
+                ];
+                continue;
+            }
+
+            if ($key === 'profile') {
+                [$routeName, $url] = self::resolveRouteMeta($item['route'] ?? null, false);
+                $preparedItems[$key] = [
+                    ...$item,
+                    'route_name' => $routeName,
+                    'url' => $url,
+                    'active' => self::isRouteMatch($currentRoute, $routeName) || request()->is('profile*'),
+                ];
+                continue;
+            }
+
+            $preparedItems[$key] = $item;
+        }
+
+        return [
+            'items' => $preparedItems,
+            'activeAccordion' => $activeAccordion,
+        ];
+    }
+
+    private static function resolveRouteMeta(?string $route, bool $dashboardPrefix = true): array
+    {
+        if (!$route) {
+            return [null, '#'];
+        }
+
+        if ($route === '/dashboard') {
+            return [
+                Route::has('dashboard.index') ? 'dashboard.index' : null,
+                Route::has('dashboard.index') ? route('dashboard.index') : '/dashboard',
+            ];
+        }
+
+        if (str_starts_with($route, '/')) {
+            return [null, url($route)];
+        }
+
+        $routeName = $dashboardPrefix && !str_starts_with($route, 'dashboard.') ? 'dashboard.' . $route : $route;
+
+        return [
+            $routeName,
+            Route::has($routeName) ? route($routeName) : '#',
+        ];
+    }
+
+    private static function isRouteMatch(string $currentRoute, ?string $routeName): bool
+    {
+        return $routeName !== null && $currentRoute === $routeName;
+    }
+
     public static function getIconSvg($iconName)
     {
-        $icons = [
-            'dashboard'       => '<svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 13h6a1 1 0 001-1V4a1 1 0 00-1-1H4a1 1 0 00-1 1v8a1 1 0 001 1zm0 8h6a1 1 0 001-1v-4a1 1 0 00-1-1H4a1 1 0 00-1 1v4a1 1 0 001 1zm10 0h6a1 1 0 001-1v-8a1 1 0 00-1-1h-6a1 1 0 00-1 1v8a1 1 0 001 1zm0-18v4a1 1 0 001 1h6a1 1 0 001-1V4a1 1 0 00-1-1h-6a1 1 0 00-1 1z" stroke="currentColor" stroke-width="1.5" fill="none"/></svg>',
+        if (view()->exists('components.icons.' . $iconName)) {
+            return Blade::render('<x-icons.' . $iconName . ' class="w-5 h-5" />');
+        }
 
+        $icons = [
+
+            'dashboard' => '<svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">  <path d="M3 13h8V3H3v10zm10 8h8v-8h-8v8zm0-18v6h8V3h-8zM3 21h8v-6H3v6z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/> </svg>',
+
+            'collaborations' => '<svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"> <path d="M16 11c1.657 0 3-1.567 3-3.5S17.657 4 16 4s-3 1.567-3 3.5S14.343 11 16 11zM8 11c1.657 0 3-1.567 3-3.5S9.657 4 8 4 5 5.567 5 7.5 6.343 11 8 11z" stroke="currentColor" stroke-width="1.5"/> <path d="M2 20v-1c0-2.761 2.686-5 6-5s6 2.239 6 5v1M14 20v-1c0-1.657-.672-3.156-1.757-4.243C13.12 13.988 14.48 13 16 13c3.314 0 6 2.239 6 5v1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/> </svg>',
+
+            'campaigns' => '<svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"> <path d="M3 11l18-8v18L3 13v-2z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>  <path d="M11 13v6a2 2 0 002 2h1"    stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>   </svg>',
+            'campaign' => '<svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"> <path d="M3 11l18-8v18L3 13v-2z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>  <path d="M11 13v6a2 2 0 002 2h1"    stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>   </svg>',
+            
             'categories'      => '<svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8 6H21M8 12H21M8 18H21M3 6H3.01M3 12H3.01M3 18H3.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
 
             'brands'          => '<svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M20 7L12 3L4 7M20 7L12 11M20 7V17L12 21M12 11L4 7M12 11V21M4 7V17L12 21" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>',

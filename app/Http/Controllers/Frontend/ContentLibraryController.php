@@ -13,18 +13,23 @@ class ContentLibraryController extends Controller
         private readonly ContentLibraryService $contentLibraryService
     ) {}
 
-    /**
-     * Display the user's profile form.
-     */
     public function index(ContentLibraryIndexRequest $request): View
     {
         $user = $request->user();
-
-        return view('frontend.pages.content-library', $this->contentLibraryService->getListingPayload(
-            $user,
-            $request->search(),
-            $request->status(),
-            $request->perPage()
-        ));
+        
+        $filters = [
+            'search' => $request->search(),
+            'status' => $request->status(),
+            'platform' => $request->platform(),
+            'date_from' => $request->dateFrom(),
+            'date_to' => $request->dateTo(),
+            'per_page' => $request->perPage(),
+        ];
+        
+        $data = $this->contentLibraryService->getListingPayload($user, $filters);
+        
+        $data['filters'] = $filters;
+        
+        return view('frontend.pages.content-library', $data);
     }
 }

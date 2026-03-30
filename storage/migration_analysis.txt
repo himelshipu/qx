@@ -1,6 +1,6 @@
 =========================================
 DETAILED MIGRATION COLUMN ANALYSIS
-Generated: 2026-03-30 14:44:32
+Generated: 2026-03-30 15:26:57
 =========================================
 
 ---------------------------------------------------
@@ -1262,9 +1262,30 @@ UNIQUE CONSTRAINTS:
   - ['user_id', 'permission_id'], 'uq_user_permissions_user_permission'
 
 
+---------------------------------------------------
+[61] File: 2026_03_30_000120_create_knowledge_base_articles_table.php
+---------------------------------------------------
+Table: knowledge_base_articles
+
+COLUMN DEFINITIONS:
+-------------------
+  - title (string)
+  - slug (string)
+  - badge (string)
+  - summary (string)
+  - content (longText)
+  - read_time_minutes (unsignedTinyInteger)
+  - is_featured (boolean)
+  - is_published (boolean)
+  - published_at (timestamp)
+  - sort_order (integer)
+  - is_published (index)
+  - is_featured (index)
+
+
 =========================================
 SUMMARY
 =========================================
-Total Migration Files: 60
-Generated on: 2026-03-30 14:44:32
+Total Migration Files: 61
+Generated on: 2026-03-30 15:26:57
 =========================================
