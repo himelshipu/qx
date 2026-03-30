@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="scroll-smooth">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="scroll-smooth bg-white dark:bg-gray-900">
 
 	<head>
 		<meta charset="utf-8">
@@ -8,56 +8,29 @@
 
 		<title>{{ $title ?? 'Welcome' }} | QX - Influencer Hiring Platform</title>
 
-		<!-- Tailwind CSS & Alpine.js via Vite -->
-		@vite(['resources/css/app.css', 'resources/js/app.js'])
-
+		<!-- Apply theme before CSS loads to avoid first-paint flash -->
 		<script>
 			(function() {
-				const savedTheme = localStorage.getItem('theme');
+				let savedTheme = null;
+				try {
+					savedTheme = localStorage.getItem('theme');
+				} catch (e) {}
+
 				const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
 				const theme = savedTheme || systemTheme;
+				const isDark = theme === 'dark';
 
-				if (theme === 'dark') {
-					document.documentElement.classList.add('dark');
-					if (document.body) {
-						document.body.classList.add('dark', 'bg-gray-900', 'text-gray-100');
-					}
-				} else {
-					document.documentElement.classList.remove('dark');
-					if (document.body) {
-						document.body.classList.add('bg-white', 'text-gray-900');
-					}
-				}
+				document.documentElement.classList.toggle('dark', isDark);
+				document.documentElement.style.colorScheme = isDark ? 'dark' : 'light';
+				document.documentElement.style.backgroundColor = isDark ? '#111827' : '#ffffff';
 			})();
 		</script>
 
-		<!-- Alpine.js Theme Store Initialization -->
-		<script>
-			document.addEventListener('alpine:init', () => {
-				Alpine.store('theme', {
-					theme: localStorage.getItem('theme') ||
-						(window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'),
-
-					toggle() {
-						this.theme = this.theme === 'light' ? 'dark' : 'light';
-						localStorage.setItem('theme', this.theme);
-
-						if (this.theme === 'dark') {
-							document.documentElement.classList.add('dark');
-							document.body.classList.add('dark', 'bg-gray-900', 'text-gray-100');
-							document.body.classList.remove('bg-white', 'text-gray-900');
-						} else {
-							document.documentElement.classList.remove('dark');
-							document.body.classList.remove('dark', 'bg-gray-900', 'text-gray-100');
-							document.body.classList.add('bg-white', 'text-gray-900');
-						}
-					}
-				});
-			});
-		</script>
+		<!-- Tailwind CSS & Alpine.js via Vite -->
+		@vite(['resources/css/app.css', 'resources/js/app.js'])
 	</head>
 
-	<body class="transition-colors duration-200">
+	<body class="bg-white text-gray-900 dark:bg-gray-900 dark:text-gray-100">
 
 		<!-- Floating Theme Toggle Button -->
 		<div class="fixed right-6 top-1/2 -translate-y-1/2 z-50">

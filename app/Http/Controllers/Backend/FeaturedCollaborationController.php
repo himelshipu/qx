@@ -4,8 +4,10 @@ namespace App\Http\Controllers\Backend;
 
 use App\Http\Controllers\Controller;
 use App\Models\FeaturedCollaboration;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Throwable;
 
 class FeaturedCollaborationController extends Controller
 {
@@ -39,9 +41,9 @@ class FeaturedCollaborationController extends Controller
         $validated = $request->validate([
             'brand_name'     => 'required|string|max:255',
             'asset_type'     => 'required|in:image,video',
-            'image_path'     => 'nullable|image|mimes:jpeg,png,webp,jpg|max:5120',
-            'video_path'     => 'nullable|mimes:mp4,webm,mov|max:102400',
-            'thumbnail_path' => 'nullable|image|mimes:jpeg,png,webp,jpg|max:2048',
+            'image_path'     => 'required_if:asset_type,image|nullable|image|mimes:jpeg,png,webp,jpg|max:5120',
+            'video_path'     => 'required_if:asset_type,video|nullable|mimes:mp4,webm,mov|max:102400',
+            'thumbnail_path' => 'exclude_unless:asset_type,video|nullable|image|mimes:jpeg,png,webp,jpg|max:2048',
             'sort_order'     => 'integer|min:0',
             'is_published'   => 'boolean'
         ]);
@@ -53,19 +55,26 @@ class FeaturedCollaborationController extends Controller
             'is_published' => $request->boolean('is_published')
         ];
 
-        // Handle image upload
-        if ($request->hasFile('image_path')) {
-            $data['image_path'] = $request->file('image_path')->store('collaborations', 'public');
-        }
+        try {
+            // Ensure upload directories exist before storing files.
+            $this->ensureCollaborationDirectories();
 
-        // Handle video upload
-        if ($request->hasFile('video_path')) {
-            $data['video_path'] = $request->file('video_path')->store('collaborations/videos', 'public');
-        }
+            if ($request->hasFile('image_path')) {
+                $data['image_path'] = $this->storePublicFile($request->file('image_path'), 'collaborations/images');
+            }
 
-        // Handle thumbnail upload
-        if ($request->hasFile('thumbnail_path')) {
-            $data['thumbnail_path'] = $request->file('thumbnail_path')->store('collaborations/thumbnails', 'public');
+            if ($request->hasFile('video_path')) {
+                $data['video_path'] = $this->storePublicFile($request->file('video_path'), 'collaborations/videos');
+            }
+
+            if ($request->hasFile('thumbnail_path') && $validated['asset_type'] === 'video') {
+                $data['thumbnail_path'] = $this->storePublicFile($request->file('thumbnail_path'), 'collaborations/thumbnails');
+            }
+        } catch (Throwable $e) {
+            report($e);
+            return back()->withInput()->withErrors([
+                'media_upload' => 'Unable to upload media right now. Please try again.'
+            ]);
         }
 
         FeaturedCollaboration::create($data);
@@ -94,9 +103,11 @@ class FeaturedCollaborationController extends Controller
             'asset_type'     => 'required|in:image,video',
             'image_path'     => 'nullable|image|mimes:jpeg,png,webp,jpg|max:5120',
             'video_path'     => 'nullable|mimes:mp4,webm,mov|max:102400',
-            'thumbnail_path' => 'nullable|image|mimes:jpeg,png,webp,jpg|max:2048',
+            'thumbnail_path' => 'exclude_unless:asset_type,video|nullable|image|mimes:jpeg,png,webp,jpg|max:2048',
             'sort_order'     => 'integer|min:0',
-            'is_published'   => 'boolean'
+            'is_published'   => 'boolean',
+            'delete_image'   => 'boolean',
+            'delete_video'   => 'boolean'
         ]);
 
         $data = [
@@ -106,31 +117,62 @@ class FeaturedCollaborationController extends Controller
             'is_published' => $request->boolean('is_published')
         ];
 
-        // Handle image upload
-        if ($request->hasFile('image_path')) {
-            // Delete old image
-            if ($featuredCollaboration->image_path && Storage::disk('public')->exists($featuredCollaboration->image_path)) {
-                Storage::disk('public')->delete($featuredCollaboration->image_path);
-            }
-            $data['image_path'] = $request->file('image_path')->store('collaborations', 'public');
+        if ($validated['asset_type'] === 'image') {
+            $this->deleteFromPublicDisk($featuredCollaboration->video_path);
+            $this->deleteFromPublicDisk($featuredCollaboration->thumbnail_path);
+            $data['video_path'] = null;
+            $data['thumbnail_path'] = null;
         }
 
-        // Handle video upload
-        if ($request->hasFile('video_path')) {
-            // Delete old video
-            if ($featuredCollaboration->video_path && Storage::disk('public')->exists($featuredCollaboration->video_path)) {
-                Storage::disk('public')->delete($featuredCollaboration->video_path);
-            }
-            $data['video_path'] = $request->file('video_path')->store('collaborations/videos', 'public');
+        if ($validated['asset_type'] === 'video') {
+            $this->deleteFromPublicDisk($featuredCollaboration->image_path);
+            $data['image_path'] = null;
         }
 
-        // Handle thumbnail upload
-        if ($request->hasFile('thumbnail_path')) {
-            // Delete old thumbnail
-            if ($featuredCollaboration->thumbnail_path && Storage::disk('public')->exists($featuredCollaboration->thumbnail_path)) {
-                Storage::disk('public')->delete($featuredCollaboration->thumbnail_path);
+        // Handle image deletion
+        if ($request->boolean('delete_image')) {
+            $this->deleteFromPublicDisk($featuredCollaboration->image_path);
+            $data['image_path'] = null;
+        }
+
+        // Handle video deletion
+        if ($request->boolean('delete_video')) {
+            $this->deleteFromPublicDisk($featuredCollaboration->video_path);
+            $data['video_path'] = null;
+            $this->deleteFromPublicDisk($featuredCollaboration->thumbnail_path);
+            $data['thumbnail_path'] = null;
+        }
+
+        try {
+            $this->ensureCollaborationDirectories();
+
+            // Handle image upload
+            if ($request->hasFile('image_path')) {
+                $this->deleteFromPublicDisk($featuredCollaboration->image_path);
+                $data['image_path'] = $this->storePublicFile($request->file('image_path'), 'collaborations/images');
             }
-            $data['thumbnail_path'] = $request->file('thumbnail_path')->store('collaborations/thumbnails', 'public');
+
+            // Handle video upload
+            if ($request->hasFile('video_path')) {
+                $this->deleteFromPublicDisk($featuredCollaboration->video_path);
+                $data['video_path'] = $this->storePublicFile($request->file('video_path'), 'collaborations/videos');
+            }
+
+            // Handle thumbnail upload - only for videos
+            if ($request->hasFile('thumbnail_path') && $validated['asset_type'] === 'video') {
+                $this->deleteFromPublicDisk($featuredCollaboration->thumbnail_path);
+                $data['thumbnail_path'] = $this->storePublicFile($request->file('thumbnail_path'), 'collaborations/thumbnails');
+            }
+        } catch (Throwable $e) {
+            report($e);
+            return back()->withInput()->withErrors([
+                'media_upload' => 'Unable to upload media right now. Please try again.'
+            ]);
+        }
+
+        if ($validated['asset_type'] === 'image') {
+            $data['video_path'] = null;
+            $data['thumbnail_path'] = null;
         }
 
         $featuredCollaboration->update($data);
@@ -145,15 +187,9 @@ class FeaturedCollaborationController extends Controller
     public function destroy(FeaturedCollaboration $featuredCollaboration)
     {
         // Delete associated files
-        if ($featuredCollaboration->image_path && Storage::disk('public')->exists($featuredCollaboration->image_path)) {
-            Storage::disk('public')->delete($featuredCollaboration->image_path);
-        }
-        if ($featuredCollaboration->video_path && Storage::disk('public')->exists($featuredCollaboration->video_path)) {
-            Storage::disk('public')->delete($featuredCollaboration->video_path);
-        }
-        if ($featuredCollaboration->thumbnail_path && Storage::disk('public')->exists($featuredCollaboration->thumbnail_path)) {
-            Storage::disk('public')->delete($featuredCollaboration->thumbnail_path);
-        }
+        $this->deleteFromPublicDisk($featuredCollaboration->image_path);
+        $this->deleteFromPublicDisk($featuredCollaboration->video_path);
+        $this->deleteFromPublicDisk($featuredCollaboration->thumbnail_path);
 
         $featuredCollaboration->delete();
 
@@ -174,5 +210,32 @@ class FeaturedCollaborationController extends Controller
 
         return redirect()->route('dashboard.featured-collaborations.index')
             ->with('success', "Featured collaboration {$status} successfully.");
+    }
+
+    private function ensureCollaborationDirectories(): void
+    {
+        $disk = Storage::disk('public');
+
+        foreach (['collaborations/images', 'collaborations/videos', 'collaborations/thumbnails'] as $directory) {
+            if (!$disk->exists($directory)) {
+                $disk->makeDirectory($directory);
+            }
+        }
+    }
+
+    private function storePublicFile(UploadedFile $file, string $directory): string
+    {
+        return $file->store($directory, 'public');
+    }
+
+    private function deleteFromPublicDisk(?string $path): void
+    {
+        if (!$path || $path === '0') {
+            return;
+        }
+
+        if (Storage::disk('public')->exists($path)) {
+            Storage::disk('public')->delete($path);
+        }
     }
 }

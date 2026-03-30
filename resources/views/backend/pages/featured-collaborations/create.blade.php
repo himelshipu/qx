@@ -2,7 +2,7 @@
 
 @section('content')
 	<div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 p-6">
-		<div class="max-w-4xl mx-auto">
+		<div class=" mx-auto">
 			<!-- Header -->
 			<div class="mb-8">
 				<a href="{{ route('dashboard.featured-collaborations.index') }}"
@@ -21,6 +21,12 @@
 				<form action="{{ route('dashboard.featured-collaborations.store') }}" method="POST" enctype="multipart/form-data"
 					class="p-8">
 					@csrf
+
+					@error('media_upload')
+						<div class="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-900/40 dark:bg-red-900/20 dark:text-red-300">
+							{{ $message }}
+						</div>
+					@enderror
 
 					<!-- Brand Name -->
 					<div class="mb-6">
@@ -119,42 +125,42 @@
 						@error('video_path')
 							<p class="text-red-500 dark:text-red-400 text-xs mt-1">{{ $message }}</p>
 						@enderror
-					</div>
 
-					<!-- Thumbnail Upload -->
-					<div class="mb-6">
-						<label for="thumbnail_path" class="block text-sm font-semibold text-gray-900 dark:text-white mb-2">
-							Thumbnail (Optional)
-						</label>
-						<div class="mt-2">
-							<div
-								class="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl px-6 py-8 text-center hover:border-indigo-500 dark:hover:border-indigo-400 transition-colors duration-200"
-								x-data="{ dragover: false }" @dragover="dragover = true" @dragleave="dragover = false"
-								@drop="dragover = false; $refs.thumbnailInput.click()"
-								:class="dragover && 'bg-indigo-50 dark:bg-indigo-900/10'">
-								<svg class="w-12 h-12 text-gray-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-										d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z">
-									</path>
-								</svg>
-								<p class="text-gray-600 dark:text-gray-400 text-sm mb-1">
-									Drag and drop or <button type="button"
-										onclick="this.closest('div').parentElement.querySelector('input[type=file]').click()"
-										class="text-indigo-600 dark:text-indigo-400 font-semibold hover:underline">click to select</button>
-								</p>
-								<p class="text-gray-500 dark:text-gray-500 text-xs">JPEG, PNG, WebP up to 2MB</p>
-								<input type="file" id="thumbnail_path" name="thumbnail_path" class="hidden" accept="image/*"
-									x-ref="thumbnailInput"
-									@change="
-                                if($el.files.length > 0) {
-                                    $el.closest('div').parentElement.querySelector('p').textContent = $el.files[0].name;
-                                }
-                            ">
+						<!-- Thumbnail Upload - only shown with videos -->
+						<div class="mt-6 pt-6 border-t border-gray-300 dark:border-gray-600">
+							<label for="thumbnail_path" class="block text-sm font-semibold text-gray-900 dark:text-white mb-2">
+								Thumbnail (Optional)
+							</label>
+							<div class="mt-2">
+								<div
+									class="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl px-6 py-8 text-center hover:border-indigo-500 dark:hover:border-indigo-400 transition-colors duration-200"
+									x-data="{ dragover: false }" @dragover="dragover = true" @dragleave="dragover = false"
+									@drop="dragover = false; $refs.thumbnailInput.click()"
+									:class="dragover && 'bg-indigo-50 dark:bg-indigo-900/10'">
+									<svg class="w-12 h-12 text-gray-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+											d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z">
+										</path>
+									</svg>
+									<p class="text-gray-600 dark:text-gray-400 text-sm mb-1">
+										Drag and drop or <button type="button"
+											onclick="this.closest('div').parentElement.querySelector('input[type=file]').click()"
+											class="text-indigo-600 dark:text-indigo-400 font-semibold hover:underline">click to select</button>
+									</p>
+									<p class="text-gray-500 dark:text-gray-500 text-xs">JPEG, PNG, WebP up to 2MB</p>
+									<input type="file" id="thumbnail_path" name="thumbnail_path" class="hidden" accept="image/*"
+										x-ref="thumbnailInput"
+										@change="
+                                    if($el.files.length > 0) {
+                                        $el.closest('div').parentElement.querySelector('p').textContent = $el.files[0].name;
+                                    }
+                                ">
+								</div>
 							</div>
+							@error('thumbnail_path')
+								<p class="text-red-500 dark:text-red-400 text-xs mt-1">{{ $message }}</p>
+							@enderror
 						</div>
-						@error('thumbnail_path')
-							<p class="text-red-500 dark:text-red-400 text-xs mt-1">{{ $message }}</p>
-						@enderror
 					</div>
 
 					<!-- Sort Order -->

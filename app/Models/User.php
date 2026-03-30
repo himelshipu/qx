@@ -128,7 +128,12 @@ class User extends Authenticatable
 
     public function createdPackages(): HasMany
     {
-        return $this->hasMany(Package::class, 'created_by_user_id');
+        return $this->hasMany(Package::class, 'created_by');
+    }
+
+    public function createdCampaigns(): HasMany
+    {
+        return $this->hasMany(Campaign::class, 'created_by');
     }
 
     public function carts(): HasMany
@@ -169,6 +174,26 @@ class User extends Authenticatable
     public function conversationParticipants(): HasMany
     {
         return $this->hasMany(ConversationParticipant::class);
+    }
+
+    public function sessions(): HasMany
+    {
+        return $this->hasMany(Session::class);
+    }
+
+    public function wishlists(): HasMany
+    {
+        return $this->hasMany(Wishlist::class);
+    }
+
+    public function uploadedDeliverables(): HasMany
+    {
+        return $this->hasMany(OrderDeliverable::class, 'uploaded_by_user_id');
+    }
+
+    public function statusHistoryChanges(): HasMany
+    {
+        return $this->hasMany(OrderStatusHistory::class, 'changed_by_user_id');
     }
 
     public function hasRole(string $roleSlug): bool

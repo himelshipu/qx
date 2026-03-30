@@ -71,4 +71,14 @@ class OrderItem extends Model
     {
         return $this->hasOne(Review::class);
     }
+
+    public function deliverables(): HasMany
+    {
+        return $this->hasMany(OrderDeliverable::class);
+    }
+
+    public function payoutItems(): HasMany
+    {
+        return $this->hasMany(PayoutItem::class);
+    }
 }

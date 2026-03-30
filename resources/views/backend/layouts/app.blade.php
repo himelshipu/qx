@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="scroll-smooth">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="scroll-smooth bg-white dark:bg-gray-900">
 
 	<head>
 		<meta charset="utf-8">
@@ -8,32 +8,25 @@
 
 		<title>{{ $title ?? 'Admin Dashboard' }} | QX - Admin</title>
 
-		@vite(['resources/css/app.css', 'resources/js/app.js'])
-
-
-		<!-- Apply dark mode immediately to prevent flash -->
+		<!-- Apply theme before CSS loads to avoid first-paint flash -->
 		<script>
 			(function() {
-				const apply = () => {
-					const savedTheme = localStorage.getItem('theme');
-					const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-					const theme = savedTheme || systemTheme;
-					if (theme === 'dark') {
-						document.documentElement.classList.add('dark');
-						if (document.body) document.body.classList.add('dark', 'bg-gray-900');
-					} else {
-						document.documentElement.classList.remove('dark');
-						if (document.body) document.body.classList.remove('dark', 'bg-gray-900');
-					}
-				};
+				let savedTheme = null;
+				try {
+					savedTheme = localStorage.getItem('theme');
+				} catch (e) {}
 
-				if (document.body) {
-					apply();
-				} else {
-					document.addEventListener('DOMContentLoaded', apply);
-				}
+				const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+				const theme = savedTheme || systemTheme;
+				const isDark = theme === 'dark';
+
+				document.documentElement.classList.toggle('dark', isDark);
+				document.documentElement.style.colorScheme = isDark ? 'dark' : 'light';
+				document.documentElement.style.backgroundColor = isDark ? '#111827' : '#ffffff';
 			})();
 		</script>
+
+		@vite(['resources/css/app.css', 'resources/js/app.js'])
 	</head>
 
 	<body x-data="{ 'loaded': true }" x-init="$store.sidebar.isExpanded = window.innerWidth >= 1280;
@@ -46,12 +39,12 @@ const checkMobile = () => {
         $store.sidebar.isExpanded = true;
     }
 };
-window.addEventListener('resize', checkMobile);" class="transition-colors duration-200">
+window.addEventListener('resize', checkMobile);" class="bg-white text-gray-900 dark:bg-gray-900 dark:text-gray-100">
 
 		<div class="min-h-screen xl:flex">
 			<x-backend.shell.backdrop />
 			<x-backend.shell.sidebar />
-			<div class="flex-1 transition-all duration-300 ease-in-out"
+			<div class="flex-1"
 				:class="{
 				    'xl:ml-[290px]': $store.sidebar.isExpanded,
 				    'xl:ml-[90px]': !$store.sidebar.isExpanded,

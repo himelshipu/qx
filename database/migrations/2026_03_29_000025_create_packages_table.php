@@ -11,7 +11,8 @@ return new class extends Migration
         Schema::create('packages', function (Blueprint $table): void {
             $table->id();
             $table->foreignId('creator_id')->constrained('creators')->cascadeOnDelete();
-            $table->enum('platform', ['instagram', 'tiktok', 'youtube', 'ugc', 'other']);
+            $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->enum('platform', ['facebook', 'instagram', 'tiktok', 'linkedin', 'x', 'youtube', 'ugc', 'other']);
             $table->string('name');
             $table->text('description')->nullable();
             $table->decimal('base_price', 12, 2);

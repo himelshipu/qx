@@ -11,12 +11,13 @@ return new class extends Migration
         Schema::create('brand_social_links', function (Blueprint $table): void {
             $table->id();
             $table->foreignId('brand_id')->constrained('brands')->cascadeOnDelete();
+            $table->string('facebook_url', 500)->nullable();
             $table->string('instagram_url', 500)->nullable();
             $table->string('tiktok_url', 500)->nullable();
-            $table->string('facebook_url', 500)->nullable();
+            $table->string('linkedin_url', 500)->nullable();
             $table->string('x_url', 500)->nullable();
             $table->string('youtube_url', 500)->nullable();
-            $table->string('linkedin_url', 500)->nullable();
+            $table->string('other_url', 500)->nullable();
             $table->timestamps();
         });
     }

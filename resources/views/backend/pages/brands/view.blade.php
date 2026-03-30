@@ -64,9 +64,10 @@
 			</div>
 			<div class="rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-gray-900">
 				<p class="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Status</p>
+				@php($isActive = (bool) ($brand->user?->is_active ?? false))
 				<p
-					class="mt-2 text-sm font-semibold {{ $brand->is_active ? 'text-green-700 dark:text-green-300' : 'text-red-700 dark:text-red-300' }}">
-					{{ $brand->is_active ? 'Active' : 'Inactive' }}
+					class="mt-2 text-sm font-semibold {{ $isActive ? 'text-green-700 dark:text-green-300' : 'text-red-700 dark:text-red-300' }}">
+					{{ $isActive ? 'Active' : 'Inactive' }}
 				</p>
 			</div>
 		</div>

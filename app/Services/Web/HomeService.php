@@ -87,8 +87,8 @@ final class HomeService
 
         $stats = CreatorPlatformStat::query()
             ->with([
-                'creator:id,user_id,display_name,title_name,description,location,city,country,profile_image_path,is_active',
-                'creator.user:id,name,slug,is_active'
+                'creator:id,user_id,display_name,title_name,description,is_active',
+                'creator.user:id,name,slug,city,country,profile_image_path,is_active'
             ])
             ->where('is_active', true)
             ->whereHas('creator', function ($query) {
@@ -139,7 +139,7 @@ final class HomeService
                             'name'             => $this->resolveCreatorName($creator),
                             'title'            => $this->resolveCreatorTitle($creator),
                             'location'         => $this->resolveCreatorLocation($creator),
-                            'image_url'        => $this->resolveCreatorImageUrl($creator->profile_image_path),
+                            'image_url'        => $this->resolveCreatorImageUrl($creator->user->profile_image_path),
                             'platform'         => $platform,
                             'platform_label'   => $this->humanizePlatform($platform),
                             'handle'           => $this->resolveHandle($stat->handle),
@@ -203,14 +203,9 @@ final class HomeService
      */
     private function resolveCreatorLocation(Creator $creator): string
     {
-        $location = trim((string) ($creator->location ?? ''));
-        if ($location !== '') {
-            return $location;
-        }
-
         $parts = array_values(array_filter([
-            trim((string) ($creator->city ?? '')),
-            trim((string) ($creator->country ?? ''))
+            trim((string) ($creator->user?->city ?? '')),
+            trim((string) ($creator->user?->country ?? ''))
         ]));
 
         return $parts !== [] ? implode(', ', $parts) : 'Location not provided';

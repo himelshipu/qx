@@ -1,7 +1,7 @@
 @extends('backend.layouts.app')
 
 @section('content')
-	<div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 p-6">
+	<div class="min-h-screen  p-6">
 		<div class="max-w-7xl mx-auto">
 			<!-- Header -->
 			<div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
@@ -18,21 +18,7 @@
 				</a>
 			</div>
 
-			<!-- Success Message -->
-			@if ($message = Session::get('success'))
-				<div
-					class="mb-6 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl flex items-start gap-3">
-					<svg class="w-5 h-5 text-green-600 dark:text-green-400 mt-0.5 flex-shrink-0" fill="currentColor"
-						viewBox="0 0 20 20">
-						<path fill-rule="evenodd"
-							d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-							clip-rule="evenodd"></path>
-					</svg>
-					<div>
-						<p class="text-sm font-medium text-green-800 dark:text-green-300">{{ $message }}</p>
-					</div>
-				</div>
-			@endif
+		
 
 			<!-- Table -->
 			<div
@@ -42,6 +28,7 @@
 						<table class="w-full">
 							<thead>
 								<tr class="bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
+									<th class="px-6 py-4 text-left text-sm font-semibold text-gray-900 dark:text-white">#</th>
 									<th class="px-6 py-4 text-left text-sm font-semibold text-gray-900 dark:text-white">Brand Name</th>
 									<th class="px-6 py-4 text-left text-sm font-semibold text-gray-900 dark:text-white">Type</th>
 									<th class="px-6 py-4 text-left text-sm font-semibold text-gray-900 dark:text-white">Preview</th>
@@ -53,6 +40,9 @@
 							<tbody class="divide-y divide-gray-200 dark:divide-gray-700">
 								@foreach ($collaborations as $collaboration)
 									<tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors duration-150">
+										<td class="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
+											{{ ($collaborations->firstItem() ?? 1) + $loop->index }}
+										</td>
 										<td class="px-6 py-4 text-sm font-medium text-gray-900 dark:text-white">{{ $collaboration->brand_name }}</td>
 										<td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
 											<span
@@ -61,17 +51,22 @@
 											</span>
 										</td>
 										<td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
-											@if ($collaboration->asset_type === 'image' && $collaboration->image_path)
-												<img src="{{ $collaboration->getImageUrl() }}" alt="{{ $collaboration->brand_name }}"
+											@if ($collaboration->asset_type === 'image')
+												<img src="{{ image_url($collaboration->image_path) }}" alt="{{ $collaboration->brand_name }}"
 													class="h-12 w-12 object-cover rounded-lg">
 											@elseif($collaboration->asset_type === 'video' && $collaboration->video_path)
-												<div class="relative h-12 w-12 bg-gray-200 dark:bg-gray-700 rounded-lg flex items-center justify-center">
-													<svg class="w-6 h-6 text-gray-600 dark:text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-														<path
-															d="M2 6a2 2 0 012-2h12a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V6zM14.553 7.106A1 1 0 0014 8v4a1 1 0 00.553.894l2 1A1 1 0 0018 13.118V6.882a1 1 0 00-1.447-.894l-2 1z">
-														</path>
-													</svg>
-												</div>
+												@if ($collaboration->thumbnail_path)
+													<img src="{{ image_url($collaboration->thumbnail_path) }}" alt="{{ $collaboration->brand_name }} thumbnail"
+														class="h-12 w-12 object-cover rounded-lg">
+												@else
+													<div class="relative h-12 w-12 bg-gray-200 dark:bg-gray-700 rounded-lg flex items-center justify-center">
+														<svg class="w-6 h-6 text-gray-600 dark:text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+															<path
+																d="M2 6a2 2 0 012-2h12a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V6zM14.553 7.106A1 1 0 0014 8v4a1 1 0 00.553.894l2 1A1 1 0 0018 13.118V6.882a1 1 0 00-1.447-.894l-2 1z">
+															</path>
+														</svg>
+													</div>
+												@endif
 											@else
 												<span class="text-gray-400">-</span>
 											@endif
@@ -83,15 +78,13 @@
 												class="inline">
 												@csrf
 												@method('PATCH')
-												<button type="submit" class="inline-block">
-													@if ($collaboration->is_published)
-														<span
-															class="px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded-full text-xs font-medium">Published</span>
-													@else
-														<span
-															class="px-3 py-1 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 rounded-full text-xs font-medium">Unpublished</span>
-													@endif
-												</button>
+												<div class="flex items-center">
+													<label class="relative inline-flex cursor-pointer items-center">
+														<input type="checkbox" {{ $collaboration->is_published ? 'checked' : '' }} onchange="this.form.submit()"
+															class="peer sr-only" />
+														<div class="h-6 w-11 rounded-full bg-gray-200 transition-colors duration-200 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-green-400 peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:ring-4 peer-focus:ring-green-300 dark:bg-gray-700 dark:peer-focus:ring-green-800"></div>
+													</label>
+												</div>
 											</form>
 										</td>
 										<td class="px-6 py-4 text-center">

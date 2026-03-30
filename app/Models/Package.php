@@ -12,6 +12,7 @@ class Package extends Model
     use HasFactory;
 
     protected $fillable = [
+        'creator_id',
         'platform',
         'name',
         'description',
@@ -19,7 +20,7 @@ class Package extends Model
         'currency',
         'delivery_days',
         'revisions_included',
-        'created_by_user_id',
+        'created_by',
         'is_active'
     ];
 
@@ -29,13 +30,20 @@ class Package extends Model
             'base_price'         => 'decimal:2',
             'delivery_days'      => 'integer',
             'revisions_included' => 'integer',
-            'is_active'          => 'boolean'
+            'is_active'          => 'boolean',
+            'created_at'         => 'datetime',
+            'updated_at'         => 'datetime'
         ];
+    }
+
+    public function creator(): BelongsTo
+    {
+        return $this->belongsTo(Creator::class);
     }
 
     public function createdBy(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'created_by_user_id');
+        return $this->belongsTo(User::class, 'created_by');
     }
 
     public function cartItems(): HasMany

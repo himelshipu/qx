@@ -1,0 +1,1264 @@
+=========================================
+DETAILED MIGRATION COLUMN ANALYSIS
+Generated: 2026-03-30 06:34:36
+=========================================
+
+---------------------------------------------------
+[1] File: 0001_01_01_000000_create_cache_table.php
+---------------------------------------------------
+Table: cache
+
+COLUMN DEFINITIONS:
+-------------------
+  - key (string)
+  - value (mediumText)
+  - expiration (integer)
+  - key (string)
+  - owner (string)
+  - expiration (integer)
+
+
+---------------------------------------------------
+[2] File: 0001_01_01_000000_create_jobs_table.php
+---------------------------------------------------
+Table: jobs
+
+COLUMN DEFINITIONS:
+-------------------
+  - queue (string)
+  - payload (longText)
+  - attempts (unsignedTinyInteger)
+  - reserved_at (unsignedInteger)
+  - available_at (unsignedInteger)
+  - created_at (unsignedInteger)
+  - id (string)
+  - name (string)
+  - total_jobs (integer)
+  - pending_jobs (integer)
+  - failed_jobs (integer)
+  - failed_job_ids (longText)
+  - options (mediumText)
+  - cancelled_at (integer)
+  - created_at (integer)
+  - finished_at (integer)
+  - uuid (string)
+  - connection (text)
+  - queue (text)
+  - payload (longText)
+  - exception (longText)
+  - failed_at (timestamp)
+
+
+---------------------------------------------------
+[3] File: 2026_03_29_000000_create_users_table.php
+---------------------------------------------------
+Table: users
+
+COLUMN DEFINITIONS:
+-------------------
+  - slug (string)
+  - name (string)
+  - email (string)
+  - password (string)
+  - user_type (enum)
+  - phone (string)
+  - date_of_birth (date)
+  - gender (enum)
+  - country (string)
+  - city (string)
+  - postal_code (string)
+  - bio (text)
+  - profile_image_path (string)
+  - cover_image_path (string)
+  - is_active (boolean)
+  - verification_code (string)
+  - verification_code_expires_at (timestamp)
+  - email_verified_at (timestamp)
+  - last_login_at (timestamp)
+
+
+---------------------------------------------------
+[4] File: 2026_03_29_000001_create_password_reset_tokens_table.php
+---------------------------------------------------
+Table: password_reset_tokens
+
+COLUMN DEFINITIONS:
+-------------------
+  - email (string)
+  - token (string)
+  - created_at (timestamp)
+
+
+---------------------------------------------------
+[5] File: 2026_03_29_000002_create_sessions_table.php
+---------------------------------------------------
+Table: sessions
+
+COLUMN DEFINITIONS:
+-------------------
+  - id (string)
+  - user_id (foreignId)
+  - ip_address (string)
+  - user_agent (text)
+  - payload (longText)
+  - last_activity (integer)
+
+FOREIGN KEY CONSTRAINTS:
+-----------------------
+  - user_id → users
+
+
+---------------------------------------------------
+[6] File: 2026_03_29_000003_create_brands_table.php
+---------------------------------------------------
+Table: brands
+
+COLUMN DEFINITIONS:
+-------------------
+  - user_id (foreignId)
+  - brand_name (string)
+  - description (text)
+  - industry (string)
+  - website (string)
+  - is_verified (boolean)
+
+FOREIGN KEY CONSTRAINTS:
+-----------------------
+  - user_id → users
+
+
+---------------------------------------------------
+[7] File: 2026_03_29_000004_create_brand_social_links_table.php
+---------------------------------------------------
+Table: brand_social_links
+
+COLUMN DEFINITIONS:
+-------------------
+  - brand_id (foreignId)
+  - instagram_url (string)
+  - tiktok_url (string)
+  - facebook_url (string)
+  - x_url (string)
+  - youtube_url (string)
+  - linkedin_url (string)
+
+FOREIGN KEY CONSTRAINTS:
+-----------------------
+  - brand_id → brands
+
+
+---------------------------------------------------
+[8] File: 2026_03_29_000005_create_brand_billing_profiles_table.php
+---------------------------------------------------
+Table: brand_billing_profiles
+
+COLUMN DEFINITIONS:
+-------------------
+  - brand_id (foreignId)
+  - legal_company_name (string)
+  - vat_id (string)
+  - billing_address (string)
+  - billing_city (string)
+  - billing_country (string)
+  - billing_postal_code (string)
+
+FOREIGN KEY CONSTRAINTS:
+-----------------------
+  - brand_id → brands
+
+
+---------------------------------------------------
+[9] File: 2026_03_29_000006_create_brand_onboarding_profiles_table.php
+---------------------------------------------------
+Table: brand_onboarding_profiles
+
+COLUMN DEFINITIONS:
+-------------------
+  - brand_id (foreignId)
+  - objective (string)
+  - budget_range (string)
+  - business_type (string)
+  - company_size (string)
+  - is_completed (boolean)
+  - completed_at (timestamp)
+
+FOREIGN KEY CONSTRAINTS:
+-----------------------
+  - brand_id → brands
+
+
+---------------------------------------------------
+[10] File: 2026_03_29_000007_create_creators_table.php
+---------------------------------------------------
+Table: creators
+
+COLUMN DEFINITIONS:
+-------------------
+  - user_id (foreignId)
+  - display_name (string)
+  - title_name (string)
+  - description (text)
+  - audience (text)
+  - brands_worked_with (text)
+  - is_active (boolean)
+  - is_featured (boolean)
+  - featured_priority (unsignedSmallInteger)
+
+FOREIGN KEY CONSTRAINTS:
+-----------------------
+  - user_id → users
+
+
+---------------------------------------------------
+[11] File: 2026_03_29_000008_create_creator_social_links_table.php
+---------------------------------------------------
+Table: creator_social_links
+
+COLUMN DEFINITIONS:
+-------------------
+  - creator_id (foreignId)
+  - instagram_url (string)
+  - tiktok_url (string)
+  - youtube_url (string)
+  - facebook_url (string)
+  - linkedin_url (string)
+  - x_url (string)
+
+FOREIGN KEY CONSTRAINTS:
+-----------------------
+  - creator_id → creators
+
+
+---------------------------------------------------
+[12] File: 2026_03_29_000009_create_creator_platform_stats_table.php
+---------------------------------------------------
+Table: creator_platform_stats
+
+COLUMN DEFINITIONS:
+-------------------
+  - creator_id (foreignId)
+  - platform (enum)
+  - handle (string)
+  - profile_url (string)
+  - follower_count (unsignedBigInteger)
+  - avg_views (unsignedBigInteger)
+  - engagement_rate (decimal)
+  - is_active (boolean)
+  - creator_id (unique)
+
+FOREIGN KEY CONSTRAINTS:
+-----------------------
+  - creator_id → creators
+
+UNIQUE CONSTRAINTS:
+------------------
+  - ['creator_id', 'platform']
+
+
+---------------------------------------------------
+[13] File: 2026_03_29_000010_create_categories_table.php
+---------------------------------------------------
+Table: categories
+
+COLUMN DEFINITIONS:
+-------------------
+  - name (string)
+  - slug (string)
+  - description (text)
+  - icon_path (string)
+  - image_path (string)
+  - is_active (boolean)
+  - is_featured (boolean)
+  - featured_order (integer)
+  - sort_order (integer)
+
+
+---------------------------------------------------
+[14] File: 2026_03_29_000011_create_creator_categories_table.php
+---------------------------------------------------
+Table: creator_categories
+
+COLUMN DEFINITIONS:
+-------------------
+  - creator_id (foreignId)
+  - category_id (foreignId)
+  - creator_id (unique)
+
+FOREIGN KEY CONSTRAINTS:
+-----------------------
+  - creator_id → creators
+  - category_id → categories
+
+UNIQUE CONSTRAINTS:
+------------------
+  - ['creator_id', 'category_id']
+
+
+---------------------------------------------------
+[15] File: 2026_03_29_000012_create_brand_onboarding_industries_table.php
+---------------------------------------------------
+Table: brand_onboarding_industries
+
+COLUMN DEFINITIONS:
+-------------------
+  - brand_onboarding_profile_id (foreignId)
+  - category_id (foreignId)
+  - brand_onboarding_profile_id (unique)
+
+FOREIGN KEY CONSTRAINTS:
+-----------------------
+  - brand_onboarding_profile_id → brand_onboarding_profiles
+  - category_id → categories
+
+UNIQUE CONSTRAINTS:
+------------------
+  - ['brand_onboarding_profile_id', 'category_id'], 'brand_onboarding_profile_category_unique'
+
+
+---------------------------------------------------
+[16] File: 2026_03_29_000013_create_badge_definitions_table.php
+---------------------------------------------------
+Table: badge_definitions
+
+COLUMN DEFINITIONS:
+-------------------
+  - code (string)
+  - name (string)
+  - description (text)
+  - is_active (boolean)
+
+
+---------------------------------------------------
+[17] File: 2026_03_29_000014_create_creator_badges_table.php
+---------------------------------------------------
+Table: creator_badges
+
+COLUMN DEFINITIONS:
+-------------------
+  - creator_id (foreignId)
+  - badge_definition_id (foreignId)
+  - earned_at (timestamp)
+  - is_active (boolean)
+  - creator_id (unique)
+
+FOREIGN KEY CONSTRAINTS:
+-----------------------
+  - creator_id → creators
+  - badge_definition_id → badge_definitions
+
+UNIQUE CONSTRAINTS:
+------------------
+  - ['creator_id', 'badge_definition_id']
+
+
+---------------------------------------------------
+[18] File: 2026_03_29_000015_create_creator_portfolios_table.php
+---------------------------------------------------
+Table: creator_portfolios
+
+COLUMN DEFINITIONS:
+-------------------
+  - creator_id (foreignId)
+  - media_type (enum)
+  - file_path (string)
+  - title (string)
+  - description (text)
+  - sort_order (integer)
+  - is_active (boolean)
+
+FOREIGN KEY CONSTRAINTS:
+-----------------------
+  - creator_id → creators
+
+
+---------------------------------------------------
+[19] File: 2026_03_29_000016_create_follower_ranges_table.php
+---------------------------------------------------
+Table: follower_ranges
+
+COLUMN DEFINITIONS:
+-------------------
+  - code (string)
+  - label (string)
+  - min_followers (unsignedBigInteger)
+  - max_followers (unsignedBigInteger)
+  - sort_order (integer)
+  - is_active (boolean)
+
+
+---------------------------------------------------
+[20] File: 2026_03_29_000017_create_campaigns_table.php
+---------------------------------------------------
+Table: campaigns
+
+COLUMN DEFINITIONS:
+-------------------
+  - brand_id (foreignId)
+  - title (string)
+  - campaign_type (enum)
+  - description (text)
+  - instructions (longText)
+  - status (enum)
+  - budget_min (decimal)
+  - budget_max (decimal)
+  - currency (char)
+  - start_date (date)
+  - end_date (date)
+  - published_at (timestamp)
+  - is_active (boolean)
+
+FOREIGN KEY CONSTRAINTS:
+-----------------------
+  - brand_id → brands
+
+
+---------------------------------------------------
+[21] File: 2026_03_29_000018_create_campaign_targeting_table.php
+---------------------------------------------------
+Table: campaign_targeting
+
+COLUMN DEFINITIONS:
+-------------------
+  - campaign_id (foreignId)
+  - influencer_count (unsignedInteger)
+  - target_gender (enum)
+  - age_min (unsignedTinyInteger)
+  - age_max (unsignedTinyInteger)
+  - notes (text)
+
+FOREIGN KEY CONSTRAINTS:
+-----------------------
+  - campaign_id → campaigns
+
+
+---------------------------------------------------
+[22] File: 2026_03_29_000019_create_campaign_categories_table.php
+---------------------------------------------------
+Table: campaign_categories
+
+COLUMN DEFINITIONS:
+-------------------
+  - campaign_id (foreignId)
+  - category_id (foreignId)
+  - campaign_id (unique)
+
+FOREIGN KEY CONSTRAINTS:
+-----------------------
+  - campaign_id → campaigns
+  - category_id → categories
+
+UNIQUE CONSTRAINTS:
+------------------
+  - ['campaign_id', 'category_id'], 'campaign_category_unique'
+
+
+---------------------------------------------------
+[23] File: 2026_03_29_000020_create_campaign_target_countries_table.php
+---------------------------------------------------
+Table: campaign_target_countries
+
+COLUMN DEFINITIONS:
+-------------------
+  - campaign_id (foreignId)
+  - country_code (char)
+  - campaign_id (unique)
+
+FOREIGN KEY CONSTRAINTS:
+-----------------------
+  - campaign_id → campaigns
+
+UNIQUE CONSTRAINTS:
+------------------
+  - ['campaign_id', 'country_code'], 'campaign_country_unique'
+
+
+---------------------------------------------------
+[24] File: 2026_03_29_000021_create_campaign_target_follower_ranges_table.php
+---------------------------------------------------
+Table: campaign_target_follower_ranges
+
+COLUMN DEFINITIONS:
+-------------------
+  - campaign_id (foreignId)
+  - follower_range_id (foreignId)
+  - campaign_id (unique)
+
+FOREIGN KEY CONSTRAINTS:
+-----------------------
+  - campaign_id → campaigns
+  - follower_range_id → follower_ranges
+
+UNIQUE CONSTRAINTS:
+------------------
+  - ['campaign_id', 'follower_range_id'], 'campaign_follower_range_unique'
+
+
+---------------------------------------------------
+[25] File: 2026_03_29_000022_create_campaign_assets_table.php
+---------------------------------------------------
+Table: campaign_assets
+
+COLUMN DEFINITIONS:
+-------------------
+  - campaign_id (foreignId)
+  - asset_type (enum)
+  - file_path (string)
+  - mime_type (string)
+  - file_size (unsignedBigInteger)
+  - title (string)
+  - sort_order (integer)
+
+FOREIGN KEY CONSTRAINTS:
+-----------------------
+  - campaign_id → campaigns
+
+
+---------------------------------------------------
+[26] File: 2026_03_29_000023_create_campaign_applications_table.php
+---------------------------------------------------
+Table: campaign_applications
+
+COLUMN DEFINITIONS:
+-------------------
+  - campaign_id (foreignId)
+  - creator_id (foreignId)
+  - status (enum)
+  - pitch_message (text)
+  - proposed_rate (decimal)
+  - agreed_rate (decimal)
+  - applied_at (timestamp)
+  - decided_at (timestamp)
+  - campaign_id (unique)
+
+FOREIGN KEY CONSTRAINTS:
+-----------------------
+  - campaign_id → campaigns
+  - creator_id → creators
+
+UNIQUE CONSTRAINTS:
+------------------
+  - ['campaign_id', 'creator_id'], 'campaign_creator_unique'
+
+
+---------------------------------------------------
+[27] File: 2026_03_29_000024_create_carts_table.php
+---------------------------------------------------
+Table: carts
+
+COLUMN DEFINITIONS:
+-------------------
+  - user_id (foreignId)
+  - status (enum)
+  - expires_at (timestamp)
+
+FOREIGN KEY CONSTRAINTS:
+-----------------------
+  - user_id → users
+
+
+---------------------------------------------------
+[28] File: 2026_03_29_000025_create_packages_table.php
+---------------------------------------------------
+Table: packages
+
+COLUMN DEFINITIONS:
+-------------------
+  - creator_id (foreignId)
+  - platform (enum)
+  - name (string)
+  - description (text)
+  - base_price (decimal)
+  - currency (char)
+  - delivery_days (unsignedSmallInteger)
+  - revisions_included (unsignedSmallInteger)
+  - is_active (boolean)
+
+FOREIGN KEY CONSTRAINTS:
+-----------------------
+  - creator_id → creators
+
+
+---------------------------------------------------
+[29] File: 2026_03_29_000026_create_cart_items_table.php
+---------------------------------------------------
+Table: cart_items
+
+COLUMN DEFINITIONS:
+-------------------
+  - cart_id (foreignId)
+  - package_id (foreignId)
+  - creator_id (foreignId)
+  - campaign_id (foreignId)
+  - quantity (unsignedInteger)
+  - unit_price (decimal)
+  - currency (char)
+  - notes (text)
+
+FOREIGN KEY CONSTRAINTS:
+-----------------------
+  - cart_id → carts
+  - package_id → packages
+  - creator_id → creators
+  - campaign_id → campaigns
+
+
+---------------------------------------------------
+[30] File: 2026_03_29_000027_create_orders_table.php
+---------------------------------------------------
+Table: orders
+
+COLUMN DEFINITIONS:
+-------------------
+  - order_number (string)
+  - buyer_user_id (foreignId)
+  - brand_id (foreignId)
+  - campaign_id (foreignId)
+  - status (enum)
+  - accepted_by_user_id (foreignId)
+  - accepted_for_creator_id (foreignId)
+  - subtotal (decimal)
+  - service_fee (decimal)
+  - tax_amount (decimal)
+  - total_amount (decimal)
+  - currency (char)
+  - placed_at (timestamp)
+  - accepted_at (timestamp)
+  - completed_at (timestamp)
+  - cancelled_at (timestamp)
+
+FOREIGN KEY CONSTRAINTS:
+-----------------------
+  - buyer_user_id → users
+  - brand_id → brands
+  - campaign_id → campaigns
+  - accepted_by_user_id → users
+  - accepted_for_creator_id → creators
+
+
+---------------------------------------------------
+[31] File: 2026_03_29_000028_create_order_items_table.php
+---------------------------------------------------
+Table: order_items
+
+COLUMN DEFINITIONS:
+-------------------
+  - order_id (foreignId)
+  - creator_id (foreignId)
+  - package_id (foreignId)
+  - campaign_id (foreignId)
+  - title (string)
+  - description (text)
+  - quantity (unsignedInteger)
+  - unit_price (decimal)
+  - line_total (decimal)
+  - status (enum)
+  - due_date (date)
+  - accepted_by_user_id (foreignId)
+  - accepted_at (timestamp)
+  - delivered_at (timestamp)
+  - approved_at (timestamp)
+
+FOREIGN KEY CONSTRAINTS:
+-----------------------
+  - order_id → orders
+  - creator_id → creators
+  - package_id → packages
+  - campaign_id → campaigns
+  - accepted_by_user_id → users
+
+
+---------------------------------------------------
+[32] File: 2026_03_29_000029_create_order_deliverables_table.php
+---------------------------------------------------
+Table: order_deliverables
+
+COLUMN DEFINITIONS:
+-------------------
+  - order_item_id (foreignId)
+  - uploaded_by_user_id (foreignId)
+  - deliverable_type (enum)
+  - file_path (string)
+  - external_url (string)
+  - notes (text)
+  - status (enum)
+
+FOREIGN KEY CONSTRAINTS:
+-----------------------
+  - order_item_id → order_items
+  - uploaded_by_user_id → users
+
+
+---------------------------------------------------
+[33] File: 2026_03_29_000030_create_order_messages_table.php
+---------------------------------------------------
+Table: order_messages
+
+COLUMN DEFINITIONS:
+-------------------
+  - order_id (foreignId)
+  - sender_user_id (foreignId)
+  - message (text)
+  - is_system (boolean)
+
+FOREIGN KEY CONSTRAINTS:
+-----------------------
+  - order_id → orders
+  - sender_user_id → users
+
+
+---------------------------------------------------
+[34] File: 2026_03_29_000031_create_order_status_history_table.php
+---------------------------------------------------
+Table: order_status_history
+
+COLUMN DEFINITIONS:
+-------------------
+  - order_id (foreignId)
+  - old_status (string)
+  - new_status (string)
+  - changed_by_user_id (foreignId)
+  - note (text)
+
+FOREIGN KEY CONSTRAINTS:
+-----------------------
+  - order_id → orders
+  - changed_by_user_id → users
+
+
+---------------------------------------------------
+[35] File: 2026_03_29_000032_create_conversations_table.php
+---------------------------------------------------
+Table: conversations
+
+COLUMN DEFINITIONS:
+-------------------
+  - conversation_type (enum)
+  - creator_id (foreignId)
+  - brand_user_id (foreignId)
+  - handled_by_user_id (foreignId)
+  - order_id (foreignId)
+  - creator_direct_message_enabled (boolean)
+  - title (string)
+
+FOREIGN KEY CONSTRAINTS:
+-----------------------
+  - creator_id → creators
+  - brand_user_id → users
+  - handled_by_user_id → users
+  - order_id → orders
+
+
+---------------------------------------------------
+[36] File: 2026_03_29_000033_create_conversation_participants_table.php
+---------------------------------------------------
+Table: conversation_participants
+
+COLUMN DEFINITIONS:
+-------------------
+  - conversation_id (foreignId)
+  - user_id (foreignId)
+  - participant_role (enum)
+  - joined_at (timestamp)
+  - left_at (timestamp)
+  - conversation_id (unique)
+
+FOREIGN KEY CONSTRAINTS:
+-----------------------
+  - conversation_id → conversations
+  - user_id → users
+
+UNIQUE CONSTRAINTS:
+------------------
+  - ['conversation_id', 'user_id']
+
+
+---------------------------------------------------
+[37] File: 2026_03_29_000034_create_messages_table.php.tmp
+---------------------------------------------------
+Table: messages
+
+COLUMN DEFINITIONS:
+-------------------
+  - conversation_id (foreignId)
+  - sender_user_id (foreignId)
+  - sender_role (enum)
+  - on_behalf_of_creator_id (foreignId)
+  - message (longText)
+  - attachment_path (string)
+  - read_at (timestamp)
+
+FOREIGN KEY CONSTRAINTS:
+-----------------------
+  - conversation_id → conversations
+  - sender_user_id → users
+  - on_behalf_of_creator_id → creators
+
+
+---------------------------------------------------
+[38] File: 2026_03_29_000034_create_payments_table.php
+---------------------------------------------------
+Table: payments
+
+COLUMN DEFINITIONS:
+-------------------
+  - order_id (foreignId)
+  - payment_provider (string)
+  - provider_payment_id (string)
+  - amount (decimal)
+  - currency (char)
+  - status (enum)
+  - paid_at (timestamp)
+
+FOREIGN KEY CONSTRAINTS:
+-----------------------
+  - order_id → orders
+
+
+---------------------------------------------------
+[39] File: 2026_03_29_000035_create_payout_accounts_table.php
+---------------------------------------------------
+Table: payout_accounts
+
+COLUMN DEFINITIONS:
+-------------------
+  - creator_id (foreignId)
+  - provider (string)
+  - account_identifier (string)
+  - account_name (string)
+  - is_default (boolean)
+  - is_active (boolean)
+
+FOREIGN KEY CONSTRAINTS:
+-----------------------
+  - creator_id → creators
+
+
+---------------------------------------------------
+[40] File: 2026_03_29_000036_create_payouts_table.php
+---------------------------------------------------
+Table: payouts
+
+COLUMN DEFINITIONS:
+-------------------
+  - creator_id (foreignId)
+  - payout_account_id (foreignId)
+  - amount (decimal)
+  - currency (char)
+  - status (enum)
+  - external_payout_id (string)
+  - paid_at (timestamp)
+
+FOREIGN KEY CONSTRAINTS:
+-----------------------
+  - creator_id → creators
+  - payout_account_id → payout_accounts
+
+
+---------------------------------------------------
+[41] File: 2026_03_29_000037_create_payout_items_table.php
+---------------------------------------------------
+Table: payout_items
+
+COLUMN DEFINITIONS:
+-------------------
+  - payout_id (foreignId)
+  - order_item_id (foreignId)
+  - amount (decimal)
+  - currency (char)
+  - payout_id (unique)
+
+FOREIGN KEY CONSTRAINTS:
+-----------------------
+  - payout_id → payouts
+  - order_item_id → order_items
+
+UNIQUE CONSTRAINTS:
+------------------
+  - ['payout_id', 'order_item_id']
+
+
+---------------------------------------------------
+[42] File: 2026_03_29_000038_create_reviews_table.php
+---------------------------------------------------
+Table: reviews
+
+COLUMN DEFINITIONS:
+-------------------
+  - order_item_id (foreignId)
+  - brand_id (foreignId)
+  - creator_id (foreignId)
+  - rating (unsignedTinyInteger)
+  - title (string)
+  - comment (text)
+  - is_public (boolean)
+
+FOREIGN KEY CONSTRAINTS:
+-----------------------
+  - order_item_id → order_items
+  - brand_id → brands
+  - creator_id → creators
+
+
+---------------------------------------------------
+[43] File: 2026_03_29_000039_create_wishlists_table.php
+---------------------------------------------------
+Table: wishlists
+
+COLUMN DEFINITIONS:
+-------------------
+  - user_id (foreignId)
+  - name (string)
+  - is_default (boolean)
+
+FOREIGN KEY CONSTRAINTS:
+-----------------------
+  - user_id → users
+
+
+---------------------------------------------------
+[44] File: 2026_03_29_000040_create_wishlist_items_table.php
+---------------------------------------------------
+Table: wishlist_items
+
+COLUMN DEFINITIONS:
+-------------------
+  - wishlist_id (foreignId)
+  - creator_id (foreignId)
+  - notes (string)
+  - wishlist_id (unique)
+
+FOREIGN KEY CONSTRAINTS:
+-----------------------
+  - wishlist_id → wishlists
+  - creator_id → creators
+
+UNIQUE CONSTRAINTS:
+------------------
+  - ['wishlist_id', 'creator_id']
+
+
+---------------------------------------------------
+[45] File: 2026_03_29_000041_create_pages_table.php
+---------------------------------------------------
+Table: pages
+
+COLUMN DEFINITIONS:
+-------------------
+  - slug (string)
+  - title (string)
+  - meta_title (string)
+  - meta_description (string)
+  - is_published (boolean)
+  - published_at (timestamp)
+
+
+---------------------------------------------------
+[46] File: 2026_03_29_000042_create_page_sections_table.php
+---------------------------------------------------
+Table: page_sections
+
+COLUMN DEFINITIONS:
+-------------------
+  - page_id (foreignId)
+  - section_key (string)
+  - heading (string)
+  - subheading (string)
+  - content_json (json)
+  - sort_order (integer)
+  - is_active (boolean)
+
+FOREIGN KEY CONSTRAINTS:
+-----------------------
+  - page_id → pages
+
+
+---------------------------------------------------
+[47] File: 2026_03_29_000043_create_case_studies_table.php
+---------------------------------------------------
+Table: case_studies
+
+COLUMN DEFINITIONS:
+-------------------
+  - title (string)
+  - slug (string)
+  - summary (text)
+  - cover_image_path (string)
+  - external_url (string)
+  - is_published (boolean)
+  - sort_order (integer)
+  - published_at (timestamp)
+
+
+---------------------------------------------------
+[48] File: 2026_03_29_000044_create_testimonials_table.php
+---------------------------------------------------
+Table: testimonials
+
+COLUMN DEFINITIONS:
+-------------------
+  - author_name (string)
+  - author_role (string)
+  - company_name (string)
+  - quote (text)
+  - rating (unsignedTinyInteger)
+  - is_published (boolean)
+  - sort_order (integer)
+
+
+---------------------------------------------------
+[49] File: 2026_03_29_000045_create_featured_collaborations_table.php
+---------------------------------------------------
+Table: featured_collaborations
+
+COLUMN DEFINITIONS:
+-------------------
+  - brand_name (string)
+  - asset_type (enum)
+  - image_path (string)
+  - video_path (string)
+  - thumbnail_path (string)
+  - sort_order (integer)
+  - is_published (boolean)
+
+
+---------------------------------------------------
+[50] File: 2026_03_29_000046_create_faq_sections_table.php
+---------------------------------------------------
+Table: faq_sections
+
+COLUMN DEFINITIONS:
+-------------------
+  - section_code (string)
+  - section_title (string)
+  - audience_type (enum)
+  - sort_order (integer)
+  - is_active (boolean)
+
+
+---------------------------------------------------
+[51] File: 2026_03_29_000047_create_faq_items_table.php
+---------------------------------------------------
+Table: faq_items
+
+COLUMN DEFINITIONS:
+-------------------
+  - faq_section_id (foreignId)
+  - question (string)
+  - answer (longText)
+  - sort_order (integer)
+  - is_active (boolean)
+
+FOREIGN KEY CONSTRAINTS:
+-----------------------
+  - faq_section_id → faq_sections
+
+
+---------------------------------------------------
+[52] File: 2026_03_29_000048_create_support_categories_table.php
+---------------------------------------------------
+Table: support_categories
+
+COLUMN DEFINITIONS:
+-------------------
+  - name (string)
+  - slug (string)
+  - description (string)
+  - sort_order (integer)
+  - is_active (boolean)
+
+
+---------------------------------------------------
+[53] File: 2026_03_29_000049_create_support_articles_table.php
+---------------------------------------------------
+Table: support_articles
+
+COLUMN DEFINITIONS:
+-------------------
+  - support_category_id (foreignId)
+  - title (string)
+  - slug (string)
+  - short_description (string)
+  - body (longText)
+  - is_published (boolean)
+  - published_at (timestamp)
+  - sort_order (integer)
+
+FOREIGN KEY CONSTRAINTS:
+-----------------------
+  - support_category_id → support_categories
+
+
+---------------------------------------------------
+[54] File: 2026_03_29_000050_create_support_questions_table.php
+---------------------------------------------------
+Table: support_questions
+
+COLUMN DEFINITIONS:
+-------------------
+  - support_category_id (foreignId)
+  - question (string)
+  - answer (longText)
+  - sort_order (integer)
+  - is_active (boolean)
+
+FOREIGN KEY CONSTRAINTS:
+-----------------------
+  - support_category_id → support_categories
+
+
+---------------------------------------------------
+[55] File: 2026_03_29_000051_create_support_tickets_table.php
+---------------------------------------------------
+Table: support_tickets
+
+COLUMN DEFINITIONS:
+-------------------
+  - ticket_number (string)
+  - requester_user_id (foreignId)
+  - support_category_id (foreignId)
+  - assigned_to_user_id (foreignId)
+  - subject (string)
+  - description (longText)
+  - priority (enum)
+  - status (enum)
+  - source (enum)
+  - resolved_at (timestamp)
+  - closed_at (timestamp)
+
+FOREIGN KEY CONSTRAINTS:
+-----------------------
+  - requester_user_id → users
+  - support_category_id → support_categories
+  - assigned_to_user_id → users
+
+
+---------------------------------------------------
+[56] File: 2026_03_29_000052_create_support_ticket_messages_table.php
+---------------------------------------------------
+Table: support_ticket_messages
+
+COLUMN DEFINITIONS:
+-------------------
+  - support_ticket_id (foreignId)
+  - sender_user_id (foreignId)
+  - message (longText)
+  - is_internal_note (boolean)
+
+FOREIGN KEY CONSTRAINTS:
+-----------------------
+  - support_ticket_id → support_tickets
+  - sender_user_id → users
+
+
+---------------------------------------------------
+[57] File: 2026_03_29_000053_create_support_ticket_attachments_table.php
+---------------------------------------------------
+Table: support_ticket_attachments
+
+COLUMN DEFINITIONS:
+-------------------
+  - support_ticket_message_id (foreignId)
+  - uploaded_by_user_id (foreignId)
+  - file_path (string)
+  - file_name (string)
+  - mime_type (string)
+  - file_size (unsignedBigInteger)
+
+FOREIGN KEY CONSTRAINTS:
+-----------------------
+  - support_ticket_message_id → support_ticket_messages
+  - uploaded_by_user_id → users
+
+
+---------------------------------------------------
+[58] File: 2026_03_29_000054_create_notifications_table.php
+---------------------------------------------------
+Table: notifications
+
+COLUMN DEFINITIONS:
+-------------------
+  - user_id (foreignId)
+  - type (string)
+  - title (string)
+  - body (text)
+  - data_json (json)
+  - is_read (boolean)
+  - read_at (timestamp)
+
+FOREIGN KEY CONSTRAINTS:
+-----------------------
+  - user_id → users
+
+
+---------------------------------------------------
+[59] File: 2026_03_29_000055_create_media_library_table.php
+---------------------------------------------------
+Table: media_library
+
+COLUMN DEFINITIONS:
+-------------------
+  - uploaded_by_user_id (foreignId)
+  - disk (string)
+  - path (string)
+  - file_name (string)
+  - mime_type (string)
+  - file_size (unsignedBigInteger)
+  - width (integer)
+  - height (integer)
+  - alt_text (string)
+  - entity_type (string)
+  - entity_id (unsignedBigInteger)
+
+FOREIGN KEY CONSTRAINTS:
+-----------------------
+  - uploaded_by_user_id → users
+
+
+---------------------------------------------------
+[60] File: 2026_03_29_000056_create_rbac_tables.php
+---------------------------------------------------
+Table: roles
+
+COLUMN DEFINITIONS:
+-------------------
+  - name (string)
+  - slug (string)
+  - description (text)
+  - is_active (boolean)
+  - name (string)
+  - slug (string)
+  - module (string)
+  - description (text)
+  - is_active (boolean)
+  - user_id (foreignId)
+  - role_id (foreignId)
+  - user_id (unique)
+  - role_id (foreignId)
+  - permission_id (foreignId)
+  - role_id (unique)
+  - user_id (foreignId)
+  - permission_id (foreignId)
+  - user_id (unique)
+
+FOREIGN KEY CONSTRAINTS:
+-----------------------
+  - user_id → users
+  - role_id → roles
+  - role_id → roles
+  - permission_id → permissions
+  - user_id → users
+  - permission_id → permissions
+
+UNIQUE CONSTRAINTS:
+------------------
+  - ['user_id', 'role_id'], 'uq_user_roles_user_role'
+  - ['role_id', 'permission_id'], 'uq_role_permissions_role_permission'
+  - ['user_id', 'permission_id'], 'uq_user_permissions_user_permission'
+
+
+=========================================
+SUMMARY
+=========================================
+Total Migration Files: 60
+Generated on: 2026-03-30 06:34:36
+=========================================

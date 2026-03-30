@@ -1,8 +1,11 @@
 import { createPopper } from "@popperjs/core";
 import Alpine from "alpinejs";
+import collapse from "@alpinejs/collapse";
 import ApexCharts from "apexcharts";
 import flatpickr from "flatpickr";
 import "flatpickr/dist/flatpickr.min.css";
+
+Alpine.plugin(collapse);
 
 window.Alpine = Alpine;
 window.flatpickr = flatpickr;
@@ -15,7 +18,7 @@ Alpine.store("toast", {
     add(type, message) {
         const id = Date.now() + Math.random();
         this.toasts.push({ id, type, message });
-        
+
         // Auto remove after 4 seconds
         setTimeout(() => {
             this.remove(id);
@@ -86,16 +89,11 @@ Alpine.store("theme", {
 
     applyTheme() {
         const html = document.documentElement;
-        const body = document.body;
+        const isDark = this.theme === "dark";
 
-        if (this.theme === "dark") {
-            html.classList.add("dark");
-            body.classList.add("dark", "bg-gray-900", "text-gray-100");
-        } else {
-            html.classList.remove("dark");
-            body.classList.remove("dark", "bg-gray-900", "text-gray-100");
-            body.classList.add("bg-white", "text-gray-900");
-        }
+        html.classList.toggle("dark", isDark);
+        html.style.colorScheme = isDark ? "dark" : "light";
+        html.style.backgroundColor = isDark ? "#111827" : "#ffffff";
     },
 });
 

@@ -11,8 +11,9 @@ return new class extends Migration
         Schema::create('campaigns', function (Blueprint $table): void {
             $table->id();
             $table->foreignId('brand_id')->constrained('brands')->cascadeOnDelete();
+            $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
             $table->string('title');
-            $table->enum('campaign_type', ['instagram', 'tiktok', 'ugc', 'youtube', 'twitch', 'other']);
+            $table->enum('campaign_type', ['facebook', 'instagram', 'tiktok', 'linkedin', 'x', 'youtube', 'ugc', 'other']);
             $table->text('description')->nullable();
             $table->longText('instructions')->nullable();
             $table->enum('status', ['draft', 'published', 'paused', 'closed', 'archived'])->default('draft');

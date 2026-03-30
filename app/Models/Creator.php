@@ -20,11 +20,6 @@ class Creator extends Model
         'description',
         'audience',
         'brands_worked_with',
-        'location',
-        'city',
-        'country',
-        'postal_code',
-        'gender',
         'profile_image_path',
         'cover_image_path',
         'is_active',
@@ -37,7 +32,9 @@ class Creator extends Model
         return [
             'is_active'         => 'boolean',
             'is_featured'       => 'boolean',
-            'featured_priority' => 'integer'
+            'featured_priority' => 'integer',
+            'created_at'        => 'datetime',
+            'updated_at'        => 'datetime'
         ];
     }
 
@@ -94,5 +91,32 @@ class Creator extends Model
     public function portfolios(): HasMany
     {
         return $this->hasMany(CreatorPortfolio::class)->orderBy('sort_order');
+    }
+
+    public function packages(): HasMany
+    {
+        return $this->hasMany(Package::class);
+    }
+
+    public function campaigns(): BelongsToMany
+    {
+        return $this->belongsToMany(Campaign::class, 'campaign_applications')
+                    ->withPivot(['status', 'pitch_message', 'proposed_rate', 'agreed_rate', 'applied_at', 'decided_at'])
+                    ->withTimestamps();
+    }
+
+    public function payoutAccounts(): HasMany
+    {
+        return $this->hasMany(PayoutAccount::class);
+    }
+
+    public function payouts(): HasMany
+    {
+        return $this->hasMany(Payout::class);
+    }
+
+    public function acceptedOrders(): HasMany
+    {
+        return $this->hasMany(Order::class, 'accepted_for_creator_id');
     }
 }

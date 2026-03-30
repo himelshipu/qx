@@ -153,10 +153,14 @@
 										</div>
 									</td>
 									<td class="px-4 py-3">
-										<button type="button" onclick="togglePackageStatus({{ $package->id }})"
-											class="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold transition {{ $package->is_active ? 'bg-green-100 text-green-700 hover:bg-green-200 dark:bg-green-900/30 dark:text-green-300' : 'bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-300' }}">
-											{{ $package->is_active ? 'Active' : 'Inactive' }}
-										</button>
+										<div class="flex items-center">
+											<label class="relative inline-flex cursor-pointer items-center">
+												<input type="checkbox" {{ $package->is_active ? 'checked' : '' }} onchange="togglePackageStatus({{ $package->id }}, this)"
+													class="peer sr-only" />
+												<div class="h-6 w-11 rounded-full bg-gray-200 transition-colors duration-200 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-green-400 peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:ring-4 peer-focus:ring-green-300 dark:bg-gray-700 dark:peer-focus:ring-green-800">
+												</div>
+											</label>
+										</div>
 									</td>
 									<td class="px-4 py-3 text-sm text-gray-600 dark:text-gray-300">{{ $package->updated_at?->format('M d, Y') }}
 									</td>
@@ -207,7 +211,15 @@
 
 	@push('scripts')
 		<script>
-			function togglePackageStatus(packageId) {
+			function togglePackageStatus(packageId, checkbox) {
+				if (checkbox?.disabled) {
+					return;
+				}
+
+				if (checkbox) {
+					checkbox.disabled = true;
+				}
+
 				const urlTemplate = @json(route('dashboard.packages.toggle-status', ['package' => '__ID__']));
 				const url = urlTemplate.replace('__ID__', String(packageId));
 
@@ -228,14 +240,15 @@
 					})
 					.then((data) => {
 						if (data.success) {
+							if (checkbox && typeof data.is_active !== 'undefined') {
+								checkbox.checked = Boolean(data.is_active);
+							}
+
 							const message = data.message || 'Package status updated successfully.';
 							if (window.toast) {
 								window.toast.success(message);
 							}
 
-							setTimeout(() => {
-								window.location.reload();
-							}, 450);
 							return;
 						}
 
@@ -246,6 +259,15 @@
 						const message = error?.message || 'Unable to update package status right now.';
 						if (window.toast) {
 							window.toast.error(message);
+						}
+
+						if (checkbox) {
+							checkbox.checked = !checkbox.checked;
+						}
+					})
+					.finally(() => {
+						if (checkbox) {
+							checkbox.disabled = false;
 						}
 					});
 			}

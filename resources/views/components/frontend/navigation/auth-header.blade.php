@@ -1,3 +1,14 @@
+@php
+	$currentUser = Auth::user();
+	$avatarPath = $currentUser?->brand?->profile_image_path
+		?? $currentUser?->creator?->profile_image_path
+		?? $currentUser?->profile_image_path;
+	$avatarUrl = filled($avatarPath) ? image_url($avatarPath) : null;
+	$userInitials = $currentUser
+		? Str::of($currentUser->name)->explode(' ')->map(fn($word) => Str::upper($word[0] ?? ''))->filter()->take(2)->join('')
+		: 'SM';
+@endphp
+
 <div x-data="{
 		isCartOpen: false,
 		isProfileOpen: false,
@@ -63,11 +74,11 @@
 
 						<!-- Profile Image/Initials -->
 						@auth
-							@if (Auth::user()->profile_image_path && file_exists(public_path(Auth::user()->profile_image_path)))
-								<img src="{{ asset(Auth::user()->profile_image_path) }}" alt="Profile" class="w-10 h-10 rounded-full object-cover">
+							@if ($avatarUrl)
+								<img src="{{ $avatarUrl }}" alt="{{ $currentUser?->name ?? 'Profile' }}" class="w-10 h-10 rounded-full object-cover">
 							@else
 								<div class="w-10 h-10 rounded-full bg-[#FFE4C4] flex items-center justify-center text-base font-bold text-black uppercase tracking-tighter">
-									{{ Str::of(Auth::user()->name)->explode(' ')->map(fn($word) => Str::upper($word[0]))->take(2)->join('') }}
+									{{ $userInitials }}
 								</div>
 							@endif
 						@else
@@ -91,7 +102,9 @@
 									<a href="{{ route('creator.profile', Auth::user()->slug) }}" class="px-7 py-3.5 text-[15px] font-bold text-gray-800 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">View profile</a>
 									<a href="{{ route('dashboard.creator.profile.edit') }}" class="px-7 py-3.5 text-[15px] font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">Edit profile</a>
 								@endif
-							@endauth
+
+											<a href="{{ route('dashboard.index') }}" class="px-7 py-3.5 text-[15px] font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">Dashboard</a>
+										@endauth
 
 							<div class="border-t border-gray-100 dark:border-gray-700 my-1 mx-2"></div>
 							<a href="{{ route('dashboard.account.edit') }}" class="px-7 py-3.5 text-[15px] font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">Account</a>

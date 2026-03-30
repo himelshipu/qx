@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
@@ -13,6 +14,8 @@ class Campaign extends Model
     use HasFactory;
 
     protected $fillable = [
+        'brand_id',
+        'created_by',
         'title',
         'campaign_type',
         'description',
@@ -37,6 +40,16 @@ class Campaign extends Model
             'published_at' => 'datetime',
             'is_active'    => 'boolean'
         ];
+    }
+
+    public function brand(): BelongsTo
+    {
+        return $this->belongsTo(Brand::class);
+    }
+
+    public function createdBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by');
     }
 
     public function targeting(): HasOne
@@ -82,5 +95,12 @@ class Campaign extends Model
     public function orderItems(): HasMany
     {
         return $this->hasMany(OrderItem::class);
+    }
+
+    public function creators(): BelongsToMany
+    {
+        return $this->belongsToMany(Creator::class, 'campaign_applications')
+                    ->withPivot(['status', 'pitch_message', 'proposed_rate', 'agreed_rate', 'applied_at', 'decided_at'])
+                    ->withTimestamps();
     }
 }

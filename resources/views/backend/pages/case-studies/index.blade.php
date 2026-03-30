@@ -60,11 +60,16 @@
 							<tr>
 								<td class="px-4 py-3 text-sm font-medium text-gray-900 dark:text-white">{{ $case->title }}</td>
 								<td class="px-4 py-3 text-sm">
-									<span
-										class="inline-flex items-center gap-1.5 rounded-full px-2 py-1 text-xs font-medium {{ $case->is_published ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400' }}">
-										<span class="h-1.5 w-1.5 rounded-full {{ $case->is_published ? 'bg-green-500' : 'bg-gray-500' }}"></span>
-										{{ $case->is_published ? 'Published' : 'Draft' }}
-									</span>
+									<form action="{{ route('dashboard.case-studies.toggle-status', $case) }}" method="POST" class="inline">
+										@csrf
+										<div class="flex items-center">
+											<label class="relative inline-flex cursor-pointer items-center">
+												<input type="checkbox" {{ $case->is_published ? 'checked' : '' }} onchange="this.form.submit()"
+													class="peer sr-only" />
+												<div class="h-6 w-11 rounded-full bg-gray-200 transition-colors duration-200 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-green-400 peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:ring-4 peer-focus:ring-green-300 dark:bg-gray-700 dark:peer-focus:ring-green-800"></div>
+											</label>
+										</div>
+									</form>
 								</td>
 								<td class="px-4 py-3 text-sm text-gray-600 dark:text-gray-400">{{ $case->sort_order }}</td>
 								<td class="px-4 py-3 text-sm text-gray-600 dark:text-gray-400">
@@ -72,20 +77,9 @@
 								</td>
 								<td class="px-4 py-3 text-right">
 									<div class="flex items-center justify-end gap-2">
-										<form action="{{ route('dashboard.case-studies.toggle-status', $case) }}" method="POST" class="inline">
-											@csrf
-											<button type="submit"
-												class="flex items-center gap-1 rounded px-2 py-1 text-xs font-medium transition hover:bg-gray-100 dark:hover:bg-gray-800">
-												@if ($case->is_published)
-													<x-icons.eye class="h-4 w-4 text-green-600" />
-												@else
-													<x-icons.eye-off class="h-4 w-4 text-gray-600" />
-												@endif
-											</button>
-										</form>
 										<a href="{{ route('dashboard.case-studies.edit', $case) }}"
 											class="flex items-center gap-1 rounded px-2 py-1 text-xs font-medium text-blue-600 transition hover:bg-blue-50 dark:hover:bg-blue-900/20">
-											<x-icons.pencil class="h-4 w-4" />
+											<x-icons.edit class="h-4 w-4" />
 										</a>
 										<form action="{{ route('dashboard.case-studies.destroy', $case) }}" method="POST" class="inline"
 											onsubmit="return confirm('Are you sure?')">

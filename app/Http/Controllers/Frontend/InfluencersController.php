@@ -79,7 +79,7 @@ class InfluencersController extends Controller
 
         $influencers = $category->creators()
             ->with([
-                'user:id,name,slug,is_active',
+                'user:id,name,slug,city,country,profile_image_path,is_active',
                 'platformStats' => fn($q) => $q->where('is_active', true)->orderByDesc('follower_count')
             ])
             ->where('is_active', true)
@@ -114,8 +114,8 @@ class InfluencersController extends Controller
                 'slug'             => $creator->user->slug,
                 'name'             => $creator->display_name ?: $creator->user->name,
                 'title'            => $creator->title_name,
-                'location'         => $creator->location ?: $creator->city,
-                'image_url'        => image_url($creator->profile_image_path),
+                'location'         => $this->resolveCreatorLocation($creator),
+                'image_url'        => image_url($creator->user->profile_image_path),
                 'platform'         => $platformKey,
                 'platform_label'   => ucfirst($platformKey),
                 'platform_slug'    => str()->slug($platformKey),
@@ -222,5 +222,18 @@ class InfluencersController extends Controller
         ];
 
         return $map[$platform] ?? $platform;
+    }
+
+    /**
+     * Helper: Resolve creator location from city and country.
+     */
+    private function resolveCreatorLocation(\App\Models\Creator $creator): string
+    {
+        $parts = array_values(array_filter([
+            trim((string) ($creator->user?->city ?? '')),
+            trim((string) ($creator->user?->country ?? ''))
+        ]));
+
+        return $parts !== [] ? implode(', ', $parts) : 'Location not provided';
     }
 }
