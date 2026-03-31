@@ -100,15 +100,14 @@
 									<a href="{{ route('dashboard.brand.profile.edit', ['slug' => Auth::user()->slug]) }}" class="px-7 py-3.5 text-[15px] font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">Edit profile</a>
 								@elseif(Auth::user()->creator)
 									<a href="{{ route('creator.profile', Auth::user()->slug) }}" class="px-7 py-3.5 text-[15px] font-bold text-gray-800 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">View profile</a>
-									<a href="{{ route('dashboard.creator.profile.edit') }}" class="px-7 py-3.5 text-[15px] font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">Edit profile</a>
+									<a href="{{ route('dashboard.creator.profile.edit', ['slug' => Auth::user()->slug]) }}" class="px-7 py-3.5 text-[15px] font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">Edit profile</a>
 								@endif
 
 											<a href="{{ route('dashboard.index') }}" class="px-7 py-3.5 text-[15px] font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">Dashboard</a>
 										@endauth
 
 							<div class="border-t border-gray-100 dark:border-gray-700 my-1 mx-2"></div>
-							<a href="{{ route('dashboard.account.edit') }}" class="px-7 py-3.5 text-[15px] font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">Account</a>
-
+									<a href="{{ route('dashboard.account.edit', ['slug' => Auth::user()->slug]) }}" class="px-7 py-3.5 text-[15px] font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">Account</a>
 							<form method="POST" action="{{ route('logout') }}">
 								@csrf
 								<button type="submit" class="text-left px-7 py-3.5 text-[15px] font-medium text-red-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-red-700 transition-colors w-full">Log Out</button>

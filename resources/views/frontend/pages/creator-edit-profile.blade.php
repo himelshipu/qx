@@ -70,7 +70,8 @@
             <button @click="tab = 'images'" :class="tab === 'images' ? 'border-b-2 border-black dark:border-white text-black dark:text-white' : 'text-gray-400 hover:text-gray-600'" class="pb-4 text-base font-medium transition-all">Images</button>
         </div>
 
-        <form action="#" @submit.prevent>
+        <form action="{{ route('dashboard.creator.profile.update', ['slug' => $slug]) }}" method="POST" enctype="multipart/form-data">
+            @csrf
             
             <!-- TAB 1: DETAILS -->
             <div x-show="tab === 'details'" x-cloak class="space-y-6 text-start">
@@ -78,8 +79,11 @@
                 <!-- Display Name -->
                 <div>
                     <label class="block text-sm font-medium text-gray-800 dark:text-gray-400 mb-1.5">Display Name</label>
-                    <input type="text" placeholder="Enter your display name"
-                        class="dark:bg-dark-900 shadow-theme-xs focus:border-pink-50 focus:ring-gray-500/10 dark:focus:border-gray-800 h-12 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30"></input>
+                    <input type="text" name="display_name" value="{{ old('display_name', $creator->display_name ?? '') }}" placeholder="Enter your display name"
+                        class="dark:bg-dark-900 shadow-theme-xs focus:border-pink-50 focus:ring-gray-500/10 dark:focus:border-gray-800 h-12 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30" />
+                    @error('display_name')
+                        <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
+                    @enderror
                 </div>
 
                 <!-- Location -->
@@ -95,15 +99,18 @@
                 <!-- Title Name -->
                 <div>
                     <label class="block text-sm font-medium text-gray-800 dark:text-gray-400 mb-1.5">Title Name</label>
-                    <input type="text" placeholder="Enter your title (e.g. Beauty Influencer, Fitness Coach, etc.)"
-                        class="dark:bg-dark-900 shadow-theme-xs focus:border-pink-50 focus:ring-gray-500/10 dark:focus:border-gray-800 h-12 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30"></input>
+                    <input type="text" name="title_name" value="{{ old('title_name', $creator->title_name ?? '') }}" placeholder="Enter your title (e.g. Beauty Influencer, Fitness Coach, etc.)"
+                        class="dark:bg-dark-900 shadow-theme-xs focus:border-pink-50 focus:ring-gray-500/10 dark:focus:border-gray-800 h-12 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30" />
+                    @error('title_name')
+                        <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
+                    @enderror
                 </div>
 
                 <!-- Description -->
                 <div>
                     <label class="block text-sm font-medium text-gray-800 dark:text-gray-400 mb-2">Description</label>
-                    <textarea name="description" rows="5" placeholder="Tell us about your brand, mission, and what you do... (max 1000 characters)"
-                        class="dark:bg-dark-900 shadow-theme-xs focus:border-pink-50 focus:ring-gray-500/10 dark:focus:border-gray-800 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-3 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 resize-none">{{ old('description', $brand->description ?? ''   ) }}</textarea>
+                    <textarea name="description" rows="5" placeholder="Tell us about yourself, your content, and what you do... (max 1000 characters)"
+                        class="dark:bg-dark-900 shadow-theme-xs focus:border-pink-50 focus:ring-gray-500/10 dark:focus:border-gray-800 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-3 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 resize-none">{{ old('description', $creator->description ?? ''   ) }}</textarea>
                     @error('description')
                         <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
                     @enderror
@@ -113,7 +120,7 @@
                 <div>
                     <label class="block text-sm font-medium text-gray-800 dark:text-gray-400 mb-2">Who is your audience?</label>
                     <textarea name="audience" rows="5" placeholder="Describe your target audience (max 1000 characters)"
-                        class="dark:bg-dark-900 shadow-theme-xs focus:border-pink-50 focus:ring-gray-500/10 dark:focus:border-gray-800 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-3 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 resize-none">{{ old('audience', $brand->audience ?? ''   ) }}</textarea>
+                        class="dark:bg-dark-900 shadow-theme-xs focus:border-pink-50 focus:ring-gray-500/10 dark:focus:border-gray-800 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-3 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 resize-none">{{ old('audience', $creator->audience ?? ''   ) }}</textarea>
                     @error('audience')
                         <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
                     @enderror
@@ -122,8 +129,11 @@
                 <!-- Brands work with -->
                 <div>
                     <label class="block text-sm font-medium text-gray-800 dark:text-gray-400 mb-1.5">What brands have you worked with?</label>
-                    <input type="text" placeholder="Enter brands you've worked with"
-                        class="dark:bg-dark-900 shadow-theme-xs focus:border-pink-50 focus:ring-gray-500/10 dark:focus:border-gray-800 h-12 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30"></input>
+                    <input type="text" name="brands_worked_with" value="{{ old('brands_worked_with', $creator->brands_worked_with ?? '') }}" placeholder="Enter brands you've worked with"
+                        class="dark:bg-dark-900 shadow-theme-xs focus:border-pink-50 focus:ring-gray-500/10 dark:focus:border-gray-800 h-12 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30" />
+                    @error('brands_worked_with')
+                        <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
+                    @enderror
                 </div>
 
                 <!-- Gender -->
@@ -147,7 +157,7 @@
             <div x-show="tab === 'social'" x-cloak class="space-y-8 text-start animate-in fade-in duration-300">
                 <div>
                     <label class="block text-sm font-medium text-gray-800 dark:text-gray-400 mb-2">Website</label>
-                    <input type="url" name="website" value="{{ old('website', $brand->website ?? '') }}" placeholder="https://yourwebsite.com"
+                    <input type="url" name="website" value="{{ old('website', $creator->user->website ?? '') }}" placeholder="https://yourwebsite.com"
                         class="dark:bg-dark-900 shadow-theme-xs focus:border-pink-50 focus:ring-gray-500/10 dark:focus:border-gray-800 h-12 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30" />
                     @error('website')
                         <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
@@ -156,54 +166,54 @@
 
                 <div>
                     <label class="block text-sm font-medium text-gray-800 dark:text-gray-400 mb-2">Instagram</label>
-                    <input type="url" name="instagram" value="{{ old('instagram', $brand?->social_links['instagram'] ?? '') }}" placeholder="https://instagram.com/yourprofile"
+                    <input type="url" name="instagram_url" value="{{ old('instagram_url', $creator->socialLinks?->instagram_url ?? '') }}" placeholder="https://instagram.com/yourprofile"
                         class="dark:bg-dark-900 shadow-theme-xs focus:border-pink-50 focus:ring-gray-500/10 dark:focus:border-gray-800 h-12 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30" />
-                    @error('instagram')
+                    @error('instagram_url')
                         <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
                     @enderror
                 </div>
 
                 <div>
                     <label class="block text-sm font-medium text-gray-800 dark:text-gray-400 mb-2">TikTok</label>
-                    <input type="url" name="tiktok" value="{{ old('tiktok', $brand?->social_links['tiktok'] ?? '') }}" placeholder="https://tiktok.com/@yourprofile"
+                    <input type="url" name="tiktok_url" value="{{ old('tiktok_url', $creator->socialLinks?->tiktok_url ?? '') }}" placeholder="https://tiktok.com/@yourprofile"
                         class="dark:bg-dark-900 shadow-theme-xs focus:border-pink-50 focus:ring-gray-500/10 dark:focus:border-gray-800 h-12 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30" />
-                    @error('tiktok')
+                    @error('tiktok_url')
                         <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
                     @enderror
                 </div>
 
                 <div>
                     <label class="block text-sm font-medium text-gray-800 dark:text-gray-400 mb-2">Facebook</label>
-                    <input type="url" name="facebook" value="{{ old('facebook', $brand?->social_links['facebook'] ?? '') }}" placeholder="https://facebook.com/yourprofile"
+                    <input type="url" name="facebook_url" value="{{ old('facebook_url', $creator->socialLinks?->facebook_url ?? '') }}" placeholder="https://facebook.com/yourprofile"
                         class="dark:bg-dark-900 shadow-theme-xs focus:border-pink-50 focus:ring-gray-500/10 dark:focus:border-gray-800 h-12 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30" />
-                    @error('facebook')
+                    @error('facebook_url')
                         <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
                     @enderror
                 </div>
 
                 <div>
-                    <label class="block text-sm font-medium text-gray-800 dark:text-gray-400 mb-2">Twitter</label>
-                    <input type="url" name="twitter" value="{{ old('twitter', $brand?->social_links['twitter'] ?? '') }}" placeholder="https://twitter.com/yourprofile"
+                    <label class="block text-sm font-medium text-gray-800 dark:text-gray-400 mb-2">X (Twitter)</label>
+                    <input type="url" name="x_url" value="{{ old('x_url', $creator->socialLinks?->x_url ?? '') }}" placeholder="https://x.com/yourprofile"
                         class="dark:bg-dark-900 shadow-theme-xs focus:border-pink-50 focus:ring-gray-500/10 dark:focus:border-gray-800 h-12 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30" />
-                    @error('twitter')
+                    @error('x_url')
                         <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
                     @enderror
                 </div>
 
                 <div>
                     <label class="block text-sm font-medium text-gray-800 dark:text-gray-400 mb-2">YouTube</label>
-                    <input type="url" name="youtube" value="{{ old('youtube', $brand?->social_links['youtube'] ?? '') }}" placeholder="https://youtube.com/c/yourchannel"
+                    <input type="url" name="youtube_url" value="{{ old('youtube_url', $creator->socialLinks?->youtube_url ?? '') }}" placeholder="https://youtube.com/c/yourchannel"
                         class="dark:bg-dark-900 shadow-theme-xs focus:border-pink-50 focus:ring-gray-500/10 dark:focus:border-gray-800 h-12 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30" />
-                    @error('youtube')
+                    @error('youtube_url')
                         <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
                     @enderror
                 </div>
 
                 <div>
-                    <label class="block text-sm font-medium text-gray-800 dark:text-gray-400 mb-2">Others</label>
-                    <input type="url" name="others" value="{{ old('others', $brand?->social_links['others'] ?? '') }}" placeholder="https://yourprofile.com"
+                    <label class="block text-sm font-medium text-gray-800 dark:text-gray-400 mb-2">Other Website</label>
+                    <input type="url" name="other_url" value="{{ old('other_url', $creator->socialLinks?->other_url ?? '') }}" placeholder="https://yourwebsite.com"
                         class="dark:bg-dark-900 shadow-theme-xs focus:border-pink-50 focus:ring-gray-500/10 dark:focus:border-gray-800 h-12 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30" />
-                    @error('others')
+                    @error('other_url')
                         <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
                     @enderror
                 </div>

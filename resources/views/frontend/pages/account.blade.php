@@ -7,28 +7,6 @@
     <div>
         <h1 class="text-3xl md:text-4xl font-semibold text-[#222] dark:text-white leading-tight text-left mb-4">My Account</h1>
 
-        <!-- Status Messages -->
-        @if (session('status') === 'profile-updated')
-            <div class="mb-6 p-4 bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 rounded-xl font-medium flex items-center gap-3">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                Profile updated successfully.
-            </div>
-        @endif
-
-        @if (session('status') === 'password-updated')
-            <div class="mb-6 p-4 bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 rounded-xl font-medium flex items-center gap-3">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                Password updated successfully.
-            </div>
-        @endif
-
-        @if (session('status') === 'billing-updated')
-            <div class="mb-6 p-4 bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 rounded-xl font-medium flex items-center gap-3">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                Billing information updated successfully.
-            </div>
-        @endif
-
         @if ($errors->any())
             <div class="mb-6 p-4 bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300 rounded-xl">
                 <div class="font-bold mb-2">Please fix the following errors:</div>
@@ -48,6 +26,14 @@
                 Details
             </button>
             
+            @if($brand)
+            <button @click="tab = 'billing'" 
+                    :class="tab === 'billing' ? 'border-b-2 border-black dark:border-white text-black dark:text-white' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'" 
+                    class="pb-4 text-base font-medium transition-all whitespace-nowrap">
+                Billing
+            </button>
+            @endif
+
             <button @click="tab = 'password'" 
                     :class="tab === 'password' ? 'border-b-2 border-black dark:border-white text-black dark:text-white' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'" 
                     class="pb-4 text-base font-medium transition-all whitespace-nowrap">
@@ -70,10 +56,10 @@
 
         <!-- Details Tab -->
         <div x-show="tab === 'details'" x-cloak class="space-y-8 animate-in fade-in duration-300">
-            <form action="{{ route('dashboard.account.details.update') }}" method="POST" class="space-y-8">
+            <form action="{{ route('dashboard.account.details.update', ['slug' => $user->slug]) }}" method="POST" class="space-y-8">
                 @csrf
 
-                <div class="flex flex-col gap-6">
+                <div class="space-y-6">
                     <!-- Name -->
                     <div>
                         <label class="block text-sm font-medium text-gray-800 dark:text-gray-300 mb-2">Full Name <span class="text-error-500"> *</span></label>
@@ -84,6 +70,7 @@
                             <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
                         @enderror
                     </div>
+                    
                     <!-- Email -->
                     <div>
                         <label class="block text-sm font-medium text-gray-800 dark:text-gray-300 mb-2">Email Address <span class="text-error-500"> *</span></label>
@@ -95,10 +82,112 @@
                         @enderror
                     </div>
 
+                    <!-- Phone -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-800 dark:text-gray-300 mb-2">Phone Number</label>
+                        <input type="tel" name="phone" value="{{ old('phone', $user->phone) }}" placeholder="+1 (555) 000-0000"
+                            class="dark:bg-dark-900 shadow-theme-xs focus:border-pink-50 focus:ring-gray-500/10 dark:focus:border-gray-800 h-12 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30" />
+                        @error('phone')
+                            <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <!-- Date of Birth -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-800 dark:text-gray-300 mb-2">Date of Birth</label>
+                        <input type="date" name="date_of_birth" value="{{ old('date_of_birth', $user->date_of_birth) }}"
+                            class="dark:bg-dark-900 shadow-theme-xs focus:border-pink-50 focus:ring-gray-500/10 dark:focus:border-gray-800 h-12 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30" />
+                        @error('date_of_birth')
+                            <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <!-- Gender -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-800 dark:text-gray-300 mb-2">Gender</label>
+                        <select name="gender"
+                            class="dark:bg-dark-900 shadow-theme-xs focus:border-pink-50 focus:ring-gray-500/10 dark:focus:border-gray-800 h-12 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30">
+                            <option value="">-- Select Gender --</option>
+                            <option value="male" {{ old('gender', $user->gender) == 'male' ? 'selected' : '' }}>Male</option>
+                            <option value="female" {{ old('gender', $user->gender) == 'female' ? 'selected' : '' }}>Female</option>
+                            <option value="other" {{ old('gender', $user->gender) == 'other' ? 'selected' : '' }}>Other</option>
+                        </select>
+                        @error('gender')
+                            <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <!-- Bio -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-800 dark:text-gray-300 mb-2">Bio</label>
+                        <textarea name="bio" rows="4" placeholder="Tell us about yourself (max 1000 characters)"
+                            class="dark:bg-dark-900 shadow-theme-xs focus:border-pink-50 focus:ring-gray-500/10 dark:focus:border-gray-800 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 resize-none">{{ old('bio', $user->bio) }}</textarea>
+                        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Max 1000 characters</p>
+                        @error('bio')
+                            <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <hr class="border-gray-200 dark:border-gray-800 my-4">
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Location</h3>
+
+                    <!-- Address Line -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-800 dark:text-gray-300 mb-2">Street Address</label>
+                        <input type="text" name="address_line" value="{{ old('address_line', $user->address_line) }}" placeholder="Street address"
+                            class="dark:bg-dark-900 shadow-theme-xs focus:border-pink-50 focus:ring-gray-500/10 dark:focus:border-gray-800 h-12 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30" />
+                        @error('address_line')
+                            <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <!-- City -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-800 dark:text-gray-300 mb-2">City</label>
+                        <input type="text" name="city" value="{{ old('city', $user->city) }}" placeholder="City name"
+                            class="dark:bg-dark-900 shadow-theme-xs focus:border-pink-50 focus:ring-gray-500/10 dark:focus:border-gray-800 h-12 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30" />
+                        @error('city')
+                            <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <!-- Country -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-800 dark:text-gray-300 mb-2">Country</label>
+                        <input type="text" name="country" value="{{ old('country', $user->country) }}" placeholder="Country"
+                            class="dark:bg-dark-900 shadow-theme-xs focus:border-pink-50 focus:ring-gray-500/10 dark:focus:border-gray-800 h-12 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30" />
+                        @error('country')
+                            <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <!-- Postal Code -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-800 dark:text-gray-300 mb-2">Postal/ZIP Code</label>
+                        <input type="text" name="postal_code" value="{{ old('postal_code', $user->postal_code) }}" placeholder="Postal or ZIP code"
+                            class="dark:bg-dark-900 shadow-theme-xs focus:border-pink-50 focus:ring-gray-500/10 dark:focus:border-gray-800 h-12 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30" />
+                        @error('postal_code')
+                            <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
+                        @enderror
+                    </div>
+                </div>
+
+                <button type="submit" class="bg-[#222] shadow-theme-xs h-14 hover:bg-purple-400 flex w-full items-center justify-center rounded-lg px-4 py-3 text-sm font-medium text-white transition">
+                    Save Changes
+                </button>
+            </form>
+        </div>
+
+        <!-- Billing Tab -->
+        <div x-show="tab === 'billing'" x-cloak class="space-y-8 animate-in fade-in duration-300">
+            <form action="{{ route('dashboard.account.billing.update', ['slug' => $user->slug]) }}" method="POST" class="space-y-8">
+                @csrf
+
+                <div class="space-y-6">
                     <!-- Legal Company Name -->
                     <div>
                         <label class="block text-sm font-medium text-gray-800 dark:text-gray-300 mb-2">Legal Company Name</label>
-                        <input type="text" name="legal_company_name" value="{{ old('legal_company_name', $brand->setup_data['details']['legal_company_name'] ?? '') }}" placeholder="Company Name for Invoicing"
+                        <input type="text" name="legal_company_name" value="{{ old('legal_company_name', $brand->billingProfile?->legal_company_name ?? '') }}" placeholder="Company Name for Invoicing"
                             class="dark:bg-dark-900 shadow-theme-xs focus:border-pink-50 focus:ring-gray-500/10 dark:focus:border-gray-800 h-12 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30" />
                         @error('legal_company_name')
                             <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
@@ -108,34 +197,59 @@
                     <!-- VAT ID -->
                     <div>
                         <label class="block text-sm font-medium text-gray-800 dark:text-gray-300 mb-2">VAT ID</label>
-                        <input type="text" name="vat_id" value="{{ old('vat_id', $brand->setup_data['details']['vat_id'] ?? '') }}" placeholder="Optional"
+                        <input type="text" name="vat_id" value="{{ old('vat_id', $brand->billingProfile?->vat_id ?? '') }}" placeholder="Optional"
                             class="dark:bg-dark-900 shadow-theme-xs focus:border-pink-50 focus:ring-gray-500/10 dark:focus:border-gray-800 h-12 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30" />
                         @error('vat_id')
                             <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
                         @enderror
                     </div>
 
+                    <hr class="border-gray-200 dark:border-gray-800 my-4">
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Billing Address</h3>
+
                     <!-- Billing Address -->
-                    <div class="md:col-span-2 flex flex-col gap-2">
-                        <label class="block text-sm font-medium text-gray-800 dark:text-gray-300 mb-2">Billing Address</label>
-                        <input type="text" name="billing_address" value="{{ old('billing_address', $brand->setup_data['details']['billing_address'] ?? '') }}" placeholder="Street address"
+                    <div>
+                        <label class="block text-sm font-medium text-gray-800 dark:text-gray-300 mb-2">Street Address</label>
+                        <input type="text" name="billing_address" value="{{ old('billing_address', $brand->billingProfile?->billing_address ?? '') }}" placeholder="Street address"
                             class="dark:bg-dark-900 shadow-theme-xs focus:border-pink-50 focus:ring-gray-500/10 dark:focus:border-gray-800 h-12 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30" />
                         @error('billing_address')
                             <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
                         @enderror
-                        <!-- city -->
-                        <input type="text" name="billing_city" value="{{ old('billing_city', $brand->setup_data['details']['billing_city'] ?? '') }}" placeholder="City Name"
-                            class="dark:bg-dark-900 shadow-theme-xs focus:border-pink-50 focus:ring-gray-500/10 dark:focus:border-gray-800 h-12 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30" />
-                        <!-- Postal Code -->
-                        <input type="text" name="billing_postal_code" value="{{ old('billing_postal_code', $brand->setup_data['details']['billing_postal_code'] ?? '') }}" placeholder="The postal or ZIP code for your billing address"
-                        class="dark:bg-dark-900 shadow-theme-xs focus:border-pink-50 focus:ring-gray-500/10 dark:focus:border-gray-800 h-12 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30" />
                     </div>
 
-                    
+                    <!-- Billing City -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-800 dark:text-gray-300 mb-2">City</label>
+                        <input type="text" name="billing_city" value="{{ old('billing_city', $brand->billingProfile?->billing_city ?? '') }}" placeholder="City Name"
+                            class="dark:bg-dark-900 shadow-theme-xs focus:border-pink-50 focus:ring-gray-500/10 dark:focus:border-gray-800 h-12 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30" />
+                        @error('billing_city')
+                            <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <!-- Billing Country -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-800 dark:text-gray-300 mb-2">Country</label>
+                        <input type="text" name="billing_country" value="{{ old('billing_country', $brand->billingProfile?->billing_country ?? '') }}" placeholder="Country"
+                            class="dark:bg-dark-900 shadow-theme-xs focus:border-pink-50 focus:ring-gray-500/10 dark:focus:border-gray-800 h-12 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30" />
+                        @error('billing_country')
+                            <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <!-- Billing Postal Code -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-800 dark:text-gray-300 mb-2">Postal/ZIP Code</label>
+                        <input type="text" name="billing_postal_code" value="{{ old('billing_postal_code', $brand->billingProfile?->billing_postal_code ?? '') }}" placeholder="The postal or ZIP code for your billing address"
+                            class="dark:bg-dark-900 shadow-theme-xs focus:border-pink-50 focus:ring-gray-500/10 dark:focus:border-gray-800 h-12 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30" />
+                        @error('billing_postal_code')
+                            <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
+                        @enderror
+                    </div>
                 </div>
 
                 <button type="submit" class="bg-[#222] shadow-theme-xs h-14 hover:bg-purple-400 flex w-full items-center justify-center rounded-lg px-4 py-3 text-sm font-medium text-white transition">
-                    Save
+                    Save Billing Information
                 </button>
             </form>
         </div>
@@ -143,7 +257,7 @@
 
         <!-- Password Tab -->
         <div x-show="tab === 'password'" x-cloak class="space-y-8 animate-in fade-in duration-300" x-data="{ showPass: { old: false, new: false, confirm: false } }">
-            <form action="{{ route('dashboard.account.password.update') }}" method="POST" class="space-y-6">
+            <form action="{{ route('dashboard.account.password.update', ['slug' => $user->slug]) }}" method="POST" class="space-y-6">
                 @csrf
 
                 <div>
@@ -215,7 +329,7 @@
                             </span>
                         </p>
                     </div>
-                    <form action="{{ route('dashboard.account.toggle-status') }}" method="POST">
+                    <form action="{{ route('dashboard.account.toggle-status', ['slug' => $user->slug]) }}" method="POST">
                         @csrf
                         <button type="submit" class="px-4 py-2 rounded-lg font-medium text-sm transition {{ $user->is_active ? 'bg-red-100 text-red-700 hover:bg-red-200' : 'bg-green-100 text-green-700 hover:bg-green-200' }}">
                             {{ $user->is_active ? 'Deactivate' : 'Activate' }}
@@ -256,7 +370,7 @@
                     <p class="text-sm text-gray-800 dark:text-gray-300 mb-4 font-medium">
                         ⚠️ This action cannot be undone. Please enter your password to confirm deletion.
                     </p>
-                    <form method="POST" action="{{ route('dashboard.account.destroy') }}" @submit="if(!confirm('Are you absolutely sure? All your data will be permanently deleted.')) $event.preventDefault();">
+                    <form method="POST" action="{{ route('dashboard.account.destroy', ['slug' => $user->slug]) }}" @submit="if(!confirm('Are you absolutely sure? All your data will be permanently deleted.')) $event.preventDefault();">
                         @csrf
                         @method('DELETE')
                         <div class="flex gap-3 flex-wrap">

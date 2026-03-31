@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Backend\Package;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\Auth;
 
 class StorePackageRequest extends FormRequest
 {
@@ -15,13 +16,31 @@ class StorePackageRequest extends FormRequest
     }
 
     /**
+     * Prepare the data for validation.
+     */
+    protected function prepareForValidation(): void
+    {
+        $user = Auth::user();
+        $isCreator = $user && $user->creator()->exists();
+
+        // If user is not a creator, ensure created_for is provided
+        // If user is a creator, remove created_for from input as it will be set automatically
+        if ($isCreator) {
+            $this->request->remove('created_for');
+        }
+    }
+
+    /**
      * Get the validation rules that apply to the request.
      *
      * @return array<string, array<int, string>>
      */
     public function rules(): array
     {
-        return [
+        $user = Auth::user();
+        $isCreator = $user && $user->creator()->exists();
+
+        $rules = [
             'platform'           => ['required', 'string', 'in:instagram,tiktok,youtube,ugc,other'],
             'name'               => ['required', 'string', 'max:255'],
             'description'        => ['nullable', 'string'],
@@ -31,5 +50,12 @@ class StorePackageRequest extends FormRequest
             'revisions_included' => ['nullable', 'integer', 'min:0', 'max:65535'],
             'is_active'          => ['sometimes', 'boolean']
         ];
+
+        // Only require created_for if user is not a creator
+        if (!$isCreator) {
+            $rules['created_for'] = ['required', 'exists:creators,id'];
+        }
+
+        return $rules;
     }
 }

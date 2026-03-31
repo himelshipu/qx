@@ -21,7 +21,8 @@ class Brand extends Model
         'is_verified',
         'is_active',
         'profile_image_path',
-        'cover_image_path'
+        'cover_image_path',
+        'setup_data'
     ];
 
     protected function casts(): array
@@ -29,6 +30,7 @@ class Brand extends Model
         return [
             'is_verified' => 'boolean',
             'is_active'   => 'boolean',
+            'setup_data'  => 'array',
             'created_at'  => 'datetime',
             'updated_at'  => 'datetime'
         ];

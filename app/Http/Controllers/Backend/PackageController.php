@@ -65,6 +65,25 @@ class PackageController extends Controller
     }
 
     /**
+     * Display the specified package details.
+     */
+    public function view(Package $package): View
+    {
+        // Load all relationships needed for detailed view
+        $package->load([
+            'createdBy',
+            'creator.user',
+            'orderItems.order.brand.user'
+        ]);
+
+        return view('backend.pages.packages.view', [
+            'package' => $package,
+            'creator' => $package->creator,
+            'orders' => $package->orderItems()->with(['order.brand.user'])->get()->map(fn($item) => $item->order)->unique('id')->values()
+        ]);
+    }
+
+    /**
      * Update the specified package in storage.
      */
     public function update(UpdatePackageRequest $request, Package $package): RedirectResponse
@@ -110,5 +129,34 @@ class PackageController extends Controller
             'message'   => 'Package status updated successfully.',
             'is_active' => $isActive
         ]);
+    }
+
+    /**
+     * Show the form to purchase packages for brands.
+     */
+    public function purchase(): View
+    {
+        return view('backend.pages.packages.purchase', $this->packageService->getPurchasePayload());
+    }
+
+    /**
+     * Handle purchase of packages by brands.
+     */
+    public function purchaseStore(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'package_id' => 'required|exists:packages,id',
+            'brand_ids'  => 'required|array',
+            'brand_ids.*' => 'exists:brands,id'
+        ]);
+
+        $packageId = $validated['package_id'];
+        $brandIds = $validated['brand_ids'];
+
+        $purchased = $this->packageService->purchasePackageForBrands($packageId, $brandIds);
+
+        return redirect()
+            ->route('dashboard.packages.purchase')
+            ->with('success', "{$purchased} brand(s) purchased this package successfully.");
     }
 }

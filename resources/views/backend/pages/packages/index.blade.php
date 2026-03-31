@@ -157,6 +157,11 @@
 									</td>
 									<td class="px-4 py-3">
 										<div class="flex items-center justify-end gap-2">
+											<a href="{{ route('dashboard.packages.view', $package) }}"
+												class="inline-flex items-center rounded-lg border border-gray-200 p-2 text-gray-600 transition hover:bg-blue-50 hover:text-blue-600 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-blue-900/20 dark:hover:text-blue-300"
+												title="View package details">
+												<x-icons.eye class="h-4 w-4" />
+											</a>
 											<a href="{{ route('dashboard.packages.edit', $package) }}"
 												class="inline-flex items-center rounded-lg border border-gray-200 p-2 text-gray-600 transition hover:bg-gray-100 hover:text-gray-900 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-white"
 												title="Edit package">

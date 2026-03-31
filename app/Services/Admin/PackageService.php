@@ -4,6 +4,7 @@ declare (strict_types = 1);
 
 namespace App\Services\Admin;
 
+use App\Models\Creator;
 use App\Models\Package;
 use App\Repositories\Contracts\PackageRepositoryInterface;
 use Illuminate\Support\Facades\Auth;
@@ -45,12 +46,17 @@ final class PackageService
     /**
      * Build form payload for create/edit pages.
      *
-     * @return array{platformOptions:array<int, array{value:string,label:string}>}
+     * @return array{platformOptions:array<int, array{value:string,label:string}>,isCreator:bool,creators:?\Illuminate\Database\Eloquent\Collection}
      */
     public function getFormPayload(): array
     {
+        $user = Auth::user();
+        $isCreator = $user && $user->creator()->exists();
+
         return [
-            'platformOptions' => $this->getPlatformOptions()
+            'platformOptions' => $this->getPlatformOptions(),
+            'isCreator'       => $isCreator,
+            'creators'        => !$isCreator ? Creator::query()->whereHas('user')->get() : null
         ];
     }
 
@@ -62,6 +68,20 @@ final class PackageService
     public function createPackage(array $validated, bool $isActive): Package
     {
         $createdByUserId = $this->resolveAuthenticatedUserId();
+        $user = Auth::user();
+        
+        // Determine creator_id based on user type
+        // If user is a creator, they are creating a package for themselves
+        // If user is admin/moderator, they are creating a package for a selected creator
+        $creatorId = null;
+        
+        if ($user && $user->creator()->exists()) {
+            // User is a creator, set creator_id to their creator id
+            $creatorId = $user->creator->id;
+        } elseif (isset($validated['created_for']) && (int)$validated['created_for'] > 0) {
+            // Admin/moderator creating package for a specific creator
+            $creatorId = (int)$validated['created_for'];
+        }
 
         return $this->packageRepository->create([
             'platform'           => $validated['platform'],
@@ -71,6 +91,7 @@ final class PackageService
             'currency'           => $this->normalizeCurrency((string) $validated['currency']),
             'delivery_days'      => $this->nullableInteger($validated['delivery_days'] ?? null),
             'revisions_included' => $this->nullableInteger($validated['revisions_included'] ?? null),
+            'creator_id'         => $creatorId,
             'created_by'         => $createdByUserId,
             'is_active'          => $isActive
         ]);
@@ -83,7 +104,8 @@ final class PackageService
      */
     public function updatePackage(Package $package, array $validated, bool $isActive): Package
     {
-        return $this->packageRepository->update($package, [
+        $user = Auth::user();
+        $updateData = [
             'platform'           => $validated['platform'],
             'name'               => $validated['name'],
             'description'        => $this->nullableString($validated['description'] ?? null),
@@ -92,7 +114,14 @@ final class PackageService
             'delivery_days'      => $this->nullableInteger($validated['delivery_days'] ?? null),
             'revisions_included' => $this->nullableInteger($validated['revisions_included'] ?? null),
             'is_active'          => $isActive
-        ]);
+        ];
+
+        // Only allow updating creator_id if user is admin/moderator and created_for is provided
+        if ($user && !$user->creator()->exists() && isset($validated['created_for']) && (int)$validated['created_for'] > 0) {
+            $updateData['creator_id'] = (int)$validated['created_for'];
+        }
+
+        return $this->packageRepository->update($package, $updateData);
     }
 
     /**
@@ -221,5 +250,84 @@ final class PackageService
         }
 
         return (int) $value;
+    }
+
+    /**
+     * Get payload for package purchase page.
+     */
+    public function getPurchasePayload(): array
+    {
+        $packages = Package::where('is_active', true)
+            ->with(['creator:id,display_name', 'creator.user:id,email,name'])
+            ->orderByDesc('created_at')
+            ->get(['id', 'name', 'description', 'base_price', 'currency', 'platform', 'delivery_days', 'revisions_included', 'creator_id']);
+
+        $brands = \App\Models\Brand::with('user:id,email,name')
+            ->orderBy('brand_name')
+            ->get(['id', 'user_id', 'brand_name']);
+
+        $activeBrandsCount = $brands->count();
+        $activePackagesCount = $packages->count();
+
+        // Get latest purchased packages
+        $latestPurchases = \App\Models\Order::where('status', '!=', 'cancelled')
+            ->with(['items', 'brand:id,brand_name', 'buyer:id,email,name'])
+            ->orderByDesc('placed_at')
+            ->limit(10)
+            ->get(['id', 'order_number', 'brand_id', 'buyer_user_id', 'status', 'total_amount', 'currency', 'placed_at']);
+
+        return compact('packages', 'brands', 'activeBrandsCount', 'activePackagesCount', 'latestPurchases');
+    }
+
+    /**
+     * Handle package purchase for multiple brands.
+     */
+    public function purchasePackageForBrands(int $packageId, array $brandIds): int
+    {
+        $package = Package::findOrFail($packageId);
+        $purchased = 0;
+
+        foreach ($brandIds as $brandId) {
+            // Check if order already exists
+            $existingOrder = \App\Models\Order::where('brand_id', $brandId)
+                ->whereHas('items', function ($query) use ($packageId) {
+                    $query->where('package_id', $packageId);
+                })
+                ->exists();
+
+            if (!$existingOrder) {
+                // Create order
+                $order = \App\Models\Order::create([
+                    'order_number' => 'ORD-' . strtoupper(uniqid()),
+                    'buyer_user_id' => Auth::id(),
+                    'brand_id' => $brandId,
+                    'status' => 'pending',
+                    'subtotal' => $package->base_price,
+                    'service_fee' => 0,
+                    'tax_amount' => 0,
+                    'total_amount' => $package->base_price,
+                    'currency' => $package->currency,
+                    'placed_at' => now()
+                ]);
+
+                // Create order item
+                \App\Models\OrderItem::create([
+                    'order_id' => $order->id,
+                    'creator_id' => $package->creator_id,
+                    'package_id' => $packageId,
+                    'title' => $package->name,
+                    'description' => $package->description,
+                    'quantity' => 1,
+                    'unit_price' => $package->base_price,
+                    'line_total' => $package->base_price,
+                    'status' => 'pending',
+                    'due_date' => $package->delivery_days ? now()->addDays($package->delivery_days)->toDateString() : null
+                ]);
+
+                $purchased++;
+            }
+        }
+
+        return $purchased;
     }
 }

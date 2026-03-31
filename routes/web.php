@@ -77,6 +77,12 @@ Route::middleware(['web'])->group(function () {
 |--------------------------------------------------------------------------
  */
 Route::prefix('dashboard')->name('dashboard.')->middleware(['auth', 'verified'])->group(function () {
+
+    // Assign creators to campaigns
+    Route::get('/campaigns/assign', [CampaignController::class, 'assign'])->name('campaigns.assign');
+    Route::post('/campaigns/assign', [CampaignController::class, 'assignStore'])->name('campaigns.assign.store');
+    // AJAX: Get assigned creators for a campaign
+    Route::get('/campaigns/{campaign}/assigned-creators', [CampaignController::class, 'assignedCreatorsJson'])->name('campaigns.assigned-creators');
     // Dashboard
 
     Route::get('/', [DashboardController::class, 'index'])->name('index');
@@ -136,10 +142,14 @@ Route::prefix('dashboard')->name('dashboard.')->middleware(['auth', 'verified'])
     Route::get('/packages', [PackageController::class, 'index'])->name('packages.index');
     Route::get('/packages/create', [PackageController::class, 'create'])->name('packages.create');
     Route::post('/packages', [PackageController::class, 'store'])->name('packages.store');
+    Route::get('/packages/purchase', [PackageController::class, 'purchase'])->name('packages.purchase');
+    Route::post('/packages/purchase', [PackageController::class, 'purchaseStore'])->name('packages.purchase.store');
+    Route::get('/packages/{package}', [PackageController::class, 'view'])->name('packages.view');
     Route::get('/packages/{package}/edit', [PackageController::class, 'edit'])->name('packages.edit');
     Route::put('/packages/{package}', [PackageController::class, 'update'])->name('packages.update');
     Route::delete('/packages/{package}', [PackageController::class, 'destroy'])->name('packages.destroy');
     Route::post('/packages/{package}/toggle-status', [PackageController::class, 'toggleStatus'])->name('packages.toggle-status');
+
     Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
     Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
     Route::view('/payments', 'backend.pages.coming-soon', ['module' => 'Payments'])->name('payments.index');
@@ -258,19 +268,19 @@ Route::prefix('dashboard')->name('dashboard.')->middleware(['auth', 'verified'])
     Route::post('/brand-profile/{slug}/toggle-status', [BrandProfileController::class, 'toggleStatus'])->name('brand.profile.toggle-status');
 
     // Creator Profile routes (dashboard)
-    Route::get('/creator-profile/edit', [\App\Http\Controllers\CreatorProfileController::class, 'edit'])->name('creator.profile.edit');
-    Route::post('/creator-profile/update', [\App\Http\Controllers\CreatorProfileController::class, 'update'])->name('creator.profile.update');
-    Route::delete('/creator-profile/profile-image', [\App\Http\Controllers\CreatorProfileController::class, 'deleteProfileImage'])->name('creator.profile.delete-image');
-    Route::delete('/creator-profile/cover-image', [\App\Http\Controllers\CreatorProfileController::class, 'deleteCoverImage'])->name('creator.profile.delete-cover');
-    Route::post('/creator-profile/toggle-status', [\App\Http\Controllers\CreatorProfileController::class, 'toggleStatus'])->name('creator.profile.toggle-status');
+    Route::get('/creator-profile/{slug}/edit', [\App\Http\Controllers\CreatorProfileController::class, 'edit'])->name('creator.profile.edit');
+    Route::post('/creator-profile/{slug}/update', [\App\Http\Controllers\CreatorProfileController::class, 'update'])->name('creator.profile.update');
+    Route::delete('/creator-profile/{slug}/profile-image', [\App\Http\Controllers\CreatorProfileController::class, 'deleteProfileImage'])->name('creator.profile.delete-image');
+    Route::delete('/creator-profile/{slug}/cover-image', [\App\Http\Controllers\CreatorProfileController::class, 'deleteCoverImage'])->name('creator.profile.delete-cover');
+    Route::post('/creator-profile/{slug}/toggle-status', [\App\Http\Controllers\CreatorProfileController::class, 'toggleStatus'])->name('creator.profile.toggle-status');
 
     // Account routes
-    Route::get('/account', [AccountController::class, 'edit'])->name('account.edit');
-    Route::post('/account/details', [AccountController::class, 'updateDetails'])->name('account.details.update');
-    Route::post('/account/billing', [AccountController::class, 'updateBilling'])->name('account.billing.update');
-    Route::post('/account/password', [AccountController::class, 'updatePassword'])->name('account.password.update');
-    Route::post('/account/toggle-status', [AccountController::class, 'toggleStatus'])->name('account.toggle-status');
-    Route::delete('/account', [AccountController::class, 'destroy'])->name('account.destroy');
+    Route::get('/account/{slug}', [AccountController::class, 'edit'])->name('account.edit');
+    Route::post('/account/{slug}/details', [AccountController::class, 'updateDetails'])->name('account.details.update');
+    Route::post('/account/{slug}/billing', [AccountController::class, 'updateBilling'])->name('account.billing.update');
+    Route::post('/account/{slug}/password', [AccountController::class, 'updatePassword'])->name('account.password.update');
+    Route::post('/account/{slug}/toggle-status', [AccountController::class, 'toggleStatus'])->name('account.toggle-status');
+    Route::delete('/account/{slug}', [AccountController::class, 'destroy'])->name('account.destroy');
 
 });
 

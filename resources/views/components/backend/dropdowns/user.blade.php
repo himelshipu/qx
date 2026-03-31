@@ -46,18 +46,24 @@
                     <x-icons.user-circle class="w-5 h-5" />
                     View profile
                 </a>
-                <a href="{{ route('dashboard.creator.profile.edit') }}"
+                <a href="{{ route('dashboard.creator.profile.edit',['slug' => $user->slug]) }}"
                     class="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
                     <x-icons.edit class="w-5 h-5" />
                     Edit profile
                 </a>
+            @elseif($user->user_type === 'admin' || $user->user_type === 'moderator')
+                <a href="{{ route('dashboard.account.edit', ['slug' => $user->slug]) }}"
+                    class="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
+                    <x-icons.edit class="w-5 h-5" />
+                    Account settings
+                </a>
             @else
-                <a href="{{ route('dashboard.account.edit') }}"
+                <a href="{{ route('dashboard.account.edit', ['slug' => $user->slug]) }}"
                     class="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
                     <x-icons.user-circle class="w-5 h-5" />
                     View profile
                 </a>
-                <a href="{{ route('dashboard.account.edit') }}"
+                <a href="{{ route('dashboard.account.edit', ['slug' => $user->slug]) }}"
                     class="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
                     <x-icons.edit class="w-5 h-5" />
                     Account settings

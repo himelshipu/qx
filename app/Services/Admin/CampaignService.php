@@ -131,7 +131,14 @@ final class CampaignService
             'createdBy:id,name,email,user_type',
             'categories:id,name',
             'followerRanges:id,label',
-            'targetCountries:id,campaign_id,country_code'
+            'targetCountries:id,campaign_id,country_code',
+            'applications' => function ($query) {
+                $query->with(['creator' => function ($query) {
+                    $query->with('user:id,email,name,phone')
+                        ->select('id', 'display_name', 'user_id');
+                }])->select('id', 'campaign_id', 'creator_id', 'status', 'pitch_message', 'proposed_rate', 'agreed_rate', 'applied_at', 'decided_at')
+                    ->orderByDesc('applied_at');
+            }
         ])->loadCount(['applications', 'assets', 'orders', 'orderItems', 'cartItems']);
 
         return [

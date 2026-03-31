@@ -184,6 +184,108 @@
 		</div>
 
 		<div class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+			<h3 class="text-sm font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-4">Applicants & Assignments</h3>
+			
+			@if ($campaign->applications->count() > 0)
+				<div class="overflow-x-auto">
+					<table class="w-full text-sm">
+						<thead class="border-b border-gray-200 dark:border-gray-700">
+							<tr>
+								<th class="px-4 py-3 text-left font-semibold text-gray-700 dark:text-gray-300">Creator</th>
+								<th class="px-4 py-3 text-left font-semibold text-gray-700 dark:text-gray-300">Email</th>
+								<th class="px-4 py-3 text-left font-semibold text-gray-700 dark:text-gray-300">Status</th>
+								<th class="px-4 py-3 text-left font-semibold text-gray-700 dark:text-gray-300">Proposed Rate</th>
+								<th class="px-4 py-3 text-left font-semibold text-gray-700 dark:text-gray-300">Agreed Rate</th>
+								<th class="px-4 py-3 text-left font-semibold text-gray-700 dark:text-gray-300">Applied Date</th>
+							</tr>
+						</thead>
+						<tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+							@foreach ($campaign->applications as $application)
+								@php
+									$statusClass = match ($application->status) {
+										'invited' => 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
+										'applied' => 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300',
+										'accepted' => 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
+										'rejected' => 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300',
+										'completed' => 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300',
+										default => 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300'
+									};
+								@endphp
+								<tr class="hover:bg-gray-50 dark:hover:bg-gray-800/50">
+									<td class="px-4 py-3">
+										<a href="{{ route('dashboard.creators.view', $application->creator) }}" 
+											class="font-medium text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300">
+											{{ $application->creator->display_name }}
+										</a>
+									</td>
+									<td class="px-4 py-3 text-gray-600 dark:text-gray-400">
+										{{ $application->creator->user?->email ?? 'N/A' }}
+									</td>
+									<td class="px-4 py-3">
+										<span class="inline-flex rounded-full px-2.5 py-1 text-xs font-semibold {{ $statusClass }}">
+											{{ \Illuminate\Support\Str::headline($application->status) }}
+										</span>
+									</td>
+									<td class="px-4 py-3 text-gray-600 dark:text-gray-400">
+										{{ $application->proposed_rate ? $campaign->currency . ' ' . number_format((float) $application->proposed_rate, 2) : 'N/A' }}
+									</td>
+									<td class="px-4 py-3 text-gray-600 dark:text-gray-400">
+										{{ $application->agreed_rate ? $campaign->currency . ' ' . number_format((float) $application->agreed_rate, 2) : 'N/A' }}
+									</td>
+									<td class="px-4 py-3 text-gray-600 dark:text-gray-400">
+										{{ $application->applied_at?->format('M d, Y') ?? 'N/A' }}
+									</td>
+								</tr>
+								@if ($application->pitch_message)
+									<tr class="bg-gray-50 dark:bg-gray-800/50">
+										<td colspan="6" class="px-4 py-3">
+											<p class="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1">Pitch Message:</p>
+											<p class="text-sm text-gray-700 dark:text-gray-300">{{ $application->pitch_message }}</p>
+										</td>
+									</tr>
+								@endif
+							@endforeach
+						</tbody>
+					</table>
+				</div>
+
+				<!-- Application Statistics -->
+				<div class="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
+					@php
+						$invited = $campaign->applications->where('status', 'invited')->count();
+						$applied = $campaign->applications->where('status', 'applied')->count();
+						$accepted = $campaign->applications->where('status', 'accepted')->count();
+						$rejected = $campaign->applications->where('status', 'rejected')->count();
+					@endphp
+
+					<div class="rounded-lg border border-blue-200 bg-blue-50 p-3 dark:border-blue-900/50 dark:bg-blue-900/20">
+						<p class="text-xs font-semibold text-blue-600 dark:text-blue-400">Invited</p>
+						<p class="mt-1 text-xl font-bold text-blue-700 dark:text-blue-300">{{ $invited }}</p>
+					</div>
+
+					<div class="rounded-lg border border-amber-200 bg-amber-50 p-3 dark:border-amber-900/50 dark:bg-amber-900/20">
+						<p class="text-xs font-semibold text-amber-600 dark:text-amber-400">Applied</p>
+						<p class="mt-1 text-xl font-bold text-amber-700 dark:text-amber-300">{{ $applied }}</p>
+					</div>
+
+					<div class="rounded-lg border border-green-200 bg-green-50 p-3 dark:border-green-900/50 dark:bg-green-900/20">
+						<p class="text-xs font-semibold text-green-600 dark:text-green-400">Accepted</p>
+						<p class="mt-1 text-xl font-bold text-green-700 dark:text-green-300">{{ $accepted }}</p>
+					</div>
+
+					<div class="rounded-lg border border-red-200 bg-red-50 p-3 dark:border-red-900/50 dark:bg-red-900/20">
+						<p class="text-xs font-semibold text-red-600 dark:text-red-400">Rejected</p>
+						<p class="mt-1 text-xl font-bold text-red-700 dark:text-red-300">{{ $rejected }}</p>
+					</div>
+				</div>
+			@else
+				<div class="rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 p-8 text-center dark:border-gray-600 dark:bg-gray-800/50">
+					<p class="text-gray-600 dark:text-gray-400">No applicants or assignments yet for this campaign.</p>
+				</div>
+			@endif
+		</div>
+
+		<div class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900">
 			<h3 class="text-sm font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Description</h3>
 			<p class="mt-3 text-sm leading-6 text-gray-700 dark:text-gray-300">
 				{{ $campaign->description ?: 'No description provided.' }}</p>

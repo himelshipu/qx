@@ -4,10 +4,10 @@ namespace App\Http\Controllers\Backend;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Backend\Campaign\StoreCampaignRequest;
-use App\Http\Requests\Backend\Campaign\UpdateCampaignRequest;
 use App\Models\Campaign;
+use App\Models\CampaignApplication;
+use App\Models\Creator;
 use App\Services\Admin\CampaignService;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
@@ -15,32 +15,117 @@ use Illuminate\View\View;
 
 class CampaignController extends Controller
 {
-    public function __construct(
-        private readonly CampaignService $campaignService
-    ) {}
+    protected CampaignService $campaignService;
 
-    /**
-     * Display a listing of campaigns with search and filters.
-     */
-    public function index(Request $request): View
+    public function __construct(CampaignService $campaignService)
     {
-        $search = trim((string) $request->string('q', ''));
-        $status = (string) $request->string('status', 'all');
-        $type   = (string) $request->string('type', 'all');
-
-        return view('backend.pages.campaigns.index', $this->campaignService->getListingPayload($search, $status, $type));
+        $this->campaignService = $campaignService;
     }
 
     /**
-     * Display the original designed campaign listing with real data.
+     * Show the form to assign creators to a campaign.
+     */
+    public function assign(): View
+    {
+        // Get ALL active campaigns (no date restrictions for assignment)
+        $campaigns = Campaign::where('is_active', true)
+            ->orderByDesc('created_at')
+            ->get(['id', 'title', 'description', 'campaign_type', 'status', 'start_date', 'end_date', 'budget_min', 'budget_max', 'currency']);
+
+        // Get active creators
+        $creators = Creator::with('user:id,email,name,phone')
+            ->where('is_active', true)
+            ->orderBy('display_name')
+            ->get(['id', 'display_name', 'user_id']);
+
+        // Get counts
+        $activeCreatorsCount = $creators->count();
+        $activeCampaignsCount = $campaigns->count();
+
+        // Get latest active campaigns for display purposes (latest 10)
+        $latestCampaigns = Campaign::where('is_active', true)
+            ->with(['applications' => function ($query) {
+                $query->select('campaign_id');
+            }])
+            ->orderByDesc('created_at')
+            ->limit(10)
+            ->get(['id', 'title', 'description', 'start_date', 'end_date', 'status', 'is_active']);
+
+        return view('backend.pages.campaigns.assign', compact('campaigns', 'creators', 'latestCampaigns', 'activeCreatorsCount', 'activeCampaignsCount'));
+    }
+
+    /**
+     * Handle assignment of creators to a campaign.
+     */
+    public function assignStore(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'campaign_id'   => 'required|exists:campaigns,id',
+            'creator_ids'   => 'required|array',
+            'creator_ids.*' => 'exists:creators,id'
+        ]);
+
+        $campaignId = $validated['campaign_id'];
+        $creatorIds = $validated['creator_ids'];
+
+        $now     = now();
+        $created = 0;
+
+        foreach ($creatorIds as $creatorId) {
+            $exists = CampaignApplication::where('campaign_id', $campaignId)
+                ->where('creator_id', $creatorId)
+                ->exists();
+
+            if (!$exists) {
+                CampaignApplication::create([
+                    'campaign_id' => $campaignId,
+                    'creator_id'  => $creatorId,
+                    'status'      => 'invited', // valid enum value
+                    'applied_at'  => $now
+                ]);
+                $created++;
+            }
+        }
+
+        return redirect()
+            ->route('dashboard.campaigns.assign')
+            ->with('success', "{$created} creator(s) assigned to the campaign.");
+    }
+
+    /**
+     * Get assigned creators for a specific campaign as JSON.
+     */
+    public function assignedCreatorsJson(Campaign $campaign)
+    {
+        $assignedCreators = $campaign->applications()
+            ->with(['creator' => function ($query) {
+                $query->with('user:id,email,name');
+            }])
+            ->get()
+            ->map(function ($application) {
+                return [
+                    'id'           => $application->creator->id,
+                    'display_name' => $application->creator->display_name,
+                    'email'        => $application->creator->user?->email,
+                ];
+            });
+
+        return response()->json($assignedCreators);
+    }
+
+    /**
+     * Display the designed campaign listing with real data.
      */
     public function indexDesigned(Request $request): View
     {
-        $search = trim((string) $request->string('q', ''));
-        $status = (string) $request->string('status', 'all');
-        $type   = (string) $request->string('type', 'all');
+        $search = trim((string) $request->input('q', ''));
+        $status = (string) $request->input('status', 'all');
+        $type   = (string) $request->input('type', 'all');
 
-        return view('backend.pages.campaigns.designed-index', $this->campaignService->getListingPayload($search, $status, $type));
+        return view(
+            'backend.pages.campaigns.designed-index',
+            $this->campaignService->getListingPayload($search, $status, $type)
+        );
     }
 
     /**
@@ -48,15 +133,21 @@ class CampaignController extends Controller
      */
     public function create(): View
     {
-        return view('backend.pages.campaigns.create', $this->campaignService->getFormPayload());
+        return view(
+            'backend.pages.campaigns.create',
+            $this->campaignService->getFormPayload()
+        );
     }
 
     /**
-     * Show the original designed wizard for creating a campaign.
+     * Show the designed wizard for creating a campaign.
      */
     public function createDesigned(): View
     {
-        return view('backend.pages.campaigns.designed-create', $this->campaignService->getFormPayload());
+        return view(
+            'backend.pages.campaigns.designed-create',
+            $this->campaignService->getFormPayload()
+        );
     }
 
     /**
@@ -77,30 +168,48 @@ class CampaignController extends Controller
             return redirect()
                 ->route($redirectRoute)
                 ->with('success', 'Campaign "' . $campaign->title . '" has been created successfully.');
+
         } catch (ValidationException $e) {
             return redirect()
                 ->back()
                 ->withErrors($e->errors())
                 ->with('error', 'Please fix the validation errors and try again.')
                 ->withInput();
+
         } catch (\Exception $e) {
             report($e);
 
             return redirect()
                 ->back()
-                ->with('error', 'Failed to create campaign. Please try again.')
+                ->with('error', 'Something went wrong. Please try again.')
                 ->withInput();
         }
     }
 
     /**
-     * Display the specified campaign details.
+     * Display a listing of standard campaigns.
+     */
+    public function index(Request $request): View
+    {
+        $search = trim((string) $request->input('q', ''));
+        $status = (string) $request->input('status', 'all');
+        $type   = (string) $request->input('type', 'all');
+
+        return view(
+            'backend.pages.campaigns.index',
+            $this->campaignService->getListingPayload($search, $status, $type)
+        );
+    }
+
+    /**
+     * Display the specified campaign.
      */
     public function view(Campaign $campaign): View
     {
-        $this->ensureCampaignAccess($campaign);
-
-        return view('backend.pages.campaigns.view', $this->campaignService->getDetailPayload($campaign));
+        return view(
+            'backend.pages.campaigns.view',
+            $this->campaignService->getDetailPayload($campaign)
+        );
     }
 
     /**
@@ -108,15 +217,8 @@ class CampaignController extends Controller
      */
     public function edit(Campaign $campaign): View
     {
-        $this->ensureCampaignAccess($campaign);
-
         return view('backend.pages.campaigns.edit', [
-            'campaign' => $campaign->load([
-                'targeting',
-                'categories:id,name',
-                'followerRanges:id,label',
-                'targetCountries:id,campaign_id,country_code'
-            ]),
+            'campaign' => $campaign->load(['targeting', 'brand', 'categories', 'followerRanges', 'targetCountries']),
             ...$this->campaignService->getFormPayload()
         ]);
     }
@@ -124,78 +226,49 @@ class CampaignController extends Controller
     /**
      * Update the specified campaign.
      */
-    public function update(UpdateCampaignRequest $request, Campaign $campaign): RedirectResponse
+    public function update(StoreCampaignRequest $request, Campaign $campaign): RedirectResponse
     {
-        $this->ensureCampaignAccess($campaign);
-
         try {
-            $updatedCampaign = $this->campaignService->updateCampaign(
+            $this->campaignService->updateCampaign(
                 $campaign,
                 $request->validated(),
-                $request->boolean('is_active')
+                $request->boolean('is_active', true)
             );
 
             return redirect()
-                ->route('dashboard.campaigns.index')
-                ->with('success', 'Campaign "' . $updatedCampaign->title . '" has been updated successfully.');
+                ->route('dashboard.campaigns.standard')
+                ->with('success', 'Campaign "' . $campaign->title . '" has been updated successfully.');
+
         } catch (ValidationException $e) {
             return redirect()
                 ->back()
                 ->withErrors($e->errors())
                 ->with('error', 'Please fix the validation errors and try again.')
                 ->withInput();
+
         } catch (\Exception $e) {
             report($e);
 
             return redirect()
                 ->back()
-                ->with('error', 'Failed to update campaign. Please try again.')
+                ->with('error', 'Something went wrong. Please try again.')
                 ->withInput();
         }
     }
 
     /**
-     * Remove the specified campaign if no dependencies exist.
+     * Delete the specified campaign.
      */
     public function destroy(Campaign $campaign): RedirectResponse
     {
-        $this->ensureCampaignAccess($campaign);
+        $result = $this->campaignService->deleteCampaign($campaign);
 
-        try {
-            $campaignTitle = $campaign->title;
-            $result        = $this->campaignService->deleteCampaign($campaign);
+        $redirect = redirect()->route('dashboard.campaigns.standard');
 
-            if (!$result['deleted']) {
-                return redirect()
-                    ->route('dashboard.campaigns.index')
-                    ->with('warning', $result['message']);
-            }
-
-            return redirect()
-                ->route('dashboard.campaigns.index')
-                ->with('success', 'Campaign "' . $campaignTitle . '" has been deleted successfully.');
-        } catch (\Exception $e) {
-            report($e);
-
-            return redirect()
-                ->route('dashboard.campaigns.index')
-                ->with('error', 'Failed to delete campaign. Please try again.');
-        }
-    }
-
-    private function ensureCampaignAccess(Campaign $campaign): void
-    {
-        $authUser = Auth::user();
-
-        if (!$authUser) {
-            abort(403);
+        if ($result['deleted']) {
+            return $redirect->with('success', 'Campaign has been deleted successfully.');
         }
 
-        if ((string) $authUser->user_type !== 'brand') {
-            return;
-        }
-
-        $brandId = (int) ($authUser->brand?->id ?? 0);
-        abort_unless($brandId > 0 && $campaign->brand_id === $brandId, 403);
+        return $redirect->with('error', $result['message']);
     }
 }

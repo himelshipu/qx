@@ -1,4 +1,4 @@
-@props(['items' => ['View More','Delete']])
+\@props(['items' => ['View More','Delete']])
 <div x-data="{openDropDown: false}" class="relative h-fit">
     <button
         @click="openDropDown = !openDropDown"

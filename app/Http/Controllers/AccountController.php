@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Brand;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -11,9 +12,28 @@ use Illuminate\Validation\Rules\Password;
 
 class AccountController extends Controller
 {
-    public function edit()
+    /**
+     * Get user by slug and verify ownership
+     */
+    private function getUserBySlug($slug)
     {
-        $user = Auth::user();
+        $user = User::where('slug', $slug)->first();
+        
+        if (!$user) {
+            abort(404, 'User not found');
+        }
+        
+        // Verify that the logged-in user owns this account
+        if (Auth::id() !== $user->id) {
+            abort(403, 'Unauthorized access');
+        }
+        
+        return $user;
+    }
+
+    public function edit($slug)
+    {
+        $user = $this->getUserBySlug($slug);
         $brand = $user->brand;
         
         return view('frontend.pages.account', [
@@ -25,9 +45,9 @@ class AccountController extends Controller
     /**
      * Update user account details
      */
-    public function updateDetails(Request $request)
+    public function updateDetails(Request $request, $slug)
     {
-        $user = Auth::user();
+        $user = $this->getUserBySlug($slug);
         
         $validated = $request->validate([
             'name' => 'required|string|max:255',
@@ -35,8 +55,6 @@ class AccountController extends Controller
             'phone' => 'nullable|string|max:20',
             'date_of_birth' => 'nullable|date|before:today',
             'gender' => 'nullable|in:male,female,other',
-            'company_name' => 'nullable|string|max:255',
-            'job_title' => 'nullable|string|max:255',
             'bio' => 'nullable|string|max:1000',
             'address_line' => 'nullable|string|max:255',
             'country' => 'nullable|string|max:255',
@@ -44,29 +62,24 @@ class AccountController extends Controller
             'postal_code' => 'nullable|string|max:20',
         ]);
 
-        // Handle profile image upload
-        if ($request->hasFile('profile_image')) {
-            // Delete old profile image if exists
-            if ($user->profile_image_path && Storage::disk('public')->exists($user->profile_image_path)) {
-                Storage::disk('public')->delete($user->profile_image_path);
-            }
-            
-            $path = $request->file('profile_image')->store('users/profile', 'public');
-            $validated['profile_image_path'] = $path;
-        }
-
+        // Update user data
         $user->update($validated);
 
-        return redirect()->route('dashboard.account.edit')->with('status', 'details-updated');
+        return redirect()->route('dashboard.account.edit', ['slug' => $user->slug])->with('success', 'Your details updated successfully.');
     }
 
     /**
      * Update user billing information
      */
-    public function updateBilling(Request $request)
+    public function updateBilling(Request $request, $slug)
     {
-        $user = Auth::user();
+        $user = $this->getUserBySlug($slug);
         $brand = $user->brand;
+        
+        if (!$brand) {
+            return redirect()->route('dashboard.account.edit', ['slug' => $user->slug])
+                ->with('error', 'Billing information is only available for brand accounts.');
+        }
         
         $validated = $request->validate([
             'legal_company_name' => 'nullable|string|max:255',
@@ -77,43 +90,48 @@ class AccountController extends Controller
             'billing_postal_code' => 'nullable|string|max:20',
         ]);
 
-        if ($brand) {
-            $setupData = $brand->setup_data ?? [];
-            $setupData['billing'] = $validated;
-            $brand->update(['setup_data' => $setupData]);
+        // Get or create billing profile
+        $billingProfile = $brand->billingProfile;
+        
+        if ($billingProfile) {
+            $billingProfile->update($validated);
+        } else {
+            $brand->billingProfile()->create($validated);
         }
 
-        return redirect()->route('dashboard.account.edit')->with('status', 'billing-updated');
+        return redirect()->route('dashboard.account.edit', ['slug' => $user->slug])->with('success', 'Billing information updated successfully.');
     }
 
     /**
      * Update user password
      */
-    public function updatePassword(Request $request)
+    public function updatePassword(Request $request, $slug)
     {
+        $user = $this->getUserBySlug($slug);
+        
         $validated = $request->validate([
             'current_password' => ['required', 'current_password'],
             'password' => ['required', Password::defaults(), 'confirmed'],
         ]);
 
-        $request->user()->update([
+        $user->update([
             'password' => Hash::make($validated['password']),
         ]);
 
-        return redirect()->route('dashboard.account.edit')->with('status', 'password-updated');
+        return redirect()->route('dashboard.account.edit', ['slug' => $user->slug])->with('success', 'Password updated successfully.');
     }
 
     /**
      * Delete user account with cascade deletion
      */
-    public function destroy(Request $request)
+    public function destroy(Request $request, $slug)
     {
+        $user = $this->getUserBySlug($slug);
+        
         $request->validate([
             'password' => ['required', 'current_password'],
         ]);
 
-        $user = $request->user();
-        
         // Delete user's profile image if exists
         if ($user->profile_image_path && Storage::disk('public')->exists($user->profile_image_path)) {
             Storage::disk('public')->delete($user->profile_image_path);
@@ -143,12 +161,12 @@ class AccountController extends Controller
     /**
      * Toggle account active status
      */
-    public function toggleStatus(Request $request)
+    public function toggleStatus(Request $request, $slug)
     {
-        $user = Auth::user();
+        $user = $this->getUserBySlug($slug);
         $user->update(['is_active' => !$user->is_active]);
 
-        return redirect()->route('dashboard.account.edit')->with(
+        return redirect()->route('dashboard.account.edit', ['slug' => $user->slug])->with(
             'status',
             $user->is_active ? 'account-activated' : 'account-deactivated'
         );

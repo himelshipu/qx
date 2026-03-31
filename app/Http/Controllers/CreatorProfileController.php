@@ -11,6 +11,17 @@ use Illuminate\Support\Facades\Storage;
 
 class CreatorProfileController extends Controller
 {
+    private function getDashboardCreatorBySlug(string $slug): ?Creator
+    {
+        $user = Auth::user();
+
+        if (!$user || $user->slug !== $slug) {
+            return null;
+        }
+
+        return $user->creator;
+    }
+
     /**
      * Show public creator profile
      */
@@ -56,27 +67,32 @@ class CreatorProfileController extends Controller
     /**
      * Show creator profile edit form
      */
-    public function edit()
+    public function edit(string $slug)
     {
-        $user    = Auth::user();
-        $creator = $user->creator;
+        $user = Auth::user();
+        $creator = $this->getDashboardCreatorBySlug($slug);
+
+        if (!$creator) {
+            abort(404);
+        }
 
         // Some views expect $brand variable; to minimize view changes we'll pass creator as brand when needed
 
         return view('frontend.pages.creator-edit-profile', [
-            'user'    => $user,
+            'user' => $user,
             'creator' => $creator,
-            'brand'   => $creator // compatibility for fields referenced as $brand in the blade
+            'brand' => $creator, // compatibility for fields referenced as $brand in the blade
+            'slug' => $slug,
         ]);
     }
 
     /**
      * Update creator profile information
      */
-    public function update(Request $request)
+    public function update(Request $request, string $slug)
     {
-        $user    = Auth::user();
-        $creator = $user->creator;
+        $user = Auth::user();
+        $creator = $this->getDashboardCreatorBySlug($slug);
 
         if (!$creator) {
             return redirect()->route('dashboard.creator.profile.edit')->with('error', 'Creator profile not found');
@@ -94,12 +110,13 @@ class CreatorProfileController extends Controller
             'bio'           => 'nullable|string|max:500',
             'phone'         => 'nullable|string|max:20',
             'website'       => 'nullable|url|max:255',
-            'instagram'     => 'nullable|url|max:255',
-            'tiktok'        => 'nullable|url|max:255',
-            'facebook'      => 'nullable|url|max:255',
-            'x'             => 'nullable|url|max:255',
-            'youtube'       => 'nullable|url|max:255',
-            'linkedin'      => 'nullable|url|max:255',
+            'instagram_url' => 'nullable|url|max:255',
+            'tiktok_url'    => 'nullable|url|max:255',
+            'facebook_url'  => 'nullable|url|max:255',
+            'x_url'         => 'nullable|url|max:255',
+            'youtube_url'   => 'nullable|url|max:255',
+            'linkedin_url'  => 'nullable|url|max:255',
+            'other_url'     => 'nullable|url|max:255',
             'profile_image' => 'nullable|image|mimes:jpeg,png,webp|max:2048',
         ]);
 
@@ -124,12 +141,13 @@ class CreatorProfileController extends Controller
             $creator->socialLinks()->updateOrCreate(
                 ['creator_id' => $creator->id],
                 [
-                    'instagram_url' => $validated['instagram'] ?? null,
-                    'tiktok_url' => $validated['tiktok'] ?? null,
-                    'facebook_url' => $validated['facebook'] ?? null,
-                    'x_url' => $validated['x'] ?? null,
-                    'youtube_url' => $validated['youtube'] ?? null,
-                    'linkedin_url' => $validated['linkedin'] ?? null,
+                    'instagram_url' => $validated['instagram_url'] ?? null,
+                    'tiktok_url' => $validated['tiktok_url'] ?? null,
+                    'facebook_url' => $validated['facebook_url'] ?? null,
+                    'x_url' => $validated['x_url'] ?? null,
+                    'youtube_url' => $validated['youtube_url'] ?? null,
+                    'linkedin_url' => $validated['linkedin_url'] ?? null,
+                    'other_url' => $validated['other_url'] ?? null,
                 ]
             );
         }
@@ -145,16 +163,16 @@ class CreatorProfileController extends Controller
             $user->save();
         }
 
-        return redirect()->route('dashboard.creator.profile.edit')->with('status', 'profile-updated');
+        return redirect()->route('dashboard.creator.profile.edit', ['slug' => $slug])->with('success', 'Profile updated successfully.');
     }
 
     /**
      * Delete creator profile image
      */
-    public function deleteProfileImage(Request $request)
+    public function deleteProfileImage(Request $request, string $slug)
     {
-        $user    = Auth::user();
-        $creator = $user->creator;
+        $user = Auth::user();
+        $creator = $this->getDashboardCreatorBySlug($slug);
 
         if (!$creator) {
             return response()->json(['error' => 'Creator not found'], 404);
@@ -166,28 +184,28 @@ class CreatorProfileController extends Controller
 
         $user->update(['profile_image_path' => null]);
 
-        return redirect()->route('dashboard.creator.profile.edit')->with('status', 'profile-image-deleted');
+        return redirect()->route('dashboard.creator.profile.edit', ['slug' => $slug])->with('status', 'profile-image-deleted');
     }
 
     /**
      * Delete creator cover image (kept for backward compatibility)
      */
-    public function deleteCoverImage(Request $request)
+    public function deleteCoverImage(Request $request, string $slug)
     {
-        $user    = Auth::user();
-        $creator = $user->creator;
+        $user = Auth::user();
+        $creator = $this->getDashboardCreatorBySlug($slug);
 
         if (!$creator) {
             return response()->json(['error' => 'Creator not found'], 404);
         }
 
-        return redirect()->route('dashboard.creator.profile.edit')->with('status', 'cover-image-message');
+        return redirect()->route('dashboard.creator.profile.edit', ['slug' => $slug])->with('status', 'cover-image-message');
     }
 
-    public function toggleStatus(Request $request)
+    public function toggleStatus(Request $request, string $slug)
     {
-        $user    = Auth::user();
-        $creator = $user->creator;
+        $user = Auth::user();
+        $creator = $this->getDashboardCreatorBySlug($slug);
 
         if (!$creator) {
             return response()->json(['error' => 'Creator not found'], 404);
@@ -195,7 +213,7 @@ class CreatorProfileController extends Controller
 
         $creator->update(['is_active' => !$creator->is_active]);
 
-        return redirect()->route('dashboard.creator.profile.edit')->with(
+        return redirect()->route('dashboard.creator.profile.edit', ['slug' => $slug])->with(
             'status',
             $creator->is_active ? 'creator-activated' : 'creator-deactivated'
         );

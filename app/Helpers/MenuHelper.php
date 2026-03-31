@@ -110,6 +110,11 @@ class MenuHelper
                         'route' => 'campaigns.create'
                     ],
                     [
+                        'icon'  => 'user-add',
+                        'name'  => 'Assign Campaign',
+                        'route' => 'campaigns.assign'
+                    ],
+                    [
                         'icon'  => 'content-library',
                         'name'  => 'Content Library',
                         'route' => 'content-library'
@@ -119,6 +124,23 @@ class MenuHelper
                         'name'  => 'Reviews',
                         'route' => 'reviews.index',
                         'count' => true
+                    ]
+                ]
+            ],
+
+            'quick_actions' => [
+                'type'  => 'group',
+                'name'  => 'QUICK ACTIONS',
+                'items' => [
+                    [
+                        'icon'  => 'user-add',
+                        'name'  => 'Assign Campaign',
+                        'route' => 'campaigns.assign'
+                    ],
+                    [
+                        'icon'  => 'packages',
+                        'name'  => 'Purchase Package',
+                        'route' => 'packages.purchase'
                     ]
                 ]
             ],
@@ -225,44 +247,44 @@ class MenuHelper
 
     public static function buildSidebarMenu(string $currentRoute): array
     {
-        $menuItems = self::getMainNavItems();
-        $preparedItems = [];
+        $menuItems       = self::getMainNavItems();
+        $preparedItems   = [];
         $activeAccordion = null;
 
         foreach ($menuItems as $key => $item) {
             if ($key === 'dashboard') {
-                [$routeName, $url] = self::resolveRouteMeta($item['route'] ?? null, false);
+                [$routeName, $url]   = self::resolveRouteMeta($item['route'] ?? null, false);
                 $preparedItems[$key] = [
-                    ...$item,
+                     ...$item,
                     'route_name' => $routeName,
-                    'url' => $url,
-                    'active' => self::isRouteMatch($currentRoute, $routeName),
+                    'url'        => $url,
+                    'active'     => self::isRouteMatch($currentRoute, $routeName)
                 ];
                 continue;
             }
 
             if (($item['type'] ?? null) === 'group') {
-                $groupItems = [];
+                $groupItems  = [];
                 $groupActive = false;
 
                 foreach ($item['items'] as $index => $subItem) {
-                    $menuId = $key . '_' . $index;
+                    $menuId      = $key . '_' . $index;
                     $hasSubItems = isset($subItem['subItems']);
 
                     if ($hasSubItems) {
-                        $nestedItems = [];
+                        $nestedItems   = [];
                         $subItemActive = false;
 
                         foreach ($subItem['subItems'] as $nestedItem) {
                             [$routeName, $url] = self::resolveRouteMeta($nestedItem['route'] ?? null, true);
-                            $isActive = self::isRouteMatch($currentRoute, $routeName);
-                            $subItemActive = $subItemActive || $isActive;
+                            $isActive          = self::isRouteMatch($currentRoute, $routeName);
+                            $subItemActive     = $subItemActive || $isActive;
 
                             $nestedItems[] = [
-                                ...$nestedItem,
+                                 ...$nestedItem,
                                 'route_name' => $routeName,
-                                'url' => $url,
-                                'active' => $isActive,
+                                'url'        => $url,
+                                'active'     => $isActive
                             ];
                         }
 
@@ -271,12 +293,12 @@ class MenuHelper
                         }
 
                         $groupItems[] = [
-                            ...$subItem,
-                            'menu_id' => $menuId,
+                             ...$subItem,
+                            'menu_id'       => $menuId,
                             'has_sub_items' => true,
-                            'sub_items' => $nestedItems,
-                            'default_url' => $nestedItems[0]['url'] ?? '#',
-                            'active' => $subItemActive,
+                            'sub_items'     => $nestedItems,
+                            'default_url'   => $nestedItems[0]['url'] ?? '#',
+                            'active'        => $subItemActive
                         ];
 
                         $groupActive = $groupActive || $subItemActive;
@@ -284,33 +306,33 @@ class MenuHelper
                     }
 
                     [$routeName, $url] = self::resolveRouteMeta($subItem['route'] ?? null, true);
-                    $isActive = self::isRouteMatch($currentRoute, $routeName);
-                    $groupActive = $groupActive || $isActive;
+                    $isActive          = self::isRouteMatch($currentRoute, $routeName);
+                    $groupActive       = $groupActive || $isActive;
 
                     $groupItems[] = [
-                        ...$subItem,
+                         ...$subItem,
                         'has_sub_items' => false,
-                        'route_name' => $routeName,
-                        'url' => $url,
-                        'active' => $isActive,
+                        'route_name'    => $routeName,
+                        'url'           => $url,
+                        'active'        => $isActive
                     ];
                 }
 
                 $preparedItems[$key] = [
-                    ...$item,
-                    'items' => $groupItems,
-                    'active' => $groupActive,
+                     ...$item,
+                    'items'  => $groupItems,
+                    'active' => $groupActive
                 ];
                 continue;
             }
 
             if ($key === 'profile') {
-                [$routeName, $url] = self::resolveRouteMeta($item['route'] ?? null, false);
+                [$routeName, $url]   = self::resolveRouteMeta($item['route'] ?? null, false);
                 $preparedItems[$key] = [
-                    ...$item,
+                     ...$item,
                     'route_name' => $routeName,
-                    'url' => $url,
-                    'active' => self::isRouteMatch($currentRoute, $routeName) || request()->is('profile*'),
+                    'url'        => $url,
+                    'active'     => self::isRouteMatch($currentRoute, $routeName) || request()->is('profile*')
                 ];
                 continue;
             }
@@ -319,8 +341,8 @@ class MenuHelper
         }
 
         return [
-            'items' => $preparedItems,
-            'activeAccordion' => $activeAccordion,
+            'items'           => $preparedItems,
+            'activeAccordion' => $activeAccordion
         ];
     }
 
@@ -333,7 +355,7 @@ class MenuHelper
         if ($route === '/dashboard') {
             return [
                 Route::has('dashboard.index') ? 'dashboard.index' : null,
-                Route::has('dashboard.index') ? route('dashboard.index') : '/dashboard',
+                Route::has('dashboard.index') ? route('dashboard.index') : '/dashboard'
             ];
         }
 
@@ -345,7 +367,7 @@ class MenuHelper
 
         return [
             $routeName,
-            Route::has($routeName) ? route($routeName) : '#',
+            Route::has($routeName) ? route($routeName) : '#'
         ];
     }
 
@@ -362,13 +384,13 @@ class MenuHelper
 
         $icons = [
 
-            'dashboard' => '<svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">  <path d="M3 13h8V3H3v10zm10 8h8v-8h-8v8zm0-18v6h8V3h-8zM3 21h8v-6H3v6z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/> </svg>',
+            'dashboard'       => '<svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">  <path d="M3 13h8V3H3v10zm10 8h8v-8h-8v8zm0-18v6h8V3h-8zM3 21h8v-6H3v6z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/> </svg>',
 
-            'collaborations' => '<svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"> <path d="M16 11c1.657 0 3-1.567 3-3.5S17.657 4 16 4s-3 1.567-3 3.5S14.343 11 16 11zM8 11c1.657 0 3-1.567 3-3.5S9.657 4 8 4 5 5.567 5 7.5 6.343 11 8 11z" stroke="currentColor" stroke-width="1.5"/> <path d="M2 20v-1c0-2.761 2.686-5 6-5s6 2.239 6 5v1M14 20v-1c0-1.657-.672-3.156-1.757-4.243C13.12 13.988 14.48 13 16 13c3.314 0 6 2.239 6 5v1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/> </svg>',
+            'collaborations'  => '<svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"> <path d="M16 11c1.657 0 3-1.567 3-3.5S17.657 4 16 4s-3 1.567-3 3.5S14.343 11 16 11zM8 11c1.657 0 3-1.567 3-3.5S9.657 4 8 4 5 5.567 5 7.5 6.343 11 8 11z" stroke="currentColor" stroke-width="1.5"/> <path d="M2 20v-1c0-2.761 2.686-5 6-5s6 2.239 6 5v1M14 20v-1c0-1.657-.672-3.156-1.757-4.243C13.12 13.988 14.48 13 16 13c3.314 0 6 2.239 6 5v1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/> </svg>',
 
-            'campaigns' => '<svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"> <path d="M3 11l18-8v18L3 13v-2z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>  <path d="M11 13v6a2 2 0 002 2h1"    stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>   </svg>',
-            'campaign' => '<svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"> <path d="M3 11l18-8v18L3 13v-2z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>  <path d="M11 13v6a2 2 0 002 2h1"    stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>   </svg>',
-            
+            'campaigns'       => '<svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"> <path d="M3 11l18-8v18L3 13v-2z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>  <path d="M11 13v6a2 2 0 002 2h1"    stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>   </svg>',
+            'campaign'        => '<svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"> <path d="M3 11l18-8v18L3 13v-2z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>  <path d="M11 13v6a2 2 0 002 2h1"    stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>   </svg>',
+
             'categories'      => '<svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8 6H21M8 12H21M8 18H21M3 6H3.01M3 12H3.01M3 18H3.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
 
             'brands'          => '<svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M20 7L12 3L4 7M20 7L12 11M20 7V17L12 21M12 11L4 7M12 11V21M4 7V17L12 21" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>',
