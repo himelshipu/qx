@@ -38,9 +38,9 @@
                 </div>
 
                 <div>
-                    <label class="block text-sm font-medium text-gray-800 dark:text-gray-400 mb-2">Description</label>
-                    <textarea name="description" rows="5" placeholder="Tell us about yourself, your content, and what you do..." class="w-full rounded-lg border border-gray-300 bg-transparent px-4 py-3 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 resize-none">{{ old('description', $creator->description ?? '') }}</textarea>
-                    @error('description')<p class="mt-1 text-xs text-red-500">{{ $message }}</p>@enderror
+                    <label class="block text-sm font-medium text-gray-800 dark:text-gray-400 mb-2">Bio</label>
+                    <textarea name="bio" rows="5" placeholder="Tell us about yourself, your content, and what you do..." class="w-full rounded-lg border border-gray-300 bg-transparent px-4 py-3 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 resize-none">{{ old('bio', $user->bio ?? '') }}</textarea>
+                    @error('bio')<p class="mt-1 text-xs text-red-500">{{ $message }}</p>@enderror
                 </div>
 
                 <div>

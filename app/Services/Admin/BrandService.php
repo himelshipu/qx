@@ -44,7 +44,7 @@ final class BrandService
      */
     public function getDetailPayload(Brand $brand): array
     {
-        $brand->load(['user:id,name,email,phone,city,country,postal_code,address_line,profile_image_path,cover_image_path,is_active,created_at', 'socialLinks', 'billingProfile', 'onboardingProfile'])
+        $brand->load(['user:id,name,email,phone,city,country,postal_code,address_line,profile_image_path,cover_image_path,is_active,created_at', 'socialLinks', 'billingProfiles', 'onboardingProfile'])
             ->loadCount(['orders', 'reviews']);
 
         return [
@@ -73,6 +73,7 @@ final class BrandService
                 'country'           => $this->nullableString($validated['country'] ?? null),
                 'postal_code'       => $this->nullableString($validated['postal_code'] ?? null),
                 'address_line'      => $this->nullableString($validated['location'] ?? null),
+                'bio'               => $this->nullableString($validated['bio'] ?? null),
                 'profile_image_path' => $this->storeUploadedAsset($profileImageFile, 'brands/profile-images'),
                 'cover_image_path'   => $this->storeUploadedAsset($coverImageFile, 'brands/cover-images'),
                 'user_type'         => 'brand',
@@ -83,7 +84,6 @@ final class BrandService
             return $this->brandRepository->createBrand([
                 'user_id'     => $user->id,
                 'brand_name'  => $validated['brand_name'],
-                'description' => $this->nullableString($validated['description'] ?? null),
                 'industry'    => $this->nullableString($validated['industry'] ?? null),
                 'website'     => $this->nullableString($validated['website'] ?? null),
                 'is_verified' => (bool) ($validated['is_verified'] ?? false)
@@ -125,6 +125,7 @@ final class BrandService
                     'country'            => $this->nullableString($validated['country'] ?? null),
                     'postal_code'        => $this->nullableString($validated['postal_code'] ?? null),
                     'address_line'       => $this->nullableString($validated['location'] ?? null),
+                    'bio'                => $this->nullableString($validated['bio'] ?? null),
                     'profile_image_path' => $profileImagePath,
                     'cover_image_path'   => $coverImagePath,
                     'is_active'          => $isActive
@@ -139,7 +140,6 @@ final class BrandService
 
             return $this->brandRepository->updateBrand($brand, [
                 'brand_name'  => $validated['brand_name'],
-                'description' => $this->nullableString($validated['description'] ?? null),
                 'industry'    => $this->nullableString($validated['industry'] ?? null),
                 'website'     => $this->nullableString($validated['website'] ?? null),
                 'is_verified' => (bool) ($validated['is_verified'] ?? false)

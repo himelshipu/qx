@@ -24,7 +24,6 @@ class BrandSeeder extends Seeder
 
             $payload = [
                 'brand_name' => $brandName,
-                'description' => $faker->paragraphs(2, true),
                 'industry' => $faker->randomElement($industryPool),
                 'phone' => $user->phone,
                 'email' => $user->email,

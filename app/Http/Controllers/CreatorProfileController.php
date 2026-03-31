@@ -102,7 +102,6 @@ class CreatorProfileController extends Controller
         $validated = $request->validate([
             'display_name'  => 'nullable|string|max:255',
             'title_name'    => 'nullable|string|max:255',
-            'description'   => 'nullable|string|max:1000',
             'audience'      => 'nullable|string',
             'brands_worked_with' => 'nullable|string',
             'city'          => 'nullable|string|max:255',
@@ -127,7 +126,6 @@ class CreatorProfileController extends Controller
         // Update creator fields
         $creator->display_name = $validated['display_name'] ?? $creator->display_name;
         $creator->title_name = $validated['title_name'] ?? $creator->title_name;
-        $creator->description = $validated['description'] ?? $creator->description;
         $creator->audience = $validated['audience'] ?? $creator->audience;
         $creator->brands_worked_with = $validated['brands_worked_with'] ?? $creator->brands_worked_with;
         $creator->save();

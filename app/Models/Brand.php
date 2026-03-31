@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 class Brand extends Model
 {
@@ -15,7 +16,6 @@ class Brand extends Model
     protected $fillable = [
         'user_id',
         'brand_name',
-        'description',
         'industry',
         'website',
         'is_verified',
@@ -46,9 +46,9 @@ class Brand extends Model
         return $this->hasOne(BrandSocialLink::class);
     }
 
-    public function billingProfile(): HasOne
+    public function billingProfiles(): MorphMany
     {
-        return $this->hasOne(BrandBillingProfile::class);
+        return $this->morphMany(BillingProfile::class, 'user', 'user_type', 'user_id');
     }
 
     public function onboardingProfile(): HasOne

@@ -56,7 +56,6 @@ class BrandProfileController extends Controller
         $rulesByTab = [
             'details' => [
                 'brand_name' => 'required|string|max:255',
-                'description' => 'nullable|string|max:1000',
                 'industry' => 'nullable|string|max:150',
                 'bio' => 'nullable|string|max:500',
                 'city' => 'nullable|string|max:255',
@@ -89,7 +88,6 @@ class BrandProfileController extends Controller
         if ($activeTab === 'details') {
             // Update brand fields
             $brand->brand_name = $validated['brand_name'];
-            $brand->description = $validated['description'] ?? null;
             $brand->industry = $validated['industry'] ?? null;
             $brand->save();
 

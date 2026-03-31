@@ -29,7 +29,7 @@ class StoreCreatorRequest extends FormRequest
             'email'              => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:users,email'],
             'phone'              => ['nullable', 'string', 'max:30'],
             'password'           => ['required', 'confirmed', Password::defaults()],
-            'description'        => ['nullable', 'string'],
+            'bio'                => ['nullable', 'string', 'max:500'],
             'audience'           => ['nullable', 'string'],
             'location'           => ['nullable', 'string', 'max:255'],
             'city'               => ['nullable', 'string', 'max:120'],

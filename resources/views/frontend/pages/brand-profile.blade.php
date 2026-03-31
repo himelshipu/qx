@@ -79,7 +79,7 @@
                 <h2 class="text-3xl font-bold text-gray-900 dark:text-white mb-4">{{ $brand->brand_name ?? $brand->user->name }}</h2>
 
                 <p class="text-sm text-gray-500 dark:text-white max-w-2xl mx-auto leading-relaxed">
-                    {{ $brand->description ?? 'No description provided yet.' }}
+                    {{ $brand->user->bio ?? 'No bio provided yet.' }}
                 </p>
 
                 @if($brand->user->city || $brand->user->country)

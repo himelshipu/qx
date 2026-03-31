@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Brand;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -74,11 +73,11 @@ class AccountController extends Controller
     public function updateBilling(Request $request, $slug)
     {
         $user = $this->getUserBySlug($slug);
-        $brand = $user->brand;
+        $profileOwner = $user->brand ?? $user->creator;
         
-        if (!$brand) {
+        if (!$profileOwner) {
             return redirect()->route('dashboard.account.edit', ['slug' => $user->slug])
-                ->with('error', 'Billing information is only available for brand accounts.');
+                ->with('error', 'Billing information is not available for this account.');
         }
         
         $validated = $request->validate([
@@ -91,12 +90,12 @@ class AccountController extends Controller
         ]);
 
         // Get or create billing profile
-        $billingProfile = $brand->billingProfile;
+        $billingProfile = $profileOwner->billingProfiles()->first();
         
         if ($billingProfile) {
             $billingProfile->update($validated);
         } else {
-            $brand->billingProfile()->create($validated);
+            $profileOwner->billingProfiles()->create($validated);
         }
 
         return redirect()->route('dashboard.account.edit', ['slug' => $user->slug])->with('success', 'Billing information updated successfully.');

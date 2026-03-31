@@ -97,16 +97,6 @@
                     @enderror
                 </div>
 
-                <!-- Description -->
-                <div>
-                    <label class="block text-sm font-medium text-gray-800 dark:text-gray-400 mb-2">Brand Description</label>
-                    <textarea name="description" rows="5" placeholder="Tell us about your brand, mission, and what you do... (max 1000 characters)"
-                        class="dark:bg-dark-900 shadow-theme-xs focus:border-pink-50 focus:ring-gray-500/10 dark:focus:border-gray-800 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-3 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 resize-none">{{ old('description', $brand->description ?? '') }}</textarea>
-                    @error('description')
-                        <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
-                    @enderror
-                </div>
-
                 <!-- Bio -->
                 <div>
                     <label class="block text-sm font-medium text-gray-800 dark:text-gray-400 mb-2">Bio</label>

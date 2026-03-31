@@ -164,7 +164,7 @@
 
 		<div class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900">
 			<h3 class="text-sm font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Bio</h3>
-			<p class="mt-3 whitespace-pre-line text-sm leading-6 text-gray-700 dark:text-gray-300">{{ $creator->description ?: 'No bio provided.' }}
+			<p class="mt-3 whitespace-pre-line text-sm leading-6 text-gray-700 dark:text-gray-300">{{ $creator->user?->bio ?: 'No bio provided.' }}
 			</p>
 
 			<h3 class="mt-6 text-sm font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Audience</h3>

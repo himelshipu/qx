@@ -71,12 +71,7 @@
 		    ]);
 		}
 
-		$bioText =
-			trim((string) ($creator->description ?? '')) !== ''
-				? (string) $creator->description
-				: (trim((string) ($creator->user->bio ?? '')) !== ''
-					? (string) $creator->user->bio
-					: '');
+		$bioText = trim((string) ($creator->user->bio ?? ''));
 
 		$packageCards = $packages
 		    ->map(static function ($package): array {

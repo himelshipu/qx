@@ -88,6 +88,7 @@ final class CreatorService
                 'country'           => $this->nullableString($validated['country'] ?? null),
                 'postal_code'       => $this->nullableString($validated['postal_code'] ?? null),
                 'address_line'      => $this->nullableString($validated['location'] ?? null),
+                'bio'               => $this->nullableString($validated['bio'] ?? null),
                 'profile_image_path' => $this->storeUploadedAsset($profileImageFile, 'users/profile'),
                 'cover_image_path'   => $this->storeUploadedAsset($coverImageFile, 'users/cover'),
                 'user_type'         => 'creator',
@@ -99,7 +100,6 @@ final class CreatorService
                 'user_id'           => $user->id,
                 'display_name'      => $this->nullableString($validated['display_name'] ?? null) ?? $validated['full_name'],
                 'title_name'        => $this->nullableString($validated['title_name'] ?? null),
-                'description'       => $this->nullableString($validated['description'] ?? null),
                 'audience'          => $this->nullableString($validated['audience'] ?? null),
                 'is_active'         => $isActive,
                 'is_featured'       => $isFeatured,
@@ -149,6 +149,7 @@ final class CreatorService
                     'country'     => $this->nullableString($validated['country'] ?? null),
                     'postal_code' => $this->nullableString($validated['postal_code'] ?? null),
                     'address_line' => $this->nullableString($validated['location'] ?? null),
+                    'bio'         => $this->nullableString($validated['bio'] ?? null),
                     'is_active'   => $isActive
                 ];
 
@@ -170,7 +171,6 @@ final class CreatorService
             $creator = $this->creatorRepository->updateCreator($creator, [
                 'display_name'      => $this->nullableString($validated['display_name'] ?? null) ?? $validated['full_name'],
                 'title_name'        => $this->nullableString($validated['title_name'] ?? null),
-                'description'       => $this->nullableString($validated['description'] ?? null),
                 'audience'          => $this->nullableString($validated['audience'] ?? null),
                 'is_active'         => $isActive,
                 'is_featured'       => $isFeatured,

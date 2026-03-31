@@ -210,8 +210,8 @@ final class InfluencerService
 
         $paginator = CreatorPlatformStat::query()
             ->with([
-                'creator:id,user_id,display_name,title_name,description,is_active',
-                'creator.user:id,name,slug,city,country,profile_image_path,is_active'
+                'creator:id,user_id,display_name,title_name,is_active',
+                'creator.user:id,name,slug,city,country,bio,profile_image_path,is_active'
             ])
             ->where('is_active', true)
             ->whereHas('creator', function ($query) {
@@ -383,9 +383,9 @@ final class InfluencerService
             return $title;
         }
 
-        $description = trim((string) ($creator->description ?? ''));
-        if ($description !== '') {
-            return Str::limit($description, 56);
+        $bio = trim((string) ($creator->user?->bio ?? ''));
+        if ($bio !== '') {
+            return Str::limit($bio, 56);
         }
 
         return 'Content Creator';

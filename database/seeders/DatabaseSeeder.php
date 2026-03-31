@@ -21,7 +21,7 @@ class DatabaseSeeder extends Seeder
             // Brand and creator profiles
             \Database\Seeders\BrandSeeder::class,
             \Database\Seeders\BrandSocialLinkSeeder::class,
-            \Database\Seeders\BrandBillingProfileSeeder::class,
+            \Database\Seeders\BillingProfileSeeder::class,
             \Database\Seeders\BrandOnboardingProfileSeeder::class,
             \Database\Seeders\BrandOnboardingIndustrySeeder::class,
             \Database\Seeders\CreatorSeeder::class,

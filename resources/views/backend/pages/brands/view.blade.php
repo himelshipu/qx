@@ -6,6 +6,7 @@
 	@php
 		$previewPath = $brand->profile_image_path ?: $brand->cover_image_path;
 		$previewUrl = null;
+		$billingProfile = $brand->billingProfiles->first();
 
 		if (!empty($previewPath)) {
 		    $isExternal = str_starts_with($previewPath, 'http://') || str_starts_with($previewPath, 'https://');
@@ -49,7 +50,7 @@
 
 			<div>
 				<p class="mt-3 text-sm leading-6 text-gray-700 dark:text-gray-300">
-					{{ $brand->description ?: 'No description provided.' }}</p>
+					{{ $brand->user?->bio ?: 'No bio provided.' }}</p>
 
 			</div>
 		</div>
@@ -168,31 +169,31 @@
 		<div class="grid grid-cols-1 gap-6 lg:grid-cols-2 mt-6">
 			<div class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900">
 				<h3 class="text-sm font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Billing Profile</h3>
-				@if ($brand->billingProfile)
+				@if ($billingProfile)
 					<dl class="mt-4 space-y-3 text-sm">
 						<div class="flex justify-between gap-4">
 							<dt class="text-gray-500 dark:text-gray-400">Legal Company Name</dt>
-							<dd class="font-medium text-gray-900 dark:text-white">{{ $brand->billingProfile->legal_company_name ?: 'N/A' }}</dd>
+							<dd class="font-medium text-gray-900 dark:text-white">{{ $billingProfile->legal_company_name ?: 'N/A' }}</dd>
 						</div>
 						<div class="flex justify-between gap-4">
 							<dt class="text-gray-500 dark:text-gray-400">VAT ID</dt>
-							<dd class="font-medium text-gray-900 dark:text-white">{{ $brand->billingProfile->vat_id ?: 'N/A' }}</dd>
+							<dd class="font-medium text-gray-900 dark:text-white">{{ $billingProfile->vat_id ?: 'N/A' }}</dd>
 						</div>
 						<div class="flex justify-between gap-4">
 							<dt class="text-gray-500 dark:text-gray-400">Billing Address</dt>
-							<dd class="font-medium text-gray-900 dark:text-white">{{ $brand->billingProfile->billing_address ?: 'N/A' }}</dd>
+							<dd class="font-medium text-gray-900 dark:text-white">{{ $billingProfile->billing_address ?: 'N/A' }}</dd>
 						</div>
 						<div class="flex justify-between gap-4">
 							<dt class="text-gray-500 dark:text-gray-400">Billing City</dt>
-							<dd class="font-medium text-gray-900 dark:text-white">{{ $brand->billingProfile->billing_city ?: 'N/A' }}</dd>
+							<dd class="font-medium text-gray-900 dark:text-white">{{ $billingProfile->billing_city ?: 'N/A' }}</dd>
 						</div>
 						<div class="flex justify-between gap-4">
 							<dt class="text-gray-500 dark:text-gray-400">Billing Country</dt>
-							<dd class="font-medium text-gray-900 dark:text-white">{{ $brand->billingProfile->billing_country ?: 'N/A' }}</dd>
+							<dd class="font-medium text-gray-900 dark:text-white">{{ $billingProfile->billing_country ?: 'N/A' }}</dd>
 						</div>
 						<div class="flex justify-between gap-4">
 							<dt class="text-gray-500 dark:text-gray-400">Billing Postal Code</dt>
-							<dd class="font-medium text-gray-900 dark:text-white">{{ $brand->billingProfile->billing_postal_code ?: 'N/A' }}</dd>
+							<dd class="font-medium text-gray-900 dark:text-white">{{ $billingProfile->billing_postal_code ?: 'N/A' }}</dd>
 						</div>
 					</dl>
 				@else

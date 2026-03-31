@@ -4,14 +4,15 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\MorphTo;
 
-class BrandBillingProfile extends Model
+class BillingProfile extends Model
 {
     use HasFactory;
 
     protected $fillable = [
-        'brand_id',
+        'user_id',
+        'user_type',
         'legal_company_name',
         'vat_id',
         'billing_address',
@@ -20,8 +21,8 @@ class BrandBillingProfile extends Model
         'billing_postal_code'
     ];
 
-    public function brand(): BelongsTo
+    public function user(): MorphTo
     {
-        return $this->belongsTo(Brand::class);
+        return $this->morphTo(__FUNCTION__, 'user_type', 'user_id');
     }
 }

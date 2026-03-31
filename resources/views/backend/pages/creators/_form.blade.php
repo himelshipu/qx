@@ -193,10 +193,10 @@
 		</div>
 
 		<div>
-			<label for="description" class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Bio</label>
-			<textarea id="description" name="description" rows="4" placeholder="Short creator biography"
-			 class="w-full rounded-lg border border-gray-300 bg-transparent px-3 py-2 text-sm text-gray-900 focus:border-gray-500 focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-white">{{ old('description', $creator?->description) }}</textarea>
-			@error('description')
+			<label for="bio" class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Bio</label>
+			<textarea id="bio" name="bio" rows="4" placeholder="Short creator biography"
+			 class="w-full rounded-lg border border-gray-300 bg-transparent px-3 py-2 text-sm text-gray-900 focus:border-gray-500 focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-white">{{ old('bio', $user?->bio) }}</textarea>
+			@error('bio')
 				<p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
 			@enderror
 		</div>

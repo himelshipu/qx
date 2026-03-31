@@ -40,7 +40,7 @@ class UpdateBrandRequest extends FormRequest
             ],
             'phone'              => ['nullable', 'string', 'max:30'],
             'password'           => ['nullable', 'confirmed', Password::defaults()],
-            'description'        => ['nullable', 'string'],
+            'bio'                => ['nullable', 'string', 'max:500'],
             'industry'           => ['nullable', 'string', 'max:150'],
             'website'            => ['nullable', 'url', 'max:500'],
             'location'           => ['nullable', 'string', 'max:255'],

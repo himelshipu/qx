@@ -28,7 +28,7 @@ class StoreBrandRequest extends FormRequest
             'email'              => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:users,email'],
             'phone'              => ['nullable', 'string', 'max:30'],
             'password'           => ['required', 'confirmed', Password::defaults()],
-            'description'        => ['nullable', 'string'],
+            'bio'                => ['nullable', 'string', 'max:500'],
             'industry'           => ['nullable', 'string', 'max:150'],
             'website'            => ['nullable', 'url', 'max:500'],
             'location'           => ['nullable', 'string', 'max:255'],

@@ -12,7 +12,6 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->unique()->constrained('users')->cascadeOnDelete();
             $table->string('brand_name');
-            $table->text('description')->nullable();
             $table->string('industry', 150)->nullable();
             $table->string('website', 500)->nullable();
             $table->boolean('is_verified')->default(false);

@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 class Creator extends Model
 {
@@ -17,7 +18,6 @@ class Creator extends Model
         'user_id',
         'display_name',
         'title_name',
-        'description',
         'audience',
         'brands_worked_with',
         'is_active',
@@ -116,5 +116,10 @@ class Creator extends Model
     public function acceptedOrders(): HasMany
     {
         return $this->hasMany(Order::class, 'accepted_for_creator_id');
+    }
+
+    public function billingProfiles(): MorphMany
+    {
+        return $this->morphMany(BillingProfile::class, 'user', 'user_type', 'user_id');
     }
 }

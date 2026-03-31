@@ -8,9 +8,10 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('brand_billing_profiles', function (Blueprint $table): void {
+        Schema::create('billing_profiles', function (Blueprint $table): void {
             $table->id();
-            $table->foreignId('brand_id')->constrained('brands')->cascadeOnDelete();
+            $table->unsignedBigInteger('user_id');
+            $table->enum('user_type', ['brand', 'creator']);
             $table->string('legal_company_name')->nullable();
             $table->string('vat_id', 120)->nullable();
             $table->string('billing_address')->nullable();
@@ -18,11 +19,13 @@ return new class extends Migration
             $table->string('billing_country', 120)->nullable();
             $table->string('billing_postal_code', 30)->nullable();
             $table->timestamps();
+
+            $table->index(['user_type', 'user_id']);
         });
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('brand_billing_profiles');
+        Schema::dropIfExists('billing_profiles');
     }
 };

@@ -13,7 +13,6 @@ return new class extends Migration
             $table->foreignId('user_id')->unique()->constrained('users')->cascadeOnDelete();
             $table->string('display_name')->nullable();
             $table->string('title_name')->nullable();
-            $table->text('description')->nullable();
             $table->text('audience')->nullable();
             $table->text('brands_worked_with')->nullable();
             $table->boolean('is_active')->default(true);

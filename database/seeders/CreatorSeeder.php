@@ -16,6 +16,8 @@ class CreatorSeeder extends Seeder
         $featuredUserIds = $creatorUsers->pluck('id')->shuffle()->take($featuredCount)->values();
 
         foreach ($creatorUsers as $user) {
+            $bio = $faker->paragraphs(2, true);
+
             $payload = [
                 'display_name' => $user->name,
                 'title_name' => $faker->randomElement([
@@ -25,7 +27,6 @@ class CreatorSeeder extends Seeder
                     'Beauty Reviewer',
                     'Fitness Coach',
                 ]),
-                'description' => $faker->paragraphs(2, true),
                 'audience' => $faker->sentence(10),
                 'brands_worked_with' => implode(', ', $faker->randomElements([
                     'Nike', 'L\'Oreal', 'Samsung', 'Adobe', 'H&M', 'Sephora', 'Notion', 'Canva'
@@ -58,6 +59,10 @@ class CreatorSeeder extends Seeder
                 ['user_id' => $user->id],
                 $payload
             );
+
+            DB::table('users')
+                ->where('id', $user->id)
+                ->update(['bio' => $bio]);
         }
     }
 }
