@@ -98,10 +98,10 @@
 											{{ $creator['title'] }}
 										</h3>
 										<span class="text-[#222] dark:text-white font-medium text-sm leading-none">
-											{{ $creator['handle'] }}
+											{{ $creator['handle'] ?: (!empty($creator['slug']) ? '@' . $creator['slug'] : 'N/A') }}
 										</span>
 									</div>
-									<p class="text-[13px] text-gray-400 font-normal mt-1">{{ $creator['location'] }}</p>
+									<p class="text-[13px] text-gray-400 font-normal mt-1">{{ $creator['location'] ?: 'N/A' }}</p>
 								</div>
 							</a>
 						@endforeach

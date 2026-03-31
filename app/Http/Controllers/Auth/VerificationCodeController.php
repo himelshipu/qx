@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Mail\SendVerificationCodeMail;
+use App\Models\Brand;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -21,8 +22,8 @@ class VerificationCodeController extends Controller
         if (Auth::user()->hasVerifiedEmail()) {
             // If brand, send to setup if not completed, otherwise home
             if (Auth::user()->user_type === 'brand') {
-                $brand = Auth::user()->brand;
-                if (!$brand || empty($brand->setup_data)) {
+                $brand = Auth::user()->brand?->load('onboardingProfile');
+                if (!$this->hasCompletedBrandSetup($brand)) {
                     return redirect(route('brand-setup.show'));
                 }
                 return redirect(route('home'));
@@ -110,8 +111,8 @@ class VerificationCodeController extends Controller
 
         // Redirect based on user type and brand setup status
         if ($user->user_type === 'brand') {
-            $brand = $user->brand;
-            if (!$brand || empty($brand->setup_data)) {
+            $brand = $user->brand?->load('onboardingProfile');
+            if (!$this->hasCompletedBrandSetup($brand)) {
                 return redirect(route('brand-setup.show'))->with('success', 'Your email has been verified successfully!');
             }
             return redirect(route('home'))->with('success', 'Your email has been verified successfully!');
@@ -119,5 +120,24 @@ class VerificationCodeController extends Controller
 
         // Creators and other users go to homepage
         return redirect(route('home'))->with('success', 'Your email has been verified successfully!');
+    }
+
+    private function hasCompletedBrandSetup(?Brand $brand): bool
+    {
+        if (!$brand) {
+            return false;
+        }
+
+        $profile = $brand->onboardingProfile;
+        if (!$profile) {
+            return false;
+        }
+
+        return (bool) $profile->is_completed
+            || !empty($profile->objective)
+            || !empty($profile->budget_range)
+            || !empty($profile->business_type)
+            || !empty($profile->company_size)
+            || $profile->categories()->exists();
     }
 }

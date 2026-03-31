@@ -7,6 +7,7 @@ namespace App\Services\Web;
 use App\Models\Creator;
 use App\Models\CreatorPlatformStat;
 use App\Models\Review;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
@@ -198,30 +199,43 @@ final class InfluencerService
         return $paginator;
     }
 
-    public function paginateInfluencers(?string $platformKey, int $perPage = 20): LengthAwarePaginator
+    /**
+     * @param  array{categories?:array<int, int|string>,sort?:string} $filters
+     */
+    public function paginateInfluencers(?string $platformKey, int $perPage = 20, array $filters = []): LengthAwarePaginator
     {
         $normalizedPlatformKey = $platformKey !== null
         ? $this->normalizePlatformKey($platformKey)
         : null;
+        $selectedCategoryIds = array_values(array_filter(array_map(
+            fn($value): int => (int) $value,
+            $filters['categories'] ?? []
+        ), fn(int $id): bool => $id > 0));
+        $sort = trim((string) ($filters['sort'] ?? 'followers_desc'));
 
         if ($normalizedPlatformKey === 'featured') {
             return $this->paginateFeaturedInfluencers($perPage);
         }
 
-        $paginator = CreatorPlatformStat::query()
+        $query = CreatorPlatformStat::query()
             ->with([
                 'creator:id,user_id,display_name,title_name,is_active',
                 'creator.user:id,name,slug,city,country,bio,profile_image_path,is_active'
             ])
             ->where('is_active', true)
-            ->whereHas('creator', function ($query) {
+            ->whereHas('creator', function ($query) use ($selectedCategoryIds) {
                 $query->where('is_active', true)
                     ->whereHas('user', fn($userQuery) => $userQuery->where('is_active', true));
+
+                if ($selectedCategoryIds !== []) {
+                    $query->whereHas('categories', fn($categoryQuery) => $categoryQuery->whereIn('categories.id', $selectedCategoryIds));
+                }
             })
-            ->when($normalizedPlatformKey !== null, fn($query) => $query->where('platform', $normalizedPlatformKey))
-            ->orderByDesc('follower_count')
-            ->paginate($perPage)
-            ->withQueryString();
+            ->when($normalizedPlatformKey !== null, fn($query) => $query->where('platform', $normalizedPlatformKey));
+
+        $this->applySorting($query, $sort);
+
+        $paginator = $query->paginate($perPage)->withQueryString();
 
         $creatorIds = $paginator->getCollection()
             ->pluck('creator_id')
@@ -258,11 +272,11 @@ final class InfluencerService
                     'name'             => $this->resolveCreatorName($creator),
                     'title'            => $this->resolveCreatorTitle($creator),
                     'location'         => $this->resolveCreatorLocation($creator),
-                    'image_url'        => image_url($creator->user->profile_image_path),
+                    'image_url'        => $creator->user->profile_image_path,
                     'platform'         => $platformKey,
                     'platform_label'   => $platformMeta['label'],
                     'platform_slug'    => $platformMeta['slug'],
-                    'handle'           => $this->resolveHandle($stat->handle),
+                    'handle'           => $this->resolveHandle($stat->handle, $creator->user->slug),
                     'followers_label'  => $this->formatFollowers($stat->follower_count),
                     'engagement_label' => $this->formatPercentage($stat->engagement_rate),
                     'rating_label'     => $averageRating !== null ? number_format($averageRating, 1) : 'N/A',
@@ -307,11 +321,11 @@ final class InfluencerService
             'name'             => $this->resolveCreatorName($creator),
             'title'            => $this->resolveCreatorTitle($creator),
             'location'         => $this->resolveCreatorLocation($creator),
-            'image_url'        => image_url($creator->user->profile_image_path),
+            'image_url'        => $creator->user->profile_image_path,
             'platform'         => $platformKey,
             'platform_label'   => $platformMeta['label'],
             'platform_slug'    => $platformMeta['slug'],
-            'handle'           => $this->resolveHandle($stat?->handle),
+            'handle'           => $this->resolveHandle($stat?->handle, $creator->user->slug),
             'followers_label'  => $this->formatFollowers($stat?->follower_count),
             'engagement_label' => $this->formatPercentage($stat?->engagement_rate),
             'rating_label'     => $averageRating !== null ? number_format($averageRating, 1) : 'N/A',
@@ -370,7 +384,7 @@ final class InfluencerService
 
         return trim((string) $creator->user?->name) !== ''
         ? (string) $creator->user?->name
-        : 'Creator';
+    : ($creator->user?->slug ?? 'N/A');
     }
 
     /**
@@ -388,7 +402,7 @@ final class InfluencerService
             return Str::limit($bio, 56);
         }
 
-        return 'Content Creator';
+        return 'N/A';
     }
 
     /**
@@ -401,21 +415,37 @@ final class InfluencerService
             trim((string) ($creator->user?->country ?? ''))
         ]));
 
-        return $parts !== [] ? implode(', ', $parts) : 'Location not provided';
+    return $parts !== [] ? implode(', ', $parts) : 'N/A';
     }
 
     /**
      * Normalize social handle output.
      */
-    private function resolveHandle(?string $handle): string
+    private function resolveHandle(?string $handle, ?string $slug = null): string
     {
         $normalized = trim((string) $handle);
 
-        if ($normalized === '') {
-            return '@creator';
+        if ($normalized !== '') {
+            return str_starts_with($normalized, '@') ? $normalized : '@' . $normalized;
         }
 
-        return str_starts_with($normalized, '@') ? $normalized : '@' . $normalized;
+        $normalizedSlug = trim((string) $slug);
+
+        return $normalizedSlug !== '' ? '@' . ltrim($normalizedSlug, '@') : 'N/A';
+    }
+
+    /**
+     * Apply supported influencer listing sort options.
+     */
+    private function applySorting(Builder $query, string $sort): void
+    {
+        match ($sort) {
+            'followers_asc'  => $query->orderBy('follower_count'),
+            'engagement_desc' => $query->orderByDesc('engagement_rate')->orderByDesc('follower_count'),
+            'engagement_asc' => $query->orderBy('engagement_rate')->orderByDesc('follower_count'),
+            'recent'         => $query->orderByDesc('created_at'),
+            default          => $query->orderByDesc('follower_count')
+        };
     }
 
     /**

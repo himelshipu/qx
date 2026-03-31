@@ -57,8 +57,11 @@
 											class="flex items-center gap-1 rounded px-2 py-1 text-xs font-medium text-blue-600 transition hover:bg-blue-50 dark:hover:bg-blue-900/20">
 											<x-icons.edit class="h-4 w-4" />
 										</a>
-										<form action="{{ route('dashboard.faqs.items.destroy', [$section, $item]) }}" method="POST" class="inline"
-											onsubmit="return confirm('Are you sure?')">
+										<form action="{{ route('dashboard.faqs.items.destroy', [$section, $item]) }}" method="POST" class="inline js-confirmable"
+											data-confirm-title="Delete FAQ Item"
+											data-confirm-message="Are you sure you want to delete this FAQ item?"
+											data-confirm-button="Delete"
+											data-confirm-variant="danger">
 											@csrf
 											@method('DELETE')
 											<button type="submit"

@@ -4,6 +4,7 @@ declare (strict_types = 1);
 
 namespace App\Services\Admin;
 
+use App\Models\Category;
 use App\Models\Brand;
 use App\Repositories\Contracts\BrandRepositoryInterface;
 use Illuminate\Http\UploadedFile;
@@ -40,15 +41,103 @@ final class BrandService
     /**
      * Build detail payload for a single brand.
      *
-     * @return array{brand:Brand}
+     * @return array{brand:Brand,onboardingData:array<string,mixed>}
      */
     public function getDetailPayload(Brand $brand): array
     {
-        $brand->load(['user:id,name,email,phone,city,country,postal_code,address_line,profile_image_path,cover_image_path,is_active,created_at', 'socialLinks', 'billingProfiles', 'onboardingProfile'])
-            ->loadCount(['orders', 'reviews']);
+        $brand->load([
+            'user:id,slug,name,email,user_type,phone,city,country,postal_code,address_line,bio,profile_image_path,cover_image_path,is_active,email_verified_at,last_login_at,stripe_customer_id,created_at',
+            'socialLinks',
+            'billingProfiles',
+            'onboardingProfile.categories:id,name'
+        ])->loadCount(['campaigns', 'orders', 'reviews']);
 
         return [
-            'brand' => $brand
+            'brand'          => $brand,
+            'onboardingData' => $this->buildOnboardingData($brand)
+        ];
+    }
+
+    /**
+     * Build normalized onboarding data from canonical profile with setup_data fallback.
+     *
+     * @return array<string,mixed>
+     */
+    private function buildOnboardingData(Brand $brand): array
+    {
+    $profile = $brand->onboardingProfile;
+    $rawSetup = $brand->getAttribute('setup_data');
+    $setup   = is_array($rawSetup) ? $rawSetup : [];
+
+        $industrySlugs = array_values(array_filter(array_map(
+            fn($value): string => trim((string) $value),
+            is_array($setup['influencer-type'] ?? null) ? $setup['influencer-type'] : []
+        ), fn(string $value): bool => $value !== ''));
+
+        $setupIndustryLabels = [];
+        if ($industrySlugs !== []) {
+            $dbCategories = Category::query()
+                ->whereIn('slug', $industrySlugs)
+                ->pluck('name', 'slug');
+
+            foreach ($industrySlugs as $slug) {
+                $setupIndustryLabels[] = $dbCategories[$slug] ?? str_replace('-', ' ', ucfirst($slug));
+            }
+        }
+
+        $objectiveMap = [
+            'one-time-campaign' => 'Find influencers for a one-time campaign',
+            'ongoing-content'   => 'Get ongoing influencer content',
+            'exploring'         => "I'm not sure yet, just exploring"
+        ];
+
+        $budgetMap = [
+            'under-1000' => 'Under $1,000',
+            '1000-5000'  => '$1,000 - $5,000',
+            '5000-10000' => '$5,000 - $10,000',
+            '10000-25000' => '$10,000 - $25,000',
+            '25000-50000' => '$25,000 - $50,000',
+            '50000-plus' => '$50,000+'
+        ];
+
+        $businessTypeMap = [
+            'agency'    => 'Agency',
+            'ecommerce' => 'E-commerce',
+            'saas'      => 'SaaS/Software',
+            'local'     => 'Local Business',
+            'other'     => 'Other'
+        ];
+
+        $companySizeMap = [
+            'just-me'  => 'Just me',
+            '2-10'     => '2-10 people',
+            '11-50'    => '11-50 people',
+            '51-200'   => '51-200 people',
+            '201-500'  => '201-500 people',
+            '500-plus' => '500+ people'
+        ];
+
+        $resolvedObjectiveRaw = $profile?->objective ?: ($setup['objective'] ?? null);
+        $resolvedBudgetRaw = $profile?->budget_range ?: ($setup['budget'] ?? null);
+        $resolvedBusinessTypeRaw = $profile?->business_type ?: ($setup['business-type'] ?? null);
+        $resolvedCompanySizeRaw = $profile?->company_size ?: ($setup['company-size'] ?? null);
+
+        $profileCategoryNames = $profile
+            ? $profile->categories->pluck('name')->filter()->values()->all()
+            : [];
+
+        $industries = $profileCategoryNames !== [] ? $profileCategoryNames : $setupIndustryLabels;
+
+        return [
+            'objective'       => $objectiveMap[(string) $resolvedObjectiveRaw] ?? (is_string($resolvedObjectiveRaw) && trim($resolvedObjectiveRaw) !== '' ? $resolvedObjectiveRaw : null),
+            'budget_range'    => $budgetMap[(string) $resolvedBudgetRaw] ?? (is_string($resolvedBudgetRaw) && trim($resolvedBudgetRaw) !== '' ? $resolvedBudgetRaw : null),
+            'business_type'   => $businessTypeMap[(string) $resolvedBusinessTypeRaw] ?? (is_string($resolvedBusinessTypeRaw) && trim($resolvedBusinessTypeRaw) !== '' ? $resolvedBusinessTypeRaw : null),
+            'company_size'    => $companySizeMap[(string) $resolvedCompanySizeRaw] ?? (is_string($resolvedCompanySizeRaw) && trim($resolvedCompanySizeRaw) !== '' ? $resolvedCompanySizeRaw : null),
+            'is_completed'    => (bool) ($profile?->is_completed ?? !empty($setup)),
+            'completed_at'    => $profile?->completed_at,
+            'industries'      => $industries,
+            'has_any_data'    => ($resolvedObjectiveRaw !== null || $resolvedBudgetRaw !== null || $resolvedBusinessTypeRaw !== null || $resolvedCompanySizeRaw !== null || $industries !== []),
+            'source'          => $profile ? 'onboarding_profile' : (!empty($setup) ? 'setup_data' : null)
         ];
     }
 

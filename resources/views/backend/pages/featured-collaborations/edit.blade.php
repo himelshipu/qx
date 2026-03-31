@@ -79,8 +79,13 @@
 											<p class="text-xs text-gray-500 dark:text-gray-500">Updated: {{ $featuredCollaboration->updated_at->format('M d, Y H:i') }}</p>
 										</div>
 									</div>
-									<button type="button" onclick="if(confirm('Delete current image?')) { document.getElementById('deleteImage').value = '1'; this.closest('.mb-4').style.display='none'; }"
-										class="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 text-xs font-semibold px-3 py-1 hover:bg-red-50 dark:hover:bg-red-900/20 rounded">
+									<button type="button"
+										class="js-confirmable text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 text-xs font-semibold px-3 py-1 hover:bg-red-50 dark:hover:bg-red-900/20 rounded"
+										data-confirm-title="Remove Current Image"
+										data-confirm-message="Delete current image?"
+										data-confirm-button="Remove"
+										data-confirm-variant="warning"
+										data-confirm-script="document.getElementById('deleteImage').value = '1'; this.closest('.mb-4').style.display='none';">
 										Remove
 									</button>
 								</div>
@@ -127,8 +132,13 @@
 										<p class="text-xs text-gray-600 dark:text-gray-400">{{ basename($featuredCollaboration->video_path) }}</p>
 										<p class="text-xs text-gray-500 dark:text-gray-500">Updated: {{ $featuredCollaboration->updated_at->format('M d, Y H:i') }}</p>
 									</div>
-									<button type="button" onclick="if(confirm('Delete current video?')) { document.getElementById('deleteVideo').value = '1'; this.closest('.mb-4').style.display='none'; }"
-										class="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 text-xs font-semibold px-3 py-1 hover:bg-red-50 dark:hover:bg-red-900/20 rounded">
+									<button type="button"
+										class="js-confirmable text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 text-xs font-semibold px-3 py-1 hover:bg-red-50 dark:hover:bg-red-900/20 rounded"
+										data-confirm-title="Remove Current Video"
+										data-confirm-message="Delete current video?"
+										data-confirm-button="Remove"
+										data-confirm-variant="warning"
+										data-confirm-script="document.getElementById('deleteVideo').value = '1'; this.closest('.mb-4').style.display='none';">
 										Remove
 									</button>
 								</div>

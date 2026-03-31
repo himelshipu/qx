@@ -85,7 +85,11 @@
 											class="flex items-center gap-1 rounded px-2 py-1 text-xs font-medium text-blue-600 transition hover:bg-blue-50 dark:hover:bg-blue-900/20">
 											<x-icons.edit class="h-4 w-4" />
 										</a>
-										<form action="{{ route('dashboard.knowledge-base.destroy', $article) }}" method="POST" class="inline" onsubmit="return confirm('Are you sure?')">
+										<form action="{{ route('dashboard.knowledge-base.destroy', $article) }}" method="POST" class="inline js-confirmable"
+											data-confirm-title="Delete Article"
+											data-confirm-message="Are you sure you want to delete this article?"
+											data-confirm-button="Delete"
+											data-confirm-variant="danger">
 											@csrf
 											@method('DELETE')
 											<button type="submit" class="flex items-center gap-1 rounded px-2 py-1 text-xs font-medium text-red-600 transition hover:bg-red-50 dark:hover:bg-red-900/20">

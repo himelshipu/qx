@@ -99,7 +99,11 @@
 													</svg>
 												</a>
 												<form action="{{ route('dashboard.featured-collaborations.destroy', $collaboration) }}" method="POST"
-													class="inline" onsubmit="return confirm('Are you sure you want to delete this collaboration?');">
+													class="inline js-confirmable"
+													data-confirm-title="Delete Collaboration"
+													data-confirm-message="Are you sure you want to delete this collaboration?"
+													data-confirm-button="Delete"
+													data-confirm-variant="danger">
 													@csrf
 													@method('DELETE')
 													<button type="submit"

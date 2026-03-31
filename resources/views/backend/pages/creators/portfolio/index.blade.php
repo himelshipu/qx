@@ -123,7 +123,11 @@
 
 								<!-- Delete Button -->
 								<form action="{{ route('dashboard.creators.portfolio.destroy', [$creator, $portfolio]) }}" method="POST"
-									class="inline" onsubmit="return confirm('Are you sure you want to delete this portfolio item?');">
+									class="inline js-confirmable"
+									data-confirm-title="Delete Portfolio Item"
+									data-confirm-message="Are you sure you want to delete this portfolio item?"
+									data-confirm-button="Delete"
+									data-confirm-variant="danger">
 									@csrf
 									@method('DELETE')
 									<button type="submit"

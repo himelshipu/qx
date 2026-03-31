@@ -139,10 +139,10 @@ final class HomeService
                             'name'             => $this->resolveCreatorName($creator),
                             'title'            => $this->resolveCreatorTitle($creator),
                             'location'         => $this->resolveCreatorLocation($creator),
-                            'image_url'        => $this->resolveCreatorImageUrl($creator->user->profile_image_path),
+                            'image_url'        => $creator->user->profile_image_path,
                             'platform'         => $platform,
                             'platform_label'   => $this->humanizePlatform($platform),
-                            'handle'           => $this->resolveHandle($stat->handle),
+                            'handle'           => $this->resolveHandle($stat->handle, $creator->user->slug),
                             'followers_label'  => $this->formatFollowers($stat->follower_count),
                             'engagement_label' => $this->formatPercentage($stat->engagement_rate),
                             'rating_label'     => $averageRating !== null ? number_format($averageRating, 1) : 'N/A',
@@ -177,7 +177,7 @@ final class HomeService
 
         return trim((string) $creator->user?->name) !== ''
         ? (string) $creator->user?->name
-        : 'Creator';
+    : ($creator->user?->slug ?? 'N/A');
     }
 
     /**
@@ -195,7 +195,7 @@ final class HomeService
             return Str::limit($bio, 56);
         }
 
-        return 'Content Creator';
+        return 'N/A';
     }
 
     /**
@@ -208,15 +208,7 @@ final class HomeService
             trim((string) ($creator->user?->country ?? ''))
         ]));
 
-        return $parts !== [] ? implode(', ', $parts) : 'Location not provided';
-    }
-
-    /**
-     * Resolve creator profile image URL with storage fallbacks.
-     */
-    private function resolveCreatorImageUrl(?string $path): string
-    {
-        return image_url($path);
+        return $parts !== [] ? implode(', ', $parts) : 'N/A';
     }
 
     /**
@@ -237,15 +229,17 @@ final class HomeService
     /**
      * Normalize social handle output.
      */
-    private function resolveHandle(?string $handle): string
+    private function resolveHandle(?string $handle, ?string $slug = null): string
     {
         $normalized = trim((string) $handle);
 
-        if ($normalized === '') {
-            return '@creator';
+        if ($normalized !== '') {
+            return str_starts_with($normalized, '@') ? $normalized : '@' . $normalized;
         }
 
-        return str_starts_with($normalized, '@') ? $normalized : '@' . $normalized;
+        $normalizedSlug = trim((string) $slug);
+
+        return $normalizedSlug !== '' ? '@' . ltrim($normalizedSlug, '@') : 'N/A';
     }
 
     /**

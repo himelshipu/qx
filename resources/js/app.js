@@ -170,6 +170,11 @@ function openElementConfirmation(element, onConfirm) {
 }
 
 function initializeConfirmationHandlers() {
+    if (window.__rockiesConfirmHandlersInitialized) {
+        return;
+    }
+
+    window.__rockiesConfirmHandlersInitialized = true;
     normalizeLegacyConfirmAttributes();
 
     document.addEventListener(
@@ -319,21 +324,32 @@ Alpine.store("sidebar", {
     },
 });
 
-// Start Alpine - IMPORTANT: Do this after defining stores
-if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", () => {
+function bootRockiesApp() {
+    if (window.__rockiesAppBooted === true) {
+        return;
+    }
+
+    window.__rockiesAppBooted = true;
+
+    if (!window.__rockiesAlpineStarted) {
         Alpine.start();
-        renderFlashToasts();
-        initializeConfirmationHandlers();
-        initializeCharts();
-        initializeCalendar();
-    });
-} else {
-    Alpine.start();
+        window.__rockiesAlpineStarted = true;
+    }
+
     renderFlashToasts();
     initializeConfirmationHandlers();
     initializeCharts();
     initializeCalendar();
+}
+
+// Start Alpine exactly once, even if this bundle is evaluated more than once.
+if (document.readyState === "loading") {
+    if (!window.__rockiesBootListenerRegistered) {
+        window.__rockiesBootListenerRegistered = true;
+        document.addEventListener("DOMContentLoaded", bootRockiesApp, { once: true });
+    }
+} else {
+    bootRockiesApp();
 }
 
 // Initialize charts for admin pages

@@ -97,9 +97,9 @@
 									<h3 class="text-gray-800 dark:text-gray-300 text-[15px] leading-tight font-medium line-clamp-1">
 										{{ $creator['title'] }}
 									</h3>
-									<span class="text-[#222] dark:text-white font-medium text-sm leading-none">{{ $creator['handle'] }}</span>
+									<span class="text-[#222] dark:text-white font-medium text-sm leading-none">{{ $creator['handle'] ?: (!empty($creator['slug']) ? '@' . $creator['slug'] : 'N/A') }}</span>
 								</div>
-								<p class="text-sm text-gray-400 dark:text-gray-400 font-normal mt-1">{{ $creator['location'] }}</p>
+								<p class="text-sm text-gray-400 dark:text-gray-400 font-normal mt-1">{{ $creator['location'] ?: 'N/A' }}</p>
 							</div>
 						</a>
 					@endforeach

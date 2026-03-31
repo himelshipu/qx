@@ -173,9 +173,13 @@
 											<form action="{{ route('dashboard.brands.destroy', $brand) }}" method="POST">
 												@csrf
 												@method('DELETE')
-												<button type="submit" onclick="return confirm('Delete this brand? This action cannot be undone.')"
+												<button type="submit"
+													data-confirm-title="Delete Brand"
+													data-confirm-message="Delete this brand? This action cannot be undone."
+													data-confirm-button="Delete"
+													data-confirm-variant="danger"
 													title="Delete brand"
-													class="inline-flex items-center rounded-lg border border-gray-200 p-2 text-gray-600 transition hover:bg-red-50 hover:text-red-600 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-red-900/20 dark:hover:text-red-300">
+													class="js-confirmable inline-flex items-center rounded-lg border border-gray-200 p-2 text-gray-600 transition hover:bg-red-50 hover:text-red-600 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-red-900/20 dark:hover:text-red-300">
 													<x-icons.trash class="h-4 w-4" />
 												</button>
 											</form>

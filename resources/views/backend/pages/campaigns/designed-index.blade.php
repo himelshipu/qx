@@ -156,9 +156,12 @@
 							@csrf
 							@method('DELETE')
 							<button type="submit" {{ $dependencyCount > 0 ? 'disabled' : '' }}
-								onclick="return confirm('Delete this campaign? This action cannot be undone.')"
+								data-confirm-title="Delete Campaign"
+								data-confirm-message="Delete this campaign? This action cannot be undone."
+								data-confirm-button="Delete"
+								data-confirm-variant="danger"
 								title="{{ $dependencyCount > 0 ? 'Cannot delete: campaign has linked records' : 'Delete campaign' }}"
-								class="inline-flex h-9 w-9 items-center justify-center rounded-full bg-white/15 text-white backdrop-blur transition hover:bg-red-500/80 disabled:cursor-not-allowed disabled:opacity-40">
+								class="js-confirmable inline-flex h-9 w-9 items-center justify-center rounded-full bg-white/15 text-white backdrop-blur transition hover:bg-red-500/80 disabled:cursor-not-allowed disabled:opacity-40">
 								<x-icons.trash class="h-4 w-4" />
 							</button>
 						</form>

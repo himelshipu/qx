@@ -16,8 +16,12 @@
 				<form action="{{ route('dashboard.support-tickets.destroy', $ticket) }}" method="POST" class="inline-block">
 					@csrf
 					@method('DELETE')
-					<button type="submit" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium text-sm"
-						onclick="return confirm('Are you sure you want to delete this ticket?')">
+					<button type="submit"
+						class="js-confirmable px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium text-sm"
+						data-confirm-title="Delete Ticket"
+						data-confirm-message="Are you sure you want to delete this ticket?"
+						data-confirm-button="Delete"
+						data-confirm-variant="danger">
 						Delete
 					</button>
 				</form>

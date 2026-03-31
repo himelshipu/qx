@@ -42,7 +42,7 @@ class InfluencersController extends Controller
         // Handle category filtering - always initialize as collection
         $categories = collect();
         if ($request->has('categories')) {
-            $categoryIds = explode(',', $request->get('categories'));
+            $categoryIds = array_filter(array_map('intval', explode(',', (string) $request->get('categories'))));
             $categories  = Category::whereIn('id', $categoryIds)->get();
         }
 
@@ -77,57 +77,12 @@ class InfluencersController extends Controller
     {
         $category = Category::where('slug', $categorySlug)->firstOrFail();
 
-        $influencers = $category->creators()
-            ->with([
-                'user:id,name,slug,city,country,profile_image_path,is_active',
-                'platformStats' => fn($q) => $q->where('is_active', true)->orderByDesc('follower_count')
-            ])
-            ->where('is_active', true)
-            ->whereHas('user', fn($q) => $q->where('is_active', true))
-            ->orderByDesc('is_featured')
-            ->paginate(20)
-            ->withQueryString();
+        $sort = (string) $request->get('sort', 'followers_desc');
 
-        $creatorIds = $influencers->pluck('id')->all();
-
-        // Get reviews summary
-        $reviewsByCreator = \App\Models\Review::query()
-            ->whereIn('creator_id', $creatorIds)
-            ->selectRaw('creator_id, AVG(rating) as average_rating, COUNT(*) as reviews_count')
-            ->groupBy('creator_id')
-            ->get()
-            ->keyBy('creator_id');
-
-        $influencersData = $influencers->map(function ($creator) use ($reviewsByCreator) {
-            $stat        = $creator->platformStats->first();
-            $platformKey = $stat !== null
-            ? $this->normalizePlatformKey((string) $stat->platform)
-            : 'other';
-
-            $reviewSummary = $reviewsByCreator->get($creator->id);
-            $averageRating = $reviewSummary && $reviewSummary->average_rating !== null
-            ? (float) $reviewSummary->average_rating
-            : null;
-
-            return [
-                'id'               => $creator->id,
-                'slug'             => $creator->user->slug,
-                'name'             => $creator->display_name ?: $creator->user->name,
-                'title'            => $creator->title_name,
-                'location'         => $this->resolveCreatorLocation($creator),
-                'image_url'        => image_url($creator->user->profile_image_path),
-                'platform'         => $platformKey,
-                'platform_label'   => ucfirst($platformKey),
-                'platform_slug'    => str()->slug($platformKey),
-                'handle'           => $stat?->handle ?? '@user',
-                'followers_label'  => $this->formatFollowers($stat?->follower_count ?? 0),
-                'engagement_label' => $this->formatPercentage((float) ($stat?->engagement_rate ?? 0)),
-                'rating_label'     => $averageRating !== null ? number_format($averageRating, 1) : 'N/A',
-                'reviews_count'    => $reviewSummary ? (int) $reviewSummary->reviews_count : 0
-            ];
-        });
-
-        $influencers->setCollection($influencersData);
+        $influencers = $this->influencerService->paginateInfluencers(null, 20, [
+            'categories' => [$category->id],
+            'sort'       => $sort
+        ]);
 
         return view('frontend.pages.influencers', [
             'title'              => $category->name . ' Influencers',
@@ -173,67 +128,4 @@ class InfluencersController extends Controller
         return response()->json(['categories' => $categories]);
     }
 
-    /**
-     * Helper: Format follower count.
-     */
-    private function formatFollowers(?int $count): string
-    {
-        if (!$count) {
-            return '0';
-        }
-
-        if ($count >= 1000000) {
-            return number_format($count / 1000000, 1) . 'M';
-        }
-
-        if ($count >= 1000) {
-            return number_format($count / 1000, 1) . 'K';
-        }
-
-        return (string) $count;
-    }
-
-    /**
-     * Helper: Format percentage.
-     */
-    private function formatPercentage(?float $percentage): string
-    {
-        if (!$percentage) {
-            return '0%';
-        }
-
-        return number_format($percentage, 2) . '%';
-    }
-
-    /**
-     * Helper: Normalize platform key.
-     */
-    private function normalizePlatformKey(string $platform): string
-    {
-        $platform = strtolower(trim($platform));
-
-        $map = [
-            'twitter'   => 'x',
-            'twitter-x' => 'x',
-            'ig'        => 'instagram',
-            'tik'       => 'tiktok',
-            'yt'        => 'youtube',
-            'youtube'   => 'youtube'
-        ];
-
-        return $map[$platform] ?? $platform;
-    }
-
-    /**
-     * Helper: Resolve creator location from city and country.
-     */
-    private function resolveCreatorLocation(\App\Models\Creator $creator): string
-    {
-        $parts = array_values(array_filter([
-            trim((string) ($creator->user?->city ?? '')),
-            trim((string) ($creator->user?->country ?? ''))
-        ]));
-
-        return $parts !== [] ? implode(', ', $parts) : 'Location not provided';
-    }
 }

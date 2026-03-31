@@ -15,7 +15,10 @@ window.ApexCharts = ApexCharts;
 window.flatpickr = flatpickr;
 window.FullCalendar = Calendar;
 
-Alpine.start();
+if (!window.__rockiesAlpineStarted) {
+    Alpine.start();
+    window.__rockiesAlpineStarted = true;
+}
 
 // Initialize components on DOM ready
 document.addEventListener('DOMContentLoaded', () => {
