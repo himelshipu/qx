@@ -41,7 +41,8 @@ class User extends Authenticatable
         'profile_image_path',
         'cover_image_path',
         'is_active',
-        'last_login_at'
+        'last_login_at',
+        'stripe_customer_id'
     ];
 
     /**
@@ -186,6 +187,11 @@ class User extends Authenticatable
     public function wishlists(): HasMany
     {
         return $this->hasMany(Wishlist::class);
+    }
+
+    public function paymentMethods(): HasMany
+    {
+        return $this->hasMany(PaymentMethod::class);
     }
 
     public function uploadedDeliverables(): HasMany

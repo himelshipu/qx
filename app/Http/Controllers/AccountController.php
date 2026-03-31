@@ -37,31 +37,38 @@ class AccountController extends Controller
         
         return view('frontend.pages.account', [
             'user' => $user,
-            'brand' => $brand
+            'brand' => $brand,
+            'paymentMethods' => $user->paymentMethods
         ]);
     }
 
     /**
      * Update user account details
+     * 
+     * Handles user personal information including address fields as separate columns:
+     * - address_line: Street address
+     * - city: City/Municipality
+     * - country: Country
+     * - postal_code: ZIP/Postal code
      */
     public function updateDetails(Request $request, $slug)
     {
         $user = $this->getUserBySlug($slug);
         
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|max:255|unique:users,email,' . $user->id,
-            'phone' => 'nullable|string|max:20',
-            'date_of_birth' => 'nullable|date|before:today',
-            'gender' => 'nullable|in:male,female,other',
-            'bio' => 'nullable|string|max:1000',
-            'address_line' => 'nullable|string|max:255',
-            'country' => 'nullable|string|max:255',
-            'city' => 'nullable|string|max:255',
-            'postal_code' => 'nullable|string|max:20',
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'email', 'max:255', 'unique:users,email,' . $user->id],
+            'phone' => ['nullable', 'string', 'max:20', 'regex:/^[0-9+\-\s\(\)]+$/'],
+            'date_of_birth' => ['nullable', 'date', 'before:today'],
+            'gender' => ['nullable', 'in:male,female,other'],
+            'bio' => ['nullable', 'string', 'max:1000'],
+            'address_line' => ['nullable', 'string', 'max:255'],
+            'country' => ['nullable', 'string', 'max:255'],
+            'city' => ['nullable', 'string', 'max:255'],
+            'postal_code' => ['nullable', 'string', 'max:20'],
         ]);
 
-        // Update user data
+        // Update user data - fields stored separately
         $user->update($validated);
 
         return redirect()->route('dashboard.account.edit', ['slug' => $user->slug])->with('success', 'Your details updated successfully.');
@@ -69,11 +76,19 @@ class AccountController extends Controller
 
     /**
      * Update user billing information
+     * 
+     * Uses updateOrCreate to prevent duplicate billing profiles.
+     * Supports both Brand and Creator polymorphic relationships.
      */
     public function updateBilling(Request $request, $slug)
     {
         $user = $this->getUserBySlug($slug);
-        $profileOwner = $user->brand ?? $user->creator;
+        
+        $profileOwner = match($user->user_type) {
+            'brand' => $user->brand,
+            'creator' => $user->creator,
+            default => null
+        };
         
         if (!$profileOwner) {
             return redirect()->route('dashboard.account.edit', ['slug' => $user->slug])
@@ -81,22 +96,22 @@ class AccountController extends Controller
         }
         
         $validated = $request->validate([
-            'legal_company_name' => 'nullable|string|max:255',
-            'vat_id' => 'nullable|string|max:255',
-            'billing_address' => 'nullable|string|max:255',
-            'billing_city' => 'nullable|string|max:255',
-            'billing_country' => 'nullable|string|max:255',
-            'billing_postal_code' => 'nullable|string|max:20',
+            'legal_company_name' => ['nullable', 'string', 'max:255'],
+            'vat_id' => ['nullable', 'string', 'max:255'],
+            'billing_address' => ['nullable', 'string', 'max:255'],
+            'billing_city' => ['nullable', 'string', 'max:255'],
+            'billing_country' => ['nullable', 'string', 'max:255'],
+            'billing_postal_code' => ['nullable', 'string', 'max:20'],
         ]);
 
-        // Get or create billing profile
-        $billingProfile = $profileOwner->billingProfiles()->first();
-        
-        if ($billingProfile) {
-            $billingProfile->update($validated);
-        } else {
-            $profileOwner->billingProfiles()->create($validated);
-        }
+        // Add user_type to validated data before saving
+        $validated['user_type'] = $user->user_type;
+
+        // Use updateOrCreate to prevent duplicate billing profiles
+        $profileOwner->billingProfiles()->updateOrCreate(
+            ['user_id' => $profileOwner->id],
+            $validated
+        );
 
         return redirect()->route('dashboard.account.edit', ['slug' => $user->slug])->with('success', 'Billing information updated successfully.');
     }

@@ -29,6 +29,7 @@ use App\Http\Controllers\Frontend\InfluencersController;
 use App\Http\Controllers\Frontend\KnowledgeBaseController as FrontendKnowledgeBaseController;
 use App\Http\Controllers\Frontend\StaticPagesController;
 use App\Http\Controllers\Frontend\SupportTicketController as FrontendSupportTicketController;
+use App\Http\Controllers\PaymentMethodController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -283,6 +284,16 @@ Route::prefix('dashboard')->name('dashboard.')->middleware(['auth', 'verified'])
     Route::post('/account/{slug}/password', [AccountController::class, 'updatePassword'])->name('account.password.update');
     Route::post('/account/{slug}/toggle-status', [AccountController::class, 'toggleStatus'])->name('account.toggle-status');
     Route::delete('/account/{slug}', [AccountController::class, 'destroy'])->name('account.destroy');
+
+    // Payment Method routes
+    Route::get('/payment-methods', [PaymentMethodController::class, 'index'])->name('payment-methods.index');
+    Route::post('/payment-methods', [PaymentMethodController::class, 'store'])->name('payment-methods.store');
+    Route::post('/payment-methods/{paymentMethod}/set-default', [PaymentMethodController::class, 'setDefault'])->name('payment-methods.set-default');
+    Route::delete('/payment-methods/{paymentMethod}', [PaymentMethodController::class, 'destroy'])->name('payment-methods.destroy');
+    
+    // AJAX API routes
+    Route::get('/payment-methods/api/list', [PaymentMethodController::class, 'getJson'])->name('payment-methods.api.list');
+    Route::get('/payment-methods/api/default', [PaymentMethodController::class, 'getDefaultJson'])->name('payment-methods.api.default');
 
 });
 

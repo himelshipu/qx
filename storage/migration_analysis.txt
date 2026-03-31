@@ -1,6 +1,6 @@
 =========================================
 DETAILED MIGRATION COLUMN ANALYSIS
-Generated: 2026-03-30 15:26:57
+Generated: 2026-03-31 18:17:00
 =========================================
 
 ---------------------------------------------------
@@ -66,6 +66,7 @@ COLUMN DEFINITIONS:
   - gender (enum)
   - country (string)
   - city (string)
+  - address_line (string)
   - postal_code (string)
   - bio (text)
   - profile_image_path (string)
@@ -117,7 +118,6 @@ COLUMN DEFINITIONS:
 -------------------
   - user_id (foreignId)
   - brand_name (string)
-  - description (text)
   - industry (string)
   - website (string)
   - is_verified (boolean)
@@ -149,23 +149,21 @@ FOREIGN KEY CONSTRAINTS:
 
 
 ---------------------------------------------------
-[8] File: 2026_03_29_000005_create_brand_billing_profiles_table.php
+[8] File: 2026_03_29_000005_create_billing_profiles_table.php
 ---------------------------------------------------
-Table: brand_billing_profiles
+Table: billing_profiles
 
 COLUMN DEFINITIONS:
 -------------------
-  - brand_id (foreignId)
+  - user_id (unsignedBigInteger)
+  - user_type (enum)
   - legal_company_name (string)
   - vat_id (string)
   - billing_address (string)
   - billing_city (string)
   - billing_country (string)
   - billing_postal_code (string)
-
-FOREIGN KEY CONSTRAINTS:
------------------------
-  - brand_id → brands
+  - user_type (index)
 
 
 ---------------------------------------------------
@@ -198,7 +196,6 @@ COLUMN DEFINITIONS:
   - user_id (foreignId)
   - display_name (string)
   - title_name (string)
-  - description (text)
   - audience (text)
   - brands_worked_with (text)
   - is_active (boolean)
@@ -1287,5 +1284,5 @@ COLUMN DEFINITIONS:
 SUMMARY
 =========================================
 Total Migration Files: 61
-Generated on: 2026-03-30 15:26:57
+Generated on: 2026-03-31 18:17:00
 =========================================
