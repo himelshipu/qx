@@ -4,6 +4,7 @@ import collapse from "@alpinejs/collapse";
 import ApexCharts from "apexcharts";
 import flatpickr from "flatpickr";
 import "flatpickr/dist/flatpickr.min.css";
+import "./stripe/payment";
 
 Alpine.plugin(collapse);
 
@@ -55,6 +56,204 @@ window.toast = {
         Alpine.store("toast").warning(message);
     },
 };
+
+Alpine.store("confirmModal", {
+    isOpen: false,
+    title: "Please confirm",
+    message: "Are you sure you want to continue?",
+    confirmText: "Confirm",
+    variant: "danger",
+    onConfirm: null,
+
+    open(options = {}) {
+        this.title = options.title || "Please confirm";
+        this.message = options.message || "Are you sure you want to continue?";
+        this.confirmText = options.confirmText || "Confirm";
+        this.variant = options.variant || "danger";
+        this.onConfirm = typeof options.onConfirm === "function" ? options.onConfirm : null;
+        this.isOpen = true;
+    },
+
+    close() {
+        this.isOpen = false;
+        this.onConfirm = null;
+    },
+
+    confirm() {
+        if (typeof this.onConfirm === "function") {
+            this.onConfirm();
+        }
+        this.close();
+    },
+});
+
+window.confirmationModal = {
+    open(options) {
+        Alpine.store("confirmModal").open(options);
+    },
+};
+
+function extractConfirmMessage(raw) {
+    if (!raw || typeof raw !== "string") {
+        return null;
+    }
+
+    const match = raw.match(/confirm\((['"`])([\s\S]*?)\1\)/i);
+    return match ? match[2] : null;
+}
+
+function parseClickConfirm(raw) {
+    if (!raw || typeof raw !== "string") {
+        return null;
+    }
+
+    const simpleMatch = raw.match(/^\s*return\s+confirm\((['"`])([\s\S]*?)\1\)\s*;?\s*$/i);
+    if (simpleMatch) {
+        return {
+            message: simpleMatch[2],
+            script: null,
+        };
+    }
+
+    const conditionalMatch = raw.match(/^\s*if\s*\(\s*confirm\((['"`])([\s\S]*?)\1\)\s*\)\s*\{([\s\S]*)\}\s*;?\s*$/i);
+    if (conditionalMatch) {
+        return {
+            message: conditionalMatch[2],
+            script: conditionalMatch[3]?.trim() || null,
+        };
+    }
+
+    return null;
+}
+
+function normalizeLegacyConfirmAttributes() {
+    document.querySelectorAll("form[onsubmit*='confirm(']").forEach((form) => {
+        const onsubmitValue = form.getAttribute("onsubmit");
+        const isSimpleConfirm = /^\s*return\s+confirm\(/i.test(onsubmitValue || "");
+        if (!isSimpleConfirm) {
+            return;
+        }
+
+        const message = extractConfirmMessage(onsubmitValue);
+        if (message) {
+            form.dataset.confirmMessage = message;
+            form.dataset.confirmVariant = form.dataset.confirmVariant || "danger";
+            form.classList.add("js-confirmable");
+            form.removeAttribute("onsubmit");
+        }
+    });
+
+    document.querySelectorAll("button[onclick*='confirm('], a[onclick*='confirm(']").forEach((element) => {
+        const parsed = parseClickConfirm(element.getAttribute("onclick"));
+        if (parsed?.message) {
+            element.dataset.confirmMessage = parsed.message;
+            element.dataset.confirmVariant = element.dataset.confirmVariant || "danger";
+            if (parsed.script) {
+                element.dataset.confirmScript = parsed.script;
+            }
+            element.classList.add("js-confirmable");
+            element.removeAttribute("onclick");
+        }
+    });
+}
+
+function openElementConfirmation(element, onConfirm) {
+    const fallbackTitle = element.dataset.confirmVariant === "danger" ? "Confirm deletion" : "Please confirm";
+
+    window.confirmationModal.open({
+        title: element.dataset.confirmTitle || fallbackTitle,
+        message: element.dataset.confirmMessage || "Are you sure you want to continue?",
+        confirmText: element.dataset.confirmButton || "Confirm",
+        variant: element.dataset.confirmVariant || "danger",
+        onConfirm,
+    });
+}
+
+function initializeConfirmationHandlers() {
+    normalizeLegacyConfirmAttributes();
+
+    document.addEventListener(
+        "submit",
+        (event) => {
+            const form = event.target;
+            if (!(form instanceof HTMLFormElement)) {
+                return;
+            }
+
+            if (!form.dataset.confirmMessage) {
+                return;
+            }
+
+            if (form.dataset.confirmArmed === "1") {
+                form.dataset.confirmArmed = "0";
+                return;
+            }
+
+            event.preventDefault();
+            openElementConfirmation(form, () => {
+                form.dataset.confirmArmed = "1";
+                form.requestSubmit();
+            });
+        },
+        true,
+    );
+
+    document.addEventListener("click", (event) => {
+        const trigger = event.target.closest(".js-confirmable[data-confirm-message]");
+        if (!trigger) {
+            return;
+        }
+
+        if (trigger instanceof HTMLFormElement) {
+            return;
+        }
+
+        if (trigger.dataset.confirmArmed === "1") {
+            trigger.dataset.confirmArmed = "0";
+            return;
+        }
+
+        const owningForm = trigger.closest("form");
+
+        event.preventDefault();
+        openElementConfirmation(trigger, () => {
+            if (trigger.dataset.confirmScript) {
+                try {
+                    // eslint-disable-next-line no-new-func
+                    const callback = new Function(trigger.dataset.confirmScript);
+                    callback.call(trigger);
+                } catch (scriptError) {
+                    console.error("Confirmation action failed:", scriptError);
+                }
+                return;
+            }
+
+            if (owningForm instanceof HTMLFormElement) {
+                owningForm.dataset.confirmArmed = "1";
+                owningForm.requestSubmit();
+                return;
+            }
+
+            trigger.dataset.confirmArmed = "1";
+            trigger.click();
+        });
+    });
+
+    window.addEventListener("open-confirmation-modal", (event) => {
+        const detail = event.detail || {};
+        openElementConfirmation(
+            {
+                dataset: {
+                    confirmTitle: detail.title,
+                    confirmMessage: detail.message,
+                    confirmButton: detail.confirmText,
+                    confirmVariant: detail.variant,
+                },
+            },
+            typeof detail.onConfirm === "function" ? detail.onConfirm : () => {},
+        );
+    });
+}
 
 function renderFlashToasts() {
     const flash = window.__toastrFlash || {};
@@ -125,12 +324,14 @@ if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", () => {
         Alpine.start();
         renderFlashToasts();
+        initializeConfirmationHandlers();
         initializeCharts();
         initializeCalendar();
     });
 } else {
     Alpine.start();
     renderFlashToasts();
+    initializeConfirmationHandlers();
     initializeCharts();
     initializeCalendar();
 }

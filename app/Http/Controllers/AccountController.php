@@ -11,6 +11,15 @@ use Illuminate\Validation\Rules\Password;
 
 class AccountController extends Controller
 {
+    private function redirectToAccount(User $user, Request $request, string $fallbackTab)
+    {
+        $tab = $request->input('tab', $request->query('tab', $fallbackTab));
+
+        return redirect()
+            ->route('dashboard.account.edit', ['slug' => $user->slug, 'tab' => $tab])
+            ->with('tab', $tab);
+    }
+
     /**
      * Get user by slug and verify ownership
      */
@@ -71,7 +80,8 @@ class AccountController extends Controller
         // Update user data - fields stored separately
         $user->update($validated);
 
-        return redirect()->route('dashboard.account.edit', ['slug' => $user->slug])->with('success', 'Your details updated successfully.');
+        return $this->redirectToAccount($user, $request, 'details')
+            ->with('success', 'Your details updated successfully.');
     }
 
     /**
@@ -91,7 +101,7 @@ class AccountController extends Controller
         };
         
         if (!$profileOwner) {
-            return redirect()->route('dashboard.account.edit', ['slug' => $user->slug])
+            return $this->redirectToAccount($user, $request, 'billing')
                 ->with('error', 'Billing information is not available for this account.');
         }
         
@@ -113,7 +123,8 @@ class AccountController extends Controller
             $validated
         );
 
-        return redirect()->route('dashboard.account.edit', ['slug' => $user->slug])->with('success', 'Billing information updated successfully.');
+        return $this->redirectToAccount($user, $request, 'billing')
+            ->with('success', 'Billing information updated successfully.');
     }
 
     /**
@@ -132,7 +143,8 @@ class AccountController extends Controller
             'password' => Hash::make($validated['password']),
         ]);
 
-        return redirect()->route('dashboard.account.edit', ['slug' => $user->slug])->with('success', 'Password updated successfully.');
+        return $this->redirectToAccount($user, $request, 'password')
+            ->with('success', 'Password updated successfully.');
     }
 
     /**
@@ -180,9 +192,9 @@ class AccountController extends Controller
         $user = $this->getUserBySlug($slug);
         $user->update(['is_active' => !$user->is_active]);
 
-        return redirect()->route('dashboard.account.edit', ['slug' => $user->slug])->with(
-            'status',
-            $user->is_active ? 'account-activated' : 'account-deactivated'
+        return $this->redirectToAccount($user, $request, 'security')->with(
+            'success',
+            $user->is_active ? 'Account activated successfully.' : 'Account deactivated successfully.'
         );
     }
 }

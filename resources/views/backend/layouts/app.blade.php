@@ -108,6 +108,8 @@ window.addEventListener('resize', checkMobile);" class="bg-white text-gray-900 d
 			</template>
 		</div>
 
+		<x-confirmation-modal />
+
 		@php
 			// Get validation errors - use session to get errors bag reliably.
 			$validationError = null;

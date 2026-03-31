@@ -117,6 +117,8 @@
 			</template>
 		</div>
 
+		<x-confirmation-modal />
+
 		@php
 			$validationError = null;
 			$errorsBag = session()->get('errors') ?: $errors ?? null;

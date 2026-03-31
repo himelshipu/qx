@@ -10,11 +10,18 @@ use Illuminate\Support\Facades\Auth;
 
 class PaymentMethodController extends Controller
 {
-    protected PaymentMethodService $paymentService;
-
-    public function __construct()
+    public function __construct(protected PaymentMethodService $paymentService)
     {
-        $this->paymentService = new PaymentMethodService();
+    }
+
+    private function redirectToAccount(Request $request, string $fallbackTab = 'payment')
+    {
+        $user = Auth::user();
+        $tab = $request->input('tab', $request->query('tab', $fallbackTab));
+
+        return redirect()
+            ->route('dashboard.account.edit', ['slug' => $user->slug, 'tab' => $tab])
+            ->with('tab', $tab);
     }
 
     /**
@@ -56,7 +63,7 @@ class PaymentMethodController extends Controller
 
         // Check if Stripe is properly configured
         if (!PaymentMethodService::isConfigured()) {
-            return redirect()->back()
+            return $this->redirectToAccount($request)
                 ->with('error', 'Payment processing is not configured. Please contact support.');
         }
 
@@ -68,11 +75,11 @@ class PaymentMethodController extends Controller
         );
 
         if (!$paymentMethod) {
-            return redirect()->back()
+            return $this->redirectToAccount($request)
                 ->with('error', 'Failed to add payment method. Please check your card details and try again.');
         }
 
-        return redirect()->route('dashboard.account.edit', ['slug' => $user->slug])
+        return $this->redirectToAccount($request)
             ->with('success', 'Payment method added successfully');
     }
 
@@ -85,7 +92,7 @@ class PaymentMethodController extends Controller
         
         $this->paymentService->setAsDefault($paymentMethod);
 
-        return redirect()->route('dashboard.account.edit', ['slug' => Auth::user()->slug])
+        return $this->redirectToAccount($request)
             ->with('success', 'Default payment method updated');
     }
 
@@ -98,7 +105,7 @@ class PaymentMethodController extends Controller
         
         $this->paymentService->deletePaymentMethod($paymentMethod);
 
-        return redirect()->route('dashboard.account.edit', ['slug' => Auth::user()->slug])
+        return $this->redirectToAccount($request)
             ->with('success', 'Payment method deleted successfully');
     }
 

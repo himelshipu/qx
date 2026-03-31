@@ -1,8 +1,17 @@
 @extends('frontend.layouts.app')
 
 @section('content')
-<div class="max-w-5xl mx-auto" 
-     x-data="{ tab: 'details' }">
+@php
+    $canManageBillingAndPayment = in_array($user->user_type, ['brand', 'creator'], true);
+@endphp
+<div class="max-w-5xl mx-auto"
+    x-data="accountPageData({
+        initialTab: @js(request('tab', session('tab', 'details'))),
+        availableTabs: @js($canManageBillingAndPayment ? ['details', 'billing', 'payment', 'password', 'security'] : ['details', 'password', 'security']),
+        stripePublicKey: @js(config('stripe.public_key')),
+        paymentStoreUrl: @js(route('dashboard.payment-methods.store')),
+        csrfToken: @js(csrf_token())
+    })">
     
     <div>
         <h1 class="text-3xl md:text-4xl font-semibold text-[#222] dark:text-white leading-tight text-left mb-4">My Account</h1>
@@ -15,11 +24,19 @@
                 Details
             </button>
             
-            @if(in_array($user->user_type, ['brand', 'creator']))
+            @if($canManageBillingAndPayment)
             <button @click="tab = 'billing'" 
                     :class="{ 'border-b-2 border-black dark:border-white text-black dark:text-white': tab === 'billing', 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300': tab !== 'billing' }"
                     class="pb-4 text-base font-medium transition-all whitespace-nowrap">
                 Billing
+            </button>
+            @endif
+
+            @if($canManageBillingAndPayment)
+            <button @click="tab = 'payment'" 
+                    :class="{ 'border-b-2 border-black dark:border-white text-black dark:text-white': tab === 'payment', 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300': tab !== 'payment' }"
+                    class="pb-4 text-base font-medium transition-all whitespace-nowrap">
+                Payment
             </button>
             @endif
 
@@ -35,18 +52,13 @@
                 Security
             </button>
 
-           <button @click="tab = 'payment'" 
-                    :class="{ 'border-b-2 border-black dark:border-white text-black dark:text-white': tab === 'payment', 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300': tab !== 'payment' }"
-                    class="pb-4 text-base font-medium transition-all whitespace-nowrap">
-                Payment
-            </button>
-
         </div>
 
         <!-- Details Tab -->
         <div x-show="tab === 'details'" x-cloak class="space-y-8 animate-in fade-in duration-300">
             <form action="{{ route('dashboard.account.details.update', ['slug' => $user->slug]) }}" method="POST" class="space-y-8">
                 @csrf
+                <input type="hidden" name="tab" :value="tab">
 
                 <div class="space-y-6">
                     <!-- Name -->
@@ -131,10 +143,12 @@
             </form>
         </div>
 
-        <!-- Billing Tab -->
+    @if($canManageBillingAndPayment)
+    <!-- Billing Tab -->
         <div x-show="tab === 'billing'" x-cloak class="space-y-8 animate-in fade-in duration-300">
             <form action="{{ route('dashboard.account.billing.update', ['slug' => $user->slug]) }}" method="POST" class="space-y-8">
                 @csrf
+                <input type="hidden" name="tab" :value="tab">
 
                 <div class="space-y-6">
                     @php
@@ -215,12 +229,14 @@
                 </button>
             </form>
         </div>
+    @endif
 
 
         <!-- Password Tab -->
         <div x-show="tab === 'password'" x-cloak class="space-y-8 animate-in fade-in duration-300" x-data="{ showPass: { old: false, new: false, confirm: false } }">
             <form action="{{ route('dashboard.account.password.update', ['slug' => $user->slug]) }}" method="POST" class="space-y-6">
                 @csrf
+                <input type="hidden" name="tab" :value="tab">
 
                 <div>
                     <label class="block text-sm font-medium text-gray-800 dark:text-gray-300 mb-2">Current Password <span class="text-error-500"> *</span></label>
@@ -293,6 +309,7 @@
                     </div>
                     <form action="{{ route('dashboard.account.toggle-status', ['slug' => $user->slug]) }}" method="POST">
                         @csrf
+                        <input type="hidden" name="tab" value="security">
                         <button type="submit" class="px-4 py-2 rounded-lg font-medium text-sm transition {{ $user->is_active ? 'bg-red-100 text-red-700 hover:bg-red-200' : 'bg-green-100 text-green-700 hover:bg-green-200' }}">
                             {{ $user->is_active ? 'Deactivate' : 'Activate' }}
                         </button>
@@ -332,9 +349,16 @@
                     <p class="text-sm text-gray-800 dark:text-gray-300 mb-4 font-medium">
                         ⚠️ This action cannot be undone. Please enter your password to confirm deletion.
                     </p>
-                    <form method="POST" action="{{ route('dashboard.account.destroy', ['slug' => $user->slug]) }}" @submit="if(!confirm('Are you absolutely sure? All your data will be permanently deleted.')) $event.preventDefault();">
+                    <form method="POST"
+                        action="{{ route('dashboard.account.destroy', ['slug' => $user->slug]) }}"
+                        class="js-confirmable"
+                        data-confirm-title="Delete Account"
+                        data-confirm-message="Are you absolutely sure? All your data will be permanently deleted."
+                        data-confirm-button="Delete Account"
+                        data-confirm-variant="danger">
                         @csrf
                         @method('DELETE')
+                        <input type="hidden" name="tab" value="security">
                         <div class="flex gap-3 flex-wrap">
                             <input type="password" name="password" placeholder="Enter your password" 
                                 class="flex-1 min-w-[200px] h-11 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-4 text-sm text-gray-900 dark:text-white focus:border-red-400 focus:ring-2 focus:ring-red-200 dark:focus:ring-red-800 transition outline-none"
@@ -351,16 +375,16 @@
             </div>
         </div>
 
+        @if($canManageBillingAndPayment)
         <!-- Payment Tab -->
-        <div x-show="tab === 'payment'" 
-            x-cloak 
-            x-data="paymentData()"
+        <div x-show="tab === 'payment'"
+            x-cloak
             class="space-y-8 animate-in fade-in duration-300">
             
             <!-- Add Payment Card Button -->
             <div class="space-y-4">
                 <h3 class="text-lg font-bold text-gray-900 dark:text-white">Payment Methods</h3>
-                <button type="button" @click="showCardModal = true" 
+                <button type="button" @click="openPaymentModal()"
                         class="px-6 py-3 bg-[#222] dark:bg-white text-white dark:text-black rounded-lg font-medium text-sm hover:opacity-90 transition active:scale-95">
                     + Add Payment Card
                 </button>
@@ -414,6 +438,7 @@
                                 @if(!$method->is_default)
                                 <form action="{{ route('dashboard.payment-methods.set-default', $method->id) }}" method="POST" style="display: inline;">
                                     @csrf
+                                    <input type="hidden" name="tab" value="payment">
                                     <button type="submit" 
                                             class="px-3 py-2 text-sm font-medium text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded transition">
                                         Set Default
@@ -424,9 +449,14 @@
                                 <form action="{{ route('dashboard.payment-methods.destroy', $method->id) }}" method="POST" style="display: inline;">
                                     @csrf
                                     @method('DELETE')
-                                    <button type="submit" 
-                                            onclick="return confirm('Are you sure you want to delete this card?')"
-                                            class="px-3 py-2 text-sm font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition">
+                                    <input type="hidden" name="tab" value="payment">
+                                    <button type="submit"
+                                            class="js-confirmable px-3 py-2 text-sm font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition"
+                                            data-confirm-title="Delete Payment Method"
+                                            data-confirm-message="Are you sure you want to delete this card?"
+                                            data-confirm-button="Delete"
+                                            data-confirm-variant="danger"
+                                            >
                                         Delete
                                     </button>
                                 </form>
@@ -442,56 +472,9 @@
                 @endif
             </div>
 
-            <!-- Add Card Modal -->
-            <div x-show="showCardModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" x-cloak>
-                <div class="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl overflow-hidden p-8 md:p-10 w-full max-w-xl">
-                    
-                    <!-- Close Button -->
-                    <button @click="showCardModal = false; resetForm();" type="button" class="absolute top-6 right-6 text-gray-400 hover:text-black dark:hover:text-white transition">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                    </button>
-
-                    <!-- Title -->
-                    <h2 class="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-2">Add New Card</h2>
-                    <p class="text-sm text-gray-600 dark:text-gray-400 mb-8">Your card information is secure and encrypted with Stripe</p>
-
-                    <!-- Error Alert -->
-                    <div x-show="error" class="mb-4 p-4 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-lg">
-                        <p class="text-sm text-red-700 dark:text-red-300" x-text="error"></p>
-                    </div>
-
-                    <form @submit.prevent="submitForm()" class="space-y-6">
-                        @csrf
-
-                        <!-- Stripe Card Element -->
-                        <div>
-                            <label class="block text-sm font-medium text-gray-800 dark:text-gray-300 mb-2">Card Details <span class="text-red-500">*</span></label>
-                            <div id="card-element" class="p-4 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800"></div>
-                            <div id="card-errors" class="text-xs text-red-500 mt-2"></div>
-                        </div>
-
-                        <!-- Set as Default Checkbox -->
-                        <div class="flex items-center gap-3">
-                            <input type="checkbox" id="is_default" x-model="isDefault" class="rounded border-gray-300 dark:border-gray-700">
-                            <label for="is_default" class="text-sm font-medium text-gray-800 dark:text-gray-300">
-                                Set as default payment method
-                            </label>
-                        </div>
-
-                        <!-- Submit Button -->
-                        <button type="submit" :disabled="isProcessing" class="w-full bg-[#222] dark:bg-white text-white dark:text-black font-bold py-3 rounded-lg text-base hover:opacity-90 transition active:scale-95 mt-8 disabled:opacity-50 disabled:cursor-not-allowed">
-                            <span x-text="isProcessing ? 'Processing...' : 'Save Card'"></span>
-                        </button>
-
-                        <p class="text-xs text-gray-500 dark:text-gray-400 text-center">
-                            � Secured by Stripe
-                        </p>
-                    </form>
-                </div>
-            </div>
+            <x-payment-modal />
         </div>
+        @endif
 
     </div>
 </div>
@@ -499,138 +482,4 @@
 <style>
     [x-cloak] { display: none !important; }
 </style>
-
-<!-- Stripe.js Script -->
-<script src="https://js.stripe.com/v3/"></script>
-
-<script>
-function paymentData() {
-    return {
-        stripe: null,
-        elements: null,
-        cardElement: null,
-        showCardModal: false,
-        isProcessing: false,
-        isDefault: false,
-        error: '',
-
-        init() {
-            // Initialize Stripe
-            const stripePublicKey = "{{ config('stripe.public_key') }}";
-            
-            if (!stripePublicKey || stripePublicKey === '') {
-                console.error('Stripe public key not configured');
-                this.error = 'Payment processing is not configured. Please contact support.';
-                return;
-            }
-
-            this.stripe = Stripe(stripePublicKey);
-            this.elements = this.stripe.elements();
-            
-            // Create Card Element
-            this.cardElement = this.elements.create('card', {
-                style: {
-                    base: {
-                        fontSize: '16px',
-                        color: document.documentElement.classList.contains('dark') ? '#fff' : '#222',
-                        '::placeholder': {
-                            color: document.documentElement.classList.contains('dark') ? '#9ca3af' : '#d1d5db',
-                        },
-                        fontFamily: 'system-ui, -apple-system, sans-serif'
-                    },
-                    invalid: {
-                        color: '#ef4444',
-                    }
-                }
-            });
-            
-            // Mount Card Element
-            this.cardElement.mount('#card-element');
-            
-            // Handle Card Errors
-            this.cardElement.addEventListener('change', (event) => {
-                const displayError = document.getElementById('card-errors');
-                if (event.error) {
-                    displayError.textContent = event.error.message;
-                    this.error = event.error.message;
-                } else {
-                    displayError.textContent = '';
-                    this.error = '';
-                }
-            });
-        },
-
-        async submitForm() {
-            if (this.isProcessing) return;
-            if (!this.stripe || !this.cardElement) {
-                this.error = 'Payment system not loaded. Please refresh and try again.';
-                return;
-            }
-
-            this.isProcessing = true;
-            this.error = '';
-
-            try {
-                // Create Payment Method
-                const { paymentMethod, error } = await this.stripe.createPaymentMethod({
-                    type: 'card',
-                    card: this.cardElement,
-                });
-
-                if (error) {
-                    this.error = error.message;
-                    this.isProcessing = false;
-                    return;
-                }
-
-                // Submit form with payment method ID
-                const form = document.createElement('form');
-                form.method = 'POST';
-                form.action = "{{ route('dashboard.payment-methods.store') }}";
-
-                form.innerHTML = `
-                    @csrf
-                    <input type="hidden" name="stripe_payment_method_id" value="${paymentMethod.id}">
-                    <input type="hidden" name="is_default" value="${this.isDefault ? 1 : 0}">
-                `;
-
-                document.body.appendChild(form);
-                form.submit();
-
-            } catch (error) {
-                this.error = 'An error occurred. Please try again.';
-                console.error('Payment Error:', error);
-                this.isProcessing = false;
-            }
-        },
-
-        resetForm() {
-            this.isProcessing = false;
-            this.isDefault = false;
-            this.error = '';
-            if (this.cardElement) {
-                this.cardElement.clear();
-            }
-        }
-    }
-}
-
-// Initialize payment data when Alpine initializes
-document.addEventListener('alpine:init', () => {
-    console.log('Alpine initialized, payment system ready');
-});
-
-// Fallback initialization if Alpine is already loaded
-document.addEventListener('DOMContentLoaded', () => {
-    // Wait for Alpine to be available
-    if (window.Alpine) {
-        setTimeout(() => {
-            const paymentTab = document.querySelector('[x-data*="paymentData"]');
-            if (paymentTab && paymentTab.__x) {
-                paymentTab.__x.init();
-            }
-        }, 100);
-    }
-});
-</script>
 @endsection
