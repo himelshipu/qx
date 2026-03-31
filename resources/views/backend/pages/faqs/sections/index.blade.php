@@ -63,12 +63,22 @@
 								<td class="px-4 py-3 text-sm font-medium text-gray-900 dark:text-white">{{ $section->section_title }}</td>
 								<td class="px-4 py-3 text-sm text-gray-600 dark:text-gray-400">{{ $section->section_code }}</td>
 								<td class="px-4 py-3 text-sm text-gray-600 dark:text-gray-400 capitalize">{{ $section->audience_type }}</td>
-								<td class="px-4 py-3 text-sm">
-									<a href="{{ route('dashboard.faqs.items.index', $section) }}"
-										class="text-blue-600 hover:text-blue-700 font-medium">
-										{{ $section->items()->count() }} Items
-									</a>
-								</td>
+
+                                <td class="px-4 py-3 text-sm">
+                                    <div class="flex items-center gap-2">
+
+                                        <span class="inline-flex items-center justify-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
+                                            {{ $section->items()->count() }}
+                                        </span>
+
+                                        <a href="{{ route('dashboard.faqs.items.index', $section) }}"
+                                           class="inline-flex items-center gap-1.5 text-xs text-gray-500 border border-gray-300 rounded-md px-2.5 py-1 hover:bg-gray-50 hover:text-gray-700 transition">
+ 											<x-icons.navigator class="h-3.5 w-3.5" />
+                                            View Items
+                                        </a>
+                                    </div>
+                                </td>
+
 								<td class="px-4 py-3 text-sm">
 									<form action="{{ route('dashboard.faqs.sections.toggle-status', $section) }}" method="POST" class="inline">
 										@csrf
