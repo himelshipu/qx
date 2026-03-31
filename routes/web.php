@@ -272,6 +272,8 @@ Route::prefix('dashboard')->name('dashboard.')->middleware(['auth', 'verified'])
     Route::post('/creator-profile/{slug}/update', [\App\Http\Controllers\CreatorProfileController::class, 'update'])->name('creator.profile.update');
     Route::delete('/creator-profile/{slug}/profile-image', [\App\Http\Controllers\CreatorProfileController::class, 'deleteProfileImage'])->name('creator.profile.delete-image');
     Route::delete('/creator-profile/{slug}/cover-image', [\App\Http\Controllers\CreatorProfileController::class, 'deleteCoverImage'])->name('creator.profile.delete-cover');
+    Route::delete('/creator-profile/{slug}/portfolio/{portfolio}', [\App\Http\Controllers\CreatorProfileController::class, 'deletePortfolioImage'])->name('creator.portfolio.delete');
+    Route::post('/creator-profile/{slug}/portfolio/{portfolio}/delete', [\App\Http\Controllers\CreatorProfileController::class, 'deletePortfolioImage'])->name('creator.portfolio.delete.post');
     Route::post('/creator-profile/{slug}/toggle-status', [\App\Http\Controllers\CreatorProfileController::class, 'toggleStatus'])->name('creator.profile.toggle-status');
 
     // Account routes

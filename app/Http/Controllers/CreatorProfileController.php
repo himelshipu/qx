@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Creator;
+use App\Models\CreatorPortfolio;
 use App\Models\Package;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -76,12 +77,12 @@ class CreatorProfileController extends Controller
             abort(404);
         }
 
-        // Some views expect $brand variable; to minimize view changes we'll pass creator as brand when needed
+        $creator->load(['user', 'socialLinks', 'portfolios']);
 
         return view('frontend.pages.creator-edit-profile', [
-            'user' => $user,
+            'user' => $creator->user,
             'creator' => $creator,
-            'brand' => $creator, // compatibility for fields referenced as $brand in the blade
+            'brand' => $creator,
             'slug' => $slug,
         ]);
     }
@@ -118,6 +119,9 @@ class CreatorProfileController extends Controller
             'linkedin_url'  => 'nullable|url|max:255',
             'other_url'     => 'nullable|url|max:255',
             'profile_image' => 'nullable|image|mimes:jpeg,png,webp|max:2048',
+            'cover_image' => 'nullable|image|mimes:jpeg,png,webp|max:4096',
+            'portfolio_images' => 'nullable|array|max:6',
+            'portfolio_images.*' => 'nullable|image|mimes:jpeg,png,webp|max:5120',
         ]);
 
         // Update creator fields
@@ -154,13 +158,66 @@ class CreatorProfileController extends Controller
 
         // Handle profile image upload (on user model)
         if ($request->hasFile('profile_image')) {
-            // Delete old profile image if exists
-            if ($user->profile_image_path && Storage::disk('public')->exists($user->profile_image_path)) {
-                Storage::disk('public')->delete($user->profile_image_path);
+            try {
+                // Delete old profile image if exists
+                if ($user->profile_image_path && Storage::disk('public')->exists($user->profile_image_path)) {
+                    Storage::disk('public')->delete($user->profile_image_path);
+                }
+                
+                // Ensure directory exists
+                Storage::disk('public')->makeDirectory('creators/profile', 0755, true);
+                
+                $path = $request->file('profile_image')->store('creators/profile', 'public');
+                $user->profile_image_path = $path;
+                $user->save();
+            } catch (\Exception $e) {
+                \Log::error('Profile image upload error: ' . $e->getMessage());
+                return redirect()->back()->with('error', 'Failed to upload profile image');
             }
-            $path = $request->file('profile_image')->store('users/profile', 'public');
-            $user->profile_image_path = $path;
-            $user->save();
+        }
+
+        // Handle cover image upload (on user model)
+        if ($request->hasFile('cover_image')) {
+            try {
+                // Delete old cover image if exists
+                if ($user->cover_image_path && Storage::disk('public')->exists($user->cover_image_path)) {
+                    Storage::disk('public')->delete($user->cover_image_path);
+                }
+                
+                // Ensure directory exists
+                Storage::disk('public')->makeDirectory('creators/cover', 0755, true);
+                
+                $path = $request->file('cover_image')->store('creators/cover', 'public');
+                $user->cover_image_path = $path;
+                $user->save();
+            } catch (\Exception $e) {
+                \Log::error('Cover image upload error: ' . $e->getMessage());
+                return redirect()->back()->with('error', 'Failed to upload cover image');
+            }
+        }
+
+        // Handle portfolio images upload
+        if ($request->hasFile('portfolio_images')) {
+            try {
+                // Ensure directory exists
+                Storage::disk('public')->makeDirectory('creators/portfolio', 0755, true);
+                
+                foreach ($request->file('portfolio_images') as $index => $portfolioImage) {
+                    $path = $portfolioImage->store('creators/portfolio', 'public');
+
+                    // Create portfolio record
+                    $creator->portfolios()->create([
+                        'media_type' => 'image',
+                        'file_path' => $path,
+                        'title' => 'Portfolio Image ' . ($index + 1),
+                        'sort_order' => $creator->portfolios()->max('sort_order') + 1,
+                        'is_active' => true
+                    ]);
+                }
+            } catch (\Exception $e) {
+                \Log::error('Portfolio image upload error: ' . $e->getMessage());
+                return redirect()->back()->with('error', 'Failed to upload portfolio images');
+            }
         }
 
         return redirect()->route('dashboard.creator.profile.edit', ['slug' => $slug])->with('success', 'Profile updated successfully.');
@@ -199,7 +256,43 @@ class CreatorProfileController extends Controller
             return response()->json(['error' => 'Creator not found'], 404);
         }
 
-        return redirect()->route('dashboard.creator.profile.edit', ['slug' => $slug])->with('status', 'cover-image-message');
+        // Delete cover image if exists
+        if ($user->cover_image_path && Storage::disk('public')->exists($user->cover_image_path)) {
+            Storage::disk('public')->delete($user->cover_image_path);
+        }
+
+        $user->update(['cover_image_path' => null]);
+
+        return redirect()->route('dashboard.creator.profile.edit', ['slug' => $slug])->with('status', 'cover-image-deleted');
+    }
+
+    /**
+     * Delete creator portfolio image
+     */
+    public function deletePortfolioImage(Request $request, string $slug, int $portfolio)
+    {
+        $user = Auth::user();
+        $creator = $this->getDashboardCreatorBySlug($slug);
+
+        if (!$creator) {
+            return redirect()->route('dashboard.creator.profile.edit', ['slug' => $slug])->with('error', 'Creator not found');
+        }
+
+        $portfolioItem = CreatorPortfolio::where('creator_id', $creator->id)->where('id', $portfolio)->first();
+
+        if (!$portfolioItem) {
+            return redirect()->route('dashboard.creator.profile.edit', ['slug' => $slug])->with('error', 'Portfolio item not found');
+        }
+
+        // Delete file from storage
+        if ($portfolioItem->file_path && Storage::disk('public')->exists($portfolioItem->file_path)) {
+            Storage::disk('public')->delete($portfolioItem->file_path);
+        }
+
+        // Delete portfolio record
+        $portfolioItem->delete();
+
+        return redirect()->route('dashboard.creator.profile.edit', ['slug' => $slug])->with('success', 'Portfolio image deleted successfully.');
     }
 
     public function toggleStatus(Request $request, string $slug)
