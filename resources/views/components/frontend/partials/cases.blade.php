@@ -3,7 +3,7 @@
 		<div>
 			<h2 class="text-2xl font-semibold text-[#222] dark:text-white mb-4">
 				<a href="{{ route('case-studies') }}" class="hover:text-blue-600 transition">
-					Case Studiesaaaaaaaaaaaaaaa
+					Case Studies
 				</a>
 			</h2>
 

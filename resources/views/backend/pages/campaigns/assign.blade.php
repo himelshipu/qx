@@ -153,7 +153,7 @@
 							:disabled="selectedCreatorIds.length === 0"
 							:class="selectedCreatorIds.length === 0 ? 'opacity-50 cursor-not-allowed bg-gray-400' : 'hover:bg-indigo-700 bg-indigo-600'"
 							class="inline-flex items-center justify-center rounded-lg px-6 py-2 text-sm font-semibold text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900 transition">
-							Assign <span x-text="selectedCreatorIds.length || '0'"></span> Creator<span x-text="selectedCreatorIds.length === 1 ? '' : 's'"></span> to Campaign
+							Assign &nbsp; <span x-text="selectedCreatorIds.length || '0'"></span> &nbsp; Creator<span x-text="selectedCreatorIds.length === 1 ? '' : 's'"></span> &nbsp; to Campaign
 						</button>
 					</div>
 				</div>
