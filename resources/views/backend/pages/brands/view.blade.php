@@ -4,24 +4,15 @@
 
 @section('content')
 	@php
-		$profilePath = $brand->user?->profile_image_path ?: $brand->profile_image_path;
-		$coverPath = $brand->user?->cover_image_path ?: $brand->cover_image_path;
-
-		$profileUrl = null;
-		$coverUrl = null;
+		$profileUrl = $brand->user?->profile_image_path 
+			? \App\Helpers\ImageHelper::url($brand->user->profile_image_path)
+			: null;
+		$coverUrl = $brand->user?->cover_image_path 
+			? \App\Helpers\ImageHelper::url($brand->user->cover_image_path)
+			: null;
 		$billingProfile = $brand->billingProfiles->first();
 		$socialLinks = $brand->socialLinks;
 		$onboarding = $onboardingData ?? [];
-
-		if (!empty($profilePath)) {
-		    $isExternal = str_starts_with($profilePath, 'http://') || str_starts_with($profilePath, 'https://');
-		    $profileUrl = $isExternal ? $profilePath : asset($profilePath);
-		}
-
-		if (!empty($coverPath)) {
-		    $isExternal = str_starts_with($coverPath, 'http://') || str_starts_with($coverPath, 'https://');
-		    $coverUrl = $isExternal ? $coverPath : asset($coverPath);
-		}
 
 		$socialPlatforms = [
 		    'facebook_url' => ['label' => 'Facebook', 'class' => 'text-blue-600'],

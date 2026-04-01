@@ -122,7 +122,7 @@ class InfluencersController extends Controller
                 'id'   => $cat->id,
                 'name' => $cat->name,
                 'slug' => $cat->slug,
-                'icon' => $cat->icon_path ? asset('storage/' . $cat->icon_path) : null
+                'icon' => $cat->icon_path ? \App\Helpers\ImageHelper::url($cat->icon_path) : null
             ]);
 
         return response()->json(['categories' => $categories]);

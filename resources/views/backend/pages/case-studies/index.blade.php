@@ -32,11 +32,18 @@
 					<h3 class="text-lg font-semibold text-gray-900 dark:text-white">Case Studies</h3>
 					<p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Manage case studies displayed on your marketing pages.</p>
 				</div>
-				<a href="{{ route('dashboard.case-studies.create') }}"
-					class="inline-flex items-center gap-2 rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-gray-800 dark:bg-gray-700 dark:hover:bg-gray-600">
-					<x-icons.plus class="h-4 w-4" />
-					New Case Study
-				</a>
+				<div class="flex gap-2">
+					<a href="{{ route('case-studies') }}" target="_blank" rel="noopener noreferrer"
+						class="inline-flex items-center gap-2 rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800">
+						<x-icons.eye class="h-4 w-4" />
+						View Public
+					</a>
+					<a href="{{ route('dashboard.case-studies.create') }}"
+						class="inline-flex items-center gap-2 rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-gray-800 dark:bg-gray-700 dark:hover:bg-gray-600">
+						<x-icons.plus class="h-4 w-4" />
+						New Case Study
+					</a>
+				</div>
 			</div>
 
 			<div class="overflow-x-auto">
@@ -77,6 +84,20 @@
 								</td>
 								<td class="px-4 py-3 text-right">
 									<div class="flex items-center justify-end gap-2">
+										<a href="{{ route('dashboard.case-studies.show', $case) }}"
+											class="flex items-center gap-1 rounded px-2 py-1 text-xs font-medium text-purple-600 transition hover:bg-purple-50 dark:hover:bg-purple-900/20" title="View Details">
+											<x-icons.eye class="h-4 w-4" />
+										</a>
+										@if ($case->is_published)
+											<a href="{{ route('case-studies.show', $case) }}" target="_blank" rel="noopener noreferrer"
+												class="flex items-center gap-1 rounded px-2 py-1 text-xs font-medium text-green-600 transition hover:bg-green-50 dark:hover:bg-green-900/20" title="View Public Page">
+												<x-icons.share class="h-4 w-4" />
+											</a>
+										@else
+											<span class="flex items-center gap-1 rounded px-2 py-1 text-xs font-medium text-gray-400 cursor-not-allowed" title="Not Published">
+												<x-icons.share class="h-4 w-4" />
+											</span>
+										@endif
 										<a href="{{ route('dashboard.case-studies.edit', $case) }}"
 											class="flex items-center gap-1 rounded px-2 py-1 text-xs font-medium text-blue-600 transition hover:bg-blue-50 dark:hover:bg-blue-900/20">
 											<x-icons.edit class="h-4 w-4" />

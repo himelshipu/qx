@@ -71,6 +71,14 @@ class CaseStudyController extends Controller
     }
 
     /**
+     * Show the case study details page.
+     */
+    public function show(CaseStudy $caseStudy)
+    {
+        return view('backend.pages.case-studies.show', compact('caseStudy'));
+    }
+
+    /**
      * Show the form for editing the specified case study.
      */
     public function edit(CaseStudy $caseStudy)

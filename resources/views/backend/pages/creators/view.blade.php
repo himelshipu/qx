@@ -4,21 +4,12 @@
 
 @section('content')
 	@php
-		$profilePath = $creator->user?->profile_image_path;
-		$coverPath = $creator->user?->cover_image_path;
-
-		$profileUrl = null;
-		$coverUrl = null;
-
-		if (!empty($profilePath)) {
-		    $isExternal = str_starts_with($profilePath, 'http://') || str_starts_with($profilePath, 'https://');
-		    $profileUrl = $isExternal ? $profilePath : asset($profilePath);
-		}
-
-		if (!empty($coverPath)) {
-		    $isExternal = str_starts_with($coverPath, 'http://') || str_starts_with($coverPath, 'https://');
-		    $coverUrl = $isExternal ? $coverPath : asset($coverPath);
-		}
+		$profileUrl = $creator->user?->profile_image_path 
+			? \App\Helpers\ImageHelper::url($creator->user->profile_image_path)
+			: null;
+		$coverUrl = $creator->user?->cover_image_path 
+			? \App\Helpers\ImageHelper::url($creator->user->cover_image_path)
+			: null;
 	@endphp
 
 	<x-backend.shell.breadcrumb pageTitle="Creator Details" />

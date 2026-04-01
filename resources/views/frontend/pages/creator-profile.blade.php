@@ -23,7 +23,7 @@
 
 		// Get first 3 portfolio images for grid display
 		$portfolioItems = $creator->portfolios->where('media_type', 'image')->take(3);
-		$gridImages = $portfolioItems->pluck('file_path')->map(fn($path) => asset('storage/' . $path))->values();
+		$gridImages = $portfolioItems->pluck('file_path')->map(fn($path) => \App\Helpers\ImageHelper::url($path))->values();
 
 		// Fill with defaults if not enough images
 		while ($gridImages->count() < 3) {
@@ -124,7 +124,7 @@
                 'id' => $p->id,
                 'title' => $p->title,
                 'description' => $p->description,
-                'url' => asset('storage/' . $p->file_path),
+                'url' => \App\Helpers\ImageHelper::url($p->file_path),
                 'type' => $p->media_type,
             ],
         )
@@ -540,7 +540,7 @@
 						<button @click="openGallery({{ $item->id }})" type="button"
 							class="portfolio-item group relative rounded-2xl overflow-hidden border border-gray-100 dark:border-gray-800 hover:shadow-xl transition-all duration-300 cursor-pointer w-full text-left bg-transparent p-0">
 							@if ($item->media_type === 'image')
-								<img src="{{ asset('storage/' . $item->file_path) }}" alt="{{ $item->title }}"
+							<img src="{{ \App\Helpers\ImageHelper::url($item->file_path) }}" alt="{{ $item->title }}"
 									class="w-full h-80 object-cover group-hover:scale-105 transition-transform duration-500">
 							@else
 								<div

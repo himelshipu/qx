@@ -39,7 +39,7 @@ class FeaturedCollaboration extends Model
             return null;
         }
 
-        return asset('storage/' . $this->image_path);
+        return \App\Helpers\ImageHelper::url($this->image_path);
     }
 
     /**
@@ -51,7 +51,7 @@ class FeaturedCollaboration extends Model
             return null;
         }
 
-        return asset('storage/' . $this->video_path);
+        return \App\Helpers\ImageHelper::url($this->video_path);
     }
 
     /**
@@ -63,7 +63,7 @@ class FeaturedCollaboration extends Model
             return null;
         }
 
-        return asset('storage/' . $this->thumbnail_path);
+        return \App\Helpers\ImageHelper::url($this->thumbnail_path);
     }
 
     /**

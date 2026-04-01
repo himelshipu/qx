@@ -40,7 +40,7 @@ class UpdatePackageRequest extends FormRequest
         $isCreator = $user && $user->creator()->exists();
 
         $rules = [
-            'platform'           => ['required', 'string', 'in:instagram,tiktok,youtube,ugc,other'],
+            'platform'           => ['required', 'string', 'in:facebook,instagram,tiktok,linkedin,x,youtube,ugc,other'],
             'name'               => ['required', 'string', 'max:255'],
             'description'        => ['nullable', 'string'],
             'base_price'         => ['required', 'numeric', 'min:0'],

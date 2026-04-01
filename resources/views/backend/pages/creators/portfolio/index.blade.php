@@ -54,7 +54,7 @@
 								<!-- Thumbnail -->
 								<div class="relative w-16 h-16 rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-800">
 									@if ($portfolio->media_type === 'image')
-										<img src="{{ asset('storage/' . $portfolio->file_path) }}" alt="{{ $portfolio->title }}"
+										<img src="{{ \App\Helpers\ImageHelper::url($portfolio->file_path) }}" alt="{{ $portfolio->title }}"
 											class="w-full h-full object-cover">
 									@else
 										<div class="w-full h-full flex items-center justify-center bg-gray-200 dark:bg-gray-700">

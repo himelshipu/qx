@@ -4,18 +4,8 @@
 	$user = $brand?->user;
 	$isEditMode = $brand !== null;
 
-	$resolvePreviewUrl = static function (?string $path): ?string {
-	    if (!$path) {
-	        return null;
-	    }
-
-	    $isExternal = str_starts_with($path, 'http://') || str_starts_with($path, 'https://');
-
-	    return $isExternal ? $path : asset($path);
-	};
-
-	$initialProfilePreview = $resolvePreviewUrl($user?->profile_image_path);
-	$initialCoverPreview = $resolvePreviewUrl($user?->cover_image_path);
+	$initialProfilePreview = $user?->profile_image_path ? \App\Helpers\ImageHelper::url($user->profile_image_path) : null;
+	$initialCoverPreview = $user?->cover_image_path ? \App\Helpers\ImageHelper::url($user->cover_image_path) : null;
 @endphp
 
 <div x-data="brandUploader({

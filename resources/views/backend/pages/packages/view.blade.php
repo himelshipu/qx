@@ -47,7 +47,7 @@
 				<h3 class="mb-4 text-sm font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Package Creator</h3>
 				<div class="flex flex-col gap-4 sm:flex-row sm:items-center">
 					@if ($package->creator->user?->profile_image_path)
-						<img src="{{ asset('storage/' . $package->creator->user->profile_image_path) }}"
+				<img src="{{ \App\Helpers\ImageHelper::url($package->creator->user->profile_image_path) }}"
 							alt="{{ $package->creator->user->name }}"
 							class="h-16 w-16 rounded-full object-cover">
 					@else

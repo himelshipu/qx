@@ -36,10 +36,10 @@
 								<div
 									class="relative overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-700 h-48 flex items-center justify-center">
 									@if ($category->image_path)
-										<img src="{{ asset('storage/' . $category->image_path) }}" alt="{{ $category->name }}"
+										<img src="{{ \App\Helpers\ImageHelper::url($category->image_path) }}" alt="{{ $category->name }}"
 											class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300">
 									@elseif ($category->icon_path)
-										<img src="{{ asset('storage/' . $category->icon_path) }}" alt="{{ $category->name }}"
+										<img src="{{ \App\Helpers\ImageHelper::url($category->icon_path) }}" alt="{{ $category->name }}"
 											class="w-16 h-16 object-contain group-hover:scale-125 transition-transform duration-300">
 									@else
 										<div class="text-gray-400 dark:text-gray-500">

@@ -96,12 +96,7 @@
 							@forelse ($creators as $creator)
 								@php
 									$previewPath = $creator->user?->profile_image_path ?: $creator->user?->cover_image_path;
-									$previewUrl = null;
-
-									if (!empty($previewPath)) {
-									    $isExternal = str_starts_with($previewPath, 'http://') || str_starts_with($previewPath, 'https://');
-									    $previewUrl = $isExternal ? $previewPath : asset($previewPath);
-									}
+								$previewUrl = $previewPath ? \App\Helpers\ImageHelper::url($previewPath) : null;
 								@endphp
 								<tr class="transition hover:bg-gray-50/70 dark:hover:bg-gray-800/40">
 									<td class="px-4 py-3">

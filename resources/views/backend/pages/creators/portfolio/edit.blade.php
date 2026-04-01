@@ -51,10 +51,10 @@
 							<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Current File</label>
 							<div class="rounded-lg border border-gray-300 dark:border-gray-700 p-4">
 								@if ($portfolio->media_type === 'image')
-									<img src="{{ asset('storage/' . $portfolio->file_path) }}" alt="{{ $portfolio->title }}"
-										class="max-w-xs rounded-lg">
-								@else
-									<video src="{{ asset('storage/' . $portfolio->file_path) }}" class="max-w-xs rounded-lg" controls></video>
+								<img src="{{ \App\Helpers\ImageHelper::url($portfolio->file_path) }}" alt="{{ $portfolio->title }}"
+									class="max-w-xs rounded-lg">
+							@else
+								<video src="{{ \App\Helpers\ImageHelper::url($portfolio->file_path) }}" class="max-w-xs rounded-lg" controls></video>
 								@endif
 							</div>
 						</div>

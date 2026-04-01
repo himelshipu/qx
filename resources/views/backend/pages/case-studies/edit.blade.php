@@ -6,93 +6,35 @@
 	<x-backend.shell.breadcrumb :links="[['label' => 'Case Studies', 'url' => route('dashboard.case-studies.index')]]" pageTitle="Edit Case Study: {{ $caseStudy->title }}" />
 
 	<div class="rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
-		<form action="{{ route('dashboard.case-studies.update', $caseStudy) }}" method="POST" enctype="multipart/form-data"
-			class="p-6">
+		<div
+			class="flex flex-col gap-4 border-b border-gray-200 p-5 sm:flex-row sm:items-center sm:justify-between dark:border-gray-800">
+			<div>
+				<h3 class="text-lg font-semibold text-gray-900 dark:text-white">Edit Case Study</h3>
+				<p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Update case study details and media.</p>
+			</div>
+			<a href="{{ route('dashboard.case-studies.index') }}"
+				class="inline-flex items-center gap-2 rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800">
+				Back to Case Studies
+			</a>
+		</div>
+
+		<form action="{{ route('dashboard.case-studies.update', $caseStudy) }}" method="POST" enctype="multipart/form-data" novalidate
+			class="space-y-6 p-5">
 			@csrf
 			@method('PUT')
 
-			<div class="grid gap-6">
-				<!-- Title -->
-				<div>
-					<label for="title" class="block text-sm font-medium text-gray-900 dark:text-white">Title <span
-							class="text-red-500">*</span></label>
-					<input type="text" id="title" name="title" value="{{ old('title', $caseStudy->title) }}" required
-						class="mt-2 w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm text-gray-900 placeholder-gray-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:placeholder-gray-400">
-					@error('title')
-						<p class="mt-1 text-sm text-red-500">{{ $message }}</p>
-					@enderror
-				</div>
+			@include('backend.pages.case-studies._form')
 
-				<!-- Summary -->
-				<div>
-					<label for="summary" class="block text-sm font-medium text-gray-900 dark:text-white">Summary <span
-							class="text-red-500">*</span></label>
-					<textarea id="summary" name="summary" rows="4" required
-					 class="mt-2 w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm text-gray-900 placeholder-gray-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:placeholder-gray-400">{{ old('summary', $caseStudy->summary) }}</textarea>
-					@error('summary')
-						<p class="mt-1 text-sm text-red-500">{{ $message }}</p>
-					@enderror
-				</div>
-
-				<!-- Cover Image -->
-				<div>
-					<label for="cover_image" class="block text-sm font-medium text-gray-900 dark:text-white">Cover Image</label>
-					@if ($caseStudy->cover_image_path)
-						<div class="mt-2 mb-4">
-							<img src="{{ asset('storage/' . $caseStudy->cover_image_path) }}" alt="{{ $caseStudy->title }}"
-								class="h-40 w-40 rounded-lg object-cover">
-						</div>
-					@endif
-					<div class="mt-2">
-						<input type="file" id="cover_image" name="cover_image" accept="image/*"
-							class="block w-full text-sm text-gray-500 file:mr-4 file:rounded-lg file:border-0 file:bg-gray-900 file:px-4 file:py-2 file:text-sm file:font-medium file:text-white hover:file:bg-gray-800 dark:file:bg-gray-700 dark:hover:file:bg-gray-600">
-						<p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Recommended: 600x400px, Max: 5MB</p>
-					</div>
-					@error('cover_image')
-						<p class="mt-1 text-sm text-red-500">{{ $message }}</p>
-					@enderror
-				</div>
-
-				<!-- External URL -->
-				<div>
-					<label for="external_url" class="block text-sm font-medium text-gray-900 dark:text-white">External URL</label>
-					<input type="url" id="external_url" name="external_url"
-						value="{{ old('external_url', $caseStudy->external_url) }}"
-						class="mt-2 w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm text-gray-900 placeholder-gray-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:placeholder-gray-400">
-					@error('external_url')
-						<p class="mt-1 text-sm text-red-500">{{ $message }}</p>
-					@enderror
-				</div>
-
-				<!-- Sort Order -->
-				<div>
-					<label for="sort_order" class="block text-sm font-medium text-gray-900 dark:text-white">Sort Order</label>
-					<input type="number" id="sort_order" name="sort_order" value="{{ old('sort_order', $caseStudy->sort_order) }}"
-						min="0"
-						class="mt-2 w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm text-gray-900 placeholder-gray-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:placeholder-gray-400">
-					@error('sort_order')
-						<p class="mt-1 text-sm text-red-500">{{ $message }}</p>
-					@enderror
-				</div>
-
-				<!-- Published -->
-				<div class="flex items-center">
-					<input type="checkbox" id="is_published" name="is_published" value="1"
-						{{ old('is_published', $caseStudy->is_published) ? 'checked' : '' }}
-						class="h-4 w-4 rounded border-gray-300 bg-white text-blue-600 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-800 dark:focus:ring-blue-600">
-					<label for="is_published" class="ml-2 text-sm font-medium text-gray-900 dark:text-white">Published</label>
-				</div>
-			</div>
-
-			<div class="mt-8 flex gap-3">
-				<button type="submit"
-					class="rounded-lg bg-gray-900 px-6 py-2 text-sm font-medium text-white transition hover:bg-gray-800 dark:bg-gray-700 dark:hover:bg-gray-600">
-					Update Case Study
-				</button>
+			<div
+				class="flex flex-col-reverse gap-3 border-t border-gray-200 pt-5 sm:flex-row sm:justify-end dark:border-gray-800">
 				<a href="{{ route('dashboard.case-studies.index') }}"
-					class="rounded-lg border border-gray-300 px-6 py-2 text-sm font-medium text-gray-900 transition hover:bg-gray-50 dark:border-gray-700 dark:text-white dark:hover:bg-gray-800">
+					class="inline-flex items-center justify-center rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800">
 					Cancel
 				</a>
+				<button type="submit"
+					class="inline-flex items-center justify-center rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-gray-800 dark:bg-gray-700 dark:hover:bg-gray-600">
+					Update Case Study
+				</button>
 			</div>
 		</form>
 	</div>

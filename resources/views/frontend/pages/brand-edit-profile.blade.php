@@ -4,47 +4,118 @@
 <div class="max-w-5xl mx-auto"
      x-data="{
         tab: @js(old('active_tab', 'details')),
-        selectedCats: @json(old('categories') ?? $brand?->categories ?? []),
-        profileFile: null,
+        errors: {},
+        isSaving: false,
         profilePreview: null,
-        coverFile: null,
         coverPreview: null,
         init() {
-            // Ensure selectedCats is always an array
-            if (!Array.isArray(this.selectedCats)) {
-                this.selectedCats = [];
-            }
-        },
-        toggleCat(cat) {
-            if (this.selectedCats.includes(cat)) {
-                this.selectedCats = this.selectedCats.filter(i => i !== cat);
-            } else {
-                this.selectedCats.push(cat);
-            }
         },
         handleProfileUpload(e) {
             const file = e.target.files[0];
             if (file) {
-                this.profileFile = file;
                 this.profilePreview = URL.createObjectURL(file);
             }
         },
         removeProfile() {
-            this.profileFile = null;
             this.profilePreview = null;
             if (this.$refs.profileInput) this.$refs.profileInput.value = '';
         },
         handleCoverUpload(e) {
             const file = e.target.files[0];
             if (file) {
-                this.coverFile = file;
                 this.coverPreview = URL.createObjectURL(file);
             }
         },
         removeCover() {
-            this.coverFile = null;
             this.coverPreview = null;
             if (this.$refs.coverInput) this.$refs.coverInput.value = '';
+        },
+        fieldError(field) {
+            const err = this.errors[field];
+            if (!err) return '';
+            return Array.isArray(err) ? err[0] : err;
+        },
+        normalizeUrl(value) {
+            if (!value) return '';
+            const trimmed = value.trim();
+            if (!trimmed) return '';
+            if (/^https?:\/\//i.test(trimmed)) return trimmed.replace(/\/$/, '');
+            return ('https://' + trimmed.replace(/^\/+/, '')).replace(/\/$/, '');
+        },
+        normalizeSocialInput(event) {
+            event.target.value = this.normalizeUrl(event.target.value);
+        },
+        async submitForm(event) {
+            this.errors = {};
+
+            const form = event.target;
+            const source = new FormData(form);
+            const payload = new FormData();
+            payload.append('_token', source.get('_token'));
+            payload.append('active_tab', this.tab);
+
+            const fieldsByTab = {
+                details: ['brand_name', 'industry', 'bio', 'address_line', 'city', 'country', 'postal_code', 'phone'],
+                social: ['website', 'instagram', 'tiktok', 'facebook', 'x', 'youtube', 'linkedin'],
+                images: ['profile_image', 'cover_image']
+            };
+
+            if (this.tab === 'details' && !String(source.get('brand_name') || '').trim()) {
+                this.errors = { brand_name: ['Brand name is required.'] };
+                window.toast?.error('Brand name is required.');
+                return;
+            }
+
+            for (const field of (fieldsByTab[this.tab] || [])) {
+                if (!source.has(field)) continue;
+                const value = source.get(field);
+
+                if (this.tab === 'social' && typeof value === 'string') {
+                    const normalized = this.normalizeUrl(value);
+                    const el = form.querySelector(`[name='${field}']`);
+                    if (el) el.value = normalized;
+                    payload.append(field, normalized);
+                    continue;
+                }
+
+                if (value instanceof File) {
+                    if (value.name) payload.append(field, value);
+                } else {
+                    payload.append(field, value ?? '');
+                }
+            }
+
+            this.isSaving = true;
+
+            try {
+                const response = await fetch(form.action, {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: payload
+                });
+
+                const data = await response.json();
+
+                if (response.status === 422) {
+                    this.errors = data.errors || {};
+                    const firstError = Object.values(this.errors)[0]?.[0] || 'Validation failed.';
+                    window.toast?.error(firstError);
+                    return;
+                }
+
+                if (!response.ok) {
+                    throw new Error(data.message || 'Failed to update profile.');
+                }
+
+                window.toast?.success(data.message || 'Profile updated successfully.');
+            } catch (error) {
+                window.toast?.error(error.message || 'Error updating profile.');
+            } finally {
+                this.isSaving = false;
+            }
         }
      }"
      x-init="init()">
@@ -67,13 +138,9 @@
             <button @click="tab = 'images'" :class="tab === 'images' ? 'border-b-2 border-black dark:border-white text-black dark:text-white' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'" class="pb-4 text-base font-medium transition-all whitespace-nowrap">Images</button>
         </div>
 
-        <form action="{{ route('dashboard.brand.profile.update', ['slug' => $slug]) }}" method="POST" enctype="multipart/form-data">
+        <form action="{{ route('dashboard.brand.profile.update', ['slug' => $slug]) }}" method="POST" enctype="multipart/form-data" @submit.prevent="submitForm">
             @csrf
             <input type="hidden" name="active_tab" :value="tab">
-
-            <template x-for="cat in selectedCats" :key="cat">
-                <input type="hidden" name="categories[]" :value="cat">
-            </template>
 
             <!-- Details Tab -->
             <div x-show="tab === 'details'" x-cloak class="space-y-8 text-start animate-in fade-in duration-300">
@@ -82,6 +149,7 @@
                     <label class="block text-sm font-medium text-gray-800 dark:text-gray-400 mb-2">Brand Name <span class="text-red-500">*</span></label>
                     <input type="text" name="brand_name" required value="{{ old('brand_name', $brand->brand_name ?? '') }}" placeholder="Enter your brand name"
                         class="dark:bg-dark-900 shadow-theme-xs focus:border-pink-50 focus:ring-gray-500/10 dark:focus:border-gray-800 h-12 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30" />
+                    <p x-show="fieldError('brand_name')" x-text="fieldError('brand_name')" class="mt-1 text-xs text-red-500"></p>
                     @error('brand_name')
                         <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
                     @enderror
@@ -109,9 +177,21 @@
 
                 <!-- City -->
                 <div>
+                    <label class="block text-sm font-medium text-gray-800 dark:text-gray-400 mb-2">Address Line</label>
+                    <input type="text" name="address_line" value="{{ old('address_line', $user->address_line ?? '') }}" placeholder="E.g. 123 Main Street"
+                        class="dark:bg-dark-900 shadow-theme-xs focus:border-pink-50 focus:ring-gray-500/10 dark:focus:border-gray-800 h-12 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30" />
+                    <p x-show="fieldError('address_line')" x-text="fieldError('address_line')" class="mt-1 text-xs text-red-500"></p>
+                    @error('address_line')
+                        <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <!-- City -->
+                <div>
                     <label class="block text-sm font-medium text-gray-800 dark:text-gray-400 mb-2">City</label>
                     <input type="text" name="city" value="{{ old('city', $user->city ?? '') }}" placeholder="E.g. New York"
                         class="dark:bg-dark-900 shadow-theme-xs focus:border-pink-50 focus:ring-gray-500/10 dark:focus:border-gray-800 h-12 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30" />
+                    <p x-show="fieldError('city')" x-text="fieldError('city')" class="mt-1 text-xs text-red-500"></p>
                     @error('city')
                         <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
                     @enderror
@@ -122,6 +202,7 @@
                     <label class="block text-sm font-medium text-gray-800 dark:text-gray-400 mb-2">Country</label>
                     <input type="text" name="country" value="{{ old('country', $user->country ?? '') }}" placeholder="E.g. United States"
                         class="dark:bg-dark-900 shadow-theme-xs focus:border-pink-50 focus:ring-gray-500/10 dark:focus:border-gray-800 h-12 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30" />
+                    <p x-show="fieldError('country')" x-text="fieldError('country')" class="mt-1 text-xs text-red-500"></p>
                     @error('country')
                         <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
                     @enderror
@@ -132,6 +213,7 @@
                     <label class="block text-sm font-medium text-gray-800 dark:text-gray-400 mb-2">Postal Code</label>
                     <input type="text" name="postal_code" value="{{ old('postal_code', $user->postal_code ?? '') }}" placeholder="E.g. 10001"
                         class="dark:bg-dark-900 shadow-theme-xs focus:border-pink-50 focus:ring-gray-500/10 dark:focus:border-gray-800 h-12 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30" />
+                    <p x-show="fieldError('postal_code')" x-text="fieldError('postal_code')" class="mt-1 text-xs text-red-500"></p>
                     @error('postal_code')
                         <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
                     @enderror
@@ -142,6 +224,7 @@
                     <label class="block text-sm font-medium text-gray-800 dark:text-gray-400 mb-2">Phone</label>
                     <input type="tel" name="phone" value="{{ old('phone', $user->phone ?? '') }}" placeholder="E.g. +1 (555) 123-4567"
                         class="dark:bg-dark-900 shadow-theme-xs focus:border-pink-50 focus:ring-gray-500/10 dark:focus:border-gray-800 h-12 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30" />
+                    <p x-show="fieldError('phone')" x-text="fieldError('phone')" class="mt-1 text-xs text-red-500"></p>
                     @error('phone')
                         <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
                     @enderror
@@ -152,8 +235,9 @@
             <div x-show="tab === 'social'" x-cloak class="space-y-8 text-start animate-in fade-in duration-300">
                 <div>
                     <label class="block text-sm font-medium text-gray-800 dark:text-gray-400 mb-2">Website</label>
-                    <input type="url" name="website" value="{{ old('website', $brand->website ?? '') }}" placeholder="https://yourwebsite.com"
+                    <input type="url" name="website" @blur="normalizeSocialInput($event)" value="{{ old('website', $brand->website ?? '') }}" placeholder="https://yourwebsite.com"
                         class="dark:bg-dark-900 shadow-theme-xs focus:border-pink-50 focus:ring-gray-500/10 dark:focus:border-gray-800 h-12 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30" />
+                    <p x-show="fieldError('website')" x-text="fieldError('website')" class="mt-1 text-xs text-red-500"></p>
                     @error('website')
                         <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
                     @enderror
@@ -161,8 +245,9 @@
 
                 <div>
                     <label class="block text-sm font-medium text-gray-800 dark:text-gray-400 mb-2">Instagram</label>
-                    <input type="url" name="instagram" value="{{ old('instagram', $brand?->socialLinks?->instagram_url ?? '') }}" placeholder="https://instagram.com/yourprofile"
+                    <input type="url" name="instagram" @blur="normalizeSocialInput($event)" value="{{ old('instagram', $brand?->socialLinks?->instagram_url ?? '') }}" placeholder="https://instagram.com/yourprofile"
                         class="dark:bg-dark-900 shadow-theme-xs focus:border-pink-50 focus:ring-gray-500/10 dark:focus:border-gray-800 h-12 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30" />
+                    <p x-show="fieldError('instagram')" x-text="fieldError('instagram')" class="mt-1 text-xs text-red-500"></p>
                     @error('instagram')
                         <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
                     @enderror
@@ -170,8 +255,9 @@
 
                 <div>
                     <label class="block text-sm font-medium text-gray-800 dark:text-gray-400 mb-2">TikTok</label>
-                    <input type="url" name="tiktok" value="{{ old('tiktok', $brand?->socialLinks?->tiktok_url ?? '') }}" placeholder="https://tiktok.com/@yourprofile"
+                    <input type="url" name="tiktok" @blur="normalizeSocialInput($event)" value="{{ old('tiktok', $brand?->socialLinks?->tiktok_url ?? '') }}" placeholder="https://tiktok.com/@yourprofile"
                         class="dark:bg-dark-900 shadow-theme-xs focus:border-pink-50 focus:ring-gray-500/10 dark:focus:border-gray-800 h-12 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30" />
+                    <p x-show="fieldError('tiktok')" x-text="fieldError('tiktok')" class="mt-1 text-xs text-red-500"></p>
                     @error('tiktok')
                         <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
                     @enderror
@@ -179,8 +265,9 @@
 
                 <div>
                     <label class="block text-sm font-medium text-gray-800 dark:text-gray-400 mb-2">Facebook</label>
-                    <input type="url" name="facebook" value="{{ old('facebook', $brand?->socialLinks?->facebook_url ?? '') }}" placeholder="https://facebook.com/yourprofile"
+                    <input type="url" name="facebook" @blur="normalizeSocialInput($event)" value="{{ old('facebook', $brand?->socialLinks?->facebook_url ?? '') }}" placeholder="https://facebook.com/yourprofile"
                         class="dark:bg-dark-900 shadow-theme-xs focus:border-pink-50 focus:ring-gray-500/10 dark:focus:border-gray-800 h-12 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30" />
+                    <p x-show="fieldError('facebook')" x-text="fieldError('facebook')" class="mt-1 text-xs text-red-500"></p>
                     @error('facebook')
                         <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
                     @enderror
@@ -188,8 +275,9 @@
 
                 <div>
                     <label class="block text-sm font-medium text-gray-800 dark:text-gray-400 mb-2">X</label>
-                    <input type="url" name="x" value="{{ old('x', $brand?->socialLinks?->x_url ?? '') }}" placeholder="https://x.com/yourprofile"
+                    <input type="url" name="x" @blur="normalizeSocialInput($event)" value="{{ old('x', $brand?->socialLinks?->x_url ?? '') }}" placeholder="https://x.com/yourprofile"
                         class="dark:bg-dark-900 shadow-theme-xs focus:border-pink-50 focus:ring-gray-500/10 dark:focus:border-gray-800 h-12 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30" />
+                    <p x-show="fieldError('x')" x-text="fieldError('x')" class="mt-1 text-xs text-red-500"></p>
                     @error('x')
                         <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
                     @enderror
@@ -197,8 +285,9 @@
 
                 <div>
                     <label class="block text-sm font-medium text-gray-800 dark:text-gray-400 mb-2">YouTube</label>
-                    <input type="url" name="youtube" value="{{ old('youtube', $brand?->socialLinks?->youtube_url ?? '') }}" placeholder="https://youtube.com/c/yourchannel"
+                    <input type="url" name="youtube" @blur="normalizeSocialInput($event)" value="{{ old('youtube', $brand?->socialLinks?->youtube_url ?? '') }}" placeholder="https://youtube.com/c/yourchannel"
                         class="dark:bg-dark-900 shadow-theme-xs focus:border-pink-50 focus:ring-gray-500/10 dark:focus:border-gray-800 h-12 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30" />
+                    <p x-show="fieldError('youtube')" x-text="fieldError('youtube')" class="mt-1 text-xs text-red-500"></p>
                     @error('youtube')
                         <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
                     @enderror
@@ -206,8 +295,9 @@
 
                 <div>
                     <label class="block text-sm font-medium text-gray-800 dark:text-gray-400 mb-2">LinkedIn</label>
-                    <input type="url" name="linkedin" value="{{ old('linkedin', $brand?->socialLinks?->linkedin_url ?? '') }}" placeholder="https://linkedin.com/company/yourcompany"
+                    <input type="url" name="linkedin" @blur="normalizeSocialInput($event)" value="{{ old('linkedin', $brand?->socialLinks?->linkedin_url ?? '') }}" placeholder="https://linkedin.com/company/yourcompany"
                         class="dark:bg-dark-900 shadow-theme-xs focus:border-pink-50 focus:ring-gray-500/10 dark:focus:border-gray-800 h-12 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30" />
+                    <p x-show="fieldError('linkedin')" x-text="fieldError('linkedin')" class="mt-1 text-xs text-red-500"></p>
                     @error('linkedin')
                         <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
                     @enderror
@@ -226,7 +316,7 @@
                                 <img :src="profilePreview" class="w-full h-full object-cover">
                             </template>
                             <template x-if="!profilePreview && {{ !is_null($user?->profile_image_path) ? 'true' : 'false' }}">
-                                <img src="{{ $user?->profile_image_path ? Storage::url($user->profile_image_path) : '' }}" class="w-full h-full object-cover">
+                                <img src="{{ $user?->profile_image_path ? \App\Helpers\ImageHelper::url($user->profile_image_path) : '' }}" class="w-full h-full object-cover">
                             </template>
                             <template x-if="!profilePreview && !{{ !is_null($user?->profile_image_path) ? 'true' : 'false' }}">
                                 <svg class="w-12 h-12 text-gray-400" fill="currentColor" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
@@ -258,7 +348,7 @@
                         </template>
 
                         <template x-if="!coverPreview && {{ !is_null($user?->cover_image_path) ? 'true' : 'false' }}">
-                            <img src="{{ $user?->cover_image_path ? Storage::url($user->cover_image_path) : '' }}" class="absolute inset-0 w-full h-full object-cover rounded-2xl z-0">
+                            <img src="{{ $user?->cover_image_path ? \App\Helpers\ImageHelper::url($user->cover_image_path) : '' }}" class="absolute inset-0 w-full h-full object-cover rounded-2xl z-0">
                         </template>
 
                         <div x-show="!coverPreview && !{{ !is_null($user?->cover_image_path) ? 'true' : 'false' }}" class="flex flex-col items-center z-10">
@@ -284,13 +374,15 @@
                 <a href="{{ url('/dashboard') }}" class="px-6 py-3 rounded-lg font-medium text-sm border border-gray-300 dark:border-gray-700 text-gray-800 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition">
                     Cancel
                 </a>
-                <button type="submit" class="bg-[#222] shadow-theme-xs hover:bg-purple-400 flex items-center justify-center rounded-lg px-4 py-3 text-sm font-medium text-white transitionactive:scale-95">
-                    Save Changes
+                <button type="submit" :disabled="isSaving" class="bg-[#222] shadow-theme-xs hover:bg-purple-400 flex items-center justify-center rounded-lg px-4 py-3 text-sm font-medium text-white transitionactive:scale-95 disabled:opacity-70 disabled:cursor-not-allowed">
+                    <span x-show="!isSaving">Save Changes</span>
+                    <span x-show="isSaving">Saving...</span>
                 </button>
             </div>
         </form>
 
-       
+
+
     </div>
 </div>
 

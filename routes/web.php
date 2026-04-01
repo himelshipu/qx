@@ -24,6 +24,7 @@ use App\Http\Controllers\Backend\TestimonialController;
 use App\Http\Controllers\Backend\UserController;
 use App\Http\Controllers\BrandProfileController;
 use App\Http\Controllers\Frontend\ContentLibraryController;
+use App\Http\Controllers\Frontend\CaseStudyController as FrontendCaseStudyController;
 use App\Http\Controllers\Frontend\HomeController;
 use App\Http\Controllers\Frontend\InfluencersController;
 use App\Http\Controllers\Frontend\KnowledgeBaseController as FrontendKnowledgeBaseController;
@@ -67,6 +68,10 @@ Route::middleware(['web'])->group(function () {
     Route::get('/influencer/{platformSlug}', [InfluencersController::class, 'index'])->name('influencers.platform');
     Route::get('/category/{categorySlug}', [InfluencersController::class, 'byCategory'])->name('influencers.category');
     Route::get('/ugc', [InfluencersController::class, 'ugc'])->name('influencers.ugc');
+
+    // Case Studies page
+    Route::get('/case-studies', [FrontendCaseStudyController::class, 'index'])->name('case-studies');
+    Route::get('/case-studies/{caseStudy:slug}', [FrontendCaseStudyController::class, 'show'])->name('case-studies.show');
 
     // API endpoints
     Route::get('/api/categories', [InfluencersController::class, 'apiCategories']);
@@ -211,6 +216,7 @@ Route::prefix('dashboard')->name('dashboard.')->middleware(['auth', 'verified'])
     Route::get('/case-studies', [CaseStudyController::class, 'index'])->name('case-studies.index');
     Route::get('/case-studies/create', [CaseStudyController::class, 'create'])->name('case-studies.create');
     Route::post('/case-studies', [CaseStudyController::class, 'store'])->name('case-studies.store');
+    Route::get('/case-studies/{caseStudy}', [CaseStudyController::class, 'show'])->name('case-studies.show');
     Route::get('/case-studies/{caseStudy}/edit', [CaseStudyController::class, 'edit'])->name('case-studies.edit');
     Route::put('/case-studies/{caseStudy}', [CaseStudyController::class, 'update'])->name('case-studies.update');
     Route::delete('/case-studies/{caseStudy}', [CaseStudyController::class, 'destroy'])->name('case-studies.destroy');

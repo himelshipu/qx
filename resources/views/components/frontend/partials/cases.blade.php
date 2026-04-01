@@ -2,7 +2,9 @@
 	<div class="flex flex-col gap-8 mt-8">
 		<div>
 			<h2 class="text-2xl font-semibold text-[#222] dark:text-white mb-4">
-				Case Studies
+				<a href="{{ route('case-studies') }}" class="hover:text-blue-600 transition">
+					Case Studiesaaaaaaaaaaaaaaa
+				</a>
 			</h2>
 
 			@php
@@ -20,11 +22,10 @@
 			@else
 				<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
 					@foreach ($caseStudies as $case)
-						<a href="{{ $case->external_url ? $case->external_url : 'javascript:void(0)' }}"
-							class="group relative rounded-xl overflow-hidden h-64 {{ !$case->external_url ? 'cursor-default' : 'hover:opacity-90' }}"
-							@if (!$case->external_url) onclick="event.preventDefault();" @endif>
+						<a href="{{ route('case-studies.show', $case) }}"
+							class="group relative rounded-xl overflow-hidden h-64 hover:opacity-90">
 							@if ($case->cover_image_path)
-								<img src="{{ asset('storage/' . $case->cover_image_path) }}" alt="{{ $case->title }}"
+								<img src="{{ \App\Helpers\ImageHelper::url($case->cover_image_path) }}" alt="{{ $case->title }}"
 									class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
 							@else
 								<div class="w-full h-full bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center">

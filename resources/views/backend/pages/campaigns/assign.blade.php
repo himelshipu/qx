@@ -97,7 +97,7 @@
 							Select Creators <span class="text-red-500">*</span>
 						</label>
 
-						<div x-data="creatorChipsSelector()" class="space-y-3">
+						<div class="space-y-3">
 							<!-- Search and Filter -->
 							<input type="search" @input="filterCreators($event)" placeholder="Search creators by name or email..."
 								class="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-3 text-sm text-gray-900 focus:border-gray-500 focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-white" />
@@ -150,8 +150,10 @@
 							Cancel
 						</a>
 						<button type="submit"
-							class="inline-flex items-center justify-center rounded-lg bg-indigo-600 px-6 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900">
-							Assign Creators to Campaign
+							:disabled="selectedCreatorIds.length === 0"
+							:class="selectedCreatorIds.length === 0 ? 'opacity-50 cursor-not-allowed bg-gray-400' : 'hover:bg-indigo-700 bg-indigo-600'"
+							class="inline-flex items-center justify-center rounded-lg px-6 py-2 text-sm font-semibold text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900 transition">
+							Assign <span x-text="selectedCreatorIds.length || '0'"></span> Creator<span x-text="selectedCreatorIds.length === 1 ? '' : 's'"></span> to Campaign
 						</button>
 					</div>
 				</div>
@@ -245,6 +247,19 @@
 					description: '',
 					assignedCount: 0
 				},
+				selectedCreatorIds: [],
+				filteredCreators: @js($creators->map(fn($c) => [
+					'id' => $c->id,
+					'display_name' => $c->display_name,
+					'email' => $c->user?->email,
+					'phone' => $c->user?->phone
+				])),
+				allCreators: @js($creators->map(fn($c) => [
+					'id' => $c->id,
+					'display_name' => $c->display_name,
+					'email' => $c->user?->email,
+					'phone' => $c->user?->phone
+				])),
 				updateCampaignDetails() {
 					const select = document.getElementById('campaign_id');
 					const selected = select.options[select.selectedIndex];
@@ -279,25 +294,7 @@
 						.catch(() => {
 							this.campaignDetails.assignedCount = 0;
 						});
-				}
-			};
-		}
-
-		function creatorChipsSelector() {
-			return {
-				selectedCreatorIds: [],
-				filteredCreators: @js($creators->map(fn($c) => [
-					'id' => $c->id,
-					'display_name' => $c->display_name,
-					'email' => $c->user?->email,
-					'phone' => $c->user?->phone
-				])),
-				allCreators: @js($creators->map(fn($c) => [
-					'id' => $c->id,
-					'display_name' => $c->display_name,
-					'email' => $c->user?->email,
-					'phone' => $c->user?->phone
-				])),
+				},
 				filterCreators(event) {
 					const searchTerm = event.target.value.toLowerCase();
 					this.filteredCreators = this.allCreators.filter(creator =>

@@ -35,11 +35,11 @@
                     @click="confirm()"
                     class="px-4 py-2 rounded-lg text-sm font-semibold text-white transition"
                     :class="{
-                        'bg-red-600 hover:bg-red-700': (variant || @js($variant)) === 'danger',
-                        'bg-amber-500 hover:bg-amber-600': (variant || @js($variant)) === 'warning',
-                        'bg-blue-600 hover:bg-blue-700': (variant || @js($variant)) === 'info'
+                        'bg-red-600 hover:bg-red-700': (($store.confirmModal?.variant ?? @js($variant)) === 'danger'),
+                        'bg-amber-500 hover:bg-amber-600': (($store.confirmModal?.variant ?? @js($variant)) === 'warning'),
+                        'bg-blue-600 hover:bg-blue-700': (($store.confirmModal?.variant ?? @js($variant)) === 'info')
                     }">
-                <span x-text="confirmText || @js($confirmText)"></span>
+                <span x-text="$store.confirmModal?.confirmText ?? @js($confirmText)"></span>
             </button>
         </div>
     </div>

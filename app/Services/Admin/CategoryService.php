@@ -172,21 +172,25 @@ final class CategoryService
             return null;
         }
 
-        $storedPath = $file->store($directory, 'public');
-
-        return 'storage/' . $storedPath;
+        return $file->store($directory, 'public');
     }
 
     /**
      * Delete stored asset only if it belongs to public storage.
+     * Handles paths with or without 'storage/' prefix for backward compatibility.
      */
     private function deleteStoredAsset(?string $path): void
     {
-        if (!$path || !str_starts_with($path, 'storage/')) {
+        if (!$path) {
             return;
         }
 
-        Storage::disk('public')->delete(Str::after($path, 'storage/'));
+        // Remove 'storage/' prefix if present (for backward compatibility)
+        $cleanPath = str_starts_with($path, 'storage/') ? Str::after($path, 'storage/') : $path;
+
+        if (Storage::disk('public')->exists($cleanPath)) {
+            Storage::disk('public')->delete($cleanPath);
+        }
     }
 
     /**

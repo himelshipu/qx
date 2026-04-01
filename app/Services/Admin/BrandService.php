@@ -163,8 +163,8 @@ final class BrandService
                 'postal_code'       => $this->nullableString($validated['postal_code'] ?? null),
                 'address_line'      => $this->nullableString($validated['location'] ?? null),
                 'bio'               => $this->nullableString($validated['bio'] ?? null),
-                'profile_image_path' => $this->storeUploadedAsset($profileImageFile, 'brands/profile-images'),
-                'cover_image_path'   => $this->storeUploadedAsset($coverImageFile, 'brands/cover-images'),
+                'profile_image_path' => $this->storeUploadedAsset($profileImageFile, 'brand-profile-images'),
+                'cover_image_path'   => $this->storeUploadedAsset($coverImageFile, 'brand-cover-images'),
                 'user_type'         => 'brand',
                 'is_active'         => $isActive,
                 'email_verified_at' => now()
@@ -196,13 +196,13 @@ final class BrandService
             $profileImagePath = $brand->user?->profile_image_path;
             if ($profileImageFile) {
                 $this->deleteStoredAsset($brand->user?->profile_image_path);
-                $profileImagePath = $this->storeUploadedAsset($profileImageFile, 'brands/profile-images');
+                $profileImagePath = $this->storeUploadedAsset($profileImageFile, 'brand-profile-images');
             }
 
             $coverImagePath = $brand->user?->cover_image_path;
             if ($coverImageFile) {
                 $this->deleteStoredAsset($brand->user?->cover_image_path);
-                $coverImagePath = $this->storeUploadedAsset($coverImageFile, 'brands/cover-images');
+                $coverImagePath = $this->storeUploadedAsset($coverImageFile, 'brand-cover-images');
             }
 
             if ($brand->user) {
@@ -280,7 +280,8 @@ final class BrandService
     }
 
     /**
-     * Persist uploaded file and return its public path.
+     * Persist uploaded file and return its relative path.
+     * Returns path without 'storage/' prefix for proper Storage::url() usage in views.
      */
     private function storeUploadedAsset(?UploadedFile $file, string $directory): ?string
     {
@@ -288,21 +289,25 @@ final class BrandService
             return null;
         }
 
-        $storedPath = $file->store($directory, 'public');
-
-        return 'storage/' . $storedPath;
+        return $file->store($directory, 'public');
     }
 
     /**
      * Delete public storage files only.
+     * Handles paths with or without 'storage/' prefix for backward compatibility.
      */
     private function deleteStoredAsset(?string $path): void
     {
-        if (!$path || !str_starts_with($path, 'storage/')) {
+        if (!$path) {
             return;
         }
 
-        Storage::disk('public')->delete(Str::after($path, 'storage/'));
+        // Remove 'storage/' prefix if present (for backward compatibility)
+        $cleanPath = str_starts_with($path, 'storage/') ? \Illuminate\Support\Str::after($path, 'storage/') : $path;
+
+        if (Storage::disk('public')->exists($cleanPath)) {
+            Storage::disk('public')->delete($cleanPath);
+        }
     }
 
     /**

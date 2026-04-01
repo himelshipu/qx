@@ -3,18 +3,8 @@
 	$category = $category ?? null;
 	$resolvedSortOrder = old('sort_order', $category?->sort_order ?? ($nextSortOrder ?? 1));
 
-	$resolvePreviewUrl = static function (?string $path): ?string {
-	    if (!$path) {
-	        return null;
-	    }
-
-	    $isExternal = str_starts_with($path, 'http://') || str_starts_with($path, 'https://');
-
-	    return $isExternal ? $path : asset($path);
-	};
-
-	$initialIconPreview = $resolvePreviewUrl($category?->icon_path);
-	$initialImagePreview = $resolvePreviewUrl($category?->image_path);
+	$initialIconPreview = $category?->icon_path ? \App\Helpers\ImageHelper::url($category->icon_path) : null;
+	$initialImagePreview = $category?->image_path ? \App\Helpers\ImageHelper::url($category->image_path) : null;
 @endphp
 
 <div x-data="categoryUploader({

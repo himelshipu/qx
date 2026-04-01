@@ -109,11 +109,7 @@ class MenuHelper
                         'name'  => 'New Campaign',
                         'route' => 'campaigns.create'
                     ],
-                    [
-                        'icon'  => 'user-add',
-                        'name'  => 'Assign Campaign',
-                        'route' => 'campaigns.assign'
-                    ],
+                   
                     [
                         'icon'  => 'content-library',
                         'name'  => 'Content Library',

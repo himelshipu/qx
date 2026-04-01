@@ -61,8 +61,12 @@ class CampaignController extends Controller
     {
         $validated = $request->validate([
             'campaign_id'   => 'required|exists:campaigns,id',
-            'creator_ids'   => 'required|array',
+            'creator_ids'   => 'required|array|min:1',
             'creator_ids.*' => 'exists:creators,id'
+        ], [
+            'creator_ids.required' => 'Please select at least one creator to assign to the campaign.',
+            'creator_ids.min' => 'Please select at least one creator to assign to the campaign.',
+            'creator_ids.*.exists' => 'One or more selected creators are invalid.'
         ]);
 
         $campaignId = $validated['campaign_id'];

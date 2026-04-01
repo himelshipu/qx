@@ -148,7 +148,7 @@
                                 <input type="file" name="profile_image" id="profileInput" class="hidden" accept="image/*">
                                 <div id="profilePreview" class="w-full h-full flex items-center justify-center">
                                     @if($user->profile_image_path)
-                                        <img src="{{ asset('storage/' . $user->profile_image_path) }}" alt="Profile" class="w-full h-full object-cover">
+                                        <img src="{{ \App\Helpers\ImageHelper::url($user->profile_image_path) }}" alt="Profile" class="w-full h-full object-cover">
                                     @else
                                         <div class="flex flex-col items-center gap-2">
                                             <svg class="w-8 h-8 text-gray-300" fill="currentColor" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
@@ -165,7 +165,7 @@
                                 <input type="file" name="cover_image" id="coverInput" class="hidden" accept="image/*">
                                 <div id="coverPreview" class="w-full h-full flex items-center justify-center">
                                     @if($user->cover_image_path)
-                                        <img src="{{ asset('storage/' . $user->cover_image_path) }}" alt="Cover" class="w-full h-full object-cover">
+                                        <img src="{{ \App\Helpers\ImageHelper::url($user->cover_image_path) }}" alt="Cover" class="w-full h-full object-cover">
                                     @else
                                         <div class="flex flex-col items-center gap-2">
                                             <svg class="w-8 h-8 text-gray-300" fill="currentColor" viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
@@ -185,7 +185,7 @@
                         @foreach($creator->portfolios as $portfolio)
                             <div class="portfolio-item relative aspect-[3/4] rounded-lg overflow-hidden border border-gray-100 dark:border-gray-800 shadow-sm bg-gray-50 dark:bg-gray-900" data-id="{{ $portfolio->id }}">
                                 @if($portfolio->file_path && $portfolio->media_type === 'image')
-                                    <img src="{{ asset('storage/' . $portfolio->file_path) }}" alt="{{ $portfolio->title ?? 'Portfolio' }}" class="w-full h-full object-cover">
+                                    <img src="{{ \App\Helpers\ImageHelper::url($portfolio->file_path) }}" alt="{{ $portfolio->title ?? 'Portfolio' }}" class="w-full h-full object-cover">
                                 @else
                                     <div class="w-full h-full flex items-center justify-center bg-gray-100 dark:bg-gray-800">
                                         <svg class="w-12 h-12 text-gray-300" fill="currentColor" viewBox="0 0 24 24"><path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
