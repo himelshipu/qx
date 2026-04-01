@@ -7,6 +7,7 @@ use App\Models\CreatorPortfolio;
 use App\Models\Package;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 
@@ -99,47 +100,67 @@ class CreatorProfileController extends Controller
             return redirect()->route('dashboard.creator.profile.edit')->with('error', 'Creator profile not found');
         }
 
-        $validated = $request->validate([
-            'display_name'  => 'nullable|string|max:255',
-            'title_name'    => 'nullable|string|max:255',
-            'audience'      => 'nullable|string',
-            'brands_worked_with' => 'nullable|string',
-            'city'          => 'nullable|string|max:255',
-            'country'       => 'nullable|string|max:255',
-            'postal_code'   => 'nullable|string|max:20',
-            'bio'           => 'nullable|string|max:500',
-            'phone'         => 'nullable|string|max:20',
-            'website'       => 'nullable|url|max:255',
-            'instagram_url' => 'nullable|url|max:255',
-            'tiktok_url'    => 'nullable|url|max:255',
-            'facebook_url'  => 'nullable|url|max:255',
-            'x_url'         => 'nullable|url|max:255',
-            'youtube_url'   => 'nullable|url|max:255',
-            'linkedin_url'  => 'nullable|url|max:255',
-            'other_url'     => 'nullable|url|max:255',
-            'profile_image' => 'nullable|image|mimes:jpeg,png,webp|max:2048',
-            'cover_image' => 'nullable|image|mimes:jpeg,png,webp|max:4096',
-            'portfolio_images' => 'nullable|array|max:6',
-            'portfolio_images.*' => 'nullable|image|mimes:jpeg,png,webp|max:5120',
-        ]);
+        $activeTab = $request->string('active_tab')->toString() ?: 'details';
 
-        // Update creator fields
-        $creator->display_name = $validated['display_name'] ?? $creator->display_name;
-        $creator->title_name = $validated['title_name'] ?? $creator->title_name;
-        $creator->audience = $validated['audience'] ?? $creator->audience;
-        $creator->brands_worked_with = $validated['brands_worked_with'] ?? $creator->brands_worked_with;
-        $creator->save();
+        $rulesByTab = [
+            'details' => [
+                'display_name' => ['nullable', 'string', 'max:255'],
+                'title_name' => ['nullable', 'string', 'max:255'],
+                'audience' => ['nullable', 'string'],
+                'brands_worked_with' => ['nullable', 'string'],
+                'gender' => ['nullable', 'string', 'in:male,female,other'],
+                'date_of_birth' => ['nullable', 'date_format:Y-m-d'],
+                'phone' => ['nullable', 'string', 'max:20'],
+                'address_line' => ['nullable', 'string', 'max:255'],
+                'city' => ['nullable', 'string', 'max:255'],
+                'country' => ['nullable', 'string', 'max:255'],
+                'postal_code' => ['nullable', 'string', 'max:20'],
+                'bio' => ['nullable', 'string', 'max:500'],
+            ],
+            'social' => [
+                'instagram_url' => ['nullable', 'url', 'max:255'],
+                'tiktok_url' => ['nullable', 'url', 'max:255'],
+                'facebook_url' => ['nullable', 'url', 'max:255'],
+                'x_url' => ['nullable', 'url', 'max:255'],
+                'youtube_url' => ['nullable', 'url', 'max:255'],
+                'linkedin_url' => ['nullable', 'url', 'max:255'],
+                'other_url' => ['nullable', 'url', 'max:255'],
+            ],
+            'images' => [
+                'profile_image' => ['nullable', 'image', 'mimes:jpeg,png,webp', 'max:2048'],
+                'cover_image' => ['nullable', 'image', 'mimes:jpeg,png,webp', 'max:4096'],
+                'portfolio_images' => ['nullable', 'array'],
+                'portfolio_images.*' => ['nullable', 'image', 'mimes:jpeg,png,webp', 'max:5120'],
+            ],
+        ];
 
-        // Update user fields
-        $user->city = $validated['city'] ?? $user->city;
-        $user->country = $validated['country'] ?? $user->country;
-        $user->postal_code = $validated['postal_code'] ?? $user->postal_code;
-        $user->bio = $validated['bio'] ?? $user->bio;
-        $user->phone = $validated['phone'] ?? $user->phone;
-        $user->save();
+        if (!array_key_exists($activeTab, $rulesByTab)) {
+            $activeTab = 'details';
+        }
 
-        // Handle social links via creator_social_links table
-        if (Schema::hasTable('creator_social_links')) {
+        $validated = $request->validate($rulesByTab[$activeTab]);
+
+        if ($activeTab === 'details') {
+            $creator->display_name = $validated['display_name'] ?? $creator->display_name;
+            $creator->title_name = $validated['title_name'] ?? $creator->title_name;
+            $creator->audience = $validated['audience'] ?? $creator->audience;
+            $creator->brands_worked_with = $validated['brands_worked_with'] ?? $creator->brands_worked_with;
+            $creator->save();
+
+            $user->city = $validated['city'] ?? $user->city;
+            $user->country = $validated['country'] ?? $user->country;
+            $user->postal_code = $validated['postal_code'] ?? $user->postal_code;
+            $user->bio = $validated['bio'] ?? $user->bio;
+            $user->phone = $validated['phone'] ?? $user->phone;
+            $user->address_line = $validated['address_line'] ?? $user->address_line;
+            $user->gender = $validated['gender'] ?? $user->gender;
+            if (array_key_exists('date_of_birth', $validated)) {
+                $user->date_of_birth = $validated['date_of_birth'];
+            }
+            $user->save();
+        }
+
+        if ($activeTab === 'social' && Schema::hasTable('creator_social_links')) {
             $creator->socialLinks()->updateOrCreate(
                 ['creator_id' => $creator->id],
                 [
@@ -154,71 +175,70 @@ class CreatorProfileController extends Controller
             );
         }
 
-        // Handle profile image upload (on user model)
-        if ($request->hasFile('profile_image')) {
-            try {
-                // Delete old profile image if exists
-                if ($user->profile_image_path && Storage::disk('public')->exists($user->profile_image_path)) {
-                    Storage::disk('public')->delete($user->profile_image_path);
+        if ($activeTab === 'images') {
+            if ($request->hasFile('profile_image')) {
+                try {
+                    if ($user->profile_image_path && Storage::disk('public')->exists($user->profile_image_path)) {
+                        Storage::disk('public')->delete($user->profile_image_path);
+                    }
+                    Storage::disk('public')->makeDirectory('creators/profile');
+                    $path = $request->file('profile_image')->store('creators/profile', 'public');
+                    $user->profile_image_path = $path;
+                    $user->save();
+                } catch (\Exception $e) {
+                    Log::error('Profile image upload error: ' . $e->getMessage());
+                    return redirect()->back()->with('error', 'Failed to upload profile image')->with('active_tab', $activeTab);
                 }
-                
-                // Ensure directory exists
-                Storage::disk('public')->makeDirectory('creators/profile', 0755, true);
-                
-                $path = $request->file('profile_image')->store('creators/profile', 'public');
-                $user->profile_image_path = $path;
-                $user->save();
-            } catch (\Exception $e) {
-                \Log::error('Profile image upload error: ' . $e->getMessage());
-                return redirect()->back()->with('error', 'Failed to upload profile image');
+            }
+
+            if ($request->hasFile('cover_image')) {
+                try {
+                    if ($user->cover_image_path && Storage::disk('public')->exists($user->cover_image_path)) {
+                        Storage::disk('public')->delete($user->cover_image_path);
+                    }
+                    Storage::disk('public')->makeDirectory('creators/cover');
+                    $path = $request->file('cover_image')->store('creators/cover', 'public');
+                    $user->cover_image_path = $path;
+                    $user->save();
+                } catch (\Exception $e) {
+                    Log::error('Cover image upload error: ' . $e->getMessage());
+                    return redirect()->back()->with('error', 'Failed to upload cover image')->with('active_tab', $activeTab);
+                }
+            }
+
+            if ($request->hasFile('portfolio_images')) {
+                try {
+                    Storage::disk('public')->makeDirectory('creators/portfolio');
+                    foreach ($request->file('portfolio_images') as $index => $portfolioImage) {
+                        $path = $portfolioImage->store('creators/portfolio', 'public');
+                        $creator->portfolios()->create([
+                            'media_type' => 'image',
+                            'file_path' => $path,
+                            'title' => 'Portfolio Image ' . ($creator->portfolios()->max('sort_order') + 1),
+                            'sort_order' => $creator->portfolios()->max('sort_order') + 1,
+                            'is_active' => true,
+                        ]);
+                    }
+                } catch (\Exception $e) {
+                    Log::error('Portfolio image upload error: ' . $e->getMessage());
+                    return redirect()->back()->with('error', 'Failed to upload portfolio images')->with('active_tab', $activeTab);
+                }
             }
         }
 
-        // Handle cover image upload (on user model)
-        if ($request->hasFile('cover_image')) {
-            try {
-                // Delete old cover image if exists
-                if ($user->cover_image_path && Storage::disk('public')->exists($user->cover_image_path)) {
-                    Storage::disk('public')->delete($user->cover_image_path);
-                }
-                
-                // Ensure directory exists
-                Storage::disk('public')->makeDirectory('creators/cover', 0755, true);
-                
-                $path = $request->file('cover_image')->store('creators/cover', 'public');
-                $user->cover_image_path = $path;
-                $user->save();
-            } catch (\Exception $e) {
-                \Log::error('Cover image upload error: ' . $e->getMessage());
-                return redirect()->back()->with('error', 'Failed to upload cover image');
-            }
+        $messages = [
+            'details' => 'Profile details updated successfully.',
+            'social' => 'Social links updated successfully.',
+            'images' => 'Profile images updated successfully.',
+        ];
+
+        $message = $messages[$activeTab] ?? 'Profile updated successfully.';
+
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json([ 'message' => $message, 'active_tab' => $activeTab ]);
         }
 
-        // Handle portfolio images upload
-        if ($request->hasFile('portfolio_images')) {
-            try {
-                // Ensure directory exists
-                Storage::disk('public')->makeDirectory('creators/portfolio', 0755, true);
-                
-                foreach ($request->file('portfolio_images') as $index => $portfolioImage) {
-                    $path = $portfolioImage->store('creators/portfolio', 'public');
-
-                    // Create portfolio record
-                    $creator->portfolios()->create([
-                        'media_type' => 'image',
-                        'file_path' => $path,
-                        'title' => 'Portfolio Image ' . ($index + 1),
-                        'sort_order' => $creator->portfolios()->max('sort_order') + 1,
-                        'is_active' => true
-                    ]);
-                }
-            } catch (\Exception $e) {
-                \Log::error('Portfolio image upload error: ' . $e->getMessage());
-                return redirect()->back()->with('error', 'Failed to upload portfolio images');
-            }
-        }
-
-        return redirect()->route('dashboard.creator.profile.edit', ['slug' => $slug])->with('success', 'Profile updated successfully.');
+        return redirect()->route('dashboard.creator.profile.edit', ['slug' => $slug])->with('success', $message)->with('active_tab', $activeTab);
     }
 
     /**

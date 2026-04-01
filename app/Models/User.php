@@ -36,7 +36,6 @@ class User extends Authenticatable
         'address_line',
         'postal_code',
         'company_name',
-            'address_line',
         'bio',
         'profile_image_path',
         'cover_image_path',

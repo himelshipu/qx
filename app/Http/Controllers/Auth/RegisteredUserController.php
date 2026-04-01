@@ -64,12 +64,17 @@ class RegisteredUserController extends Controller
                 'brand_name' => $request->input('brand_name', $request->name),
             ]);
         } elseif ($user->user_type === 'creator') {
-            Creator::create([
+            $creator = Creator::create([
                 'user_id' => $user->id,
-                'facebook' => $request->input('facebook'),
-                'tiktok' => $request->input('tiktok'),
-                'linkedin' => $request->input('linkedin'),
-                'instagram' => $request->input('instagram'),
+                'display_name' => $request->name,
+            ]);
+
+            // Create social links record if any social media was provided
+            $creator->socialLinks()->create([
+                'facebook_url' => $request->input('facebook'),
+                'tiktok_url' => $request->input('tiktok'),
+                'linkedin_url' => $request->input('linkedin'),
+                'instagram_url' => $request->input('instagram'),
             ]);
         }
 

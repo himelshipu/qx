@@ -23,7 +23,7 @@
         <div class="tab-content" id="tab-details">
             <form id="detailsForm" action="{{ route('dashboard.creator.profile.update', ['slug' => $slug]) }}" method="POST" class="space-y-6">
                 @csrf
-                <input type="hidden" name="form_type" value="details">
+                <input type="hidden" name="active_tab" value="details">
 
                 <div>
                     <label class="block text-sm font-medium text-gray-800 dark:text-gray-400 mb-1.5">Display Name</label>
@@ -55,15 +55,57 @@
                     @error('brands_worked_with')<p class="mt-1 text-xs text-red-500">{{ $message }}</p>@enderror
                 </div>
 
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-800 dark:text-gray-400 mb-1.5">Gender</label>
+                        <select name="gender" class="h-12 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 focus:ring-1 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
+                            <option value="">Select Gender</option>
+                            <option value="male" {{ old('gender', $user->gender ?? '') == 'male' ? 'selected' : '' }}>Male</option>
+                            <option value="female" {{ old('gender', $user->gender ?? '') == 'female' ? 'selected' : '' }}>Female</option>
+                            <option value="other" {{ old('gender', $user->gender ?? '') == 'other' ? 'selected' : '' }}>Other</option>
+                        </select>
+                        @error('gender')<p class="mt-1 text-xs text-red-500">{{ $message }}</p>@enderror
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-800 dark:text-gray-400 mb-1.5">Date of Birth</label>
+                        <input type="date" name="date_of_birth" value="{{ old('date_of_birth', $user->date_of_birth?->format('Y-m-d') ?? '') }}" class="h-12 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 focus:ring-1 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white/90" />
+                        @error('date_of_birth')<p class="mt-1 text-xs text-red-500">{{ $message }}</p>@enderror
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-800 dark:text-gray-400 mb-1.5">Phone</label>
+                        <input type="tel" name="phone" value="{{ old('phone', $user->phone ?? '') }}" placeholder="Enter your phone number" class="h-12 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30" />
+                        @error('phone')<p class="mt-1 text-xs text-red-500">{{ $message }}</p>@enderror
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-800 dark:text-gray-400 mb-1.5">Country</label>
+                        <input type="text" name="country" value="{{ old('country', $user->country ?? '') }}" placeholder="Enter your country" class="h-12 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30" />
+                        @error('country')<p class="mt-1 text-xs text-red-500">{{ $message }}</p>@enderror
+                    </div>
+                </div>
+
                 <div>
-                    <label class="block text-sm font-medium text-gray-800 dark:text-gray-300 mb-2">Gender</label>
-                    <select name="gender" class="h-12 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 focus:ring-1 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
-                        <option value="">Select Gender</option>
-                        <option value="male" {{ old('gender', $creator->gender ?? '') == 'male' ? 'selected' : '' }}>Male</option>
-                        <option value="female" {{ old('gender', $creator->gender ?? '') == 'female' ? 'selected' : '' }}>Female</option>
-                        <option value="other" {{ old('gender', $creator->gender ?? '') == 'other' ? 'selected' : '' }}>Other</option>
-                    </select>
-                    @error('gender')<p class="mt-1 text-xs text-red-500">{{ $message }}</p>@enderror
+                    <label class="block text-sm font-medium text-gray-800 dark:text-gray-400 mb-1.5">Address Line</label>
+                    <input type="text" name="address_line" value="{{ old('address_line', $user->address_line ?? '') }}" placeholder="Enter your street address" class="h-12 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30" />
+                    @error('address_line')<p class="mt-1 text-xs text-red-500">{{ $message }}</p>@enderror
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-800 dark:text-gray-400 mb-1.5">City</label>
+                        <input type="text" name="city" value="{{ old('city', $user->city ?? '') }}" placeholder="Enter your city" class="h-12 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30" />
+                        @error('city')<p class="mt-1 text-xs text-red-500">{{ $message }}</p>@enderror
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-800 dark:text-gray-400 mb-1.5">Postal Code</label>
+                        <input type="text" name="postal_code" value="{{ old('postal_code', $user->postal_code ?? '') }}" placeholder="Enter your postal code" class="h-12 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30" />
+                        @error('postal_code')<p class="mt-1 text-xs text-red-500">{{ $message }}</p>@enderror
+                    </div>
                 </div>
 
                 <div class="flex justify-end pt-4">
@@ -77,13 +119,7 @@
         <div class="tab-content hidden" id="tab-social">
             <form id="socialForm" action="{{ route('dashboard.creator.profile.update', ['slug' => $slug]) }}" method="POST" class="space-y-6">
                 @csrf
-                <input type="hidden" name="form_type" value="social">
-
-                <div>
-                    <label class="block text-sm font-medium text-gray-800 dark:text-gray-400 mb-2">Website</label>
-                    <input type="url" name="website" value="{{ old('website', $creator->user->website ?? '') }}" placeholder="https://yourwebsite.com" class="h-12 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30" />
-                    @error('website')<p class="mt-1 text-xs text-red-500">{{ $message }}</p>@enderror
-                </div>
+                <input type="hidden" name="active_tab" value="social">
 
                 <div>
                     <label class="block text-sm font-medium text-gray-800 dark:text-gray-400 mb-2">Instagram</label>
@@ -138,7 +174,7 @@
         <div class="tab-content hidden" id="tab-images">
             <form id="imagesForm" action="{{ route('dashboard.creator.profile.update', ['slug' => $slug]) }}" method="POST" enctype="multipart/form-data" class="space-y-8">
                 @csrf
-                <input type="hidden" name="form_type" value="images">
+                <input type="hidden" name="active_tab" value="images">
 
                 <div>
                     <h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-4">Profile & Cover</h3>
@@ -181,9 +217,10 @@
 
                 <div>
                     <h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-4">Portfolio Images</h3>
+                    @php $totalPortfolioCount = $creator->portfolios->count(); @endphp
                     <div id="portfolioGrid" class="grid grid-cols-2 md:grid-cols-3 gap-4 mb-4">
-                        @foreach($creator->portfolios as $portfolio)
-                            <div class="portfolio-item relative aspect-[3/4] rounded-lg overflow-hidden border border-gray-100 dark:border-gray-800 shadow-sm bg-gray-50 dark:bg-gray-900" data-id="{{ $portfolio->id }}">
+                        @foreach($creator->portfolios->sortByDesc('sort_order')->take(5) as $portfolio)
+                            <div class="portfolio-item relative aspect-3/4 rounded-lg overflow-hidden border border-gray-100 dark:border-gray-800 shadow-sm bg-gray-50 dark:bg-gray-900" data-id="{{ $portfolio->id }}">
                                 @if($portfolio->file_path && $portfolio->media_type === 'image')
                                     <img src="{{ \App\Helpers\ImageHelper::url($portfolio->file_path) }}" alt="{{ $portfolio->title ?? 'Portfolio' }}" class="w-full h-full object-cover">
                                 @else
@@ -199,9 +236,15 @@
                                 </button>
                             </div>
                         @endforeach
+
+                        @if($totalPortfolioCount > 5)
+                            <div class="relative aspect-3/4 rounded-lg overflow-hidden border border-gray-100 dark:border-gray-800 shadow-sm bg-gray-100 dark:bg-gray-900 flex items-center justify-center">
+                                <span class="text-lg font-bold text-gray-700 dark:text-gray-200">+{{ $totalPortfolioCount - 5 }} more</span>
+                            </div>
+                        @endif
                     </div>
 
-                    <input type="file" id="portfolioInput" class="hidden" multiple accept="image/*" name="portfolio_images[]">
+                    <input type="file" id="portfolioInput" class="hidden" multiple accept="image/*,video/*" name="portfolio_images[]">
                     <button type="button" id="addPortfolioBtn" class="bg-gray-800 hover:bg-gray-700 px-4 py-2 rounded-lg text-sm font-medium text-white transition">
                         Add Portfolio Images
                     </button>
@@ -237,6 +280,14 @@ document.addEventListener('DOMContentLoaded', function() {
             btn.classList.add('border-b-2', 'border-black', 'dark:border-white', 'text-black', 'dark:text-white');
         });
     });
+
+    const initialTab = "{{ old('active_tab', session('active_tab', 'details')) }}";
+    if (initialTab) {
+        const initialButton = document.querySelector(`.tab-btn[data-tab="${initialTab}"]`);
+        if (initialButton) {
+            initialButton.click();
+        }
+    }
     
     const profileUploadArea = document.getElementById('profileUploadArea');
     const profileInput = document.getElementById('profileInput');
@@ -248,7 +299,13 @@ document.addEventListener('DOMContentLoaded', function() {
         if (file) {
             const reader = new FileReader();
             reader.onload = (event) => {
-                profilePreview.innerHTML = `<img src="${event.target.result}" class="w-full h-full object-cover">`;
+                if (file.type.startsWith('image/')) {
+                    profilePreview.innerHTML = `<img src="${event.target.result}" class="w-full h-full object-cover">`;
+                } else if (file.type.startsWith('video/')) {
+                    profilePreview.innerHTML = `<video controls class="w-full h-full object-cover"><source src="${event.target.result}" type="${file.type}" /></video>`;
+                } else {
+                    profilePreview.innerHTML = `<div class="w-full h-full flex items-center justify-center bg-gray-200 text-sm text-gray-600">Preview not available</div>`;
+                }
             };
             reader.readAsDataURL(file);
         }
@@ -278,24 +335,31 @@ document.addEventListener('DOMContentLoaded', function() {
     
     portfolioInput.addEventListener('change', function(e) {
         const files = Array.from(e.target.files);
-        const maxSlots = 6;
-        const existingCount = portfolioGrid.querySelectorAll('.portfolio-item').length;
-        const remainingSlots = maxSlots - existingCount;
         
-        files.slice(0, remainingSlots).forEach(file => {
+        files.forEach(file => {
             const reader = new FileReader();
             reader.onload = (event) => {
                 const div = document.createElement('div');
                 div.className = 'portfolio-item relative aspect-[3/4] rounded-lg overflow-hidden border border-gray-100 dark:border-gray-800 shadow-sm bg-gray-50 dark:bg-gray-900';
+
+                let previewHtml = '';
+                if (file.type.startsWith('image/')) {
+                    previewHtml = `<img src="${event.target.result}" alt="New" class="w-full h-full object-cover">`;
+                } else if (file.type.startsWith('video/')) {
+                    previewHtml = `<video controls class="w-full h-full object-cover"><source src="${event.target.result}" type="${file.type}" /></video>`;
+                } else {
+                    previewHtml = `<div class="w-full h-full flex items-center justify-center bg-gray-200 text-sm text-gray-600">Preview not supported</div>`;
+                }
+
                 div.innerHTML = `
-                    <img src="${event.target.result}" alt="New" class="w-full h-full object-cover">
+                    ${previewHtml}
                     <div class="absolute top-2 left-2 bg-white/90 backdrop-blur-sm border border-gray-100 px-2 py-0.5 rounded text-[9px] font-bold text-gray-600 uppercase">New</div>
                     <button type="button" class="remove-new-portfolio absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white p-1.5 rounded-full transition-colors">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M6 18L18 6M6 6l12 12"/></svg>
                     </button>
                 `;
                 portfolioGrid.appendChild(div);
-                
+
                 div.querySelector('.remove-new-portfolio').addEventListener('click', () => div.remove());
             };
             reader.readAsDataURL(file);
