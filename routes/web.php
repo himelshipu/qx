@@ -66,7 +66,7 @@ Route::middleware(['web'])->group(function () {
     Route::get('/brand/{slug}', [\App\Http\Controllers\BrandProfileController::class, 'show'])->name('brand.profile');
 
     // Authenticated conversation negotiation
-    Route::get('/creator/{creator}/start-negotiation', [\App\Http\Controllers\ConversationController::class, 'startNegotiation'])->middleware('auth')->name('conversations.start-negotiation');
+    Route::get('/creator/{creator}/start-negotiation', [\App\Http\Controllers\ConversationController::class, 'startNegotiation'])->name('conversations.start-negotiation');
 
     // Influencers pages
     Route::get('/influencers', [InfluencersController::class, 'index'])->name('influencers');
@@ -80,7 +80,7 @@ Route::middleware(['web'])->group(function () {
 
     // Cart routes
     Route::get('/cart', [CartController::class, 'index'])->name('cart.index')->middleware('auth');
-    Route::post('/cart/add', [CartController::class, 'add'])->name('cart.add')->middleware('auth');
+    Route::post('/cart/add', [CartController::class, 'add'])->name('cart.add');
     Route::post('/cart/checkout', [CartController::class, 'checkout'])->name('cart.checkout')->middleware('auth');
     Route::post('/cart/complete-checkout', [CartController::class, 'completeCheckout'])->name('cart.complete-checkout')->middleware('auth');
     Route::delete('/cart/items/{cartItem}', [CartController::class, 'remove'])->name('cart.remove')->middleware('auth');

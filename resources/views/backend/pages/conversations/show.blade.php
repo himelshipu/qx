@@ -3,175 +3,285 @@
 @section('title', 'Conversation')
 
 @section('content')
-	<x-backend.shell.breadcrumb :links="[['label' => 'Conversations', 'url' => route('dashboard.conversations.index')]]" pageTitle="Chat" />
-
-	<div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
-		<!-- Chat Area -->
-		<div class="lg:col-span-2">
-			<div class="rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900 flex flex-col"
-				style="height: 600px;">
-				<!-- Header -->
-				<div class="border-b border-gray-200 p-4 dark:border-gray-800">
-					<div class="flex items-center justify-between">
-						<div>
-							<h3 class="font-semibold text-gray-900 dark:text-white">
-								@if (auth()->user()->user_type === 'brand')
-									{{ $conversation->creator->display_name ?? $conversation->creator->user->name }}
-								@else
-									{{ $conversation->brandUser->name }}
-								@endif
-							</h3>
-							<p class="text-xs text-gray-500 dark:text-gray-400">
-								@if (auth()->user()->user_type === 'brand')
-									Package Order
-								@else
-									Moderating for {{ $conversation->creator->display_name ?? $conversation->creator->user->name }}
-								@endif
-							</p>
-						</div>
-						<a href="{{ route('dashboard.conversations.index') }}"
-							class="inline-flex items-center gap-1 rounded border border-gray-200 px-3 py-1 text-xs font-medium text-gray-700 transition hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800">
-							Back
-						</a>
-					</div>
-				</div>
-
-				<!-- Messages Container -->
-				<div class="flex-1 overflow-y-auto p-4 space-y-4" id="messagesContainer">
-					@forelse ($messages as $message)
-						@php
-							$isOwn = $message->sender_user_id === auth()->id();
-						@endphp
-						<div class="flex @if ($isOwn) justify-end @else justify-start @endif">
-							<div
-								class="max-w-xs rounded-lg @if ($isOwn) bg-blue-600 text-white @else bg-gray-100 text-gray-900 dark:bg-gray-800 dark:text-white @endif px-4 py-2">
-								<p class="text-sm">{{ $message->message }}</p>
-								<p
-									class="mt-1 text-xs @if ($isOwn) text-blue-100 @else text-gray-500 dark:text-gray-400 @endif">
-									{{ $message->created_at->format('H:i') }}
-									@if (auth()->user()->user_type !== 'brand' && !$isOwn)
-										<span class="ml-1">(as creator)</span>
-									@endif
-								</p>
-							</div>
-						</div>
-					@empty
-						<div class="flex h-full items-center justify-center">
-							<p class="text-sm text-gray-500 dark:text-gray-400">No messages yet. Start the conversation!</p>
-						</div>
-					@endforelse
-				</div>
-
-				<!-- Message Input -->
-				<div class="border-t border-gray-200 p-4 dark:border-gray-800">
-					<form action="{{ route('dashboard.conversations.storeMessage', $conversation) }}" method="POST" class="flex gap-2">
-						@csrf
-						<input type="text" name="message" placeholder="Type your message..."
-							class="flex-1 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm focus:border-blue-500 focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-white"
-							required>
-						<button type="submit"
-							class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-700">
-							Send
-						</button>
-					</form>
-				</div>
-			</div>
-		</div>
-
-		<!-- Sidebar -->
-		<div class="space-y-6">
-			<!-- Conversation Info -->
-			<div class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900">
-				<h4 class="font-semibold text-gray-900 dark:text-white">Conversation Details</h4>
-				<div class="mt-4 space-y-3">
-					<div>
-						<p class="text-xs uppercase tracking-wider text-gray-500 dark:text-gray-400">Type</p>
-						<p class="mt-1 text-sm font-medium text-gray-900 dark:text-white">
-							{{ ucfirst(str_replace('_', ' ', $conversation->conversation_type)) }}
-						</p>
-					</div>
-					<div>
-						<p class="text-xs uppercase tracking-wider text-gray-500 dark:text-gray-400">Started</p>
-						<p class="mt-1 text-sm font-medium text-gray-900 dark:text-white">
-							{{ $conversation->created_at->format('M d, Y H:i') }}
-						</p>
-					</div>
-					@if ($conversation->order_id)
-						<div>
-							<p class="text-xs uppercase tracking-wider text-gray-500 dark:text-gray-400">Order</p>
-							<p class="mt-1 text-sm font-medium text-gray-900 dark:text-white">
-								<a href="{{ route('dashboard.orders.show', $conversation->order_id) }}" class="text-blue-600 hover:underline">
-									View Order
-								</a>
-							</p>
-						</div>
-					@endif
-				</div>
-			</div>
-
-			<!-- Participants -->
-			<div class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900">
-				<h4 class="font-semibold text-gray-900 dark:text-white">Participants</h4>
-				<div class="mt-4 space-y-3">
-					<div>
-						<p class="text-xs text-gray-500 dark:text-gray-400">Creator</p>
-						<p class="mt-1 text-sm font-medium text-gray-900 dark:text-white">
-							{{ $conversation->creator->display_name ?? $conversation->creator->user->name }}
-						</p>
-					</div>
-					<div>
-						<p class="text-xs text-gray-500 dark:text-gray-400">Brand</p>
-						<p class="mt-1 text-sm font-medium text-gray-900 dark:text-white">
-							{{ $conversation->brandUser->name }}
-						</p>
-					</div>
-					@if ($conversation->handled_by_user_id)
-						<div>
-							<p class="text-xs text-gray-500 dark:text-gray-400">Moderator</p>
-							<p class="mt-1 text-sm font-medium text-gray-900 dark:text-white">
-								{{ $conversation->handledBy->name }}
-							</p>
-						</div>
-					@else
-						<div class="mt-3">
-							<p class="text-xs text-yellow-600 dark:text-yellow-400">No moderator assigned yet</p>
-						</div>
-					@endif
-				</div>
-			</div>
-
-			<!-- Assign Moderator (Admin only) -->
-			@if (auth()->user()->user_type === 'admin' && !$conversation->handled_by_user_id)
-				<div class="rounded-xl border border-yellow-200 bg-yellow-50 p-4 dark:border-yellow-900/30 dark:bg-yellow-900/20">
-					<h4 class="font-semibold text-yellow-900 dark:text-yellow-100">Assign Moderator</h4>
-					<p class="mt-1 text-xs text-yellow-800 dark:text-yellow-300">This conversation needs a moderator to handle creator
-						responses.</p>
-					<form action="{{ route('dashboard.conversations.assign-moderator', $conversation) }}" method="POST"
-						class="mt-3 space-y-2">
-						@csrf
-						<select name="moderator_user_id"
-							class="w-full rounded-lg border border-yellow-300 bg-white px-3 py-2 text-sm dark:border-yellow-700 dark:bg-gray-800"
-							required>
-							<option value="">Select a moderator...</option>
-							@foreach (\App\Models\User::where('user_type', 'moderator')->get() as $mod)
-								<option value="{{ $mod->id }}">{{ $mod->name }}</option>
-							@endforeach
-						</select>
-						<button type="submit"
-							class="w-full rounded-lg bg-yellow-600 px-3 py-2 text-sm font-medium text-white transition hover:bg-yellow-700">
-							Assign
-						</button>
-					</form>
-				</div>
-			@endif
-		</div>
-	</div>
-
-	<script>
-		// Auto-scroll to bottom of messages
-		const container = document.getElementById('messagesContainer');
-		if (container) {
-			container.scrollTop = container.scrollHeight;
-		}
-	</script>
+	
+	<!-- component -->
+<div class="flex h-screen overflow-hidden">
+        <!-- Sidebar -->
+        <div class="w-1/4 bg-white border-r border-gray-300">
+          <!-- Sidebar Header -->
+          <header class="p-4 border-b border-gray-300 flex justify-between items-center bg-indigo-600 text-white">
+            <h1 class="text-2xl font-semibold">Chat Web</h1>
+            <div class="relative">
+              <button id="menuButton" class="focus:outline-none">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-100" viewBox="0 0 20 20" fill="currentColor">
+                  <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
+                  <path d="M2 10a2 2 0 012-2h12a2 2 0 012 2 2 2 0 01-2 2H4a2 2 0 01-2-2z" />
+                </svg>
+              </button>
+              <!-- Menu Dropdown -->
+              <div id="menuDropdown" class="absolute right-0 mt-2 w-48 bg-white border border-gray-300 rounded-md shadow-lg hidden">
+                <ul class="py-2 px-3">
+                  <li><a href="#" class="block px-4 py-2 text-gray-800 hover:text-gray-400">Option 1</a></li>
+                  <li><a href="#" class="block px-4 py-2 text-gray-800 hover:text-gray-400">Option 2</a></li>
+                  <!-- Add more menu options here -->
+                </ul>
+              </div>
+            </div>
+          </header>
+        
+          <!-- Contact List -->
+          <div class="overflow-y-auto h-screen p-3 mb-9 pb-20">
+            <div class="flex items-center mb-4 cursor-pointer hover:bg-gray-100 p-2 rounded-md">
+              <div class="w-12 h-12 bg-gray-300 rounded-full mr-3">
+                <img src="https://placehold.co/200x/ffa8e4/ffffff.svg?text=ʕ•́ᴥ•̀ʔ&font=Lato" alt="User Avatar" class="w-12 h-12 rounded-full">
+              </div>
+              <div class="flex-1">
+                <h2 class="text-lg font-semibold">Alice</h2>
+                <p class="text-gray-600">Hoorayy!!</p>
+              </div>
+            </div>
+            
+            <div class="flex items-center mb-4 cursor-pointer hover:bg-gray-100 p-2 rounded-md">
+              <div class="w-12 h-12 bg-gray-300 rounded-full mr-3">
+                <img src="https://placehold.co/200x/ad922e/ffffff.svg?text=ʕ•́ᴥ•̀ʔ&font=Lato" alt="User Avatar" class="w-12 h-12 rounded-full">
+              </div>
+              <div class="flex-1">
+                <h2 class="text-lg font-semibold">Martin</h2>
+                <p class="text-gray-600">That pizza place was amazing! We should go again sometime. 🍕</p>
+              </div>
+            </div>
+            
+            <div class="flex items-center mb-4 cursor-pointer hover:bg-gray-100 p-2 rounded-md">
+              <div class="w-12 h-12 bg-gray-300 rounded-full mr-3">
+                <img src="https://placehold.co/200x/2e83ad/ffffff.svg?text=ʕ•́ᴥ•̀ʔ&font=Lato" alt="User Avatar" class="w-12 h-12 rounded-full">
+              </div>
+              <div class="flex-1">
+                <h2 class="text-lg font-semibold">Charlie</h2>
+                <p class="text-gray-600">Hey, do you have any recommendations for a good movie to watch?</p>
+              </div>
+            </div>
+            
+            <div class="flex items-center mb-4 cursor-pointer hover:bg-gray-100 p-2 rounded-md">
+              <div class="w-12 h-12 bg-gray-300 rounded-full mr-3">
+                <img src="https://placehold.co/200x/c2ebff/0f0b14.svg?text=ʕ•́ᴥ•̀ʔ&font=Lato" alt="User Avatar" class="w-12 h-12 rounded-full">
+              </div>
+              <div class="flex-1">
+                <h2 class="text-lg font-semibold">David</h2>
+                <p class="text-gray-600">I just finished reading a great book! It was so captivating.</p>
+              </div>
+            </div>
+            
+            <div class="flex items-center mb-4 cursor-pointer hover:bg-gray-100 p-2 rounded-md">
+              <div class="w-12 h-12 bg-gray-300 rounded-full mr-3">
+                <img src="https://placehold.co/200x/e7c2ff/7315d1.svg?text=ʕ•́ᴥ•̀ʔ&font=Lato" alt="User Avatar" class="w-12 h-12 rounded-full">
+              </div>
+              <div class="flex-1">
+                <h2 class="text-lg font-semibold">Ella</h2>
+                <p class="text-gray-600">What's the plan for this weekend? Anything fun?</p>
+              </div>
+            </div>
+            
+            <div class="flex items-center mb-4 cursor-pointer hover:bg-gray-100 p-2 rounded-md">
+              <div class="w-12 h-12 bg-gray-300 rounded-full mr-3">
+                <img src="https://placehold.co/200x/ffc2e2/ffdbdb.svg?text=ʕ•́ᴥ•̀ʔ&font=Lato" alt="User Avatar" class="w-12 h-12 rounded-full">
+              </div>
+              <div class="flex-1">
+                <h2 class="text-lg font-semibold">Fiona</h2>
+                <p class="text-gray-600">I heard there's a new exhibit at the art museum. Interested?</p>
+              </div>
+            </div>
+            
+            <div class="flex items-center mb-4 cursor-pointer hover:bg-gray-100 p-2 rounded-md">
+              <div class="w-12 h-12 bg-gray-300 rounded-full mr-3">
+                <img src="https://placehold.co/200x/f83f3f/4f4f4f.svg?text=ʕ•́ᴥ•̀ʔ&font=Lato" alt="User Avatar" class="w-12 h-12 rounded-full">
+              </div>
+              <div class="flex-1">
+                <h2 class="text-lg font-semibold">George</h2>
+                <p class="text-gray-600">I tried that new cafe downtown. The coffee was fantastic!</p>
+              </div>
+            </div>
+            
+            <div class="flex items-center mb-4 cursor-pointer hover:bg-gray-100 p-2 rounded-md">
+              <div class="w-12 h-12 bg-gray-300 rounded-full mr-3">
+                <img src="https://placehold.co/200x/dddddd/999999.svg?text=ʕ•́ᴥ•̀ʔ&font=Lato" alt="User Avatar" class="w-12 h-12 rounded-full">
+              </div>
+              <div class="flex-1">
+                <h2 class="text-lg font-semibold">Hannah</h2>
+                <p class="text-gray-600">I'm planning a hiking trip next month. Want to join?</p>
+              </div>
+            </div>
+            
+            <div class="flex items-center mb-4 cursor-pointer hover:bg-gray-100 p-2 rounded-md">
+              <div class="w-12 h-12 bg-gray-300 rounded-full mr-3">
+                <img src="https://placehold.co/200x/70ff33/501616.svg?text=ʕ•́ᴥ•̀ʔ&font=Lato" alt="User Avatar" class="w-12 h-12 rounded-full">
+              </div>
+              <div class="flex-1">
+                <h2 class="text-lg font-semibold">Ian</h2>
+                <p class="text-gray-600">Let's catch up soon. It's been too long!</p>
+              </div>
+            </div>
+            
+            <div class="flex items-center mb-4 cursor-pointer hover:bg-gray-100 p-2 rounded-md">
+              <div class="w-12 h-12 bg-gray-300 rounded-full mr-3">
+                <img src="https://placehold.co/200x/30916c/ffffff.svg?text=ʕ•́ᴥ•̀ʔ&font=Lato" alt="User Avatar" class="w-12 h-12 rounded-full">
+              </div>
+              <div class="flex-1">
+                <h2 class="text-lg font-semibold">Jack</h2>
+                <p class="text-gray-600">Remember that hilarious joke you told me? I can't stop laughing!</p>
+              </div>
+            </div>
+            
+            
+          </div>
+        </div>
+        
+        <!-- Main Chat Area -->
+        <div class="flex-1">
+            <!-- Chat Header -->
+            <header class="bg-white p-4 text-gray-700">
+                <h1 class="text-2xl font-semibold">Alice</h1>
+            </header>
+            
+            <!-- Chat Messages -->
+            <div class="h-screen overflow-y-auto p-4 pb-36">
+               <!-- Incoming Message -->
+               <div class="flex mb-4 cursor-pointer">
+                 <div class="w-9 h-9 rounded-full flex items-center justify-center mr-2">
+                   <img src="https://placehold.co/200x/ffa8e4/ffffff.svg?text=ʕ•́ᴥ•̀ʔ&font=Lato" alt="User Avatar" class="w-8 h-8 rounded-full">
+                 </div>
+                 <div class="flex max-w-96 bg-white rounded-lg p-3 gap-3">
+                   <p class="text-gray-700">Hey Bob, how's it going?</p>
+                 </div>
+               </div>
+               
+               <!-- Outgoing Message -->
+               <div class="flex justify-end mb-4 cursor-pointer">
+                 <div class="flex max-w-96 bg-indigo-500 text-white rounded-lg p-3 gap-3">
+                   <p>Hi Alice! I'm good, just finished a great book. How about you?</p>
+                 </div>
+                 <div class="w-9 h-9 rounded-full flex items-center justify-center ml-2">
+                   <img src="https://placehold.co/200x/b7a8ff/ffffff.svg?text=ʕ•́ᴥ•̀ʔ&font=Lato" alt="My Avatar" class="w-8 h-8 rounded-full">
+                 </div>
+               </div>
+               
+               <!-- Incoming Message -->
+               <div class="flex mb-4 cursor-pointer">
+                 <div class="w-9 h-9 rounded-full flex items-center justify-center mr-2">
+                   <img src="https://placehold.co/200x/ffa8e4/ffffff.svg?text=ʕ•́ᴥ•̀ʔ&font=Lato" alt="User Avatar" class="w-8 h-8 rounded-full">
+                 </div>
+                 <div class="flex max-w-96 bg-white rounded-lg p-3 gap-3">
+                   <p class="text-gray-700">That book sounds interesting! What's it about?</p>
+                 </div>
+               </div>
+               
+               <!-- Outgoing Message -->
+               <div class="flex justify-end mb-4 cursor-pointer">
+                 <div class="flex max-w-96 bg-indigo-500 text-white rounded-lg p-3 gap-3">
+                   <p>It's about an astronaut stranded on Mars, trying to survive. Gripping stuff!</p>
+                 </div>
+                 <div class="w-9 h-9 rounded-full flex items-center justify-center ml-2">
+                   <img src="https://placehold.co/200x/b7a8ff/ffffff.svg?text=ʕ•́ᴥ•̀ʔ&font=Lato" alt="My Avatar" class="w-8 h-8 rounded-full">
+                 </div>
+               </div>
+               
+               <!-- Incoming Message -->
+               <div class="flex mb-4 cursor-pointer">
+                 <div class="w-9 h-9 rounded-full flex items-center justify-center mr-2">
+                   <img src="https://placehold.co/200x/ffa8e4/ffffff.svg?text=ʕ•́ᴥ•̀ʔ&font=Lato" alt="User Avatar" class="w-8 h-8 rounded-full">
+                 </div>
+                 <div class="flex max-w-96 bg-white rounded-lg p-3 gap-3">
+                   <p class="text-gray-700">I'm intrigued! Maybe I'll borrow it from you when you're done?</p>
+                 </div>
+               </div>
+               
+               <!-- Outgoing Message -->
+               <div class="flex justify-end mb-4 cursor-pointer">
+                 <div class="flex max-w-96 bg-indigo-500 text-white rounded-lg p-3 gap-3">
+                   <p>Of course! I'll drop it off at your place tomorrow.</p>
+                 </div>
+                 <div class="w-9 h-9 rounded-full flex items-center justify-center ml-2">
+                   <img src="https://placehold.co/200x/b7a8ff/ffffff.svg?text=ʕ•́ᴥ•̀ʔ&font=Lato" alt="My Avatar" class="w-8 h-8 rounded-full">
+                 </div>
+               </div>
+               
+               <!-- Incoming Message -->
+               <div class="flex mb-4 cursor-pointer">
+                 <div class="w-9 h-9 rounded-full flex items-center justify-center mr-2">
+                   <img src="https://placehold.co/200x/ffa8e4/ffffff.svg?text=ʕ•́ᴥ•̀ʔ&font=Lato" alt="User Avatar" class="w-8 h-8 rounded-full">
+                 </div>
+                 <div class="flex max-w-96 bg-white rounded-lg p-3 gap-3">
+                   <p class="text-gray-700">Thanks, you're the best!</p>
+                 </div>
+               </div>
+               
+               <!-- Outgoing Message -->
+               <div class="flex justify-end mb-4 cursor-pointer">
+                 <div class="flex max-w-96 bg-indigo-500 text-white rounded-lg p-3 gap-3">
+                   <p>Anytime! Let me know how you like it. 😊</p>
+                 </div>
+                 <div class="w-9 h-9 rounded-full flex items-center justify-center ml-2">
+                   <img src="https://placehold.co/200x/b7a8ff/ffffff.svg?text=ʕ•́ᴥ•̀ʔ&font=Lato" alt="My Avatar" class="w-8 h-8 rounded-full">
+                 </div>
+               </div>
+               
+               <!-- Incoming Message -->
+               <div class="flex mb-4 cursor-pointer">
+                 <div class="w-9 h-9 rounded-full flex items-center justify-center mr-2">
+                   <img src="https://placehold.co/200x/ffa8e4/ffffff.svg?text=ʕ•́ᴥ•̀ʔ&font=Lato" alt="User Avatar" class="w-8 h-8 rounded-full">
+                 </div>
+                 <div class="flex max-w-96 bg-white rounded-lg p-3 gap-3">
+                   <p class="text-gray-700">So, pizza next week, right?</p>
+                 </div>
+               </div>
+               
+               <!-- Outgoing Message -->
+               <div class="flex justify-end mb-4 cursor-pointer">
+                 <div class="flex max-w-96 bg-indigo-500 text-white rounded-lg p-3 gap-3">
+                   <p>Absolutely! Can't wait for our pizza date. 🍕</p>
+                 </div>
+                 <div class="w-9 h-9 rounded-full flex items-center justify-center ml-2">
+                   <img src="https://placehold.co/200x/b7a8ff/ffffff.svg?text=ʕ•́ᴥ•̀ʔ&font=Lato" alt="My Avatar" class="w-8 h-8 rounded-full">
+                 </div>
+               </div>
+               <!-- Incoming Message -->
+               <div class="flex mb-4 cursor-pointer">
+                 <div class="w-9 h-9 rounded-full flex items-center justify-center mr-2">
+                   <img src="https://placehold.co/200x/ffa8e4/ffffff.svg?text=ʕ•́ᴥ•̀ʔ&font=Lato" alt="User Avatar" class="w-8 h-8 rounded-full">
+                 </div>
+                 <div class="flex max-w-96 bg-white rounded-lg p-3 gap-3">
+                   <p class="text-gray-700">Hoorayy!!</p>
+                 </div>
+               </div>
+               
+            </div>
+            
+            <!-- Chat Input -->
+            <footer class="bg-white border-t border-gray-300 p-4 absolute bottom-0 w-3/4">
+                <div class="flex items-center">
+                    <input type="text" placeholder="Type a message..." class="w-full p-2 rounded-md border border-gray-400 focus:outline-none focus:border-blue-500">
+                    <button class="bg-indigo-500 text-white px-4 py-2 rounded-md ml-2">Send</button>
+                </div>
+            </footer>
+        </div>
+</div>
+    <script>
+      // JavaScript for showing/hiding the menu
+      const menuButton = document.getElementById('menuButton');
+      const menuDropdown = document.getElementById('menuDropdown');
+      
+      menuButton.addEventListener('click', () => {
+        if (menuDropdown.classList.contains('hidden')) {
+          menuDropdown.classList.remove('hidden');
+        } else {
+          menuDropdown.classList.add('hidden');
+        }
+      });
+      
+      // Close the menu if you click outside of it
+      document.addEventListener('click', (e) => {
+        if (!menuDropdown.contains(e.target) && !menuButton.contains(e.target)) {
+          menuDropdown.classList.add('hidden');
+        }
+      });
+    </script>
 @endsection

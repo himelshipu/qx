@@ -63,6 +63,7 @@
 		<script>
 			// Store initial cart data from server
 			window.initialCartData = {!! json_encode($cartItemsData ?? []) !!};
+			window.loginUrl = @js(route('login'));
 
 			// Global store for cart state (accessible from anywhere)
 			window.cartStore = {
@@ -72,7 +73,7 @@
 
 			// Global addToCart function callable from any Alpine component
 			async function addToCart(packageId) {
-				if (window.cartStore.isAdding) return;
+				if (window.cartStore.isAdding) return false;
 				window.cartStore.isAdding = true;
 
 				try {
@@ -90,6 +91,16 @@
 
 					if (!response.ok) {
 						const errorData = await response.json().catch(() => ({}));
+
+						if (response.status === 401 && errorData.redirect_url) {
+							if (window.toast && window.toast.warning) {
+								window.toast.warning(errorData.message || 'Please login first.');
+							}
+
+							window.location.href = errorData.redirect_url;
+							return false;
+						}
+
 						throw new Error(errorData.message || 'Failed to add item');
 					}
 
@@ -109,6 +120,8 @@
 						if (window.toast && window.toast.success) {
 							window.toast.success('Package added to cart!');
 						}
+
+						return true;
 					} else {
 						throw new Error(data.message || 'Failed to add item');
 					}
@@ -116,6 +129,8 @@
 					if (window.toast && window.toast.error) {
 						window.toast.error(error.message || 'Failed to add item to cart');
 					}
+
+					return false;
 				} finally {
 					window.cartStore.isAdding = false;
 				}
@@ -157,6 +172,16 @@
 
 							if (!response.ok) {
 								const errorData = await response.json().catch(() => ({}));
+
+								if (response.status === 401 && errorData.redirect_url) {
+									if (window.toast && window.toast.warning) {
+										window.toast.warning(errorData.message || 'Please login first.');
+									}
+
+									window.location.href = errorData.redirect_url;
+									return;
+								}
+
 								throw new Error(errorData.message || 'Failed to add item');
 							}
 

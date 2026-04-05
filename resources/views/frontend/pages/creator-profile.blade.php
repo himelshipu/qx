@@ -430,7 +430,7 @@
 
 						<!-- Show only Brand Users -->
 						<div class="flex gap-3 w-full">
-							<form @submit.prevent="addToCart(selectedPackage.id)" method="POST" class="flex-1">
+							<form @submit.prevent="handleAddToCart()" method="POST" class="flex-1">
 								<button type="submit"
 									class="bg-[#1A1A1A] hover:bg-purple-400 flex w-full items-center justify-center rounded-xl px-4 py-4 text-sm font-bold text-white transition active:scale-[0.98]">
 									Add to Cart
@@ -590,6 +590,7 @@
 					isAuthenticated: @json(auth()->check()),
 					userType: @json(auth()->check() ? auth()->user()->user_type : null),
 					loginUrl: @js(route('login')),
+					cartUrl: @js(route('cart.index')),
 					conversationsUrl: @js(route('dashboard.conversations.index')),
 					creatorId: @js($creator->id),
 					startNegotiationUrl: @js(route('conversations.start-negotiation', ['creator' => $creator->id])),
@@ -685,9 +686,21 @@
 						}
 					},
 
+					async handleAddToCart() {
+						if (!this.selectedPackage) {
+							return;
+						}
+
+						const added = await addToCart(this.selectedPackage.id);
+
+						if (added && this.isAuthenticated && this.userType === 'brand') {
+							window.location.href = this.cartUrl;
+						}
+					},
+
 					negotiatePackage() {
 						if (!this.isAuthenticated) {
-							window.location.href = this.loginUrl;
+							window.location.href = this.startNegotiationUrl;
 						} else if (this.userType === 'brand') {
 							window.location.href = this.startNegotiationUrl;
 						} else {

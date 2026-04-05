@@ -6,6 +6,7 @@ use App\Models\Conversation;
 use App\Models\Creator;
 use App\Models\Message;
 use App\Models\ModeratorAssignment;
+use App\Services\Auth\PendingPostAuthActionService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -57,6 +58,14 @@ class ConversationController extends Controller
      */
     public function startNegotiation(Creator $creator): RedirectResponse
     {
+        if (!auth()->check()) {
+            app(PendingPostAuthActionService::class)->rememberNegotiate($creator->id);
+
+            return redirect()
+                ->route('login')
+                ->with('warning', 'Please login first to negotiate with this creator.');
+        }
+
         $user = auth()->user();
 
         // Only brands can start negotiations
@@ -74,8 +83,7 @@ class ConversationController extends Controller
             // Create a new conversation
             $conversation = Conversation::create([
                 'brand_user_id' => $user->id,
-                'creator_id'    => $creator->id,
-                'status'        => 'pending' // Waiting for moderator assignment
+                'creator_id'    => $creator->id
             ]);
         }
 

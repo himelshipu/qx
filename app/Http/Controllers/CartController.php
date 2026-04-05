@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Cart;
 use App\Models\CartItem;
 use App\Models\Package;
+use App\Services\Auth\PendingPostAuthActionService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -41,6 +42,23 @@ class CartController extends Controller
         $validated = $request->validate([
             'package_id' => 'required|exists:packages,id'
         ]);
+
+        if (!auth()->check()) {
+            app(PendingPostAuthActionService::class)->rememberAddToCart((int) $validated['package_id']);
+
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'requires_auth' => true,
+                    'message' => 'Please login first to add packages to your cart.',
+                    'redirect_url' => route('login'),
+                ], 401);
+            }
+
+            return redirect()
+                ->route('login')
+                ->with('warning', 'Please login first to add packages to your cart.');
+        }
 
         $user    = auth()->user();
         $package = Package::findOrFail($validated['package_id']);

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Brand;
 use App\Models\Creator;
 use App\Models\User;
+use App\Services\Auth\PendingPostAuthActionService;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -82,6 +83,11 @@ class RegisteredUserController extends Controller
 
         Auth::login($user);
 
-        return redirect(route('verification.notice', absolute: false));
+        $pendingActionRedirect = app(PendingPostAuthActionService::class)->consume($user);
+        if ($pendingActionRedirect instanceof RedirectResponse) {
+            return $pendingActionRedirect;
+        }
+
+        return redirect()->intended(route('dashboard.index', absolute: false));
     }
 }
