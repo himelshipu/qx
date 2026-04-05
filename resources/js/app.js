@@ -5,6 +5,7 @@ import ApexCharts from "apexcharts";
 import flatpickr from "flatpickr";
 import "flatpickr/dist/flatpickr.min.css";
 import "./stripe/payment";
+import "./conversation";
 
 Alpine.plugin(collapse);
 

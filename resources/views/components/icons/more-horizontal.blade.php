@@ -9,5 +9,7 @@
     stroke-linecap="round"
     stroke-linejoin="round"
 >
-    <polyline points="9 18 15 12 9 6"></polyline>
+    <circle cx="12" cy="12" r="1"></circle>
+    <circle cx="19" cy="12" r="1"></circle>
+    <circle cx="5" cy="12" r="1"></circle>
 </svg>

@@ -1,9 +1,14 @@
-@props(['class' => ''])
+@props(['class' => 'w-4 h-4'])
 
 <svg 
     {{ $attributes->merge(['class' => $class]) }}
-    viewBox="0 0 512 512"
-    fill="currentColor"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="2"
+    stroke-linecap="round"
+    stroke-linejoin="round"
 >
-    <path d="M389.2 48h70.6L305.6 224.2 487 464H345L233.7 318.6 106.5 464H35.8L200.7 275.5 26.8 48H172.4L272.9 180.9 389.2 48zM364.4 421.8h39.1L151.1 88h-42L364.4 421.8z"/>
+    <line x1="18" y1="6" x2="6" y2="18"></line>
+    <line x1="6" y1="6" x2="18" y2="18"></line>
 </svg>

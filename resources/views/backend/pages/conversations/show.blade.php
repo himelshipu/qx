@@ -3,285 +3,350 @@
 @section('title', 'Conversation')
 
 @section('content')
-	
-	<!-- component -->
-<div class="flex h-screen overflow-hidden">
-        <!-- Sidebar -->
-        <div class="w-1/4 bg-white border-r border-gray-300">
-          <!-- Sidebar Header -->
-          <header class="p-4 border-b border-gray-300 flex justify-between items-center bg-indigo-600 text-white">
-            <h1 class="text-2xl font-semibold">Chat Web</h1>
-            <div class="relative">
-              <button id="menuButton" class="focus:outline-none">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-100" viewBox="0 0 20 20" fill="currentColor">
-                  <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
-                  <path d="M2 10a2 2 0 012-2h12a2 2 0 012 2 2 2 0 01-2 2H4a2 2 0 01-2-2z" />
-                </svg>
-              </button>
-              <!-- Menu Dropdown -->
-              <div id="menuDropdown" class="absolute right-0 mt-2 w-48 bg-white border border-gray-300 rounded-md shadow-lg hidden">
-                <ul class="py-2 px-3">
-                  <li><a href="#" class="block px-4 py-2 text-gray-800 hover:text-gray-400">Option 1</a></li>
-                  <li><a href="#" class="block px-4 py-2 text-gray-800 hover:text-gray-400">Option 2</a></li>
-                  <!-- Add more menu options here -->
-                </ul>
-              </div>
-            </div>
-          </header>
+    @php
+        $user = auth()->user();
+
+        $sidebarConversations = match ($user->user_type) {
+            'brand' => \App\Models\Conversation::query()
+                ->where('brand_user_id', $user->id),
+            'moderator' => \App\Models\Conversation::query()
+                ->where('handled_by_user_id', $user->id),
+            default => \App\Models\Conversation::query(),
+        };
+
+        $sidebarConversations = $sidebarConversations
+            ->with([
+                'creator.user',
+                'brandUser',
+                'handledBy',
+                'messages' => fn($query) => $query->latest()->limit(1),
+            ])
+            ->orderByDesc('updated_at')
+            ->get();
+
+        $getInitials = static function (?string $name): string {
+            $name = trim((string) $name);
+            if ($name === '') {
+                return 'NA';
+            }
+
+            $parts = preg_split('/\s+/', $name) ?: [];
+            $first = mb_substr($parts[0] ?? '', 0, 1);
+            $last = count($parts) > 1 ? mb_substr($parts[count($parts) - 1], 0, 1) : '';
+
+            return mb_strtoupper($first . $last);
+        };
+
+        $getPartyForSidebar = static function (\App\Models\Conversation $item) use ($user) {
+            if ($user->user_type === 'brand') {
+                return $item->creator?->user;
+            }
+
+            return $item->brandUser;
+        };
+
+        $currentTitle =
+            $user->user_type === 'brand'
+                ? ($conversation->creator->display_name ?? $conversation->creator->user->name)
+                : $conversation->brandUser->name;
         
-          <!-- Contact List -->
-          <div class="overflow-y-auto h-screen p-3 mb-9 pb-20">
-            <div class="flex items-center mb-4 cursor-pointer hover:bg-gray-100 p-2 rounded-md">
-              <div class="w-12 h-12 bg-gray-300 rounded-full mr-3">
-                <img src="https://placehold.co/200x/ffa8e4/ffffff.svg?text=ʕ•́ᴥ•̀ʔ&font=Lato" alt="User Avatar" class="w-12 h-12 rounded-full">
-              </div>
-              <div class="flex-1">
-                <h2 class="text-lg font-semibold">Alice</h2>
-                <p class="text-gray-600">Hoorayy!!</p>
-              </div>
-            </div>
-            
-            <div class="flex items-center mb-4 cursor-pointer hover:bg-gray-100 p-2 rounded-md">
-              <div class="w-12 h-12 bg-gray-300 rounded-full mr-3">
-                <img src="https://placehold.co/200x/ad922e/ffffff.svg?text=ʕ•́ᴥ•̀ʔ&font=Lato" alt="User Avatar" class="w-12 h-12 rounded-full">
-              </div>
-              <div class="flex-1">
-                <h2 class="text-lg font-semibold">Martin</h2>
-                <p class="text-gray-600">That pizza place was amazing! We should go again sometime. 🍕</p>
-              </div>
-            </div>
-            
-            <div class="flex items-center mb-4 cursor-pointer hover:bg-gray-100 p-2 rounded-md">
-              <div class="w-12 h-12 bg-gray-300 rounded-full mr-3">
-                <img src="https://placehold.co/200x/2e83ad/ffffff.svg?text=ʕ•́ᴥ•̀ʔ&font=Lato" alt="User Avatar" class="w-12 h-12 rounded-full">
-              </div>
-              <div class="flex-1">
-                <h2 class="text-lg font-semibold">Charlie</h2>
-                <p class="text-gray-600">Hey, do you have any recommendations for a good movie to watch?</p>
-              </div>
-            </div>
-            
-            <div class="flex items-center mb-4 cursor-pointer hover:bg-gray-100 p-2 rounded-md">
-              <div class="w-12 h-12 bg-gray-300 rounded-full mr-3">
-                <img src="https://placehold.co/200x/c2ebff/0f0b14.svg?text=ʕ•́ᴥ•̀ʔ&font=Lato" alt="User Avatar" class="w-12 h-12 rounded-full">
-              </div>
-              <div class="flex-1">
-                <h2 class="text-lg font-semibold">David</h2>
-                <p class="text-gray-600">I just finished reading a great book! It was so captivating.</p>
-              </div>
-            </div>
-            
-            <div class="flex items-center mb-4 cursor-pointer hover:bg-gray-100 p-2 rounded-md">
-              <div class="w-12 h-12 bg-gray-300 rounded-full mr-3">
-                <img src="https://placehold.co/200x/e7c2ff/7315d1.svg?text=ʕ•́ᴥ•̀ʔ&font=Lato" alt="User Avatar" class="w-12 h-12 rounded-full">
-              </div>
-              <div class="flex-1">
-                <h2 class="text-lg font-semibold">Ella</h2>
-                <p class="text-gray-600">What's the plan for this weekend? Anything fun?</p>
-              </div>
-            </div>
-            
-            <div class="flex items-center mb-4 cursor-pointer hover:bg-gray-100 p-2 rounded-md">
-              <div class="w-12 h-12 bg-gray-300 rounded-full mr-3">
-                <img src="https://placehold.co/200x/ffc2e2/ffdbdb.svg?text=ʕ•́ᴥ•̀ʔ&font=Lato" alt="User Avatar" class="w-12 h-12 rounded-full">
-              </div>
-              <div class="flex-1">
-                <h2 class="text-lg font-semibold">Fiona</h2>
-                <p class="text-gray-600">I heard there's a new exhibit at the art museum. Interested?</p>
-              </div>
-            </div>
-            
-            <div class="flex items-center mb-4 cursor-pointer hover:bg-gray-100 p-2 rounded-md">
-              <div class="w-12 h-12 bg-gray-300 rounded-full mr-3">
-                <img src="https://placehold.co/200x/f83f3f/4f4f4f.svg?text=ʕ•́ᴥ•̀ʔ&font=Lato" alt="User Avatar" class="w-12 h-12 rounded-full">
-              </div>
-              <div class="flex-1">
-                <h2 class="text-lg font-semibold">George</h2>
-                <p class="text-gray-600">I tried that new cafe downtown. The coffee was fantastic!</p>
-              </div>
-            </div>
-            
-            <div class="flex items-center mb-4 cursor-pointer hover:bg-gray-100 p-2 rounded-md">
-              <div class="w-12 h-12 bg-gray-300 rounded-full mr-3">
-                <img src="https://placehold.co/200x/dddddd/999999.svg?text=ʕ•́ᴥ•̀ʔ&font=Lato" alt="User Avatar" class="w-12 h-12 rounded-full">
-              </div>
-              <div class="flex-1">
-                <h2 class="text-lg font-semibold">Hannah</h2>
-                <p class="text-gray-600">I'm planning a hiking trip next month. Want to join?</p>
-              </div>
-            </div>
-            
-            <div class="flex items-center mb-4 cursor-pointer hover:bg-gray-100 p-2 rounded-md">
-              <div class="w-12 h-12 bg-gray-300 rounded-full mr-3">
-                <img src="https://placehold.co/200x/70ff33/501616.svg?text=ʕ•́ᴥ•̀ʔ&font=Lato" alt="User Avatar" class="w-12 h-12 rounded-full">
-              </div>
-              <div class="flex-1">
-                <h2 class="text-lg font-semibold">Ian</h2>
-                <p class="text-gray-600">Let's catch up soon. It's been too long!</p>
-              </div>
-            </div>
-            
-            <div class="flex items-center mb-4 cursor-pointer hover:bg-gray-100 p-2 rounded-md">
-              <div class="w-12 h-12 bg-gray-300 rounded-full mr-3">
-                <img src="https://placehold.co/200x/30916c/ffffff.svg?text=ʕ•́ᴥ•̀ʔ&font=Lato" alt="User Avatar" class="w-12 h-12 rounded-full">
-              </div>
-              <div class="flex-1">
-                <h2 class="text-lg font-semibold">Jack</h2>
-                <p class="text-gray-600">Remember that hilarious joke you told me? I can't stop laughing!</p>
-              </div>
-            </div>
-            
-            
-          </div>
-        </div>
-        
-        <!-- Main Chat Area -->
-        <div class="flex-1">
-            <!-- Chat Header -->
-            <header class="bg-white p-4 text-gray-700">
-                <h1 class="text-2xl font-semibold">Alice</h1>
-            </header>
-            
-            <!-- Chat Messages -->
-            <div class="h-screen overflow-y-auto p-4 pb-36">
-               <!-- Incoming Message -->
-               <div class="flex mb-4 cursor-pointer">
-                 <div class="w-9 h-9 rounded-full flex items-center justify-center mr-2">
-                   <img src="https://placehold.co/200x/ffa8e4/ffffff.svg?text=ʕ•́ᴥ•̀ʔ&font=Lato" alt="User Avatar" class="w-8 h-8 rounded-full">
-                 </div>
-                 <div class="flex max-w-96 bg-white rounded-lg p-3 gap-3">
-                   <p class="text-gray-700">Hey Bob, how's it going?</p>
-                 </div>
-               </div>
-               
-               <!-- Outgoing Message -->
-               <div class="flex justify-end mb-4 cursor-pointer">
-                 <div class="flex max-w-96 bg-indigo-500 text-white rounded-lg p-3 gap-3">
-                   <p>Hi Alice! I'm good, just finished a great book. How about you?</p>
-                 </div>
-                 <div class="w-9 h-9 rounded-full flex items-center justify-center ml-2">
-                   <img src="https://placehold.co/200x/b7a8ff/ffffff.svg?text=ʕ•́ᴥ•̀ʔ&font=Lato" alt="My Avatar" class="w-8 h-8 rounded-full">
-                 </div>
-               </div>
-               
-               <!-- Incoming Message -->
-               <div class="flex mb-4 cursor-pointer">
-                 <div class="w-9 h-9 rounded-full flex items-center justify-center mr-2">
-                   <img src="https://placehold.co/200x/ffa8e4/ffffff.svg?text=ʕ•́ᴥ•̀ʔ&font=Lato" alt="User Avatar" class="w-8 h-8 rounded-full">
-                 </div>
-                 <div class="flex max-w-96 bg-white rounded-lg p-3 gap-3">
-                   <p class="text-gray-700">That book sounds interesting! What's it about?</p>
-                 </div>
-               </div>
-               
-               <!-- Outgoing Message -->
-               <div class="flex justify-end mb-4 cursor-pointer">
-                 <div class="flex max-w-96 bg-indigo-500 text-white rounded-lg p-3 gap-3">
-                   <p>It's about an astronaut stranded on Mars, trying to survive. Gripping stuff!</p>
-                 </div>
-                 <div class="w-9 h-9 rounded-full flex items-center justify-center ml-2">
-                   <img src="https://placehold.co/200x/b7a8ff/ffffff.svg?text=ʕ•́ᴥ•̀ʔ&font=Lato" alt="My Avatar" class="w-8 h-8 rounded-full">
-                 </div>
-               </div>
-               
-               <!-- Incoming Message -->
-               <div class="flex mb-4 cursor-pointer">
-                 <div class="w-9 h-9 rounded-full flex items-center justify-center mr-2">
-                   <img src="https://placehold.co/200x/ffa8e4/ffffff.svg?text=ʕ•́ᴥ•̀ʔ&font=Lato" alt="User Avatar" class="w-8 h-8 rounded-full">
-                 </div>
-                 <div class="flex max-w-96 bg-white rounded-lg p-3 gap-3">
-                   <p class="text-gray-700">I'm intrigued! Maybe I'll borrow it from you when you're done?</p>
-                 </div>
-               </div>
-               
-               <!-- Outgoing Message -->
-               <div class="flex justify-end mb-4 cursor-pointer">
-                 <div class="flex max-w-96 bg-indigo-500 text-white rounded-lg p-3 gap-3">
-                   <p>Of course! I'll drop it off at your place tomorrow.</p>
-                 </div>
-                 <div class="w-9 h-9 rounded-full flex items-center justify-center ml-2">
-                   <img src="https://placehold.co/200x/b7a8ff/ffffff.svg?text=ʕ•́ᴥ•̀ʔ&font=Lato" alt="My Avatar" class="w-8 h-8 rounded-full">
-                 </div>
-               </div>
-               
-               <!-- Incoming Message -->
-               <div class="flex mb-4 cursor-pointer">
-                 <div class="w-9 h-9 rounded-full flex items-center justify-center mr-2">
-                   <img src="https://placehold.co/200x/ffa8e4/ffffff.svg?text=ʕ•́ᴥ•̀ʔ&font=Lato" alt="User Avatar" class="w-8 h-8 rounded-full">
-                 </div>
-                 <div class="flex max-w-96 bg-white rounded-lg p-3 gap-3">
-                   <p class="text-gray-700">Thanks, you're the best!</p>
-                 </div>
-               </div>
-               
-               <!-- Outgoing Message -->
-               <div class="flex justify-end mb-4 cursor-pointer">
-                 <div class="flex max-w-96 bg-indigo-500 text-white rounded-lg p-3 gap-3">
-                   <p>Anytime! Let me know how you like it. 😊</p>
-                 </div>
-                 <div class="w-9 h-9 rounded-full flex items-center justify-center ml-2">
-                   <img src="https://placehold.co/200x/b7a8ff/ffffff.svg?text=ʕ•́ᴥ•̀ʔ&font=Lato" alt="My Avatar" class="w-8 h-8 rounded-full">
-                 </div>
-               </div>
-               
-               <!-- Incoming Message -->
-               <div class="flex mb-4 cursor-pointer">
-                 <div class="w-9 h-9 rounded-full flex items-center justify-center mr-2">
-                   <img src="https://placehold.co/200x/ffa8e4/ffffff.svg?text=ʕ•́ᴥ•̀ʔ&font=Lato" alt="User Avatar" class="w-8 h-8 rounded-full">
-                 </div>
-                 <div class="flex max-w-96 bg-white rounded-lg p-3 gap-3">
-                   <p class="text-gray-700">So, pizza next week, right?</p>
-                 </div>
-               </div>
-               
-               <!-- Outgoing Message -->
-               <div class="flex justify-end mb-4 cursor-pointer">
-                 <div class="flex max-w-96 bg-indigo-500 text-white rounded-lg p-3 gap-3">
-                   <p>Absolutely! Can't wait for our pizza date. 🍕</p>
-                 </div>
-                 <div class="w-9 h-9 rounded-full flex items-center justify-center ml-2">
-                   <img src="https://placehold.co/200x/b7a8ff/ffffff.svg?text=ʕ•́ᴥ•̀ʔ&font=Lato" alt="My Avatar" class="w-8 h-8 rounded-full">
-                 </div>
-               </div>
-               <!-- Incoming Message -->
-               <div class="flex mb-4 cursor-pointer">
-                 <div class="w-9 h-9 rounded-full flex items-center justify-center mr-2">
-                   <img src="https://placehold.co/200x/ffa8e4/ffffff.svg?text=ʕ•́ᴥ•̀ʔ&font=Lato" alt="User Avatar" class="w-8 h-8 rounded-full">
-                 </div>
-                 <div class="flex max-w-96 bg-white rounded-lg p-3 gap-3">
-                   <p class="text-gray-700">Hoorayy!!</p>
-                 </div>
-               </div>
-               
-            </div>
-            
-            <!-- Chat Input -->
-            <footer class="bg-white border-t border-gray-300 p-4 absolute bottom-0 w-3/4">
-                <div class="flex items-center">
-                    <input type="text" placeholder="Type a message..." class="w-full p-2 rounded-md border border-gray-400 focus:outline-none focus:border-blue-500">
-                    <button class="bg-indigo-500 text-white px-4 py-2 rounded-md ml-2">Send</button>
+        // Helper to get status color
+        $getOrderStatusColor = function ($status) {
+            return match($status) {
+                'pending' => 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400',
+                'processing' => 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
+                'shipped' => 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400',
+                'delivered' => 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
+                'cancelled' => 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
+                default => 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-400',
+            };
+        };
+    @endphp
+
+
+    <div class="h-[calc(100vh-120px)] rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900 overflow-hidden transition-all duration-200">
+        <div class="flex h-full w-full">
+            <!-- Sidebar -->
+            <aside class="w-80 flex-shrink-0 border-r border-gray-200 dark:border-gray-800 bg-gray-50/40 dark:bg-gray-900/50 flex flex-col h-full">
+                <header class="flex-shrink-0 border-b border-gray-200 bg-white/80 backdrop-blur-sm px-5 py-4 dark:border-gray-800 dark:bg-gray-900/80">
+                    <div class="flex items-center justify-between">
+                        <h2 class="text-base font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                            <svg class="w-5 h-5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                            </svg>
+                            Conversations
+                            <span class="text-xs font-normal text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 px-2 py-0.5 rounded-full">{{ $sidebarConversations->count() }}</span>
+                        </h2>
+                        <button class="lg:hidden p-1.5 rounded-lg text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 transition">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+                </header>
+
+                <div class="flex-1 overflow-y-auto p-3 space-y-1.5">
+                    @forelse ($sidebarConversations as $item)
+                        @php
+                            $party = $getPartyForSidebar($item);
+                            $partyName = $party?->name ?? 'Unknown User';
+                            $partyAvatar = filled($party?->profile_image_path ?? null) ? image_url($party->profile_image_path) : null;
+                            $latestMessage = $item->messages->first();
+                            $isActive = $item->id === $conversation->id;
+                        @endphp
+
+                        <a href="{{ route('dashboard.conversations.show', $item) }}"
+                            class="flex items-start gap-3 rounded-xl p-3 transition-all duration-150 group
+                                {{ $isActive 
+                                    ? 'bg-white dark:bg-gray-800/80 shadow-sm ring-1 ring-indigo-200 dark:ring-indigo-800' 
+                                    : 'hover:bg-white/60 dark:hover:bg-gray-800/40' }}">
+                            <div class="relative shrink-0">
+                                <div class="h-12 w-12 rounded-full overflow-hidden bg-gradient-to-br from-indigo-100 to-purple-100 dark:from-indigo-900/30 dark:to-purple-900/30 flex items-center justify-center text-sm font-semibold text-indigo-700 dark:text-indigo-300 shadow-sm">
+                                    @if ($partyAvatar)
+                                        <img src="{{ $partyAvatar }}" alt="{{ $partyName }}" class="h-full w-full object-cover">
+                                    @else
+                                        <span>{{ $getInitials($partyName) }}</span>
+                                    @endif
+                                </div>
+                                <span class="absolute bottom-0 right-0 block h-3 w-3 rounded-full bg-green-500 ring-2 ring-white dark:ring-gray-900"></span>
+                            </div>
+                            <div class="min-w-0 flex-1">
+                                <div class="flex items-center justify-between gap-2">
+                                    <h3 class="truncate text-sm font-semibold text-gray-900 dark:text-white">{{ $partyName }}</h3>
+                                    <span class="text-[11px] font-medium text-gray-400 dark:text-gray-500">{{ $item->updated_at->diffForHumans() }}</span>
+                                </div>
+                                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400 line-clamp-1">
+                                    {{ $latestMessage?->message ? \Illuminate\Support\Str::limit($latestMessage->message, 50) : '✨ No messages yet' }}
+                                </p>
+                            </div>
+                        </a>
+                    @empty
+                        <div class="flex flex-col items-center justify-center py-12 px-4 text-center">
+                            <div class="w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center mb-3">
+                                <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                                </svg>
+                            </div>
+                            <p class="text-sm text-gray-500 dark:text-gray-400">No conversations found</p>
+                            <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">When conversations start, they will appear here</p>
+                        </div>
+                    @endforelse
                 </div>
-            </footer>
+            </aside>
+
+            <!-- Main chat panel -->
+            <section class="flex-1 flex flex-col h-full bg-white dark:bg-gray-900 min-w-0">
+                <!-- Chat header with order info -->
+                <div class="flex-shrink-0 border-b border-gray-200 bg-white/80 backdrop-blur-sm px-5 py-3 dark:border-gray-800 dark:bg-gray-900/80">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-3 min-w-0">
+                            <button class="lg:hidden p-1.5 -ml-1 rounded-lg text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 transition">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 6h16M4 12h16M4 18h7" />
+                                </svg>
+                            </button>
+                            <div class="h-10 w-10 rounded-full overflow-hidden bg-gradient-to-br from-indigo-100 to-purple-100 dark:from-indigo-900/30 dark:to-purple-900/30 flex items-center justify-center flex-shrink-0">
+                                <span class="text-sm font-semibold text-indigo-700 dark:text-indigo-300">{{ $getInitials($currentTitle) }}</span>
+                            </div>
+                            <div class="min-w-0">
+                                <h3 class="text-base font-semibold text-gray-900 dark:text-white truncate">{{ $currentTitle }}</h3>
+                                <div class="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+                                    <span class="inline-flex items-center gap-1">
+                                        <span class="relative flex h-2 w-2">
+                                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                                            <span class="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                                        </span>
+                                        Active
+                                    </span>
+                                    <span>•</span>
+                                    <span class="truncate">{{ ucfirst(str_replace('_', ' ', $conversation->conversation_type)) }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        @if($conversation->order_id)
+                            <button id="toggleOrderDetails" class="p-2 rounded-lg text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 transition flex-shrink-0" title="View Order Details">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                                </svg>
+                            </button>
+                        @endif
+                    </div>
+                </div>
+
+                <!-- Order Details Panel (Collapsible) -->
+                @if($conversation->order_id)
+                    <div id="orderDetailsPanel" class="flex-shrink-0 border-b border-gray-200 dark:border-gray-800 bg-gradient-to-r from-indigo-50/50 to-purple-50/50 dark:from-indigo-950/20 dark:to-purple-950/20 hidden transition-all duration-300">
+                        <div class="p-4">
+                            <div class="flex items-center justify-between mb-3">
+                                <h4 class="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                                    <svg class="w-4 h-4 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                                    </svg>
+                                    Order Information
+                                </h4>
+                                <a href="{{ route('dashboard.orders.show', $conversation->order_id) }}" class="text-xs text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 flex items-center gap-1">
+                                    View Full Order
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                                    </svg>
+                                </a>
+                            </div>
+                            <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
+                                <div class="bg-white/60 dark:bg-gray-800/40 rounded-lg px-3 py-2 backdrop-blur-sm">
+                                    <p class="text-[10px] uppercase tracking-wider text-gray-500 dark:text-gray-400">Order ID</p>
+                                    <p class="text-sm font-mono font-semibold text-gray-900 dark:text-white">#{{ $conversation->order_id }}</p>
+                                </div>
+                                <div class="bg-white/60 dark:bg-gray-800/40 rounded-lg px-3 py-2 backdrop-blur-sm">
+                                    <p class="text-[10px] uppercase tracking-wider text-gray-500 dark:text-gray-400">Total Amount</p>
+                                    <p class="text-sm font-semibold text-gray-900 dark:text-white">${{ number_format($conversation->order?->total_amount ?? 0, 2) }}</p>
+                                </div>
+                                <div class="bg-white/60 dark:bg-gray-800/40 rounded-lg px-3 py-2 backdrop-blur-sm">
+                                    <p class="text-[10px] uppercase tracking-wider text-gray-500 dark:text-gray-400">Status</p>
+                                    <span class="inline-flex px-2 py-0.5 text-xs font-semibold rounded-full {{ $getOrderStatusColor($conversation->order?->status ?? 'pending') }}">
+                                        {{ ucfirst($conversation->order?->status ?? 'Pending') }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                @endif
+
+                <!-- Messages area - scrollable -->
+                <div id="messagesContainer" class="flex-1 overflow-y-auto p-5 space-y-4 bg-gradient-to-b from-gray-50 to-white dark:from-gray-950/30 dark:to-gray-900">
+                    @forelse ($messages as $message)
+                        @php
+                            $isOwn = $message->sender_user_id === auth()->id();
+                            $senderName = $message->sender?->name ?? 'Unknown';
+                            $senderAvatar = filled($message->sender?->profile_image_path ?? null) ? image_url($message->sender->profile_image_path) : null;
+                            $time = $message->created_at->format('g:i A');
+                        @endphp
+
+                        <div class="flex {{ $isOwn ? 'justify-end' : 'justify-start' }} animate-fade-in">
+                            <div class="flex max-w-[85%] md:max-w-[75%] items-end gap-2 {{ $isOwn ? 'flex-row-reverse' : '' }}">
+                                @if (!$isOwn)
+                                    <div class="h-8 w-8 shrink-0 rounded-full overflow-hidden bg-gradient-to-br from-indigo-100 to-purple-100 dark:from-indigo-900/30 dark:to-purple-900/30 flex items-center justify-center text-xs font-semibold text-indigo-700">
+                                        @if ($senderAvatar)
+                                            <img src="{{ $senderAvatar }}" alt="{{ $senderName }}" class="h-full w-full object-cover">
+                                        @else
+                                            <span>{{ $getInitials($senderName) }}</span>
+                                        @endif
+                                    </div>
+                                @endif
+                                <div class="group relative">
+                                    <div class="rounded-2xl px-4 py-2.5 shadow-sm transition-all duration-150
+                                        {{ $isOwn 
+                                            ? 'bg-indigo-600 text-white rounded-br-sm' 
+                                            : 'bg-white text-gray-900 dark:bg-gray-800 dark:text-white rounded-bl-sm border border-gray-100 dark:border-gray-700' }}">
+                                        <p class="text-sm leading-relaxed whitespace-pre-line break-words">{{ $message->message }}</p>
+                                    </div>
+                                    <div class="mt-1 flex items-center gap-1.5 text-[10px] font-medium px-1
+                                        {{ $isOwn ? 'justify-end text-gray-400' : 'justify-start text-gray-400' }}">
+                                        <span>{{ $time }}</span>
+                                        <span>•</span>
+                                        <span class="{{ $isOwn ? 'text-indigo-400' : 'text-gray-500' }}">{{ $isOwn ? 'You' : $senderName }}</span>
+                                        @if ($isOwn)
+                                            <svg class="w-3 h-3 text-indigo-400" fill="currentColor" viewBox="0 0 20 20">
+                                                <path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" fill-rule="evenodd"></path>
+                                            </svg>
+                                        @endif
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    @empty
+                        <div class="flex flex-col items-center justify-center h-full text-center py-12">
+                            <div class="w-20 h-20 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center mb-4">
+                                <svg class="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                                </svg>
+                            </div>
+                            <p class="text-sm font-medium text-gray-900 dark:text-white">No messages yet</p>
+                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Send a message to start the conversation</p>
+                        </div>
+                    @endforelse
+                </div>
+
+                <!-- Typing indicator -->
+                <div id="typingIndicator" class="flex-shrink-0 px-5 py-2 hidden">
+                    <div class="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+                        <div class="flex gap-0.5">
+                            <span class="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0s"></span>
+                            <span class="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0.2s"></span>
+                            <span class="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0.4s"></span>
+                        </div>
+                        <span>Someone is typing...</span>
+                    </div>
+                </div>
+
+                @if ($messages->hasPages())
+                    <div class="flex-shrink-0 border-t border-gray-200 bg-white px-4 py-2 dark:border-gray-800 dark:bg-gray-900">
+                        {{ $messages->links() }}
+                    </div>
+                @endif
+
+                <!-- Message input - always visible at bottom -->
+                <div class="flex-shrink-0 border-t border-gray-200 bg-white/80 backdrop-blur-sm p-4 dark:border-gray-800 dark:bg-gray-900/80">
+                    <form action="{{ route('dashboard.conversations.storeMessage', $conversation) }}" method="POST" class="flex gap-2">
+                        @csrf
+                        <div class="flex-1 relative">
+                            <input type="text" name="message" placeholder="Write your message..." autocomplete="off"
+                                class="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 pr-12 text-sm focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-100 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:focus:ring-indigo-900/50 transition">
+                            <button type="button" class="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-lg text-gray-400 hover:text-indigo-500 transition">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+                                </svg>
+                            </button>
+                        </div>
+                        <button type="submit"
+                            class="inline-flex items-center justify-center rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900">
+                            Send
+                            <svg class="w-4 h-4 ml-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                            </svg>
+                        </button>
+                    </form>
+                </div>
+            </section>
         </div>
-</div>
+    </div>
+
+    
+
     <script>
-      // JavaScript for showing/hiding the menu
-      const menuButton = document.getElementById('menuButton');
-      const menuDropdown = document.getElementById('menuDropdown');
-      
-      menuButton.addEventListener('click', () => {
-        if (menuDropdown.classList.contains('hidden')) {
-          menuDropdown.classList.remove('hidden');
-        } else {
-          menuDropdown.classList.add('hidden');
+        // Auto-scroll to bottom
+        const container = document.getElementById('messagesContainer');
+        if (container) {
+            container.scrollTop = container.scrollHeight;
         }
-      });
-      
-      // Close the menu if you click outside of it
-      document.addEventListener('click', (e) => {
-        if (!menuDropdown.contains(e.target) && !menuButton.contains(e.target)) {
-          menuDropdown.classList.add('hidden');
+        
+        // Auto-focus input on load
+        const messageInput = document.querySelector('input[name="message"]');
+        if (messageInput) {
+            messageInput.focus();
         }
-      });
+        
+        // Toggle order details panel
+        const toggleBtn = document.getElementById('toggleOrderDetails');
+        const orderPanel = document.getElementById('orderDetailsPanel');
+        
+        if (toggleBtn && orderPanel) {
+            toggleBtn.addEventListener('click', function() {
+                orderPanel.classList.toggle('hidden');
+            });
+        }
+        
+        // Typing indicator simulation
+        const typingIndicator = document.getElementById('typingIndicator');
+        
+        if (messageInput && typingIndicator) {
+            let typingTimeout;
+            messageInput.addEventListener('input', function() {
+                typingIndicator.classList.remove('hidden');
+                clearTimeout(typingTimeout);
+                typingTimeout = setTimeout(() => {
+                    typingIndicator.classList.add('hidden');
+                }, 1000);
+            });
+        }
     </script>
 @endsection
