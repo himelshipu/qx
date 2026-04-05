@@ -21,12 +21,41 @@ class AuthenticatedSessionController extends Controller
 
     /**
      * Handle an incoming authentication request.
+     *
+     * Workflow B (Package Order): Redirect to conversation after login if confirming package
      */
     public function store(LoginRequest $request): RedirectResponse
     {
         $request->authenticate();
 
         $request->session()->regenerate();
+
+        // Check if user was confirming a package order
+        $pendingConversationId = session('pending_conversation_id');
+        $pendingCreatorId      = session('pending_creator_id');
+        $pendingPackageId      = session('pending_package_id');
+
+        if ($pendingConversationId) {
+            // Clear the session data
+            session()->forget(['pending_conversation_id', 'pending_creator_id', 'pending_package_id']);
+
+            // Redirect to the conversation
+
+            return redirect()->route('conversations.show', \App\Models\Conversation::findOrFail($pendingConversationId));
+        }
+
+        if ($pendingCreatorId && $pendingPackageId) {
+            // Create conversation for package order and redirect
+            session()->forget(['pending_creator_id', 'pending_package_id']);
+
+            $conversation = \App\Http\Controllers\ConversationController::createForPackageOrder(
+                auth()->id(),
+                $pendingCreatorId,
+                null// order_id will be created during checkout
+            );
+
+            return redirect()->route('conversations.show', $conversation);
+        }
 
         return redirect()->intended(route('dashboard.index', absolute: false));
     }

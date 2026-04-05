@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class OrderItem extends Model
@@ -26,7 +27,8 @@ class OrderItem extends Model
         'accepted_by_user_id',
         'accepted_at',
         'delivered_at',
-        'approved_at'
+        'approved_at',
+        'paid_at'
     ];
 
     protected function casts(): array
@@ -38,7 +40,8 @@ class OrderItem extends Model
             'due_date'     => 'date',
             'accepted_at'  => 'datetime',
             'delivered_at' => 'datetime',
-            'approved_at'  => 'datetime'
+            'approved_at'  => 'datetime',
+            'paid_at'      => 'datetime'
         ];
     }
 

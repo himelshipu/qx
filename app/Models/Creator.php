@@ -99,8 +99,8 @@ class Creator extends Model
     public function campaigns(): BelongsToMany
     {
         return $this->belongsToMany(Campaign::class, 'campaign_applications')
-                    ->withPivot(['status', 'pitch_message', 'proposed_rate', 'agreed_rate', 'applied_at', 'decided_at'])
-                    ->withTimestamps();
+            ->withPivot(['status', 'pitch_message', 'proposed_rate', 'agreed_rate', 'applied_at', 'decided_at'])
+            ->withTimestamps();
     }
 
     public function payoutAccounts(): HasMany
@@ -121,5 +121,37 @@ class Creator extends Model
     public function billingProfiles(): MorphMany
     {
         return $this->morphMany(BillingProfile::class, 'user', 'user_type', 'user_id');
+    }
+
+    /**
+     * Get all campaign assignments for this creator
+     */
+    public function campaignAssignments(): HasMany
+    {
+        return $this->hasMany(CampaignInfluencer::class);
+    }
+
+    /**
+     * Get the active moderator assignment (if any)
+     */
+    public function activeModerator(): HasMany
+    {
+        return $this->hasMany(ModeratorAssignment::class)->whereNull('unassigned_at');
+    }
+
+    /**
+     * Get all moderator assignments history
+     */
+    public function moderatorAssignments(): HasMany
+    {
+        return $this->hasMany(ModeratorAssignment::class);
+    }
+
+    /**
+     * Get all sub-orders for this creator
+     */
+    public function subOrders(): HasMany
+    {
+        return $this->hasMany(SubOrder::class);
     }
 }

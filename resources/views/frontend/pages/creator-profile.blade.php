@@ -7,12 +7,12 @@
 		        ? (string) $creator->display_name
 		        : (string) ($creator->user->name ?? 'Creator');
 		$locationParts = array_values(
-			array_filter([
-				trim((string) ($creator->user->address_line ?? '')),
-				trim((string) ($creator->user->city ?? '')),
-				trim((string) ($creator->user->postal_code ?? '')),
-				trim((string) ($creator->user->country ?? '')),
-			]),
+		    array_filter([
+		        trim((string) ($creator->user->address_line ?? '')),
+		        trim((string) ($creator->user->city ?? '')),
+		        trim((string) ($creator->user->postal_code ?? '')),
+		        trim((string) ($creator->user->country ?? '')),
+		    ]),
 		);
 		$locationText = $locationParts !== [] ? implode(', ', $locationParts) : '';
 
@@ -89,6 +89,7 @@
 		        };
 		        $description = trim((string) ($package->description ?? ''));
 		        return [
+		            'id' => (int) $package->id,
 		            'key' => 'package-' . (int) $package->id,
 		            'name' => (string) $package->name,
 		            'icon' => $icon,
@@ -104,112 +105,14 @@
 		    })
 		    ->values();
 
-		$packageTabs = collect(['All'])->merge($packageCards->pluck('category')->unique()->values())->values();
+		$packageTabs = collect(['All'])
+		    ->merge($packageCards->pluck('category')->unique()->values())
+		    ->values();
 
 		$initialPackageKey = $packageCards->first()['key'] ?? null;
 	@endphp
 
-	<section class="min-h-screen" x-data="{
-    openDropdown: false,
-    selectedPackageKey: @js($initialPackageKey),
-    activeTab: 'All',
-	packages: @js($packageCards),
-	packageTabs: @js($packageTabs),
-
-    // Portfolio Lightbox
-    portfolioItems: @js(
-    $creator->portfolios
-        ->map(
-            fn($p) => [
-                'id' => $p->id,
-                'title' => $p->title,
-                'description' => $p->description,
-                'url' => \App\Helpers\ImageHelper::url($p->file_path),
-                'type' => $p->media_type,
-            ],
-        )
-        ->values()
-        ->toArray(),
-),
-    showGallery: false,
-    currentGalleryIndex: 0,
-
-    openGallery(itemId) {
-        this.currentGalleryIndex = this.portfolioItems.findIndex(p => p.id === itemId);
-        this.showGallery = true;
-        document.body.style.overflow = 'hidden';
-    },
-
-    closeGallery() {
-        this.showGallery = false;
-        document.body.style.overflow = 'auto';
-    },
-
-    nextGalleryItem() {
-        this.currentGalleryIndex = (this.currentGalleryIndex + 1) % this.portfolioItems.length;
-    },
-
-    prevGalleryItem() {
-        this.currentGalleryIndex = (this.currentGalleryIndex - 1 + this.portfolioItems.length) % this.portfolioItems.length;
-    },
-
-    get currentGalleryItem() {
-        return this.portfolioItems[this.currentGalleryIndex] || null;
-    },
-
-    get filteredPackages() {
-        if (this.activeTab === 'All') return this.packages;
-        return this.packages.filter((p) => p.category === this.activeTab);
-    },
-
-    get selectedPackage() {
-        return this.packages.find((p) => p.key === this.selectedPackageKey) || this.packages[0] || null;
-    },
-
-    get selectedPackageName() {
-        return this.selectedPackage ? this.selectedPackage.name : 'No package available';
-    },
-
-    get price() {
-        return this.selectedPackage ? this.selectedPackage.price : '$0.00';
-    },
-
-    get selectedPackageDescription() {
-        return this.selectedPackage ? this.selectedPackage.description : 'Package details are not available right now.';
-    },
-
-    selectPackage(key) {
-        this.selectedPackageKey = key;
-        this.openDropdown = false;
-    },
-
-    // Touch swipe support
-    touchStartX: 0,
-    touchEndX: 0,
-
-    getTouchPosition(e) {
-        this.touchStartX = e.changedTouches[0].clientX;
-    },
-
-    handleTouchEnd(e) {
-        this.touchEndX = e.changedTouches[0].clientX;
-        this.handleSwipe();
-    },
-
-    handleSwipe() {
-        const swipeThreshold = 50;
-        const diff = this.touchStartX - this.touchEndX;
-        if (Math.abs(diff) > swipeThreshold) {
-            if (diff > 0) {
-                // Swiped left, show next item
-                this.nextGalleryItem();
-            } else {
-                // Swiped right, show previous item
-                this.prevGalleryItem();
-            }
-        }
-    }
-}">
+	<section class="min-h-screen" x-data="creatorProfileData()">
 
 		<main class="max-w-screen-2xl mx-auto">
 			<!-- 1. TOP CATEGORIES & EDIT -->
@@ -222,7 +125,9 @@
 					@endforeach
 				</div>
 				<div class="flex items-center gap-2">
-					<button id="share-btn" type="button" class="flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm font-semibold text-purple-700 dark:text-purple-300 hover:bg-purple-50 dark:hover:bg-gray-800 transition" onclick="copyProfileUrl(event); return false;">
+					<button id="share-btn" type="button"
+						class="flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm font-semibold text-purple-700 dark:text-purple-300 hover:bg-purple-50 dark:hover:bg-gray-800 transition"
+						onclick="copyProfileUrl(event); return false;">
 						<x-icons.share class="w-5 h-5" />
 						Share
 					</button>
@@ -239,60 +144,62 @@
 					@endauth
 				</div>
 			</div>
-@push('scripts')
-<script>
-	function copyProfileUrl(e) {
-		if (e) e.preventDefault();
-		const url = window.location.href;
-		if (navigator.clipboard) {
-			navigator.clipboard.writeText(url).then(function() {
-				showLinkCopied();
-			}, function() {
-				fallbackCopyTextToClipboard(url);
-			});
-		} else {
-			fallbackCopyTextToClipboard(url);
-		}
-		return false;
-	}
-	function fallbackCopyTextToClipboard(text) {
-		const textArea = document.createElement("textarea");
-		textArea.value = text;
-		document.body.appendChild(textArea);
-		textArea.focus();
-		textArea.select();
-		try {
-			document.execCommand('copy');
-			showLinkCopied();
-		} catch (err) {}
-		document.body.removeChild(textArea);
-	}
-	function showLinkCopied() {
-		if (window.toast) {
-			window.toast.success('Link copied.');
-		}
-	}
-</script>
-@endpush
+			@push('scripts')
+				<script>
+					function copyProfileUrl(e) {
+						if (e) e.preventDefault();
+						const url = window.location.href;
+						if (navigator.clipboard) {
+							navigator.clipboard.writeText(url).then(function() {
+								showLinkCopied();
+							}, function() {
+								fallbackCopyTextToClipboard(url);
+							});
+						} else {
+							fallbackCopyTextToClipboard(url);
+						}
+						return false;
+					}
+
+					function fallbackCopyTextToClipboard(text) {
+						const textArea = document.createElement("textarea");
+						textArea.value = text;
+						document.body.appendChild(textArea);
+						textArea.focus();
+						textArea.select();
+						try {
+							document.execCommand('copy');
+							showLinkCopied();
+						} catch (err) {}
+						document.body.removeChild(textArea);
+					}
+
+					function showLinkCopied() {
+						if (window.toast) {
+							window.toast.success('Link copied.');
+						}
+					}
+				</script>
+			@endpush
 
 			<!-- 2. PORTRAIT IMAGE GRID & MOBILE SLIDER -->
-			<div class="relative -mx-4 sm:-mx-6 lg:mx-0 mb-10 lg:mb-16"
-				x-data="{
-					activeImage: 1,
-					total: {{ count($gridImages) }},
-					handleScroll(e) {
-						const width = e.target.offsetWidth;
-						this.activeImage = Math.round(e.target.scrollLeft / width) + 1;
-					}
-				}">
+			<div class="relative -mx-4 sm:-mx-6 lg:mx-0 mb-10 lg:mb-16" x-data="{
+    activeImage: 1,
+    total: {{ count($gridImages) }},
+    handleScroll(e) {
+        const width = e.target.offsetWidth;
+        this.activeImage = Math.round(e.target.scrollLeft / width) + 1;
+    }
+}">
 
 				<!-- Container: Flex on mobile (for scroll), Grid on desktop -->
 				<div @scroll.debounce.100ms="handleScroll($event)"
 					class="flex lg:grid lg:grid-cols-12 overflow-x-auto lg:overflow-x-visible snap-x snap-mandatory no-scrollbar h-[450px] lg:h-[600px] gap-0 lg:gap-4">
 
-					@foreach($gridImages as $index => $image)
+					@foreach ($gridImages as $index => $image)
 						<!-- Removed 'hidden' class. min-w-full handles the mobile layout -->
-						<div class="min-w-full lg:min-w-0 lg:col-span-4 snap-center relative overflow-hidden lg:rounded-xl border-gray-100 dark:border-gray-800">
+						<div
+							class="min-w-full lg:min-w-0 lg:col-span-4 snap-center relative overflow-hidden lg:rounded-xl border-gray-100 dark:border-gray-800">
 							<img src="{{ $image }}"
 								class="w-full h-full object-cover lg:hover:scale-105 transition-transform duration-700"
 								alt="Creator showcase image {{ $index + 1 }}">
@@ -302,19 +209,22 @@
 
 				<!-- Show All Photos Button (Desktop Only) -->
 				@if ($creator->portfolios->count() > 3)
-				<div class="hidden lg:block absolute bottom-6 right-6 z-10">
-					<a href="#portfolio-gallery"
-						class="flex items-center gap-2 bg-white/90 backdrop-blur-md px-5 py-2.5 rounded-2xl text-sm font-bold text-gray-900 border border-gray-100 shadow-xl hover:bg-white transition active:scale-95">
-						<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-							<path d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>
-						</svg>
-						Show All Photos
-					</a>
-				</div>
+					<div class="hidden lg:block absolute bottom-6 right-6 z-10">
+						<a href="#portfolio-gallery"
+							class="flex items-center gap-2 bg-white/90 backdrop-blur-md px-5 py-2.5 rounded-2xl text-sm font-bold text-gray-900 border border-gray-100 shadow-xl hover:bg-white transition active:scale-95">
+							<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+								stroke="currentColor" stroke-width="2">
+								<path
+									d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+							</svg>
+							Show All Photos
+						</a>
+					</div>
 				@endif
 
 				<!-- Dynamic Mobile Image Counter Badge (1/3) -->
-				<div class="lg:hidden absolute bottom-4 right-4 bg-black/60 backdrop-blur-md text-white px-3 py-1 rounded-md text-[10px] font-medium tracking-widest z-20 pointer-events-none">
+				<div
+					class="lg:hidden absolute bottom-4 right-4 bg-black/60 backdrop-blur-md text-white px-3 py-1 rounded-md text-[10px] font-medium tracking-widest z-20 pointer-events-none">
 					<span x-text="activeImage"></span> / <span x-text="total"></span>
 				</div>
 			</div>
@@ -324,6 +234,7 @@
 				.no-scrollbar::-webkit-scrollbar {
 					display: none;
 				}
+
 				.no-scrollbar {
 					-ms-overflow-style: none;
 					scrollbar-width: none;
@@ -456,7 +367,8 @@
 								</div>
 							</template>
 							<template x-if="filteredPackages.length === 0">
-								<div class="p-5 border border-gray-100 dark:border-gray-800 rounded-2xl bg-white dark:bg-transparent text-sm text-gray-500 dark:text-gray-400">
+								<div
+									class="p-5 border border-gray-100 dark:border-gray-800 rounded-2xl bg-white dark:bg-transparent text-sm text-gray-500 dark:text-gray-400">
 									No active packages available for this creator.
 								</div>
 							</template>
@@ -517,10 +429,23 @@
 						</div>
 
 						<!-- Show only Brand Users -->
-						<button
-							class="bg-[#1A1A1A] hover:bg-purple-400 flex w-full items-center justify-center rounded-xl px-4 py-4 text-sm font-bold text-white transition active:scale-[0.98]">
-							Add to Cart
-						</button>
+						<div class="flex gap-3 w-full">
+							<form @submit.prevent="addToCart(selectedPackage.id)" method="POST" class="flex-1">
+								<button type="submit"
+									class="bg-[#1A1A1A] hover:bg-purple-400 flex w-full items-center justify-center rounded-xl px-4 py-4 text-sm font-bold text-white transition active:scale-[0.98]">
+									Add to Cart
+								</button>
+							</form>
+
+							<div class="flex items-center px-3 text-gray-500 dark:text-gray-400 font-semibold">
+								or
+							</div>
+
+							<button @click="negotiatePackage()" type="button"
+								class="flex-1 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 flex items-center justify-center rounded-xl px-4 py-4 text-sm font-bold text-gray-800 dark:text-white transition active:scale-[0.98]">
+								Negotiate a Package
+							</button>
+						</div>
 					</div>
 				</div>
 			</div>
@@ -540,7 +465,7 @@
 						<button @click="openGallery({{ $item->id }})" type="button"
 							class="portfolio-item group relative rounded-2xl overflow-hidden border border-gray-100 dark:border-gray-800 hover:shadow-xl transition-all duration-300 cursor-pointer w-full text-left bg-transparent p-0">
 							@if ($item->media_type === 'image')
-							<img src="{{ \App\Helpers\ImageHelper::url($item->file_path) }}" alt="{{ $item->title }}"
+								<img src="{{ \App\Helpers\ImageHelper::url($item->file_path) }}" alt="{{ $item->title }}"
 									class="w-full h-80 object-cover group-hover:scale-105 transition-transform duration-500">
 							@else
 								<div
@@ -652,4 +577,125 @@
 			</section>
 		@endif
 	</section>
+
+	@push('scripts')
+		<script>
+			function creatorProfileData() {
+				return {
+					openDropdown: false,
+					selectedPackageKey: @js($initialPackageKey),
+					activeTab: 'All',
+					packages: @js($packageCards),
+					packageTabs: @js($packageTabs),
+					isAuthenticated: @json(auth()->check()),
+					userType: @json(auth()->check() ? auth()->user()->user_type : null),
+					loginUrl: @js(route('login')),
+					conversationsUrl: @js(route('dashboard.conversations.index')),
+					creatorId: @js($creator->id),
+					startNegotiationUrl: @js(route('conversations.start-negotiation', ['creator' => $creator->id])),
+					portfolioItems: @js(
+    $creator->portfolios
+        ->map(
+            fn($p) => [
+                'id' => $p->id,
+                'title' => $p->title,
+                'description' => $p->description,
+                'url' => \App\Helpers\ImageHelper::url($p->file_path),
+                'type' => $p->media_type,
+            ],
+        )
+        ->values()
+        ->toArray(),
+),
+					showGallery: false,
+					currentGalleryIndex: 0,
+
+					openGallery(itemId) {
+						this.currentGalleryIndex = this.portfolioItems.findIndex(p => p.id === itemId);
+						this.showGallery = true;
+						document.body.style.overflow = 'hidden';
+					},
+
+					closeGallery() {
+						this.showGallery = false;
+						document.body.style.overflow = 'auto';
+					},
+
+					nextGalleryItem() {
+						this.currentGalleryIndex = (this.currentGalleryIndex + 1) % this.portfolioItems.length;
+					},
+
+					prevGalleryItem() {
+						this.currentGalleryIndex = (this.currentGalleryIndex - 1 + this.portfolioItems.length) % this
+							.portfolioItems.length;
+					},
+
+					get currentGalleryItem() {
+						return this.portfolioItems[this.currentGalleryIndex] || null;
+					},
+
+					get filteredPackages() {
+						if (this.activeTab === 'All') return this.packages;
+						return this.packages.filter((p) => p.category === this.activeTab);
+					},
+
+					get selectedPackage() {
+						return this.packages.find((p) => p.key === this.selectedPackageKey) || this.packages[0] || null;
+					},
+
+					get selectedPackageName() {
+						return this.selectedPackage ? this.selectedPackage.name : 'No package available';
+					},
+
+					get price() {
+						return this.selectedPackage ? this.selectedPackage.price : '$0.00';
+					},
+
+					get selectedPackageDescription() {
+						return this.selectedPackage ? this.selectedPackage.description :
+							'Package details are not available right now.';
+					},
+
+					selectPackage(key) {
+						this.selectedPackageKey = key;
+						this.openDropdown = false;
+					},
+
+					touchStartX: 0,
+					touchEndX: 0,
+
+					getTouchPosition(e) {
+						this.touchStartX = e.changedTouches[0].clientX;
+					},
+
+					handleTouchEnd(e) {
+						this.touchEndX = e.changedTouches[0].clientX;
+						this.handleSwipe();
+					},
+
+					handleSwipe() {
+						const swipeThreshold = 50;
+						const diff = this.touchStartX - this.touchEndX;
+						if (Math.abs(diff) > swipeThreshold) {
+							if (diff > 0) {
+								this.nextGalleryItem();
+							} else {
+								this.prevGalleryItem();
+							}
+						}
+					},
+
+					negotiatePackage() {
+						if (!this.isAuthenticated) {
+							window.location.href = this.loginUrl;
+						} else if (this.userType === 'brand') {
+							window.location.href = this.startNegotiationUrl;
+						} else {
+							alert('Only brands can negotiate packages.');
+						}
+					}
+				};
+			}
+		</script>
+	@endpush
 @endsection

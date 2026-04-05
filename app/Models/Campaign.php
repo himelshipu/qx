@@ -100,7 +100,23 @@ class Campaign extends Model
     public function creators(): BelongsToMany
     {
         return $this->belongsToMany(Creator::class, 'campaign_applications')
-                    ->withPivot(['status', 'pitch_message', 'proposed_rate', 'agreed_rate', 'applied_at', 'decided_at'])
-                    ->withTimestamps();
+            ->withPivot(['status', 'pitch_message', 'proposed_rate', 'agreed_rate', 'applied_at', 'decided_at'])
+            ->withTimestamps();
+    }
+
+    /**
+     * Get all influencer assignments for this campaign
+     */
+    public function influencerAssignments(): HasMany
+    {
+        return $this->hasMany(CampaignInfluencer::class);
+    }
+
+    /**
+     * Get all approved influencers for this campaign
+     */
+    public function approvedInfluencers(): HasMany
+    {
+        return $this->hasMany(CampaignInfluencer::class)->where('status', 'approved');
     }
 }

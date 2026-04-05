@@ -59,6 +59,168 @@
 			</button>
 		</div>
 
+		<!-- Cart Modal Data Function (must load BEFORE auth-header component) -->
+		<script>
+			// Store initial cart data from server
+			window.initialCartData = {!! json_encode($cartItemsData ?? []) !!};
+
+			// Global store for cart state (accessible from anywhere)
+			window.cartStore = {
+				isAdding: false,
+				isRemoving: false
+			};
+
+			// Global addToCart function callable from any Alpine component
+			async function addToCart(packageId) {
+				if (window.cartStore.isAdding) return;
+				window.cartStore.isAdding = true;
+
+				try {
+					const response = await fetch('{{ route('cart.add') }}', {
+						method: 'POST',
+						headers: {
+							'Content-Type': 'application/json',
+							'Accept': 'application/json',
+							'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+						},
+						body: JSON.stringify({
+							package_id: packageId
+						})
+					});
+
+					if (!response.ok) {
+						const errorData = await response.json().catch(() => ({}));
+						throw new Error(errorData.message || 'Failed to add item');
+					}
+
+					const data = await response.json();
+					if (data.success) {
+						// Update global initial cart data
+						window.initialCartData = data.cart.items || [];
+
+						// Update cart items in the auth-header component if it exists
+						const cartHeaderEl = document.querySelector('[x-data*="cartModalData"]');
+						if (cartHeaderEl && cartHeaderEl.__x !== undefined && cartHeaderEl.__x.$data) {
+							// Force Alpine to update by triggering reactivity
+							cartHeaderEl.__x.$data.cartItems = [...data.cart.items];
+							cartHeaderEl.__x.$data.isCartOpen = true;
+						}
+
+						if (window.toast && window.toast.success) {
+							window.toast.success('Package added to cart!');
+						}
+					} else {
+						throw new Error(data.message || 'Failed to add item');
+					}
+				} catch (error) {
+					if (window.toast && window.toast.error) {
+						window.toast.error(error.message || 'Failed to add item to cart');
+					}
+				} finally {
+					window.cartStore.isAdding = false;
+				}
+			}
+
+			function cartModalData() {
+				return {
+					isCartOpen: false,
+					isProfileOpen: false,
+					cartItems: window.initialCartData || [],
+					isRemoving: false,
+					isAdding: false,
+
+					get subtotal() {
+						return this.cartItems.reduce((acc, item) => acc + (item.price * item.quantity), 0);
+					},
+
+					get projectedSpend() {
+						return this.cartItems.length > 0 ? this.subtotal : 0;
+					},
+
+					async addToCart(packageId) {
+						if (this.isAdding) return;
+						this.isAdding = true;
+
+						try {
+							const response = await fetch('{{ route('cart.add') }}', {
+								method: 'POST',
+								headers: {
+									'Content-Type': 'application/json',
+									'Accept': 'application/json',
+									'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').getAttribute(
+										'content')
+								},
+								body: JSON.stringify({
+									package_id: packageId
+								})
+							});
+
+							if (!response.ok) {
+								const errorData = await response.json().catch(() => ({}));
+								throw new Error(errorData.message || 'Failed to add item');
+							}
+
+							const data = await response.json();
+							if (data.success) {
+								// Update component data with spread operator to trigger reactivity
+								this.cartItems = data.cart.items ? [...data.cart.items] : [];
+								this.isCartOpen = true;
+								if (window.toast && window.toast.success) {
+									window.toast.success('Package added to cart!');
+								}
+							} else {
+								throw new Error(data.message || 'Failed to add item');
+							}
+						} catch (error) {
+							if (window.toast && window.toast.error) {
+								window.toast.error(error.message || 'Failed to add item to cart');
+							}
+						} finally {
+							this.isAdding = false;
+						}
+					},
+
+					async removeCartItem(itemId) {
+						if (this.isRemoving) return;
+						this.isRemoving = true;
+
+						try {
+							const response = await fetch(`/cart/items/${itemId}`, {
+								method: 'DELETE',
+								headers: {
+									'Content-Type': 'application/json',
+									'Accept': 'application/json',
+									'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').getAttribute(
+										'content')
+								}
+							});
+
+							if (!response.ok) {
+								const errorData = await response.json().catch(() => ({}));
+								throw new Error(errorData.message || 'Failed to remove item');
+							}
+
+							const data = await response.json();
+							if (data.success) {
+								// Update component data with spread operator to trigger reactivity
+								this.cartItems = data.cart.items ? [...data.cart.items] : [];
+								if (window.toast && window.toast.success) {
+									window.toast.success('Item removed from cart');
+								}
+							} else {
+								throw new Error(data.message || 'Failed to remove item');
+							}
+						} catch (error) {
+							if (window.toast && window.toast.error) {
+								window.toast.error(error.message || 'Failed to remove item from cart');
+							}
+						} finally {
+							this.isRemoving = false;
+						}
+					}
+				};
+			}
+		</script>
 
 		@if (auth()->user())
 			<x-frontend.navigation.auth-header />
@@ -86,22 +248,26 @@
 					<div class="flex-shrink-0">
 						<template x-if="t.type === 'success'">
 							<svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+									d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
 							</svg>
 						</template>
 						<template x-if="t.type === 'error'">
 							<svg class="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+									d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
 							</svg>
 						</template>
 						<template x-if="t.type === 'info'">
 							<svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+									d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
 							</svg>
 						</template>
 						<template x-if="t.type === 'warning'">
 							<svg class="w-5 h-5 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+									d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
 							</svg>
 						</template>
 					</div>

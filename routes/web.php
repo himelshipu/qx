@@ -5,6 +5,7 @@ declare (strict_types = 1);
 use App\Http\Controllers\AccountController;
 use App\Http\Controllers\Backend\BrandController;
 use App\Http\Controllers\Backend\CampaignController;
+use App\Http\Controllers\Backend\CartManagerController;
 use App\Http\Controllers\Backend\CaseStudyController;
 use App\Http\Controllers\Backend\CategoryController;
 use App\Http\Controllers\Backend\CreatorController;
@@ -23,8 +24,9 @@ use App\Http\Controllers\Backend\SupportTicketController;
 use App\Http\Controllers\Backend\TestimonialController;
 use App\Http\Controllers\Backend\UserController;
 use App\Http\Controllers\BrandProfileController;
-use App\Http\Controllers\Frontend\ContentLibraryController;
+use App\Http\Controllers\CartController;
 use App\Http\Controllers\Frontend\CaseStudyController as FrontendCaseStudyController;
+use App\Http\Controllers\Frontend\ContentLibraryController;
 use App\Http\Controllers\Frontend\HomeController;
 use App\Http\Controllers\Frontend\InfluencersController;
 use App\Http\Controllers\Frontend\KnowledgeBaseController as FrontendKnowledgeBaseController;
@@ -63,6 +65,9 @@ Route::middleware(['web'])->group(function () {
     Route::get('/creator/{slug}', [\App\Http\Controllers\CreatorProfileController::class, 'show'])->name('creator.profile');
     Route::get('/brand/{slug}', [\App\Http\Controllers\BrandProfileController::class, 'show'])->name('brand.profile');
 
+    // Authenticated conversation negotiation
+    Route::get('/creator/{creator}/start-negotiation', [\App\Http\Controllers\ConversationController::class, 'startNegotiation'])->middleware('auth')->name('conversations.start-negotiation');
+
     // Influencers pages
     Route::get('/influencers', [InfluencersController::class, 'index'])->name('influencers');
     Route::get('/influencer/{platformSlug}', [InfluencersController::class, 'index'])->name('influencers.platform');
@@ -72,6 +77,15 @@ Route::middleware(['web'])->group(function () {
     // Case Studies page
     Route::get('/case-studies', [FrontendCaseStudyController::class, 'index'])->name('case-studies');
     Route::get('/case-studies/{caseStudy:slug}', [FrontendCaseStudyController::class, 'show'])->name('case-studies.show');
+
+    // Cart routes
+    Route::get('/cart', [CartController::class, 'index'])->name('cart.index')->middleware('auth');
+    Route::post('/cart/add', [CartController::class, 'add'])->name('cart.add')->middleware('auth');
+    Route::post('/cart/checkout', [CartController::class, 'checkout'])->name('cart.checkout')->middleware('auth');
+    Route::post('/cart/complete-checkout', [CartController::class, 'completeCheckout'])->name('cart.complete-checkout')->middleware('auth');
+    Route::delete('/cart/items/{cartItem}', [CartController::class, 'remove'])->name('cart.remove')->middleware('auth');
+    Route::put('/cart/items/{cartItem}', [CartController::class, 'updateQuantity'])->name('cart.update')->middleware('auth');
+    Route::post('/cart/clear', [CartController::class, 'clear'])->name('cart.clear')->middleware('auth');
 
     // API endpoints
     Route::get('/api/categories', [InfluencersController::class, 'apiCategories']);
@@ -141,6 +155,19 @@ Route::prefix('dashboard')->name('dashboard.')->middleware(['auth', 'verified'])
     Route::put('/campaigns/{campaign}', [CampaignController::class, 'update'])->name('campaigns.update');
     Route::delete('/campaigns/{campaign}', [CampaignController::class, 'destroy'])->name('campaigns.destroy');
 
+    // Campaign Influencer Management (Workflow A)
+    Route::prefix('campaigns/{campaign}/influencers')->name('campaigns.influencers.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Backend\CampaignInfluencerController::class, 'index'])->name('index');
+        Route::get('/create', [\App\Http\Controllers\Backend\CampaignInfluencerController::class, 'create'])->name('create');
+        Route::post('/', [\App\Http\Controllers\Backend\CampaignInfluencerController::class, 'store'])->name('store');
+    });
+    Route::prefix('campaign-influencers')->name('campaign-influencers.')->group(function () {
+        Route::post('{campaignInfluencer}/approve', [\App\Http\Controllers\Backend\CampaignInfluencerController::class, 'approve'])->name('approve');
+        Route::post('{campaignInfluencer}/reject', [\App\Http\Controllers\Backend\CampaignInfluencerController::class, 'reject'])->name('reject');
+        Route::post('{campaignInfluencer}/cancel', [\App\Http\Controllers\Backend\CampaignInfluencerController::class, 'cancel'])->name('cancel');
+        Route::delete('{campaignInfluencer}', [\App\Http\Controllers\Backend\CampaignInfluencerController::class, 'destroy'])->name('destroy');
+    });
+
     // Commerce and operations modules
     Route::get('/reviews', [ReviewController::class, 'index'])->name('reviews.index');
     Route::get('/reviews/{review}', [ReviewController::class, 'show'])->name('reviews.show');
@@ -156,11 +183,25 @@ Route::prefix('dashboard')->name('dashboard.')->middleware(['auth', 'verified'])
     Route::delete('/packages/{package}', [PackageController::class, 'destroy'])->name('packages.destroy');
     Route::post('/packages/{package}/toggle-status', [PackageController::class, 'toggleStatus'])->name('packages.toggle-status');
 
+    Route::get('/carts', [CartManagerController::class, 'index'])->name('carts.index');
+    Route::get('/carts/{cart}', [CartManagerController::class, 'show'])->name('carts.show');
+
     Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
     Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
+    Route::post('/orders/create-from-campaign', [OrderController::class, 'createFromCampaign'])->name('orders.create-from-campaign');
+    Route::put('/sub-orders/{subOrder}/status', [OrderController::class, 'updateSubOrderStatus'])->name('sub-orders.update-status');
+    Route::post('/sub-orders/{subOrder}/mark-paid', [OrderController::class, 'markSubOrderPaid'])->name('sub-orders.mark-paid');
+    Route::put('/order-items/{orderItem}', [OrderController::class, 'updateOrderItemStatus'])->name('order-items.update-status');
+    Route::post('/order-items/{orderItem}/mark-paid', [OrderController::class, 'markOrderItemPaid'])->name('order-items.mark-paid');
     Route::view('/payments', 'backend.pages.coming-soon', ['module' => 'Payments'])->name('payments.index');
     Route::view('/payouts', 'backend.pages.coming-soon', ['module' => 'Payouts'])->name('payouts.index');
     Route::view('/wishlists', 'backend.pages.coming-soon', ['module' => 'Wishlists'])->name('wishlists.index');
+
+    // Conversations (Chat with Moderator Mediation)
+    Route::get('/conversations', [\App\Http\Controllers\ConversationController::class, 'index'])->name('conversations.index');
+    Route::get('/conversations/{conversation}', [\App\Http\Controllers\ConversationController::class, 'show'])->name('conversations.show');
+    Route::post('/conversations/{conversation}/messages', [\App\Http\Controllers\ConversationController::class, 'storeMessage'])->name('conversations.storeMessage');
+    Route::post('/conversations/{conversation}/assign-moderator', [\App\Http\Controllers\ConversationController::class, 'assignModerator'])->name('conversations.assign-moderator');
 
     // Support Tickets
     Route::get('/support-tickets', [SupportTicketController::class, 'index'])->name('support-tickets.index');
@@ -169,7 +210,6 @@ Route::prefix('dashboard')->name('dashboard.')->middleware(['auth', 'verified'])
     Route::delete('/support-tickets/{ticket}', [SupportTicketController::class, 'destroy'])->name('support-tickets.destroy');
     Route::post('/support-tickets/bulk-update', [SupportTicketController::class, 'bulkUpdate'])->name('support-tickets.bulk-update');
 
-    Route::view('/conversations', 'backend.pages.coming-soon', ['module' => 'Conversations'])->name('conversations.index');
     Route::view('/notifications', 'backend.pages.coming-soon', ['module' => 'Notifications'])->name('notifications.index');
 
     // Content Library
@@ -296,7 +336,7 @@ Route::prefix('dashboard')->name('dashboard.')->middleware(['auth', 'verified'])
     Route::post('/payment-methods', [PaymentMethodController::class, 'store'])->name('payment-methods.store');
     Route::post('/payment-methods/{paymentMethod}/set-default', [PaymentMethodController::class, 'setDefault'])->name('payment-methods.set-default');
     Route::delete('/payment-methods/{paymentMethod}', [PaymentMethodController::class, 'destroy'])->name('payment-methods.destroy');
-    
+
     // AJAX API routes
     Route::get('/payment-methods/api/list', [PaymentMethodController::class, 'getJson'])->name('payment-methods.api.list');
     Route::get('/payment-methods/api/default', [PaymentMethodController::class, 'getDefaultJson'])->name('payment-methods.api.default');

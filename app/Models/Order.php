@@ -93,4 +93,20 @@ class Order extends Model
     {
         return $this->hasMany(OrderStatusHistory::class);
     }
+
+    /**
+     * Get all sub-orders for this master order
+     */
+    public function subOrders(): HasMany
+    {
+        return $this->hasMany(SubOrder::class);
+    }
+
+    /**
+     * Check if this is a master order (has sub-orders)
+     */
+    public function isMasterOrder(): bool
+    {
+        return $this->subOrders()->count() > 0;
+    }
 }
