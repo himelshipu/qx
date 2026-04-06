@@ -211,6 +211,54 @@
                     </div>
                 @endif
 
+                <!-- Assign Moderator (Admin only) -->
+                @if (auth()->user()->user_type === 'admin' && !$conversation->handled_by_user_id)
+                    <div class="flex-shrink-0 border-b border-yellow-200 dark:border-yellow-900/30 bg-yellow-50/50 dark:bg-yellow-900/20 p-4 transition-all duration-300">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h4 class="font-semibold text-yellow-900 dark:text-yellow-100 flex items-center gap-2">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM9 19c-4.3 0-8 1.343-8 3v2h16v-2c0-1.657-3.7-3-8-3z" />
+                                    </svg>
+                                    Assign Moderator
+                                </h4>
+                                <p class="mt-1 text-xs text-yellow-800 dark:text-yellow-300">This conversation needs a moderator to handle creator responses.</p>
+                            </div>
+                        </div>
+                        <form action="{{ route('dashboard.conversations.assign-moderator', $conversation) }}" method="POST" class="mt-3 flex gap-2">
+                            @csrf
+                            <select name="moderator_user_id"
+                                class="flex-1 rounded-lg border border-yellow-300 bg-white px-3 py-2 text-sm dark:border-yellow-700 dark:bg-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-yellow-400 dark:focus:ring-yellow-600"
+                                required>
+                                <option value="">Select a moderator...</option>
+                                @foreach (\App\Models\User::where('user_type', 'moderator')->get() as $mod)
+                                    <option value="{{ $mod->id }}">{{ $mod->name }}</option>
+                                @endforeach
+                            </select>
+                            <button type="submit"
+                                class="rounded-lg bg-yellow-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-yellow-500 dark:bg-yellow-700 dark:hover:bg-yellow-800">
+                                Assign
+                            </button>
+                        </form>
+                    </div>
+                @elseif (auth()->user()->user_type === 'admin' && $conversation->handled_by_user_id)
+                    <div class="flex-shrink-0 border-b border-green-200 dark:border-green-900/30 bg-green-50/50 dark:bg-green-900/20 p-4">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h4 class="font-semibold text-green-900 dark:text-green-100 flex items-center gap-2">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    Moderator Assigned
+                                </h4>
+                                <p class="mt-1 text-sm text-green-800 dark:text-green-300">
+                                    <span class="font-medium">{{ $conversation->handledBy->name }}</span> is handling this conversation
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                @endif
+
                 <!-- Messages area - scrollable -->
                 <div id="messagesContainer" class="flex-1 overflow-y-auto p-5 space-y-4 bg-gradient-to-b from-gray-50 to-white dark:from-gray-950/30 dark:to-gray-900">
                     @forelse ($messages as $message)

@@ -25,7 +25,7 @@ class OrderController extends Controller
             $brandId = $user->brand?->id;
 
             $orders = Order::where('brand_id', $brandId)
-                ->with(['items.package.creator.user', 'acceptedBy'])
+                ->with(['items.package', 'items.creator.user', 'acceptedBy'])
                 ->when($search !== '', fn($q) => $q->where('order_number', 'like', "%{$search}%"))
                 ->when($status !== 'all', fn($q) => $q->where('status', $status))
                 ->orderByDesc('created_at')
@@ -35,7 +35,7 @@ class OrderController extends Controller
         } elseif ($user->user_type === 'creator') {
             // Creator sees orders where they have items
             $orders = Order::whereHas('items', fn($q) => $q->where('creator_id', $user->creator->id))
-                ->with(['buyer.user', 'items.package'])
+                ->with(['buyer.brand', 'items.package', 'items.creator.user'])
                 ->when($search !== '', fn($q) => $q->where('order_number', 'like', "%{$search}%"))
                 ->when($status !== 'all', fn($q) => $q->where('status', $status))
                 ->orderByDesc('created_at')
@@ -80,7 +80,7 @@ class OrderController extends Controller
             'buyer:id,name,email,phone',
             'items:id,order_id,creator_id,package_id,title,description,quantity,unit_price,line_total,status,due_date,paid_at',
             'items.creator:id,user_id,display_name',
-            'items.creator.user:id,name'
+            'items.creator.user'
         ]);
 
         return view('frontend.orders.show', compact('order'));

@@ -118,38 +118,12 @@ class CampaignController extends Controller
     }
 
     /**
-     * Display the designed campaign listing with real data.
-     */
-    public function indexDesigned(Request $request): View
-    {
-        $search = trim((string) $request->input('q', ''));
-        $status = (string) $request->input('status', 'all');
-        $type   = (string) $request->input('type', 'all');
-
-        return view(
-            'backend.pages.campaigns.designed-index',
-            $this->campaignService->getListingPayload($search, $status, $type)
-        );
-    }
-
-    /**
      * Show the form for creating a new campaign.
      */
     public function create(): View
     {
         return view(
             'backend.pages.campaigns.create',
-            $this->campaignService->getFormPayload()
-        );
-    }
-
-    /**
-     * Show the designed wizard for creating a campaign.
-     */
-    public function createDesigned(): View
-    {
-        return view(
-            'backend.pages.campaigns.designed-create',
             $this->campaignService->getFormPayload()
         );
     }
@@ -165,12 +139,8 @@ class CampaignController extends Controller
                 $request->boolean('is_active', true)
             );
 
-            $redirectRoute = $request->input('ui_variant') === 'designed'
-            ? 'dashboard.campaigns.designed'
-            : 'dashboard.campaigns.standard';
-
             return redirect()
-                ->route($redirectRoute)
+                ->route('dashboard.campaigns.standard')
                 ->with('success', 'Campaign "' . $campaign->title . '" has been created successfully.');
 
         } catch (ValidationException $e) {

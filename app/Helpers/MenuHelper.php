@@ -102,17 +102,17 @@ class MenuHelper
                     [
                         'icon'  => 'campaign',
                         'name'  => 'All Campaigns',
-                        'route' => 'campaigns.index'
+                        'route' => 'campaigns.standard'
                     ],
                     [
                         'icon'  => 'campaign-new',
                         'name'  => 'New Campaign',
-                        'route' => 'campaigns.create'
+                        'route' => 'campaigns.standard.create'
                     ],
                     [
                         'icon'  => 'user-add',
-                        'name'  => 'Influencer Assignments',
-                        'route' => 'campaigns.show'
+                        'name'  => 'Assign Campaign',
+                        'route' => 'campaigns.assign'
                     ],
                     [
                         'icon'  => 'content-library',

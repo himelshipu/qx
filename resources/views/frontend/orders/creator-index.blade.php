@@ -27,7 +27,7 @@
 						@foreach ($orders as $order)
 							<tr>
 								<td>{{ $order->order_number }}</td>
-								<td>{{ $order->buyer->user->name ?? 'N/A' }}</td>
+								<td>{{ $order->buyer->brand->name ?? 'N/A' }}</td>
 								<td>
 									@foreach ($order->items->where('creator_id', auth()->user()->creator?->id) as $item)
 										{{ $item->package->name ?? 'N/A' }}@if (!$loop->last)

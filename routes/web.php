@@ -215,7 +215,7 @@ Route::prefix('dashboard')->name('dashboard.')->middleware(['auth', 'verified', 
     Route::post('/creators/{creator}/portfolio/reorder', [CreatorPortfolioController::class, 'reorder'])->name('creators.portfolio.reorder');
     Route::post('/creators/{creator}/portfolio/{portfolio}/toggle', [CreatorPortfolioController::class, 'toggle'])->name('creators.portfolio.toggle');
 
-    // Admin campaigns - standard view only
+    // Admin campaigns
     Route::get('/campaigns/standard', [CampaignController::class, 'index'])->name('campaigns.standard');
     Route::get('/campaigns/standard/create', [CampaignController::class, 'create'])->name('campaigns.standard.create');
     Route::post('/campaigns', [CampaignController::class, 'store'])->name('campaigns.store');
@@ -223,6 +223,9 @@ Route::prefix('dashboard')->name('dashboard.')->middleware(['auth', 'verified', 
     Route::get('/campaigns/{campaign}/edit', [CampaignController::class, 'edit'])->name('campaigns.edit');
     Route::put('/campaigns/{campaign}', [CampaignController::class, 'update'])->name('campaigns.update');
     Route::delete('/campaigns/{campaign}', [CampaignController::class, 'destroy'])->name('campaigns.destroy');
+    Route::get('/campaigns/assign', [CampaignController::class, 'assign'])->name('campaigns.assign');
+    Route::post('/campaigns/assign', [CampaignController::class, 'assignStore'])->name('campaigns.assign.store');
+    Route::get('/campaigns/{campaign}/assigned-creators', [CampaignController::class, 'assignedCreatorsJson'])->name('campaigns.assigned-creators');
 
 // Campaign Influencer Management (Workflow A)
     Route::prefix('campaigns/{campaign}/influencers')->name('campaigns.influencers.')->group(function () {
