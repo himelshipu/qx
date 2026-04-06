@@ -48,10 +48,10 @@ class CartController extends Controller
 
             if ($request->wantsJson()) {
                 return response()->json([
-                    'success' => false,
+                    'success'       => false,
                     'requires_auth' => true,
-                    'message' => 'Please login first to add packages to your cart.',
-                    'redirect_url' => route('login'),
+                    'message'       => 'Please login first to add packages to your cart.',
+                    'redirect_url'  => route('login')
                 ], 401);
             }
 
@@ -254,6 +254,8 @@ class CartController extends Controller
         }
 
         try {
+            $conversations = [];
+
             // Create order for each cart item
             foreach ($cart->items as $cartItem) {
                 $package = $cartItem->package;
@@ -281,19 +283,27 @@ class CartController extends Controller
                 ]);
 
                 // Create conversation for package order
-                \App\Http\Controllers\ConversationController::createForPackageOrder(
+                $conversation = \App\Http\Controllers\ConversationController::createForPackageOrder(
                     $user->id,
                     $package->creator_id,
                     $order->id
                 );
+                $conversations[] = $conversation;
             }
 
             // Clear cart
             $cart->items()->delete();
 
-            return redirect()
-                ->route('dashboard.conversations.index')
-                ->with('success', 'Order created! Check your conversations to message the creators');
+            // Redirect to first conversation if only one, otherwise to conversations list
+            if (count($conversations) === 1) {
+                return redirect()
+                    ->route('frontend.conversations.show', $conversations[0])
+                    ->with('success', 'Order created! Start negotiating with the creator');
+            } else {
+                return redirect()
+                    ->route('frontend.conversations.index')
+                    ->with('success', 'Orders created! Check your conversations to message the creators');
+            }
         } catch (\Exception $e) {
             return redirect()
                 ->back()

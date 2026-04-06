@@ -36,11 +36,7 @@
 						platform.</p>
 				</div>
 				<div class="flex flex-wrap items-center gap-2">
-					<a href="{{ route('dashboard.campaigns.index') }}"
-						class="inline-flex items-center gap-2 rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800">
-						Switch to Enhanced View
-					</a>
-					<a href="{{ route('dashboard.campaigns.create') }}"
+					<a href="{{ route('dashboard.campaigns.standard.create') }}"
 						class="inline-flex items-center gap-2 rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-gray-800 dark:bg-gray-700 dark:hover:bg-gray-600">
 						<x-icons.plus class="h-4 w-4" />
 						New Campaign
@@ -49,7 +45,7 @@
 			</div>
 
 			<div class="p-5">
-				<form method="GET" action="{{ route('dashboard.campaigns.index') }}"
+				<form method="GET" action="{{ route('dashboard.campaigns.standard') }}"
 					class="mb-5 grid grid-cols-1 gap-3 md:grid-cols-6">
 					<div class="md:col-span-3">
 						<label for="q"
@@ -92,7 +88,7 @@
 							class="h-10 w-full rounded-lg bg-gray-900 px-3 text-sm font-medium text-white transition hover:bg-gray-800 dark:bg-gray-700 dark:hover:bg-gray-600">
 							Apply
 						</button>
-						<a href="{{ route('dashboard.campaigns.index') }}"
+						<a href="{{ route('dashboard.campaigns.standard') }}"
 							class="h-10 w-full rounded-lg border border-gray-200 px-3 text-center text-sm font-medium leading-10 text-gray-700 transition hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800">
 							Reset
 						</a>
@@ -198,10 +194,8 @@
 											<form action="{{ route('dashboard.campaigns.destroy', $campaign) }}" method="POST">
 												@csrf
 												@method('DELETE')
-												<button type="submit" {{ $dependencyCount > 0 ? 'disabled' : '' }}
-													data-confirm-title="Delete Campaign"
-													data-confirm-message="Delete this campaign? This action cannot be undone."
-													data-confirm-button="Delete"
+												<button type="submit" {{ $dependencyCount > 0 ? 'disabled' : '' }} data-confirm-title="Delete Campaign"
+													data-confirm-message="Delete this campaign? This action cannot be undone." data-confirm-button="Delete"
 													data-confirm-variant="danger"
 													title="{{ $dependencyCount > 0 ? 'Cannot delete: campaign has linked records' : 'Delete campaign' }}"
 													class="js-confirmable inline-flex items-center rounded-lg border border-gray-200 p-2 text-gray-600 transition hover:bg-red-50 hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-40 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-red-900/20 dark:hover:text-red-300">

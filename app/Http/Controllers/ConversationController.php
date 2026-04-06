@@ -87,7 +87,7 @@ class ConversationController extends Controller
             ]);
         }
 
-        return redirect()->route('dashboard.conversations.show', ['conversation' => $conversation]);
+        return redirect()->route('frontend.conversations.show', ['conversation' => $conversation]);
     }
 
     /**

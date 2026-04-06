@@ -3,8 +3,17 @@
 namespace App\Providers;
 
 use App\Models\Brand;
+use App\Models\Campaign;
+use App\Models\Conversation;
 use App\Models\Creator;
+use App\Models\Order;
+use App\Models\Package;
+use App\Policies\CampaignPolicy;
+use App\Policies\ConversationPolicy;
+use App\Policies\OrderPolicy;
+use App\Policies\PackagePolicy;
 use Illuminate\Database\Eloquent\Relations\Relation;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -26,5 +35,11 @@ class AppServiceProvider extends ServiceProvider
             'brand'   => Brand::class,
             'creator' => Creator::class
         ]);
+
+        // Register authorization policies
+        Gate::policy(Campaign::class, CampaignPolicy::class);
+        Gate::policy(Package::class, PackagePolicy::class);
+        Gate::policy(Conversation::class, ConversationPolicy::class);
+        Gate::policy(Order::class, OrderPolicy::class);
     }
 }

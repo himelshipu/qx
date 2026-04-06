@@ -1,6 +1,6 @@
 =========================================
 DETAILED MIGRATION COLUMN ANALYSIS
-Generated: 2026-03-31 18:17:00
+Generated: 2026-04-06 04:25:21
 =========================================
 
 ---------------------------------------------------
@@ -776,7 +776,7 @@ UNIQUE CONSTRAINTS:
 
 
 ---------------------------------------------------
-[37] File: 2026_03_29_000034_create_messages_table.php.tmp
+[37] File: 2026_03_29_000034_create_messages_table.php
 ---------------------------------------------------
 Table: messages
 
@@ -1260,7 +1260,87 @@ UNIQUE CONSTRAINTS:
 
 
 ---------------------------------------------------
-[61] File: 2026_03_30_000120_create_knowledge_base_articles_table.php
+[61] File: 2026_03_29_000057_create_campaign_influencers_table.php
+---------------------------------------------------
+Table: campaign_influencers
+
+COLUMN DEFINITIONS:
+-------------------
+  - campaign_id (foreignId)
+  - creator_id (foreignId)
+  - status (enum)
+  - approved_by (foreignId)
+  - approved_at (timestamp)
+  - cancelled_at (timestamp)
+  - rejection_reason (text)
+  - campaign_id (unique)
+
+FOREIGN KEY CONSTRAINTS:
+-----------------------
+  - campaign_id → campaigns
+  - creator_id → creators
+  - approved_by → users
+
+UNIQUE CONSTRAINTS:
+------------------
+  - ['campaign_id', 'creator_id']
+
+
+---------------------------------------------------
+[62] File: 2026_03_29_000058_create_sub_orders_table.php
+---------------------------------------------------
+Table: sub_orders
+
+COLUMN DEFINITIONS:
+-------------------
+  - order_id (foreignId)
+  - campaign_influencer_id (foreignId)
+  - creator_id (foreignId)
+  - status (enum)
+  - deliverables (longText)
+  - amount (decimal)
+  - currency (char)
+  - accepted_at (timestamp)
+  - completed_at (timestamp)
+  - cancelled_at (timestamp)
+  - paid_at (timestamp)
+  - order_id (index)
+  - creator_id (index)
+
+FOREIGN KEY CONSTRAINTS:
+-----------------------
+  - order_id → orders
+  - campaign_influencer_id → campaign_influencers
+  - creator_id → creators
+
+
+---------------------------------------------------
+[63] File: 2026_03_29_000059_create_moderator_assignments_table.php
+---------------------------------------------------
+Table: moderator_assignments
+
+COLUMN DEFINITIONS:
+-------------------
+  - moderator_user_id (foreignId)
+  - creator_id (foreignId)
+  - assigned_at (timestamp)
+  - unassigned_at (timestamp)
+  - moderator_user_id (index)
+  - creator_id (index)
+  - creator_id (unique)
+
+FOREIGN KEY CONSTRAINTS:
+-----------------------
+  - moderator_user_id → users
+  - creator_id → creators
+
+UNIQUE CONSTRAINTS:
+------------------
+  - ['creator_id', 'unassigned_at']
+
+
+---------------------------------------------------
+[64] File: 2026_03_30_000120_create_knowledge_base_articles_table.php
 ---------------------------------------------------
 Table: knowledge_base_articles
 
@@ -1280,9 +1360,63 @@ COLUMN DEFINITIONS:
   - is_featured (index)
 
 
+---------------------------------------------------
+[65] File: 2026_03_30_000121_create_payment_methods_table.php
+---------------------------------------------------
+Table: payment_methods
+
+COLUMN DEFINITIONS:
+-------------------
+  - user_id (unsignedBigInteger)
+  - provider (enum)
+  - provider_payment_method_id (string)
+  - last4 (string)
+  - brand (string)
+  - expiry_month (unsignedTinyInteger)
+  - expiry_year (unsignedSmallInteger)
+  - is_default (boolean)
+  - user_id (foreign)
+  - user_id (index)
+  - user_id (index)
+
+
+---------------------------------------------------
+[66] File: 2026_03_30_000122_add_payment_method_id_to_payments_table.php
+---------------------------------------------------
+Table: UNKNOWN_TABLE
+
+COLUMN DEFINITIONS:
+-------------------
+  - payment_method_id (foreignId)
+  - \App\Models\PaymentMethod::class (dropForeignIdFor)
+  - payment_method_id (dropColumn)
+
+
+---------------------------------------------------
+[67] File: 2026_03_30_000122_add_stripe_customer_id_to_users_table.php
+---------------------------------------------------
+Table: UNKNOWN_TABLE
+
+COLUMN DEFINITIONS:
+-------------------
+  - stripe_customer_id (string)
+  - stripe_customer_id (dropColumn)
+
+
+---------------------------------------------------
+[68] File: 2026_04_05_062950_add_paid_at_to_order_items_table.php
+---------------------------------------------------
+Table: UNKNOWN_TABLE
+
+COLUMN DEFINITIONS:
+-------------------
+  - paid_at (timestamp)
+  - paid_at (dropColumn)
+
+
 =========================================
 SUMMARY
 =========================================
-Total Migration Files: 61
-Generated on: 2026-03-31 18:17:00
+Total Migration Files: 68
+Generated on: 2026-04-06 04:25:21
 =========================================

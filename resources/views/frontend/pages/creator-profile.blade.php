@@ -133,7 +133,7 @@
 					</button>
 					@auth
 						@if (optional(Auth::user()->creator)->id === optional($creator)->id)
-							<a href="{{ route('dashboard.creator.profile.edit', ['slug' => Auth::user()->slug]) }}"
+							<a href="{{ route('creator.profile.edit', ['slug' => Auth::user()->slug]) }}"
 								class="flex items-center gap-2 px-5 py-2 border border-gray-200 dark:border-gray-800 rounded-lg text-sm font-bold text-[#222] hover:bg-purple-50 transition active:scale-95">
 								<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
 									<path d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
@@ -691,6 +691,23 @@
 							return;
 						}
 
+						// Check if user is authenticated
+						if (!this.isAuthenticated) {
+							window.location.href = this.loginUrl;
+							return;
+						}
+
+						// Prevent creators from adding to cart
+						if (this.userType === 'creator') {
+							window.confirmationModal.open({
+								title: 'Creators Cannot Add to Cart',
+								message: 'Only brands can add packages to cart. If you\'re a brand, please log in with your brand account.',
+								confirmText: 'OK',
+								variant: 'warning'
+							});
+							return;
+						}
+
 						const added = await addToCart(this.selectedPackage.id);
 
 						if (added && this.isAuthenticated && this.userType === 'brand') {
@@ -704,7 +721,12 @@
 						} else if (this.userType === 'brand') {
 							window.location.href = this.startNegotiationUrl;
 						} else {
-							alert('Only brands can negotiate packages.');
+							window.confirmationModal.open({
+								title: 'Creators Cannot Negotiate Packages',
+								message: 'Only brands can negotiate packages. If you\'re a brand, please log in with your brand account.',
+								confirmText: 'OK',
+								variant: 'warning'
+							});
 						}
 					}
 				};

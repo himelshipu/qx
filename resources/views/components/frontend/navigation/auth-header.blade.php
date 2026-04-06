@@ -59,8 +59,8 @@
 			<div class="mb-0">
 				<nav class="flex flex-wrap items-center justify-center gap-4 md:gap-6 lg:gap-10 text-sm font-medium mb-0">
 					<a href="{{ route('home') }}" class="nav-link {{ request()->routeIs('home') ? 'active' : '' }}">Home</a>
-					<a href="{{ route('dashboard.content-library') }}"
-						class="nav-link {{ request()->routeIs('dashboard.content-library') ? 'active' : '' }}">Library</a>
+					<a href="{{ route('frontend.content-library') }}"
+						class="nav-link {{ request()->routeIs('frontend.content-library') ? 'active' : '' }}">Library</a>
 					<a href="{{ route('home') }}#how-it-works" class="nav-link">How it Works</a>
 					<a href="{{ route('influencers') }}" class="nav-link">Search</a>
 					<a href="{{ route('faq') }}" class="nav-link {{ request()->routeIs('faq') ? 'active' : '' }}">Faq</a>
@@ -123,33 +123,62 @@
 						class="absolute right-0 top-full mt-3 w-56 bg-white dark:bg-gray-800 rounded-[20px] shadow-[0_10px_40px_rgba(0,0,0,0.1)] border border-gray-50 dark:border-gray-700 z-50 overflow-hidden">
 						<div class="py-2 flex flex-col">
 							@auth
+								<!-- Profile -->
 								@if (Auth::user()->brand)
 									<a href="{{ route('brand.profile', Auth::user()->slug) }}"
-										class="px-7 py-3.5 text-[15px] font-bold text-gray-800 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">View
-										profile</a>
-									<a href="{{ route('dashboard.brand.profile.edit', ['slug' => Auth::user()->slug]) }}"
-										class="px-7 py-3.5 text-[15px] font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">Edit
-										profile</a>
+										class="px-7 py-3.5 text-[15px] font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+										<i class="fas fa-user mr-2"></i>Profile
+									</a>
 								@elseif(Auth::user()->creator)
 									<a href="{{ route('creator.profile', Auth::user()->slug) }}"
-										class="px-7 py-3.5 text-[15px] font-bold text-gray-800 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">View
-										profile</a>
-									<a href="{{ route('dashboard.creator.profile.edit', ['slug' => Auth::user()->slug]) }}"
-										class="px-7 py-3.5 text-[15px] font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">Edit
-										profile</a>
+										class="px-7 py-3.5 text-[15px] font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+										<i class="fas fa-user mr-2"></i>Profile
+									</a>
 								@endif
 
-								<a href="{{ route('dashboard.index') }}"
-									class="px-7 py-3.5 text-[15px] font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">Dashboard</a>
+								<!-- Account -->
+								<a href="{{ route('frontend.account.edit', Auth::user()->slug) }}"
+									class="px-7 py-3.5 text-[15px] font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+									<i class="fas fa-cog mr-2"></i>Account
+								</a>
+
+								<!-- Cart (Brand Only) -->
+								@if (Auth::user()->user_type === 'brand')
+									<a href="{{ route('cart.index') }}"
+										class="px-7 py-3.5 text[15px] font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+										<i class="fas fa-shopping-cart mr-2"></i>Cart
+									</a>
+								@endif
+
+								<!-- Orders -->
+								<a href="{{ route('frontend.orders.index') }}"
+									class="px-7 py-3.5 text-[15px] font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+									<i class="fas fa-receipt mr-2"></i>Orders
+								</a>
+
+								<!-- Campaigns -->
+								<a href="{{ route('frontend.campaigns.index') }}"
+									class="px-7 py-3.5 text-[15px] font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+									<i class="fas fa-bullseye mr-2"></i>Campaigns
+								</a>
+
+								<!-- Conversations (Brand Only) -->
+								@if (Auth::user()->user_type === 'brand')
+									<a href="{{ route('frontend.conversations.index') }}"
+										class="px-7 py-3.5 text-[15px] font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+										<i class="fas fa-comments mr-2"></i>Conversations
+									</a>
+								@endif
 
 								<div class="border-t border-gray-100 dark:border-gray-700 my-1 mx-2"></div>
-								<a href="{{ route('dashboard.account.edit', ['slug' => Auth::user()->slug]) }}"
-									class="px-7 py-3.5 text-[15px] font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">Account</a>
+
+								<!-- Logout -->
 								<form method="POST" action="{{ route('logout') }}">
 									@csrf
 									<button type="submit"
-										class="text-left px-7 py-3.5 text-[15px] font-medium text-red-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-red-700 transition-colors w-full">Log
-										Out</button>
+										class="text-left px-7 py-3.5 text-[15px] font-medium text-red-600 dark:text-red-500 hover:bg-gray-50 dark:hover:bg-red-700/20 transition-colors w-full">
+										<i class="fas fa-sign-out-alt mr-2"></i>Log Out
+									</button>
 								</form>
 							@endauth
 						</div>
@@ -191,7 +220,8 @@
 										<div class="h-full bg-white transition-all duration-1000"
 											:style="`width: ${cartItems.length > 0 ? (1 / cartItems.length) * 100 : 0}%`"></div>
 									</div>
-									<div class="text-right mt-3 text-sm font-bold text-gray-500" x-text="cartItems.length + ' Influencers'"></div>
+									<div class="text-right mt-3 text-sm font-bold text-gray-500" x-text="cartItems.length + ' Influencers'">
+									</div>
 								</div>
 
 								<!-- Spend Progress -->

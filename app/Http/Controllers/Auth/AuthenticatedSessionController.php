@@ -23,7 +23,9 @@ class AuthenticatedSessionController extends Controller
     /**
      * Handle an incoming authentication request.
      *
-     * Workflow B (Package Order): Redirect to conversation after login if confirming package
+     * Redirects based on user type:
+     * - admin/superadmin/moderator → /dashboard
+     * - brand/creator → /
      */
     public function store(LoginRequest $request): RedirectResponse
     {
@@ -37,7 +39,17 @@ class AuthenticatedSessionController extends Controller
             return $pendingActionRedirect;
         }
 
-        return redirect()->intended(route('dashboard.index', absolute: false));
+        $user     = $request->user();
+        $userType = $user->user_type;
+
+        // Redirect based on user type
+        if (in_array($userType, ['admin', 'superadmin', 'moderator'])) {
+            return redirect()->intended(route('dashboard.index', absolute: false));
+        }
+
+        // Brand and Creator users go to frontend
+
+        return redirect()->intended(route('home', absolute: false));
     }
 
     /**

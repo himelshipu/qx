@@ -17,10 +17,11 @@ class PaymentMethodController extends Controller
     private function redirectToAccount(Request $request, string $fallbackTab = 'payment')
     {
         $user = Auth::user();
-        $tab = $request->input('tab', $request->query('tab', $fallbackTab));
+        $tab  = $request->input('tab', $request->query('tab', $fallbackTab));
 
         return redirect()
-            ->route('dashboard.account.edit', ['slug' => $user->slug, 'tab' => $tab])
+            ->route('frontend.account.edit', ['slug' => $user->slug, 'tab' => $tab])
+            ->with('success', session('success'))
             ->with('tab', $tab);
     }
 
@@ -39,17 +40,17 @@ class PaymentMethodController extends Controller
      */
     public function index(Request $request)
     {
-        $user = Auth::user();
+        $user           = Auth::user();
         $paymentMethods = $user->paymentMethods()
             ->orderBy('is_default', 'desc')
             ->orderBy('created_at', 'desc')
             ->get();
 
         return view('frontend.pages.account', [
-            'user' => $user,
-            'brand' => $user->brand,
+            'user'           => $user,
+            'brand'          => $user->brand,
             'paymentMethods' => $paymentMethods,
-            'tab' => 'payment'
+            'tab'            => 'payment'
         ]);
     }
 
@@ -58,7 +59,7 @@ class PaymentMethodController extends Controller
      */
     public function store(StorePaymentMethodRequest $request)
     {
-        $user = Auth::user();
+        $user      = Auth::user();
         $validated = $request->validated();
 
         // Check if Stripe is properly configured
@@ -89,7 +90,7 @@ class PaymentMethodController extends Controller
     public function setDefault(Request $request, PaymentMethod $paymentMethod)
     {
         $this->verifyOwnership($paymentMethod);
-        
+
         $this->paymentService->setAsDefault($paymentMethod);
 
         return $this->redirectToAccount($request)
@@ -102,7 +103,7 @@ class PaymentMethodController extends Controller
     public function destroy(Request $request, PaymentMethod $paymentMethod)
     {
         $this->verifyOwnership($paymentMethod);
-        
+
         $this->paymentService->deletePaymentMethod($paymentMethod);
 
         return $this->redirectToAccount($request)
@@ -114,20 +115,20 @@ class PaymentMethodController extends Controller
      */
     public function getJson(Request $request)
     {
-        $user = Auth::user();
+        $user           = Auth::user();
         $paymentMethods = $user->paymentMethods()
             ->orderBy('is_default', 'desc')
             ->select(['id', 'last4', 'brand', 'expiry_month', 'expiry_year', 'is_default'])
             ->get()
             ->map(function ($method) {
                 return [
-                    'id' => $method->id,
-                    'display' => $method->display_name,
-                    'last4' => $method->last4,
-                    'brand' => strtoupper($method->brand),
-                    'expiry' => $method->formatted_expiry,
-                    'is_default' => $method->is_default,
-                    'is_expired' => $method->isExpired(),
+                    'id'               => $method->id,
+                    'display'          => $method->display_name,
+                    'last4'            => $method->last4,
+                    'brand'            => strtoupper($method->brand),
+                    'expiry'           => $method->formatted_expiry,
+                    'is_default'       => $method->is_default,
+                    'is_expired'       => $method->isExpired(),
                     'is_expiring_soon' => $method->isExpiringSoon()
                 ];
             });
@@ -140,7 +141,7 @@ class PaymentMethodController extends Controller
      */
     public function getDefaultJson(Request $request)
     {
-        $user = Auth::user();
+        $user          = Auth::user();
         $defaultMethod = $user->paymentMethods()->where('is_default', true)->first();
 
         if (!$defaultMethod) {
@@ -148,11 +149,11 @@ class PaymentMethodController extends Controller
         }
 
         return response()->json([
-            'id' => $defaultMethod->id,
+            'id'      => $defaultMethod->id,
             'display' => $defaultMethod->display_name,
-            'last4' => $defaultMethod->last4,
-            'brand' => strtoupper($defaultMethod->brand),
-            'expiry' => $defaultMethod->formatted_expiry,
+            'last4'   => $defaultMethod->last4,
+            'brand'   => strtoupper($defaultMethod->brand),
+            'expiry'  => $defaultMethod->formatted_expiry
         ]);
     }
 }
