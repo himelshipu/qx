@@ -3,7 +3,7 @@
 @section('title', 'Campaign Influencers')
 
 @section('content')
-	<x-backend.shell.breadcrumb :links="[['label' => 'Campaigns', 'url' => route('dashboard.campaigns.index')]]" pageTitle="Campaign Influencers - {{ $campaign->title }}" />
+	<x-backend.shell.breadcrumb :links="[['label' => 'Campaigns', 'url' => route('dashboard.campaigns.standard')]]" pageTitle="Campaign Influencers - {{ $campaign->title }}" />
 
 	<div class="space-y-6">
 		<!-- Campaign Info -->
@@ -21,7 +21,7 @@
 						</svg>
 						Assign Influencers
 					</a>
-					<a href="{{ route('dashboard.campaigns.index') }}"
+					<a href="{{ route('dashboard.campaigns.standard') }}"
 						class="inline-flex items-center gap-2 rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800">
 						Back
 					</a>

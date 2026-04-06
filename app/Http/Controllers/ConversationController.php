@@ -22,27 +22,13 @@ class ConversationController extends Controller
 
         if ($user->user_type === 'brand') {
             // Brand sees conversations with creators/moderators
-            $conversations = Conversation::where('brand_user_id', $user->id)
-                ->with(['creator.user', 'handledBy', 'messages' => function ($query) {
-                    $query->orderByDesc('created_at')->limit(1);
-                }])
-                ->orderByDesc('updated_at')
-                ->paginate(15);
+            $conversations = Conversation::forBrand($user->id)->paginate(15);
         } elseif ($user->user_type === 'admin') {
             // Admins see ALL conversations to manage and assign moderators
-            $conversations = Conversation::with(['creator.user', 'brandUser', 'handledBy', 'messages' => function ($query) {
-                $query->orderByDesc('created_at')->limit(1);
-            }])
-                ->orderByDesc('updated_at')
-                ->paginate(15);
+            $conversations = Conversation::forAdmin()->paginate(15);
         } elseif ($user->user_type === 'moderator') {
             // Moderators see conversations assigned to them
-            $conversations = Conversation::where('handled_by_user_id', $user->id)
-                ->with(['creator.user', 'brandUser', 'messages' => function ($query) {
-                    $query->orderByDesc('created_at')->limit(1);
-                }])
-                ->orderByDesc('updated_at')
-                ->paginate(15);
+            $conversations = Conversation::forModerator($user->id)->paginate(15);
         } else {
             // Creators don't see any conversations (they use moderators)
             abort(403, 'Creators cannot access conversations directly.');
@@ -58,8 +44,10 @@ class ConversationController extends Controller
      */
     public function startNegotiation(Creator $creator): RedirectResponse
     {
+        $creatorProfileUrl = route('creator.profile', ['slug' => $creator->user->slug]);
+
         if (!auth()->check()) {
-            app(PendingPostAuthActionService::class)->rememberNegotiate($creator->id);
+            app(PendingPostAuthActionService::class)->rememberNegotiate($creator->id, $creatorProfileUrl);
 
             return redirect()
                 ->route('login')
@@ -70,8 +58,10 @@ class ConversationController extends Controller
 
         // Only brands can start negotiations
         if ($user->user_type !== 'brand') {
-            return redirect()->route('creator.profile', ['slug' => $creator->user->slug])
-                ->with('error', 'Only brands can negotiate with creators');
+            return redirect($creatorProfileUrl)
+                ->with('warning', 'Only brand accounts can add to cart or negotiate packages.')
+                ->with('brand_action_required_modal', true)
+                ->with('brand_action_required_message', 'Only brand accounts can add to cart or negotiate packages.');
         }
 
         // Find or create a conversation with this creator
@@ -87,7 +77,20 @@ class ConversationController extends Controller
             ]);
         }
 
-        return redirect()->route('frontend.conversations.show', ['conversation' => $conversation]);
+        $creatorName = $creator->display_name ?: ($creator->user?->name ?? 'there');
+        $messageText = sprintf('hello %s,i want to discuss with you for a custom package', $creatorName);
+
+        Message::create([
+            'conversation_id' => $conversation->id,
+            'sender_user_id'  => $user->id,
+            'sender_role'     => $user->user_type,
+            'message'         => $messageText,
+            'read_at'         => null,
+        ]);
+
+        $conversation->touch();
+
+        return redirect()->route('frontend.conversations.show', ['conversation' => $conversation->public_id]);
     }
 
     /**
@@ -110,10 +113,7 @@ class ConversationController extends Controller
         // Admins can view all conversations
 
         $conversation->load(['creator.user', 'handledBy', 'brandUser']);
-        $messages = $conversation->messages()
-            ->with('sender')
-            ->orderBy('created_at')
-            ->paginate(20);
+        $messages = Message::forConversation($conversation->id);
 
         return view('backend.pages.conversations.show', [
             'conversation'  => $conversation,
@@ -172,7 +172,7 @@ class ConversationController extends Controller
         ]);
 
         return redirect()
-            ->route('dashboard.conversations.show', $conversation)
+            ->route('dashboard.conversations.show', $conversation->public_id)
             ->with('success', 'Message sent');
     }
 

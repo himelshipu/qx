@@ -167,7 +167,7 @@ class CampaignController extends Controller
 
             $redirectRoute = $request->input('ui_variant') === 'designed'
             ? 'dashboard.campaigns.designed'
-            : 'dashboard.campaigns.index';
+            : 'dashboard.campaigns.standard';
 
             return redirect()
                 ->route($redirectRoute)

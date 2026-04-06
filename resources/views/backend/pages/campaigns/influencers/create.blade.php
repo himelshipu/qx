@@ -4,7 +4,7 @@
 
 @section('content')
 	<x-backend.shell.breadcrumb :links="[
-	    ['label' => 'Campaigns', 'url' => route('dashboard.campaigns.index')],
+	    ['label' => 'Campaigns', 'url' => route('dashboard.campaigns.standard')],
 	    ['label' => $campaign->title, 'url' => route('dashboard.campaigns.influencers.index', $campaign)],
 	]" pageTitle="Assign Influencers" />
 

@@ -88,6 +88,6 @@ class RegisteredUserController extends Controller
             return $pendingActionRedirect;
         }
 
-        return redirect()->intended(route('dashboard.index', absolute: false));
+        return redirect()->intended(route('home', absolute: false));
     }
 }

@@ -54,7 +54,7 @@
         @endphp
 
         @foreach($campaignStats as $c)
-        <a href="{{ route('dashboard.campaigns.index') }}" class="block">
+        <a href="{{ route('dashboard.campaigns.standard') }}" class="block">
         <div class="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl p-5 relative overflow-hidden flex items-center gap-5 shadow-sm hover:shadow-md transition-shadow">
             <div class="absolute top-2 right-3">
                 <span class="text-[10px] font-bold text-purple-500 bg-blue-50 dark:bg-purple-900/20 px-2 py-0.5 rounded border border-blue-100 dark:border-purple-600 uppercase">View All</span>

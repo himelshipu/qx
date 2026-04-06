@@ -691,28 +691,18 @@
 							return;
 						}
 
-						// Check if user is authenticated
-						if (!this.isAuthenticated) {
-							window.location.href = this.loginUrl;
-							return;
-						}
-
 						// Prevent creators from adding to cart
-						if (this.userType === 'creator') {
+						if (this.isAuthenticated && this.userType !== 'brand') {
 							window.confirmationModal.open({
-								title: 'Creators Cannot Add to Cart',
-								message: 'Only brands can add packages to cart. If you\'re a brand, please log in with your brand account.',
+								title: 'Brand Account Required',
+								message: 'Only brand accounts can add to cart or negotiate packages.',
 								confirmText: 'OK',
 								variant: 'warning'
 							});
 							return;
 						}
 
-						const added = await addToCart(this.selectedPackage.id);
-
-						if (added && this.isAuthenticated && this.userType === 'brand') {
-							window.location.href = this.cartUrl;
-						}
+						await addToCart(this.selectedPackage.id);
 					},
 
 					negotiatePackage() {
@@ -722,8 +712,8 @@
 							window.location.href = this.startNegotiationUrl;
 						} else {
 							window.confirmationModal.open({
-								title: 'Creators Cannot Negotiate Packages',
-								message: 'Only brands can negotiate packages. If you\'re a brand, please log in with your brand account.',
+								title: 'Brand Account Required',
+								message: 'Only brand accounts can add to cart or negotiate packages.',
 								confirmText: 'OK',
 								variant: 'warning'
 							});
@@ -732,5 +722,6 @@
 				};
 			}
 		</script>
+
 	@endpush
 @endsection

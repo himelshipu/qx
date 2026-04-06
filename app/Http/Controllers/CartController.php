@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Cart;
 use App\Models\CartItem;
+use App\Models\Conversation;
+use App\Models\Message;
 use App\Models\Package;
 use App\Services\Auth\PendingPostAuthActionService;
 use Illuminate\Http\RedirectResponse;
@@ -12,6 +14,8 @@ use Illuminate\View\View;
 
 class CartController extends Controller
 {
+    private const MAX_CART_INFLUENCERS = 5;
+
     /**
      * View cart contents
      */
@@ -44,7 +48,10 @@ class CartController extends Controller
         ]);
 
         if (!auth()->check()) {
-            app(PendingPostAuthActionService::class)->rememberAddToCart((int) $validated['package_id']);
+            app(PendingPostAuthActionService::class)->rememberAddToCart(
+                (int) $validated['package_id'],
+                $request->headers->get('referer')
+            );
 
             if ($request->wantsJson()) {
                 return response()->json([
@@ -61,6 +68,20 @@ class CartController extends Controller
         }
 
         $user    = auth()->user();
+
+        if ($user->user_type !== 'brand') {
+            $message = 'Only brand accounts can add packages to cart.';
+
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $message,
+                ], 403);
+            }
+
+            return redirect()->back()->with('warning', $message);
+        }
+
         $package = Package::findOrFail($validated['package_id']);
 
         // Get or create cart
@@ -72,6 +93,29 @@ class CartController extends Controller
         $existingItem = $cart->items()
             ->where('package_id', $package->id)
             ->first();
+
+        $creatorAlreadyInCart = $cart->items()
+            ->where('creator_id', $package->creator_id)
+            ->exists();
+
+        if (!$existingItem && !$creatorAlreadyInCart) {
+            $influencerCount = (int) $cart->items()
+                ->distinct('creator_id')
+                ->count('creator_id');
+
+            if ($influencerCount >= self::MAX_CART_INFLUENCERS) {
+                $limitMessage = 'You can not add more than 5 influencers before placing your current orders.';
+
+                if ($request->wantsJson()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => $limitMessage,
+                    ], 422);
+                }
+
+                return redirect()->back()->with('warning', $limitMessage);
+            }
+        }
 
         if ($existingItem) {
             $existingItem->update([
@@ -244,7 +288,7 @@ class CartController extends Controller
     {
         $user = auth()->user();
         $cart = Cart::where('user_id', $user->id)
-            ->with('items.package')
+            ->with('items.package.creator.user')
             ->first();
 
         if (!$cart || $cart->items->count() === 0) {
@@ -254,56 +298,98 @@ class CartController extends Controller
         }
 
         try {
-            $conversations = [];
+            $latestConversation = null;
 
-            // Create order for each cart item
-            foreach ($cart->items as $cartItem) {
-                $package = $cartItem->package;
+            // Group by influencer to keep one conversation message per influencer.
+            foreach ($cart->items->groupBy('creator_id') as $creatorId => $creatorCartItems) {
+                $latestOrderId = null;
+                $packageLines = [];
 
-                // Create order
-                $order = \App\Models\Order::create([
-                    'order_number'  => 'ORD-' . uniqid(),
-                    'buyer_user_id' => $user->id,
-                    'total_amount'  => $cartItem->unit_price * $cartItem->quantity,
-                    'currency'      => 'USD',
-                    'status'        => 'pending',
-                    'placed_at'     => now()
-                ]);
+                foreach ($creatorCartItems as $cartItem) {
+                    $package = $cartItem->package;
 
-                // Create order item
-                \App\Models\OrderItem::create([
-                    'order_id'   => $order->id,
-                    'package_id' => $package->id,
-                    'creator_id' => $package->creator_id,
-                    'title'      => $package->name,
-                    'quantity'   => $cartItem->quantity,
-                    'unit_price' => $cartItem->unit_price,
-                    'line_total' => $cartItem->unit_price * $cartItem->quantity,
-                    'status'     => 'pending'
-                ]);
+                    // Create order
+                    $order = \App\Models\Order::create([
+                        'order_number'  => 'ORD-' . uniqid(),
+                        'buyer_user_id' => $user->id,
+                        'brand_id'      => $user->brand?->id,
+                        'total_amount'  => $cartItem->unit_price * $cartItem->quantity,
+                        'currency'      => 'USD',
+                        'status'        => 'pending',
+                        'placed_at'     => now()
+                    ]);
 
-                // Create conversation for package order
-                $conversation = \App\Http\Controllers\ConversationController::createForPackageOrder(
-                    $user->id,
-                    $package->creator_id,
-                    $order->id
+                    // Create order item
+                    \App\Models\OrderItem::create([
+                        'order_id'   => $order->id,
+                        'package_id' => $package->id,
+                        'creator_id' => $package->creator_id,
+                        'title'      => $package->name,
+                        'quantity'   => $cartItem->quantity,
+                        'unit_price' => $cartItem->unit_price,
+                        'line_total' => $cartItem->unit_price * $cartItem->quantity,
+                        'status'     => 'pending'
+                    ]);
+
+                    $latestOrderId = $order->id;
+                    $packageLines[] = sprintf('%dx %s', (int) $cartItem->quantity, $package->name);
+                }
+
+                $creatorSampleItem = $creatorCartItems->first();
+                $creator = $creatorSampleItem?->package?->creator;
+
+                $conversation = Conversation::query()
+                    ->where('brand_user_id', $user->id)
+                    ->where('creator_id', (int) $creatorId)
+                    ->latest('updated_at')
+                    ->first();
+
+                if (!$conversation) {
+                    $conversation = \App\Http\Controllers\ConversationController::createForPackageOrder(
+                        $user->id,
+                        (int) $creatorId,
+                        (int) $latestOrderId
+                    );
+                }
+
+                if (!$conversation->order_id && $latestOrderId) {
+                    $conversation->update([
+                        'order_id' => $latestOrderId,
+                        'conversation_type' => $conversation->conversation_type ?: 'order',
+                    ]);
+                }
+
+                $creatorName = $creator?->display_name ?: ($creator?->user?->name ?? 'there');
+                $orderConfirmationMessage = sprintf(
+                    "hello %s,i want to confirm order for this package:\n- %s",
+                    $creatorName,
+                    implode("\n- ", $packageLines)
                 );
-                $conversations[] = $conversation;
+
+                Message::create([
+                    'conversation_id' => $conversation->id,
+                    'sender_user_id' => $user->id,
+                    'sender_role' => $user->user_type,
+                    'message' => $orderConfirmationMessage,
+                    'read_at' => null,
+                ]);
+
+                $conversation->touch();
+                $latestConversation = $conversation;
             }
 
             // Clear cart
             $cart->items()->delete();
 
-            // Redirect to first conversation if only one, otherwise to conversations list
-            if (count($conversations) === 1) {
-                return redirect()
-                    ->route('frontend.conversations.show', $conversations[0])
-                    ->with('success', 'Order created! Start negotiating with the creator');
-            } else {
-                return redirect()
-                    ->route('frontend.conversations.index')
-                    ->with('success', 'Orders created! Check your conversations to message the creators');
+            if ($latestConversation) {
+                    return redirect()
+                        ->route('frontend.conversations.show', $latestConversation->public_id)
+                        ->with('success', 'Orders created! Latest conversation opened.');
             }
+
+            return redirect()
+                ->route('frontend.conversations.index')
+                ->with('success', 'Orders created!');
         } catch (\Exception $e) {
             return redirect()
                 ->back()
@@ -319,13 +405,17 @@ class CartController extends Controller
         $cart->load(['items.package.creator.user']);
 
         $items = $cart->items->map(function ($item) {
+            $creatorUser = $item->package->creator->user;
+
             return [
                 'id'       => $item->id,
-                'name'     => $item->package->creator->user->name,
+                'name'     => $creatorUser->name,
                 'package'  => $item->package->name,
                 'price'    => (int) $item->unit_price,
                 'quantity' => $item->quantity,
-                'image'    => image_url($item->package->creator->profile_image_path ?? '/default.webp')
+                'image'    => image_url($item->package->creator->profile_image_path ?? '/default.webp'),
+                'creator_id' => $item->creator_id,
+                'country' => $creatorUser->country ?? null,
             ];
         })->toArray();
 
@@ -336,7 +426,8 @@ class CartController extends Controller
         return [
             'items'     => $items,
             'subtotal'  => $subtotal,
-            'itemCount' => $cart->items->count()
+            'itemCount' => $cart->items->count(),
+            'totalQuantity' => $cart->items->sum('quantity'),
         ];
     }
 

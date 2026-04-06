@@ -23,12 +23,7 @@ class ConversationController extends Controller
 
         if ($user->user_type === 'brand') {
             // Brands see their conversations with creators
-            $conversations = Conversation::where('brand_user_id', $user->id)
-                ->with(['creator.user', 'handledBy', 'messages' => function ($query) {
-                    $query->orderByDesc('created_at')->limit(1);
-                }])
-                ->orderByDesc('updated_at')
-                ->paginate(15);
+            $conversations = Conversation::forBrand($user->id)->paginate(15);
 
             return view('frontend.conversations.index', compact('conversations'));
         } else {
@@ -51,10 +46,7 @@ class ConversationController extends Controller
 
         $conversation->load(['creator.user', 'handledBy', 'brandUser', 'order']);
 
-        $messages = $conversation->messages()
-            ->with('sender')
-            ->orderBy('created_at')
-            ->paginate(20);
+        $messages = Message::forConversation($conversation->id);
 
         return view('frontend.conversations.show', compact('conversation', 'messages'));
     }
@@ -87,8 +79,8 @@ class ConversationController extends Controller
         // Update conversation timestamp
         $conversation->touch();
 
-        return redirect()
-            ->route('frontend.conversations.show', $conversation)
-            ->with('success', 'Message sent');
+            return redirect()
+                ->route('frontend.conversations.show', $conversation->public_id)
+                ->with('success', 'Message sent');
     }
 }

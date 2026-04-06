@@ -41,4 +41,23 @@ class Message extends Model
     {
         return $this->belongsTo(Creator::class, 'on_behalf_of_creator_id');
     }
+
+    /**
+     * Scope: Get paginated messages for a conversation with eager loading
+     */
+    public function scopeForConversation($query, $conversationId, $perPage = 20)
+    {
+        return $query->where('conversation_id', $conversationId)
+            ->with('sender')
+            ->orderBy('created_at')
+            ->paginate($perPage);
+    }
+
+    /**
+     * Scope: Get unread messages for a conversation
+     */
+    public function scopeUnread($query)
+    {
+        return $query->whereNull('read_at');
+    }
 }

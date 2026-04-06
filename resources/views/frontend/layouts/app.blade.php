@@ -64,6 +64,8 @@
 			// Store initial cart data from server
 			window.initialCartData = {!! json_encode($cartItemsData ?? []) !!};
 			window.loginUrl = @js(route('login'));
+			window.autoOpenCartSidebar = @json((bool) session('auto_open_cart_sidebar'));
+			window.brandActionRequiredMessage = @json(session('brand_action_required_message'));
 
 			// Global store for cart state (accessible from anywhere)
 			window.cartStore = {
@@ -136,11 +138,15 @@
 				}
 			}
 
-			function cartModalData() {
+			function cartModalData(initialCartItems = null) {
+				const resolvedInitialItems = Array.isArray(initialCartItems) ?
+					initialCartItems :
+					(Array.isArray(window.initialCartData) ? window.initialCartData : []);
+
 				return {
 					isCartOpen: false,
 					isProfileOpen: false,
-					cartItems: window.initialCartData || [],
+					cartItems: resolvedInitialItems,
 					isRemoving: false,
 					isAdding: false,
 
@@ -150,6 +156,62 @@
 
 					get projectedSpend() {
 						return this.cartItems.length > 0 ? this.subtotal : 0;
+					},
+
+					get totalItemCount() {
+						return this.cartItems.reduce((sum, item) => sum + Number(item.quantity || 0), 0);
+					},
+
+					get uniqueInfluencerCount() {
+						const creatorIds = this.cartItems
+							.map((item) => item.creator_id)
+							.filter((id) => id !== null && id !== undefined);
+
+						return new Set(creatorIds).size;
+					},
+
+					get topAudienceLocations() {
+						const locationMap = new Map();
+
+						this.cartItems.forEach((item) => {
+							const country = (item.country || '').toString().trim();
+							if (!country) {
+								return;
+							}
+
+							const normalized = country.toLowerCase();
+							locationMap.set(normalized, {
+								country,
+								count: (locationMap.get(normalized)?.count || 0) + 1,
+							});
+						});
+
+						return Array.from(locationMap.values())
+							.sort((a, b) => b.count - a.count)
+							.slice(0, 3)
+							.map((entry) => ({
+								country: entry.country,
+								count: entry.count,
+								code: this.countryCode(entry.country),
+							}));
+					},
+
+					countryCode(country) {
+						const value = (country || '').toString().trim();
+						if (!value) {
+							return '--';
+						}
+
+						if (value.length <= 3) {
+							return value.toUpperCase();
+						}
+
+						const words = value.split(/\s+/).filter(Boolean);
+						if (words.length >= 2) {
+							return (words[0][0] + words[1][0]).toUpperCase();
+						}
+
+						return value.slice(0, 2).toUpperCase();
 					},
 
 					async addToCart(packageId) {
@@ -245,6 +307,26 @@
 					}
 				};
 			}
+
+			document.addEventListener('DOMContentLoaded', () => {
+				if (window.autoOpenCartSidebar) {
+					window.setTimeout(() => {
+						const cartHeaderEl = document.querySelector('[x-data*="cartModalData"]');
+						if (cartHeaderEl && cartHeaderEl.__x?.$data) {
+							cartHeaderEl.__x.$data.isCartOpen = true;
+						}
+					}, 150);
+				}
+
+				if (window.brandActionRequiredMessage && window.confirmationModal) {
+					window.confirmationModal.open({
+						title: 'Brand Account Required',
+						message: window.brandActionRequiredMessage,
+						confirmText: 'OK',
+						variant: 'warning'
+					});
+				}
+			});
 		</script>
 
 		@if (auth()->user())

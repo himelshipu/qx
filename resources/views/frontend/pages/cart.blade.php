@@ -86,27 +86,26 @@
 					<div class="lg:col-span-1">
 						<div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 sticky top-4">
 							<h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Order Summary</h3>
+							@php
+								$subtotal = (float) $cart->total_price;
+								$fee = $subtotal * 0.02;
+								$total = $subtotal + $fee;
+							@endphp
 
 							<div class="space-y-3 mb-6 pb-6 border-b border-gray-200 dark:border-gray-700">
 								<div class="flex justify-between text-sm">
 									<span class="text-gray-600 dark:text-gray-400">Subtotal:</span>
-									<span class="font-medium text-gray-900 dark:text-white">${{ number_format($cart->total_price, 2) }}</span>
+									<span class="font-medium text-gray-900 dark:text-white">${{ number_format($subtotal, 2) }}</span>
 								</div>
 								<div class="flex justify-between text-sm">
-									<span class="text-gray-600 dark:text-gray-400">Tax (10%):</span>
-									<span
-										class="font-medium text-gray-900 dark:text-white">${{ number_format($cart->total_price * 0.1, 2) }}</span>
-								</div>
-								<div class="flex justify-between text-sm">
-									<span class="text-gray-600 dark:text-gray-400">Shipping:</span>
-									<span class="font-medium text-gray-900 dark:text-white">Free</span>
+									<span class="text-gray-600 dark:text-gray-400">Fee (2%):</span>
+									<span class="font-medium text-gray-900 dark:text-white">${{ number_format($fee, 2) }}</span>
 								</div>
 							</div>
 
 							<div class="flex justify-between mb-6">
 								<span class="text-lg font-semibold text-gray-900 dark:text-white">Total:</span>
-								<span
-									class="text-lg font-bold text-gray-900 dark:text-white">${{ number_format($cart->total_price * 1.1, 2) }}</span>
+								<span class="text-lg font-bold text-gray-900 dark:text-white">${{ number_format($total, 2) }}</span>
 							</div>
 
 							<form action="{{ route('cart.checkout') }}" method="POST" class="w-full">

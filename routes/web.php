@@ -123,8 +123,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Frontend Conversations
     Route::get('/messages', [\App\Http\Controllers\Frontend\ConversationController::class, 'index'])->name('frontend.conversations.index');
-    Route::get('/messages/{conversation}', [\App\Http\Controllers\Frontend\ConversationController::class, 'show'])->name('frontend.conversations.show');
-    Route::post('/messages/{conversation}/send', [\App\Http\Controllers\Frontend\ConversationController::class, 'storeMessage'])->name('frontend.conversations.storeMessage');
+    Route::get('/messages/{conversation:public_id}', [\App\Http\Controllers\Frontend\ConversationController::class, 'show'])->name('frontend.conversations.show');
+    Route::post('/messages/{conversation:public_id}/send', [\App\Http\Controllers\Frontend\ConversationController::class, 'storeMessage'])->name('frontend.conversations.storeMessage');
 
     // Frontend Content Library
     Route::get('/content-library', [ContentLibraryController::class, 'index'])->name('frontend.content-library');
@@ -257,10 +257,11 @@ Route::prefix('dashboard')->name('dashboard.')->middleware(['auth', 'verified', 
 
     Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
     Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
+    Route::put('/orders/{order}/status', [OrderController::class, 'updateStatus'])->name('orders.update-status');
     Route::post('/orders/create-from-campaign', [OrderController::class, 'createFromCampaign'])->name('orders.create-from-campaign');
     Route::put('/sub-orders/{subOrder}/status', [OrderController::class, 'updateSubOrderStatus'])->name('sub-orders.update-status');
     Route::post('/sub-orders/{subOrder}/mark-paid', [OrderController::class, 'markSubOrderPaid'])->name('sub-orders.mark-paid');
-    Route::put('/order-items/{orderItem}', [OrderController::class, 'updateOrderItemStatus'])->name('order-items.update-status');
+    Route::put('/order-items/{orderItem}/status', [OrderController::class, 'updateOrderItemStatus'])->name('order-items.update-status');
     Route::post('/order-items/{orderItem}/mark-paid', [OrderController::class, 'markOrderItemPaid'])->name('order-items.mark-paid');
     Route::view('/payments', 'backend.pages.coming-soon', ['module' => 'Payments'])->name('payments.index');
     Route::view('/payouts', 'backend.pages.coming-soon', ['module' => 'Payouts'])->name('payouts.index');
@@ -268,9 +269,9 @@ Route::prefix('dashboard')->name('dashboard.')->middleware(['auth', 'verified', 
 
 // Conversations (Chat with Moderator Mediation)
     Route::get('/conversations', [\App\Http\Controllers\ConversationController::class, 'index'])->name('conversations.index');
-    Route::get('/conversations/{conversation}', [\App\Http\Controllers\ConversationController::class, 'show'])->name('conversations.show');
-    Route::post('/conversations/{conversation}/messages', [\App\Http\Controllers\ConversationController::class, 'storeMessage'])->name('conversations.storeMessage');
-    Route::post('/conversations/{conversation}/assign-moderator', [\App\Http\Controllers\ConversationController::class, 'assignModerator'])->name('conversations.assign-moderator');
+    Route::get('/conversations/{conversation:public_id}', [\App\Http\Controllers\ConversationController::class, 'show'])->name('conversations.show');
+    Route::post('/conversations/{conversation:public_id}/messages', [\App\Http\Controllers\ConversationController::class, 'storeMessage'])->name('conversations.storeMessage');
+    Route::post('/conversations/{conversation:public_id}/assign-moderator', [\App\Http\Controllers\ConversationController::class, 'assignModerator'])->name('conversations.assign-moderator');
 
 // Support Tickets
     Route::get('/support-tickets', [SupportTicketController::class, 'index'])->name('support-tickets.index');

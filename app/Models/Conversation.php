@@ -18,8 +18,18 @@ class Conversation extends Model
         'handled_by_user_id',
         'order_id',
         'creator_direct_message_enabled',
-        'title'
+        'title',
+        'public_id',
     ];
+
+    protected static function booted()
+    {
+        static::creating(function ($conversation) {
+            if (empty($conversation->public_id)) {
+                $conversation->public_id = bin2hex(random_bytes(8));
+            }
+        });
+    }
 
     protected function casts(): array
     {
@@ -56,5 +66,47 @@ class Conversation extends Model
     public function messages(): HasMany
     {
         return $this->hasMany(Message::class);
+    }
+
+    /**
+     * Scope: Brand conversations ordered by most recent
+     */
+    public function scopeForBrand($query, $brandUserId)
+    {
+        return $query->where('brand_user_id', $brandUserId)
+            ->with([
+                'creator.user',
+                'handledBy',
+                'messages' => fn($q) => $q->orderByDesc('created_at')->limit(1)
+            ])
+            ->orderByDesc('updated_at');
+    }
+
+    /**
+     * Scope: All conversations (admin view)
+     */
+    public function scopeForAdmin($query)
+    {
+        return $query->with([
+            'creator.user',
+            'brandUser',
+            'handledBy',
+            'messages' => fn($q) => $q->orderByDesc('created_at')->limit(1)
+        ])
+            ->orderByDesc('updated_at');
+    }
+
+    /**
+     * Scope: Moderator's assigned conversations
+     */
+    public function scopeForModerator($query, $moderatorId)
+    {
+        return $query->where('handled_by_user_id', $moderatorId)
+            ->with([
+                'creator.user',
+                'brandUser',
+                'messages' => fn($q) => $q->orderByDesc('created_at')->limit(1)
+            ])
+            ->orderByDesc('updated_at');
     }
 }

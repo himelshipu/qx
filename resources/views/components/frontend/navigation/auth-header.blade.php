@@ -22,25 +22,26 @@
 	    if ($cart) {
 	        $cart->load(['items.package.creator.user']);
 	        foreach ($cart->items as $item) {
+	            $creatorUser = $item->package->creator->user;
 	            $cartItemsData[] = [
 	                'id' => $item->id,
-	                'name' => $item->package->creator->user->name,
+	                'name' => $creatorUser->name,
 	                'package' => $item->package->name,
 	                'price' => (int) $item->unit_price,
 	                'quantity' => $item->quantity,
 	                'image' => image_url($item->package->creator->profile_image_path ?? '/default.webp'),
+	                'creator_id' => $item->creator_id,
+	                'country' => $creatorUser->country ?? null,
 	            ];
 	            $cartTotal += $item->unit_price * $item->quantity;
 	        }
 	    }
 	}
 
-	// Convert cart data to JSON for Alpine.js
-	$cartItemsJson = json_encode($cartItemsData);
 @endphp
 
 
-<div x-data="cartModalData()" class=" max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
+<div x-data='cartModalData(@json($cartItemsData))' class=" max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
 
 	<div class="relative">
 		<!-- After login menu -->
@@ -73,6 +74,10 @@
 				<!-- Shopping Cart Icon (THIS ONLY opens the Cart Modal) -->
 				<div @click="isCartOpen = true" class="relative cursor-pointer hover:opacity-70 transition-opacity p-2">
 					<x-icons.shopping-cart class="w-5 h-5 " />
+
+					<span x-show="totalItemCount > 0" x-cloak
+						class="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-purple-600 text-white text-[10px] font-bold leading-[18px] text-center"
+						x-text="totalItemCount"></span>
 
 
 
@@ -214,13 +219,14 @@
 								<!-- Influencer Progress -->
 								<div>
 									<div class="flex justify-between items-end mb-3">
-										<span class="text-xl font-bold" x-text="(cartItems.length > 0 ? 1 : 0) + ' Influencer'"></span>
+										<span class="text-xl font-bold" x-text="uniqueInfluencerCount + ' Influencer'"></span>
 									</div>
 									<div class="h-2 w-full bg-gray-800 rounded-sm overflow-hidden">
 										<div class="h-full bg-white transition-all duration-1000"
-											:style="`width: ${cartItems.length > 0 ? (1 / cartItems.length) * 100 : 0}%`"></div>
+											:style="`width: ${uniqueInfluencerCount > 0 ? (1 / uniqueInfluencerCount) * 100 : 0}%`"></div>
 									</div>
-									<div class="text-right mt-3 text-sm font-bold text-gray-500" x-text="cartItems.length + ' Influencers'">
+									<div class="text-right mt-3 text-sm font-bold text-gray-500"
+										x-text="uniqueInfluencerCount + ' Influencers'">
 									</div>
 								</div>
 
@@ -239,20 +245,24 @@
 								<!-- Top Locations -->
 								<div x-show="cartItems.length > 0" class="pt-4">
 									<h3 class="text-xl font-bold mb-6">Top Audience Locations</h3>
-									<ul class="space-y-5">
-										<li class="flex items-center gap-4"><span
-												class="w-8 h-8 rounded-full border border-gray-700 flex items-center justify-center text-xs font-bold">1</span><span
-												class="text-sm font-bold uppercase tracking-widest"><span class="text-gray-500 mr-2">US</span> United
-												States</span></li>
-										<li class="flex items-center gap-4"><span
-												class="w-8 h-8 rounded-full border border-gray-700 flex items-center justify-center text-xs font-bold">2</span><span
-												class="text-sm font-bold uppercase tracking-widest"><span class="text-gray-500 mr-2">GB</span> United
-												Kingdom</span></li>
-										<li class="flex items-center gap-4"><span
-												class="w-8 h-8 rounded-full border border-gray-700 flex items-center justify-center text-xs font-bold">3</span><span
-												class="text-sm font-bold uppercase tracking-widest"><span class="text-gray-500 mr-2">TH</span>
-												Thailand</span></li>
-									</ul>
+									<template x-if="topAudienceLocations.length > 0">
+										<ul class="space-y-5">
+											<template x-for="(location, index) in topAudienceLocations" :key="location.code + '-' + index">
+												<li class="flex items-center gap-4">
+													<span
+														class="w-8 h-8 rounded-full border border-gray-700 flex items-center justify-center text-xs font-bold"
+														x-text="index + 1"></span>
+													<span class="text-sm font-bold uppercase tracking-widest">
+														<span class="text-gray-500 mr-2" x-text="location.code"></span>
+														<span x-text="location.country"></span>
+													</span>
+												</li>
+											</template>
+										</ul>
+									</template>
+									<template x-if="topAudienceLocations.length === 0">
+										<p class="text-sm text-gray-500">No audience location data available yet.</p>
+									</template>
 								</div>
 							</div>
 						</div>
@@ -286,14 +296,16 @@
 									<div class="flex items-start gap-4">
 										<img :src="item.image" class="w-16 h-16 rounded-xl object-cover shadow-sm">
 										<div class="flex-1">
-											<div class="flex justify-between items-start">
+											<div class="flex justify-between items-start mb-1">
 												<h4 class="font-bold text-gray-900 text-[15px]" x-text="item.package"></h4>
 												<span class="font-bold text-gray-900" x-text="'$' + (item.price * item.quantity).toLocaleString()"></span>
 											</div>
-											<p class="text-sm text-gray-400" x-text="'by ' + item.name"></p>
+											<div class="flex justify-between items-center">
+												<p class="text-sm text-gray-400" x-text="'by ' + item.name"></p>
+												<button @click="removeCartItem(item.id)" :disabled="isRemoving"
+													class="text-[11px] font-bold text-gray-300 hover:text-red-500 uppercase tracking-widest transition-colors border-b border-gray-300 pb-1 disabled:opacity-50">Remove</button>
+											</div>
 											<p class="text-xs text-gray-500 mt-1" x-text="'Qty: ' + item.quantity"></p>
-											<button @click="removeCartItem(item.id)" :disabled="isRemoving"
-												class="text-[11px] font-bold text-gray-300 hover:text-red-500 mt-2 uppercase tracking-widest transition-colors flex justify-self-end border-b border-gray-300 pb-1 disabled:opacity-50">Remove</button>
 										</div>
 									</div>
 								</template>

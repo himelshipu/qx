@@ -4,7 +4,9 @@ namespace App\Http\Controllers\Backend;
 
 use App\Http\Controllers\Controller;
 use App\Models\Order;
+use App\Models\OrderItem;
 use Illuminate\Http\Request;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 
 class OrderController extends Controller
@@ -66,7 +68,7 @@ class OrderController extends Controller
             'acceptedBy:id,name,email',
             'acceptedForCreator:id,user_id,display_name',
             'acceptedForCreator.user:id,name',
-            'items:id,order_id,creator_id,package_id,title,quantity,unit_price,line_total,status,due_date',
+            'items:id,order_id,creator_id,package_id,title,quantity,unit_price,line_total,status,due_date,paid_at',
             'items.creator:id,user_id,display_name',
             'items.creator.user:id,name',
             'items.package:id,name,base_price,currency',
@@ -76,6 +78,40 @@ class OrderController extends Controller
         return view('backend.pages.orders.show', [
             'order' => $order
         ]);
+    }
+
+    /**
+     * Update overall order status
+     */
+    public function updateStatus(Request $request, Order $order): RedirectResponse
+    {
+        $validated = $request->validate([
+            'status' => 'required|in:pending,accepted,in-progress,in_progress,completed,cancelled'
+        ]);
+
+        $status = $validated['status'];
+
+        // Normalize status (convert in-progress to in_progress for database)
+        if ($status === 'in-progress') {
+            $status = 'in_progress';
+        }
+
+        $order->update([
+            'status' => $status
+        ]);
+
+        // Update timestamps based on status
+        if ($status === 'accepted') {
+            $order->update(['accepted_at' => $order->accepted_at ?? now()]);
+        } elseif ($status === 'completed') {
+            $order->update(['completed_at' => now()]);
+        } elseif ($status === 'cancelled') {
+            $order->update(['cancelled_at' => now()]);
+        }
+
+        return redirect()
+            ->back()
+            ->with('success', 'Order status updated successfully');
     }
 
     /**
@@ -141,7 +177,7 @@ class OrderController extends Controller
     /**
      * Update sub-order status
      */
-    public function updateSubOrderStatus(Request $request, \App\Models\SubOrder $subOrder): \Illuminate\Http\RedirectResponse
+    public function updateSubOrderStatus(Request $request, \App\Models\SubOrder $subOrder): RedirectResponse
     {
         $validated = $request->validate([
             'status' => 'required|in:pending,accepted,in_progress,on_review,completed,cancelled'
@@ -167,7 +203,7 @@ class OrderController extends Controller
     /**
      * Record payment for a sub-order
      */
-    public function markSubOrderPaid(Request $request, \App\Models\SubOrder $subOrder): \Illuminate\Http\RedirectResponse
+    public function markSubOrderPaid(Request $request, \App\Models\SubOrder $subOrder): RedirectResponse
     {
         $subOrder->update([
             'paid_at' => now()
@@ -181,10 +217,10 @@ class OrderController extends Controller
     /**
      * Update order item status
      */
-    public function updateOrderItemStatus(Request $request, OrderItem $orderItem): \Illuminate\Http\RedirectResponse
+    public function updateOrderItemStatus(Request $request, OrderItem $orderItem): RedirectResponse
     {
         $validated = $request->validate([
-            'status' => 'required|in:pending,accepted,in_progress,delivered,approved,rejected,cancelled'
+            'status' => 'required|in:pending,accepted,in_progress,delivered,approved,rejected,cancelled,completed'
         ]);
 
         $orderItem->update([
@@ -199,7 +235,7 @@ class OrderController extends Controller
     /**
      * Mark order item as paid
      */
-    public function markOrderItemPaid(OrderItem $orderItem): \Illuminate\Http\RedirectResponse
+    public function markOrderItemPaid(OrderItem $orderItem): RedirectResponse
     {
         $orderItem->update([
             'paid_at' => now()

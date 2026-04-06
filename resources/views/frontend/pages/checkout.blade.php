@@ -100,7 +100,7 @@
 							@csrf
 							<button type="submit"
 								class="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold py-3 px-4 rounded-lg transition mb-3">
-								Complete Order
+								Place Order
 							</button>
 						</form>
 

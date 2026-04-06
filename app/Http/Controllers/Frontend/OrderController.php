@@ -21,8 +21,10 @@ class OrderController extends Controller
         $status = (string) $request->input('status', 'all');
 
         if ($user->user_type === 'brand') {
-            // Brand sees orders they created
-            $orders = Order::where('brand_user_id', $user->id)
+            // Brand sees orders for their own brand
+            $brandId = $user->brand?->id;
+
+            $orders = Order::where('brand_id', $brandId)
                 ->with(['items.package.creator.user', 'acceptedBy'])
                 ->when($search !== '', fn($q) => $q->where('order_number', 'like', "%{$search}%"))
                 ->when($status !== 'all', fn($q) => $q->where('status', $status))
@@ -47,16 +49,26 @@ class OrderController extends Controller
 
     /**
      * Display the specified order.
+     * Authorization: brand sees orders they bought, creator sees orders where they have items
      */
     public function show(Order $order): View
     {
         $user = auth()->user();
 
-        // Authorization: brand sees own orders, creator sees orders where they have items
-        if ($user->user_type === 'brand' && $order->brand_user_id !== $user->id) {
+        // Authorization check
+        if (!in_array($user->user_type, ['brand', 'creator'])) {
             abort(403, 'Unauthorized');
         }
 
+        // Brand user: check if they are the buyer
+        if ($user->user_type === 'brand') {
+            // Check if buyer belongs to this brand user
+            if ($order->buyer_user_id !== $user->id) {
+                abort(403, 'Unauthorized');
+            }
+        }
+
+        // Creator user: check if they have items in this order
         if ($user->user_type === 'creator') {
             $hasItems = $order->items()->where('creator_id', $user->creator->id)->exists();
             if (!$hasItems) {
@@ -64,14 +76,9 @@ class OrderController extends Controller
             }
         }
 
-        if (!in_array($user->user_type, ['brand', 'creator'])) {
-            abort(403, 'Unauthorized');
-        }
-
         $order->load([
             'buyer:id,name,email,phone',
-            'items:id,order_id,creator_id,package_id,name,quantity,unit_price,status,due_date',
-            'items.package:id,name,base_price,currency',
+            'items:id,order_id,creator_id,package_id,title,description,quantity,unit_price,line_total,status,due_date,paid_at',
             'items.creator:id,user_id,display_name',
             'items.creator.user:id,name'
         ]);

@@ -17,8 +17,8 @@ class OrderPolicy
             return true;
         }
 
-        // Brand can view orders they created
-        if ($user->user_type === 'brand' && $order->brand_user_id === $user->id) {
+        // Brand can view orders for their own brand
+        if ($user->user_type === 'brand' && $order->brand_id === $user->brand?->id) {
             return true;
         }
 
@@ -52,6 +52,6 @@ class OrderPolicy
 
         // Brand can update their own orders (only status to some extent)
 
-        return $user->user_type === 'brand' && $order->brand_user_id === $user->id;
+        return $user->user_type === 'brand' && $order->brand_id === $user->brand?->id;
     }
 }
