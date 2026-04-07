@@ -20,7 +20,7 @@ return new class extends Migration
             $table->timestamp('decided_at')->nullable();
             $table->timestamps();
 
-            $table->unique(['campaign_id', 'influencer_id'], 'campaign_creator_unique');
+            $table->unique(['campaign_id', 'influencer_id'], 'campaign_influencer_unique');
         });
     }
 

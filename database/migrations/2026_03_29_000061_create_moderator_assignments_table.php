@@ -16,7 +16,7 @@ return new class extends Migration
             $table->timestamp('unassigned_at')->nullable();
             $table->timestamps();
 
-            // One moderator can have multiple creators, but each creator can have only one active moderator
+            // One moderator can have multiple influencers, but each influencer can have only one active moderator
             $table->index('moderator_user_id');
             $table->index('influencer_id');
             $table->unique(['influencer_id', 'unassigned_at']);

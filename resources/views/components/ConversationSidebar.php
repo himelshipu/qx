@@ -21,7 +21,7 @@ class ConversationSidebar extends Component
     public function getPartyForSidebar($item)
     {
         if ($this->user->user_type === 'brand') {
-            return $item->creator?->user;
+            return $item->influencer?->user;
         }
         return $item->brandUser;
     }

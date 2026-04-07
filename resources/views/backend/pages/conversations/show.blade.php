@@ -39,7 +39,7 @@
 
         $getPartyForSidebar = static function (\App\Models\Conversation $item) use ($user) {
             if ($user->user_type === 'brand') {
-                return $item->creator?->user;
+                return $item->influencer?->user;
             }
 
             return $item->brandUser;
@@ -47,7 +47,7 @@
 
         $currentTitle =
             $user->user_type === 'brand'
-                ? ($conversation->creator->display_name ?? $conversation->creator->user->name)
+                ? ($conversation->influencer->display_name ?? $conversation->influencer->user->name)
                 : $conversation->brandUser->name;
         
         // Helper to get status color
@@ -222,7 +222,7 @@
                                     </svg>
                                     Assign Moderator
                                 </h4>
-                                <p class="mt-1 text-xs text-yellow-800 dark:text-yellow-300">This conversation needs a moderator to handle creator responses.</p>
+                                <p class="mt-1 text-xs text-yellow-800 dark:text-yellow-300">This conversation needs a moderator to handle influencer responses.</p>
                             </div>
                         </div>
                         <form action="{{ route('dashboard.conversations.assign-moderator', $conversation) }}" method="POST" class="mt-3 flex gap-2">

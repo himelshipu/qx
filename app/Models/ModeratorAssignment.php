@@ -14,14 +14,14 @@ class ModeratorAssignment extends Model
         'moderator_user_id',
         'influencer_id',
         'assigned_at',
-        'unassigned_at'
+        'unassigned_at',
     ];
 
     protected function casts(): array
     {
         return [
-            'assigned_at'   => 'datetime',
-            'unassigned_at' => 'datetime'
+            'assigned_at' => 'datetime',
+            'unassigned_at' => 'datetime',
         ];
     }
 
@@ -34,9 +34,9 @@ class ModeratorAssignment extends Model
     }
 
     /**
-     * Get the creator/influencer being moderated
+     * Get the influencer being moderated
      */
-    public function creator(): BelongsTo
+    public function influencer(): BelongsTo
     {
         return $this->belongsTo(Influencer::class);
     }

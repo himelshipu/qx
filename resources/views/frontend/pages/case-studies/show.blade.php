@@ -131,11 +131,11 @@
 						Inspired by this case study?
 					</h3>
 					<p class="text-gray-600 dark:text-gray-300 mb-6">
-						Join our creator community and start collaborating with brands today.
+						Join our influencer community and start collaborating with brands today.
 					</p>
 					<a href="{{ route('influencers') }}"
 						class="inline-flex items-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-bold transition">
-						Browse Creators
+						Browse Influencers
 						<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
 						</svg>

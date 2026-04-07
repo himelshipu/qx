@@ -1,5 +1,5 @@
 @php
-	/** @var \App\Models\Creator|null $influencer */
+	/** @var \App\Models\Influencer|null $influencer */
 	$influencer = $influencer ?? null;
 	$user = $influencer?->user;
 	$isEditMode = $influencer !== null;
@@ -11,7 +11,7 @@
 	$initialCoverPreview = $user?->cover_image_path ? \App\Helpers\ImageHelper::url($user->cover_image_path) : null;
 @endphp
 
-<div x-data="creatorUploader({
+<div x-data="influencerUploader({
     profilePreview: @js($initialProfilePreview),
     coverPreview: @js($initialCoverPreview),
     categoryOptions: @js($categoryOptions),
@@ -47,7 +47,7 @@
 					Email <span class="text-red-500">*</span>
 				</label>
 				<input id="email" name="email" type="email" value="{{ old('email', $user?->email) }}" required
-					placeholder="creator@example.com"
+					placeholder="influencer@example.com"
 					class="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-3 text-sm text-gray-900 focus:border-gray-500 focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-white">
 				@error('email')
 					<p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
@@ -94,7 +94,7 @@
 			<div>
 				<label for="title_name" class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Title</label>
 				<input id="title_name" name="title_name" type="text" value="{{ old('title_name', $influencer?->title_name) }}"
-					placeholder="e.g., Fashion UGC Creator"
+					placeholder="e.g., Fashion UGC Influencer"
 					class="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-3 text-sm text-gray-900 focus:border-gray-500 focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-white">
 				@error('title_name')
 					<p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
@@ -184,7 +184,7 @@
 
 		<div>
 			<label for="bio" class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Bio</label>
-			<textarea id="bio" name="bio" rows="4" placeholder="Short creator biography"
+			<textarea id="bio" name="bio" rows="4" placeholder="Short influencer biography"
 			 class="w-full rounded-lg border border-gray-300 bg-transparent px-3 py-2 text-sm text-gray-900 focus:border-gray-500 focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-white">{{ old('bio', $user?->bio) }}</textarea>
 			@error('bio')
 				<p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
@@ -339,8 +339,8 @@
 			<input type="hidden" name="is_featured" value="0">
 			<label for="is_featured" class="flex cursor-pointer items-center justify-between gap-3">
 				<div>
-					<span class="text-sm font-medium text-amber-800 dark:text-amber-200">Featured Creator</span>
-					<p class="text-xs text-amber-600 dark:text-amber-400 mt-0.5">Show this creator in the homepage Featured section
+					<span class="text-sm font-medium text-amber-800 dark:text-amber-200">Featured Influencer</span>
+					<p class="text-xs text-amber-600 dark:text-amber-400 mt-0.5">Show this influencer in the homepage Featured section
 						and on /influencer/featured</p>
 				</div>
 				<input id="is_featured" name="is_featured" type="checkbox" value="1"
@@ -369,7 +369,7 @@
 @once
 	@push('scripts')
 		<script>
-			function creatorUploader(config) {
+			function influencerUploader(config) {
 				return {
 					profilePreview: config.profilePreview || null,
 					coverPreview: config.coverPreview || null,

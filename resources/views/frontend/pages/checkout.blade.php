@@ -21,7 +21,7 @@
                 <div class="divide-y divide-gray-200 dark:divide-gray-800">
                     @foreach ($items as $item)
                         @php
-                            $influencer = $item->package->creator;
+                            $influencer = $item->package->influencer;
                             $influencerName = $influencer->display_name ?? $influencer->user->name;
                         @endphp
                         <div class="p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -56,7 +56,7 @@
                         <h3 class="font-semibold text-blue-900 dark:text-blue-100">What happens next?</h3>
                         <ul class="mt-2 text-sm text-blue-800 dark:text-blue-200 space-y-1">
                             <li>✓ Your order will be created</li>
-                            <li>✓ A conversation will open with each creator</li>
+                            <li>✓ A conversation will open with each influencer</li>
                             <li>✓ You can discuss details and negotiate terms</li>
                             <li>✓ Track progress until delivery</li>
                         </ul>
@@ -81,8 +81,8 @@
                             <span class="font-medium text-gray-900 dark:text-white">{{ $items->sum('quantity') }}</span>
                         </div>
                         <div class="flex justify-between text-sm">
-                            <span class="text-gray-600 dark:text-gray-400">Creators</span>
-                            <span class="font-medium text-gray-900 dark:text-white">{{ $items->groupBy('package.creator_id')->count() }}</span>
+                            <span class="text-gray-600 dark:text-gray-400">Influencers</span>
+                            <span class="font-medium text-gray-900 dark:text-white">{{ $items->groupBy('package.influencer_id')->count() }}</span>
                         </div>
                     </div>
 
@@ -106,7 +106,7 @@
 
                     <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-800">
                         <p class="text-xs text-gray-500 dark:text-gray-400">
-                            After placing your order, you'll be redirected to your conversations where you can message creators directly.
+                            After placing your order, you'll be redirected to your conversations where you can message influencers directly.
                         </p>
                     </div>
                 </div>

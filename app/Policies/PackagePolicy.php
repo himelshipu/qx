@@ -17,7 +17,7 @@ class PackagePolicy
             return true;
         }
 
-        // Creator can view their own packages
+        // Influencer can view their own packages
         if ($user->user_type === 'influencer' && $package->influencer_id === $user->influencer?->id) {
             return true;
         }
@@ -48,7 +48,7 @@ class PackagePolicy
             return true;
         }
 
-        // Creator can update only their own
+        // Influencer can update only their own
 
         return $user->user_type === 'influencer' && $package->influencer_id === $user->influencer?->id;
     }
@@ -63,7 +63,7 @@ class PackagePolicy
             return true;
         }
 
-        // Creator can delete only their own
+        // Influencer can delete only their own
 
         return $user->user_type === 'influencer' && $package->influencer_id === $user->influencer?->id;
     }

@@ -17,9 +17,9 @@ class Conversation extends Model
         'brand_user_id',
         'handled_by_user_id',
         'order_id',
-        'creator_direct_message_enabled',
+        'influencer_direct_message_enabled',
         'title',
-        'public_id'
+        'public_id',
     ];
 
     protected static function booted()
@@ -34,11 +34,11 @@ class Conversation extends Model
     protected function casts(): array
     {
         return [
-            'creator_direct_message_enabled' => 'boolean'
+            'influencer_direct_message_enabled' => 'boolean',
         ];
     }
 
-    public function creator(): BelongsTo
+    public function influencer(): BelongsTo
     {
         return $this->belongsTo(Influencer::class, 'influencer_id');
     }
@@ -77,7 +77,7 @@ class Conversation extends Model
             ->with([
                 'influencer.user',
                 'handledBy',
-                'messages' => fn($q) => $q->orderByDesc('created_at')->limit(1)
+                'messages' => fn ($q) => $q->orderByDesc('created_at')->limit(1),
             ])
             ->orderByDesc('updated_at');
     }
@@ -91,7 +91,7 @@ class Conversation extends Model
             'influencer.user',
             'brandUser',
             'handledBy',
-            'messages' => fn($q) => $q->orderByDesc('created_at')->limit(1)
+            'messages' => fn ($q) => $q->orderByDesc('created_at')->limit(1),
         ])
             ->orderByDesc('updated_at');
     }
@@ -105,7 +105,7 @@ class Conversation extends Model
             ->with([
                 'influencer.user',
                 'brandUser',
-                'messages' => fn($q) => $q->orderByDesc('created_at')->limit(1)
+                'messages' => fn ($q) => $q->orderByDesc('created_at')->limit(1),
             ])
             ->orderByDesc('updated_at');
     }

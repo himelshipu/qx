@@ -135,7 +135,7 @@
 
 				<!-- Sidebar -->
 				<div class="lg:col-span-1">
-					<!-- Brand/Creator Info Card -->
+					<!-- Brand/Influencer Info Card -->
 					<div
 						class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-6 shadow-sm sticky top-8">
 						<h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4">Campaign Owner</h3>

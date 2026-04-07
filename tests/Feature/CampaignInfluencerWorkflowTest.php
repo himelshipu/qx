@@ -41,9 +41,9 @@ class CampaignInfluencerWorkflowTest extends TestCase
             'status'     => 'published'
         ]);
 
-        // Create creators
-        $this->creator1 = Influencer::factory()->create();
-        $this->creator2 = Influencer::factory()->create();
+        // Create influencers
+        $this->influencer1 = Influencer::factory()->create();
+        $this->influencer2 = Influencer::factory()->create();
     }
 
     /**
@@ -66,20 +66,20 @@ class CampaignInfluencerWorkflowTest extends TestCase
         $this->actingAs($this->admin);
 
         $response = $this->post(route('dashboard.campaigns.influencers.store', $this->campaign), [
-            'influencer_ids' => [$this->creator1->id, $this->creator2->id]
+            'influencer_ids' => [$this->influencer1->id, $this->influencer2->id]
         ]);
 
         $response->assertRedirect();
 
         $this->assertDatabaseHas('campaign_influencers', [
             'campaign_id' => $this->campaign->id,
-            'creator_id'  => $this->creator1->id,
+            'influencer_id'  => $this->influencer1->id,
             'status'      => 'assigned'
         ]);
 
         $this->assertDatabaseHas('campaign_influencers', [
             'campaign_id' => $this->campaign->id,
-            'creator_id'  => $this->creator2->id,
+            'influencer_id'  => $this->influencer2->id,
             'status'      => 'assigned'
         ]);
     }
@@ -94,7 +94,7 @@ class CampaignInfluencerWorkflowTest extends TestCase
         // Create assignment
         $assignment = CampaignInfluencer::factory()->create([
             'campaign_id' => $this->campaign->id,
-            'creator_id'  => $this->creator1->id,
+            'influencer_id'  => $this->influencer1->id,
             'status'      => 'assigned'
         ]);
 
@@ -119,7 +119,7 @@ class CampaignInfluencerWorkflowTest extends TestCase
         // Create and approve influencer assignments
         $assignment1 = CampaignInfluencer::factory()->create([
             'campaign_id' => $this->campaign->id,
-            'creator_id'  => $this->creator1->id,
+            'influencer_id'  => $this->influencer1->id,
             'status'      => 'approved',
             'approved_by' => $this->admin->id,
             'approved_at' => now()
@@ -158,7 +158,7 @@ class CampaignInfluencerWorkflowTest extends TestCase
 
         $subOrder = SubOrder::factory()->create([
             'order_id'   => $order->id,
-            'creator_id' => $this->creator1->id,
+            'influencer_id' => $this->influencer1->id,
             'status'     => 'pending'
         ]);
 
@@ -188,7 +188,7 @@ class CampaignInfluencerWorkflowTest extends TestCase
 
         $subOrder = SubOrder::factory()->create([
             'order_id'   => $order->id,
-            'creator_id' => $this->creator1->id,
+            'influencer_id' => $this->influencer1->id,
             'status'     => 'completed',
             'paid_at'    => null
         ]);
@@ -206,17 +206,17 @@ class CampaignInfluencerWorkflowTest extends TestCase
     }
 
     /**
-     * Test that creator can have campaign assignment
+     * Test that influencer can have campaign assignment
      */
-    public function test_creator_has_campaign_assignments(): void
+    public function test_influencer_has_campaign_assignments(): void
     {
         $assignment = CampaignInfluencer::factory()->create([
             'campaign_id' => $this->campaign->id,
-            'creator_id'  => $this->creator1->id
+            'influencer_id'  => $this->influencer1->id
         ]);
 
-        $this->creator1->refresh();
-        $assignments = $this->creator1->campaignAssignments;
+        $this->influencer1->refresh();
+        $assignments = $this->influencer1->campaignAssignments;
 
         $this->assertCount(1, $assignments);
         $this->assertEquals($assignment->id, $assignments->first()->id);

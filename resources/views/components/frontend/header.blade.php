@@ -54,7 +54,7 @@
 							</a>
 						@endif
 					@elseif(auth()->user()->user_type === 'influencer')
-						{{-- Creator Navigation --}}
+						{{-- Influencer Navigation --}}
 						<a href="{{ route('frontend.packages.index') }}"
 							class="px-3 py-2 text-sm font-medium rounded-md transition-colors
                             {{ request()->routeIs('frontend.packages.*') ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-200' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800' }}">

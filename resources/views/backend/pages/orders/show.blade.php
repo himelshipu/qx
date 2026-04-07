@@ -49,9 +49,9 @@
 									<div class="flex-1">
 										<h3 class="font-semibold text-gray-900 dark:text-white">{{ $item->title }}</h3>
 										<p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
-											Creator:
+											Influencer:
 											<span class="font-medium">
-												{{ $item->creator?->display_name ?: $item->creator?->user?->name ?? 'N/A' }}
+												{{ $item->influencer?->display_name ?: $item->influencer?->user?->name ?? 'N/A' }}
 											</span>
 										</p>
 
@@ -163,9 +163,9 @@
 							<span class="font-medium text-gray-900 dark:text-white">{{ $order->items->count() }}</span>
 						</div>
 						<div class="flex justify-between text-sm">
-							<span class="text-gray-600 dark:text-gray-400">Creators</span>
+							<span class="text-gray-600 dark:text-gray-400">Influencers</span>
 							<span class="font-medium text-gray-900 dark:text-white">
-								{{ $order->items->pluck('creator_id')->unique()->count() }}
+								{{ $order->items->pluck('influencer_id')->unique()->count() }}
 							</span>
 						</div>
 						<div class="border-t border-gray-200 dark:border-gray-700 pt-3 flex justify-between">

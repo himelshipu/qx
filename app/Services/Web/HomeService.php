@@ -100,7 +100,7 @@ final class HomeService
 
         $influencerIds = $stats->pluck('influencer_id')->unique()->values()->all();
 
-        $reviewsByCreator = Review::query()
+        $reviewsByInfluencer = Review::query()
             ->whereIn('influencer_id', $influencerIds)
             ->selectRaw('influencer_id, AVG(rating) as average_rating, COUNT(*) as reviews_count')
             ->groupBy('influencer_id')
@@ -115,20 +115,20 @@ final class HomeService
             ->values();
 
         return $orderedPlatforms
-            ->map(function (string $platform) use ($statsByPlatform, $limitPerPlatform, $reviewsByCreator): array {
+            ->map(function (string $platform) use ($statsByPlatform, $limitPerPlatform, $reviewsByInfluencer): array {
                 $platformStats = $statsByPlatform->get($platform, collect())
                     ->take($limitPerPlatform)
                     ->values();
 
                 $influencers = $platformStats
-                    ->map(function (InfluencerPlatformStat $stat) use ($reviewsByCreator, $platform): ?array {
+                    ->map(function (InfluencerPlatformStat $stat) use ($reviewsByInfluencer, $platform): ?array {
                         $influencer = $stat->influencer;
 
                         if (!$influencer || !$influencer->user) {
                             return null;
                         }
 
-                        $reviewSummary = $reviewsByCreator->get($influencer->id);
+                        $reviewSummary = $reviewsByInfluencer->get($influencer->id);
                         $averageRating = $reviewSummary && $reviewSummary->average_rating !== null
                         ? (float) $reviewSummary->average_rating
                         : null;

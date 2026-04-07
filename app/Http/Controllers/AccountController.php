@@ -27,7 +27,7 @@ class AccountController extends Controller
     {
         $user = User::where('slug', $slug)->first();
 
-        if (!$user) {
+        if (! $user) {
             abort(404, 'User not found');
         }
 
@@ -41,13 +41,13 @@ class AccountController extends Controller
 
     public function edit($slug)
     {
-        $user  = $this->getUserBySlug($slug);
+        $user = $this->getUserBySlug($slug);
         $brand = $user->brand;
 
         return view('frontend.pages.account', [
-            'user'           => $user,
-            'brand'          => $brand,
-            'paymentMethods' => $user->paymentMethods
+            'user' => $user,
+            'brand' => $brand,
+            'paymentMethods' => $user->paymentMethods,
         ]);
     }
 
@@ -65,16 +65,16 @@ class AccountController extends Controller
         $user = $this->getUserBySlug($slug);
 
         $validated = $request->validate([
-            'name'          => ['required', 'string', 'max:255'],
-            'email'         => ['required', 'email', 'max:255', 'unique:users,email,' . $user->id],
-            'phone'         => ['nullable', 'string', 'max:20', 'regex:/^[0-9+\-\s\(\)]+$/'],
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'email', 'max:255', 'unique:users,email,'.$user->id],
+            'phone' => ['nullable', 'string', 'max:20', 'regex:/^[0-9+\-\s\(\)]+$/'],
             'date_of_birth' => ['nullable', 'date', 'before:today'],
-            'gender'        => ['nullable', 'in:male,female,other'],
-            'bio'           => ['nullable', 'string', 'max:1000'],
-            'address_line'  => ['nullable', 'string', 'max:255'],
-            'country'       => ['nullable', 'string', 'max:255'],
-            'city'          => ['nullable', 'string', 'max:255'],
-            'postal_code'   => ['nullable', 'string', 'max:20']
+            'gender' => ['nullable', 'in:male,female,other'],
+            'bio' => ['nullable', 'string', 'max:1000'],
+            'address_line' => ['nullable', 'string', 'max:255'],
+            'country' => ['nullable', 'string', 'max:255'],
+            'city' => ['nullable', 'string', 'max:255'],
+            'postal_code' => ['nullable', 'string', 'max:20'],
         ]);
 
         // Update user data - fields stored separately
@@ -95,23 +95,23 @@ class AccountController extends Controller
         $user = $this->getUserBySlug($slug);
 
         $profileOwner = match ($user->user_type) {
-            'brand'   => $user->brand,
-            'creator' => $user->influencer,
-            default   => null
+            'brand' => $user->brand,
+            'influencer' => $user->influencer,
+            default => null
         };
 
-        if (!$profileOwner) {
+        if (! $profileOwner) {
             return $this->redirectToAccount($user, $request, 'billing')
                 ->with('error', 'Billing information is not available for this account.');
         }
 
         $validated = $request->validate([
-            'legal_company_name'  => ['nullable', 'string', 'max:255'],
-            'vat_id'              => ['nullable', 'string', 'max:255'],
-            'billing_address'     => ['nullable', 'string', 'max:255'],
-            'billing_city'        => ['nullable', 'string', 'max:255'],
-            'billing_country'     => ['nullable', 'string', 'max:255'],
-            'billing_postal_code' => ['nullable', 'string', 'max:20']
+            'legal_company_name' => ['nullable', 'string', 'max:255'],
+            'vat_id' => ['nullable', 'string', 'max:255'],
+            'billing_address' => ['nullable', 'string', 'max:255'],
+            'billing_city' => ['nullable', 'string', 'max:255'],
+            'billing_country' => ['nullable', 'string', 'max:255'],
+            'billing_postal_code' => ['nullable', 'string', 'max:20'],
         ]);
 
         // Add user_type to validated data before saving
@@ -136,11 +136,11 @@ class AccountController extends Controller
 
         $validated = $request->validate([
             'current_password' => ['required', 'current_password'],
-            'password'         => ['required', Password::defaults(), 'confirmed']
+            'password' => ['required', Password::defaults(), 'confirmed'],
         ]);
 
         $user->update([
-            'password' => Hash::make($validated['password'])
+            'password' => Hash::make($validated['password']),
         ]);
 
         return $this->redirectToAccount($user, $request, 'password')
@@ -155,7 +155,7 @@ class AccountController extends Controller
         $user = $this->getUserBySlug($slug);
 
         $request->validate([
-            'password' => ['required', 'current_password']
+            'password' => ['required', 'current_password'],
         ]);
 
         // Delete user's profile image if exists
@@ -190,7 +190,7 @@ class AccountController extends Controller
     public function toggleStatus(Request $request, $slug)
     {
         $user = $this->getUserBySlug($slug);
-        $user->update(['is_active' => !$user->is_active]);
+        $user->update(['is_active' => ! $user->is_active]);
 
         return $this->redirectToAccount($user, $request, 'security')->with(
             'success',

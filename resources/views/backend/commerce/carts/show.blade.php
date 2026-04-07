@@ -58,9 +58,9 @@
 						<div class="space-y-4">
 							@foreach ($cart->items as $item)
 								<div class="flex gap-4 pb-4 border-b border-gray-200 dark:border-gray-700 last:border-b-0">
-									@if ($item->package->creator)
-										<img src="{{ image_url($item->package->creator->profile_image_path ?? '/default.webp') }}"
-											alt="{{ $item->package->creator->user->name }}" class="w-16 h-16 rounded-lg object-cover flex-shrink-0" />
+									@if ($item->package->influencer)
+										<img src="{{ image_url($item->package->influencer->profile_image_path ?? '/default.webp') }}"
+											alt="{{ $item->package->influencer->user->name }}" class="w-16 h-16 rounded-lg object-cover flex-shrink-0" />
 									@endif
 
 									<div class="flex-1 min-w-0">
@@ -68,7 +68,7 @@
 											<div>
 												<h4 class="font-semibold text-gray-900 dark:text-white">{{ $item->package->name }}</h4>
 												<p class="text-sm text-gray-600 dark:text-gray-400">
-													by <span class="font-medium">{{ $item->package->creator->user->name ?? 'Unknown' }}</span>
+													by <span class="font-medium">{{ $item->package->influencer->user->name ?? 'Unknown' }}</span>
 												</p>
 											</div>
 											<div class="text-right flex-shrink-0">
@@ -144,7 +144,7 @@
 
 						<div class="flex justify-between text-gray-600 dark:text-gray-400">
 							<span>Influencers:</span>
-							<span class="font-medium">{{ $cart->items->count() }} creator{{ $cart->items->count() !== 1 ? 's' : '' }}</span>
+							<span class="font-medium">{{ $cart->items->count() }} influencer{{ $cart->items->count() !== 1 ? 's' : '' }}</span>
 						</div>
 
 						@php

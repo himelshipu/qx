@@ -3,8 +3,11 @@
 namespace App\Http\Controllers\Backend;
 
 use App\Http\Controllers\Controller;
+use App\Models\Brand;
+use App\Models\Campaign;
 use App\Models\Order;
 use App\Models\OrderItem;
+use App\Models\SubOrder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -20,42 +23,42 @@ class OrderController extends Controller
             ->with([
                 'buyer:id,name,email',
                 'brand:id,brand_name',
-                'campaign:id,title'
+                'campaign:id,title',
             ])
             ->when($search !== '', function ($query) use ($search) {
                 $query->where(function ($subQuery) use ($search) {
                     $subQuery
-                        ->where('order_number', 'like', '%' . $search . '%')
+                        ->where('order_number', 'like', '%'.$search.'%')
                         ->orWhereHas('buyer', function ($buyerQuery) use ($search) {
                             $buyerQuery
-                                ->where('name', 'like', '%' . $search . '%')
-                                ->orWhere('email', 'like', '%' . $search . '%');
+                                ->where('name', 'like', '%'.$search.'%')
+                                ->orWhere('email', 'like', '%'.$search.'%');
                         })
                         ->orWhereHas('brand', function ($brandQuery) use ($search) {
-                            $brandQuery->where('brand_name', 'like', '%' . $search . '%');
+                            $brandQuery->where('brand_name', 'like', '%'.$search.'%');
                         })
                         ->orWhereHas('campaign', function ($campaignQuery) use ($search) {
-                            $campaignQuery->where('title', 'like', '%' . $search . '%');
+                            $campaignQuery->where('title', 'like', '%'.$search.'%');
                         });
                 });
             })
-            ->when($status !== 'all', fn($query) => $query->where('status', $status))
+            ->when($status !== 'all', fn ($query) => $query->where('status', $status))
             ->orderByDesc('created_at')
             ->paginate(15)
             ->withQueryString();
 
         $stats = [
-            'total'     => Order::count(),
-            'pending'   => Order::where('status', 'pending')->count(),
+            'total' => Order::count(),
+            'pending' => Order::where('status', 'pending')->count(),
             'completed' => Order::where('status', 'completed')->count(),
-            'revenue'   => (float) Order::where('status', 'completed')->sum('total_amount')
+            'revenue' => (float) Order::where('status', 'completed')->sum('total_amount'),
         ];
 
         return view('backend.pages.orders.index', [
             'orders' => $orders,
-            'stats'  => $stats,
+            'stats' => $stats,
             'search' => $search,
-            'status' => $status
+            'status' => $status,
         ]);
     }
 
@@ -69,14 +72,14 @@ class OrderController extends Controller
             'acceptedForInfluencer:id,user_id,display_name',
             'acceptedForInfluencer.user:id,name',
             'items:id,order_id,influencer_id,package_id,title,quantity,unit_price,line_total,status,due_date,paid_at',
-            'items.creator:id,user_id,display_name',
-            'items.creator.user:id,name',
+            'items.influencer:id,user_id,display_name',
+            'items.influencer.user:id,name',
             'items.package:id,name,base_price,currency',
-            'payments:id,order_id,status,amount,currency,payment_provider,paid_at,created_at'
+            'payments:id,order_id,status,amount,currency,payment_provider,paid_at,created_at',
         ]);
 
         return view('backend.pages.orders.show', [
-            'order' => $order
+            'order' => $order,
         ]);
     }
 
@@ -86,7 +89,7 @@ class OrderController extends Controller
     public function updateStatus(Request $request, Order $order): RedirectResponse
     {
         $validated = $request->validate([
-            'status' => 'required|in:pending,accepted,in-progress,in_progress,completed,cancelled'
+            'status' => 'required|in:pending,accepted,in-progress,in_progress,completed,cancelled',
         ]);
 
         $status = $validated['status'];
@@ -97,7 +100,7 @@ class OrderController extends Controller
         }
 
         $order->update([
-            'status' => $status
+            'status' => $status,
         ]);
 
         // Update timestamps based on status
@@ -118,15 +121,15 @@ class OrderController extends Controller
      * Create master order with sub-orders from approved influencers for a campaign
      * Workflow A: Campaign Order
      */
-    public function createFromCampaign(Request $request): \Illuminate\Http\RedirectResponse
+    public function createFromCampaign(Request $request): RedirectResponse
     {
         $validated = $request->validate([
             'campaign_id' => 'required|exists:campaigns,id',
-            'brand_id'    => 'required|exists:brands,id'
+            'brand_id' => 'required|exists:brands,id',
         ]);
 
-        $campaign = \App\Models\Campaign::findOrFail($validated['campaign_id']);
-        $brand    = \App\Models\Brand::findOrFail($validated['brand_id']);
+        $campaign = Campaign::findOrFail($validated['campaign_id']);
+        $brand = Brand::findOrFail($validated['brand_id']);
 
         // Get approved influencers for this campaign
         $approvedInfluencers = $campaign->approvedInfluencers()->get();
@@ -144,47 +147,47 @@ class OrderController extends Controller
 
         // Create master order
         $order = Order::create([
-            'order_number'  => 'ORD-' . time(),
+            'order_number' => 'ORD-'.time(),
             'buyer_user_id' => auth()->id(),
-            'brand_id'      => $brand->id,
-            'campaign_id'   => $campaign->id,
-            'status'        => 'pending',
-            'subtotal'      => $totalAmount,
-            'service_fee'   => 0,
-            'tax_amount'    => 0,
-            'total_amount'  => $totalAmount,
-            'currency'      => 'USD',
-            'placed_at'     => now()
+            'brand_id' => $brand->id,
+            'campaign_id' => $campaign->id,
+            'status' => 'pending',
+            'subtotal' => $totalAmount,
+            'service_fee' => 0,
+            'tax_amount' => 0,
+            'total_amount' => $totalAmount,
+            'currency' => 'USD',
+            'placed_at' => now(),
         ]);
 
         // Create sub-orders for each approved influencer
         foreach ($approvedInfluencers as $influencer) {
-            \App\Models\SubOrder::create([
-                'order_id'                   => $order->id,
-                'campaign_influencer_id'     => $influencer->id,
+            SubOrder::create([
+                'order_id' => $order->id,
+                'campaign_influencer_id' => $influencer->id,
                 'accepted_for_influencer_id' => $influencer->id,
-                'status'                     => 'pending',
-                'amount'                     => $influencer->pivot->agreed_rate ?? 0,
-                'currency'                   => 'USD'
+                'status' => 'pending',
+                'amount' => $influencer->pivot->agreed_rate ?? 0,
+                'currency' => 'USD',
             ]);
         }
 
         return redirect()
             ->route('dashboard.orders.show', $order)
-            ->with('success', 'Master order created with ' . $approvedInfluencers->count() . ' sub-orders');
+            ->with('success', 'Master order created with '.$approvedInfluencers->count().' sub-orders');
     }
 
     /**
      * Update sub-order status
      */
-    public function updateSubOrderStatus(Request $request, \App\Models\SubOrder $subOrder): RedirectResponse
+    public function updateSubOrderStatus(Request $request, SubOrder $subOrder): RedirectResponse
     {
         $validated = $request->validate([
-            'status' => 'required|in:pending,accepted,in_progress,on_review,completed,cancelled'
+            'status' => 'required|in:pending,accepted,in_progress,on_review,completed,cancelled',
         ]);
 
         $subOrder->update([
-            'status' => $validated['status']
+            'status' => $validated['status'],
         ]);
 
         if ($validated['status'] === 'accepted') {
@@ -203,10 +206,10 @@ class OrderController extends Controller
     /**
      * Record payment for a sub-order
      */
-    public function markSubOrderPaid(Request $request, \App\Models\SubOrder $subOrder): RedirectResponse
+    public function markSubOrderPaid(Request $request, SubOrder $subOrder): RedirectResponse
     {
         $subOrder->update([
-            'paid_at' => now()
+            'paid_at' => now(),
         ]);
 
         return redirect()
@@ -220,11 +223,11 @@ class OrderController extends Controller
     public function updateOrderItemStatus(Request $request, OrderItem $orderItem): RedirectResponse
     {
         $validated = $request->validate([
-            'status' => 'required|in:pending,accepted,in_progress,delivered,approved,rejected,cancelled,completed'
+            'status' => 'required|in:pending,accepted,in_progress,delivered,approved,rejected,cancelled,completed',
         ]);
 
         $orderItem->update([
-            'status' => $validated['status']
+            'status' => $validated['status'],
         ]);
 
         return redirect()
@@ -238,7 +241,7 @@ class OrderController extends Controller
     public function markOrderItemPaid(OrderItem $orderItem): RedirectResponse
     {
         $orderItem->update([
-            'paid_at' => now()
+            'paid_at' => now(),
         ]);
 
         return redirect()

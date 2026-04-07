@@ -11,7 +11,7 @@ class PackageSeeder extends Seeder
     public function run(): void
     {
         $influencerIds = DB::table('influencers')->pluck('id');
-        $influencerUserByCreatorId = DB::table('influencers')->pluck('user_id', 'id');
+        $influencerUserByInfluencerId = DB::table('influencers')->pluck('user_id', 'id');
         $managerIds = DB::table('users')->whereIn('user_type', ['admin', 'moderator'])->pluck('id')->all();
         $hasCreatedByColumn = Schema::hasColumn('packages', 'created_by');
 
@@ -29,10 +29,10 @@ class PackageSeeder extends Seeder
         foreach ($influencerIds as $influencerId) {
             foreach ($templates as $index => $template) {
                 $price = random_int($template['price'][0], $template['price'][1]);
-                $ownerUserId = $influencerUserByCreatorId[$influencerId] ?? null;
+                $ownerUserId = $influencerUserByInfluencerId[$influencerId] ?? null;
                 $createdByUserId = $ownerUserId;
 
-                // Some packages are created by admin/moderator on behalf of creators.
+                // Some packages are created by admin/moderator on behalf of influencers.
                 if (!empty($managerIds) && random_int(1, 100) <= 35) {
                     $createdByUserId = $managerIds[array_rand($managerIds)];
                 }

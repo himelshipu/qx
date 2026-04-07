@@ -14,18 +14,18 @@ class BadgeDefinition extends Model
         'code',
         'name',
         'description',
-        'is_active'
+        'is_active',
     ];
 
     protected function casts(): array
     {
         return [
-            'is_active' => 'boolean'
+            'is_active' => 'boolean',
         ];
     }
 
     public function influencers(): BelongsToMany
     {
-        return $this->belongsToMany(Influencer::class, 'creator_badges')->withPivot(['earned_at', 'is_active'])->withTimestamps();
+        return $this->belongsToMany(Influencer::class, 'influencer_badges')->withPivot(['earned_at', 'is_active'])->withTimestamps();
     }
 }

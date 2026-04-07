@@ -49,7 +49,7 @@
 					</h2>
 					<p class="text-gray-600 dark:text-gray-400 mb-6">
 						@if ($userType === 'brand')
-							Get started by creating your first campaign to find perfect creators for your brand
+							Get started by creating your first campaign to find perfect influencers for your brand
 						@else
 							Start applying to campaigns to collaborate with brands
 						@endif
@@ -100,7 +100,7 @@
 										{{ $campaign->start_date?->format('M d') }} - {{ $campaign->end_date?->format('M d, Y') }}
 									</span>
 								</div>
-								@if ($userType === 'creator')
+								@if ($userType === 'influencer')
 									<div class="flex justify-between text-sm">
 										<span class="text-gray-600 dark:text-gray-400">Application Status:</span>
 										<span class="font-semibold text-blue-600 dark:text-blue-400">

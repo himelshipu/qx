@@ -21,22 +21,22 @@ class Package extends Model
         'delivery_days',
         'revisions_included',
         'created_by',
-        'is_active'
+        'is_active',
     ];
 
     protected function casts(): array
     {
         return [
-            'base_price'         => 'decimal:2',
-            'delivery_days'      => 'integer',
+            'base_price' => 'decimal:2',
+            'delivery_days' => 'integer',
             'revisions_included' => 'integer',
-            'is_active'          => 'boolean',
-            'created_at'         => 'datetime',
-            'updated_at'         => 'datetime'
+            'is_active' => 'boolean',
+            'created_at' => 'datetime',
+            'updated_at' => 'datetime',
         ];
     }
 
-    public function creator(): BelongsTo
+    public function influencer(): BelongsTo
     {
         return $this->belongsTo(Influencer::class, 'influencer_id');
     }

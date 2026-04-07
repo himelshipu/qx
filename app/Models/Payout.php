@@ -18,20 +18,20 @@ class Payout extends Model
         'currency',
         'status',
         'external_payout_id',
-        'paid_at'
+        'paid_at',
     ];
 
     protected function casts(): array
     {
         return [
-            'amount'     => 'decimal:2',
-            'paid_at'    => 'datetime',
+            'amount' => 'decimal:2',
+            'paid_at' => 'datetime',
             'created_at' => 'datetime',
-            'updated_at' => 'datetime'
+            'updated_at' => 'datetime',
         ];
     }
 
-    public function creator(): BelongsTo
+    public function influencer(): BelongsTo
     {
         return $this->belongsTo(Influencer::class, 'influencer_id');
     }

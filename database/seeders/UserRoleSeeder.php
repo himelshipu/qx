@@ -16,12 +16,12 @@ class UserRoleSeeder extends Seeder
             $roleSlug = match ($user->user_type) {
                 'admin' => 'admin',
                 'moderator' => 'moderator',
-                'creator' => 'creator',
+                'influencer' => 'influencer',
                 default => 'brand',
             };
 
             $roleId = $roles[$roleSlug] ?? null;
-            if (!$roleId) {
+            if (! $roleId) {
                 continue;
             }
 
@@ -38,4 +38,3 @@ class UserRoleSeeder extends Seeder
         }
     }
 }
-

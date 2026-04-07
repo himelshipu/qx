@@ -49,7 +49,7 @@
                 <div class="flex-1 overflow-y-auto p-3 space-y-1.5">
                     @forelse ($sidebarConversations as $item)
                         @php
-                            $party = $item->creator?->user;
+                            $party = $item->influencer?->user;
                             $partyName = $party?->name ?? 'Unknown User';
                             $partyAvatar = filled($party?->profile_image_path ?? null) ? image_url($party->profile_image_path) : null;
                             $latestMessage = $item->messages->first();
@@ -103,19 +103,19 @@
                         </div>
                         <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">Select a Conversation</h2>
                         <p class="text-gray-600 dark:text-gray-400 mb-8">
-                            Click on a conversation from the left panel to start messaging with creators and negotiate package details.
+                            Click on a conversation from the left panel to start messaging with influencers and negotiate package details.
                         </p>
                         
                         @if ($sidebarConversations->isEmpty())
                             <div class="bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-950/30 dark:to-purple-950/30 rounded-xl p-6 mb-6">
                                 <p class="text-sm text-gray-700 dark:text-gray-300 mb-4">
-                                    You don't have any active conversations yet. Start by negotiating with creators!
+                                    You don't have any active conversations yet. Start by negotiating with influencers!
                                 </p>
                                 <a href="{{ route('frontend.packages.index') }}" class="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-6 rounded-xl transition">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                                     </svg>
-                                    Browse Creators
+                                    Browse Influencers
                                 </a>
                             </div>
                         @else

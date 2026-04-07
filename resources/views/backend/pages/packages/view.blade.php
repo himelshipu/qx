@@ -41,36 +41,36 @@
 			</div>
 		</div>
 
-		<!-- Creator Profile Section -->
-		@if ($package->creator)
+		<!-- Influencer Profile Section -->
+		@if ($package->influencer)
 			<div class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900">
-				<h3 class="mb-4 text-sm font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Package Creator</h3>
+				<h3 class="mb-4 text-sm font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Package Influencer</h3>
 				<div class="flex flex-col gap-4 sm:flex-row sm:items-center">
-					@if ($package->creator->user?->profile_image_path)
-				<img src="{{ \App\Helpers\ImageHelper::url($package->creator->user->profile_image_path) }}"
-							alt="{{ $package->creator->user->name }}"
+					@if ($package->influencer->user?->profile_image_path)
+				<img src="{{ \App\Helpers\ImageHelper::url($package->influencer->user->profile_image_path) }}"
+							alt="{{ $package->influencer->user->name }}"
 							class="h-16 w-16 rounded-full object-cover">
 					@else
 						<div class="h-16 w-16 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white font-bold text-lg">
-							{{ substr($package->creator->user?->name ?? 'C', 0, 1) }}
+							{{ substr($package->influencer->user?->name ?? 'C', 0, 1) }}
 						</div>
 					@endif
 					<div>
-						<p class="text-lg font-semibold text-gray-900 dark:text-white">{{ $package->creator->user?->name ?? 'N/A' }}</p>
-						<p class="text-sm text-gray-500 dark:text-gray-400">{{ $package->creator->user?->email ?? 'N/A' }}</p>
-						@if ($package->creator->bio)
-							<p class="mt-2 text-sm text-gray-600 dark:text-gray-300">{{ $package->creator->bio }}</p>
+						<p class="text-lg font-semibold text-gray-900 dark:text-white">{{ $package->influencer->user?->name ?? 'N/A' }}</p>
+						<p class="text-sm text-gray-500 dark:text-gray-400">{{ $package->influencer->user?->email ?? 'N/A' }}</p>
+						@if ($package->influencer->bio)
+							<p class="mt-2 text-sm text-gray-600 dark:text-gray-300">{{ $package->influencer->bio }}</p>
 						@endif
 						<div class="mt-3 flex gap-4 text-sm">
-							@if ($package->creator->followers_count)
+							@if ($package->influencer->followers_count)
 								<div>
-									<span class="font-semibold text-gray-900 dark:text-white">{{ number_format($package->creator->followers_count) }}</span>
+									<span class="font-semibold text-gray-900 dark:text-white">{{ number_format($package->influencer->followers_count) }}</span>
 									<span class="text-gray-500 dark:text-gray-400">Followers</span>
 								</div>
 							@endif
-							@if ($package->creator->engagement_rate)
+							@if ($package->influencer->engagement_rate)
 								<div>
-									<span class="font-semibold text-gray-900 dark:text-white">{{ number_format($package->creator->engagement_rate, 2) }}%</span>
+									<span class="font-semibold text-gray-900 dark:text-white">{{ number_format($package->influencer->engagement_rate, 2) }}%</span>
 									<span class="text-gray-500 dark:text-gray-400">Engagement</span>
 								</div>
 							@endif

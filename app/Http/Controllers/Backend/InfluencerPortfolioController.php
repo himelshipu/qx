@@ -14,15 +14,15 @@ use Illuminate\View\View;
 class InfluencerPortfolioController extends Controller
 {
     /**
-     * Display portfolio items for a specific creator
+     * Display portfolio items for a specific influencer
      */
     public function index(Influencer $influencer): View
     {
         $portfolios = $influencer->portfolios()->orderBy('sort_order')->get();
 
-        return view('backend.pages.creators.portfolio.index', [
+        return view('backend.pages.influencers.portfolio.index', [
             'influencer' => $influencer,
-            'portfolios' => $portfolios
+            'portfolios' => $portfolios,
         ]);
     }
 
@@ -31,8 +31,8 @@ class InfluencerPortfolioController extends Controller
      */
     public function create(Influencer $influencer): View
     {
-        return view('backend.pages.creators.portfolio.create', [
-            'influencer' => $influencer
+        return view('backend.pages.influencers.portfolio.create', [
+            'influencer' => $influencer,
         ]);
     }
 
@@ -43,38 +43,38 @@ class InfluencerPortfolioController extends Controller
     {
         $validated = $request->validate(
             [
-                'media_type'  => 'required|in:image,video',
-                'file'        => 'required|file|mimes:jpeg,png,webp,jpg,mp4,webm,mov|max:10240',
-                'title'       => 'nullable|string|max:255',
+                'media_type' => 'required|in:image,video',
+                'file' => 'required|file|mimes:jpeg,png,webp,jpg,mp4,webm,mov|max:10240',
+                'title' => 'nullable|string|max:255',
                 'description' => 'nullable|string|max:1000',
-                'sort_order'  => 'nullable|integer|min:0',
-                'is_active'   => 'nullable|boolean'
+                'sort_order' => 'nullable|integer|min:0',
+                'is_active' => 'nullable|boolean',
             ],
             [
-                'file.required'       => 'Please select a file to upload.',
-                'file.file'           => 'The file must be a valid file.',
-                'file.mimes'          => 'File must be an image (JPG, PNG, WebP) or video (MP4, WebM, MOV).',
-                'file.max'            => 'File size must not exceed 10 MB.',
+                'file.required' => 'Please select a file to upload.',
+                'file.file' => 'The file must be a valid file.',
+                'file.mimes' => 'File must be an image (JPG, PNG, WebP) or video (MP4, WebM, MOV).',
+                'file.max' => 'File size must not exceed 10 MB.',
                 'media_type.required' => 'Please select a media type (image or video).',
-                'media_type.in'       => 'Media type must be either image or video.',
-                'title.max'           => 'Title must not exceed 255 characters.',
-                'description.max'     => 'Description must not exceed 1000 characters.',
-                'sort_order.integer'  => 'Display order must be a valid number.',
-                'sort_order.min'      => 'Display order must be 0 or greater.'
+                'media_type.in' => 'Media type must be either image or video.',
+                'title.max' => 'Title must not exceed 255 characters.',
+                'description.max' => 'Description must not exceed 1000 characters.',
+                'sort_order.integer' => 'Display order must be a valid number.',
+                'sort_order.min' => 'Display order must be 0 or greater.',
             ]
         );
 
-        $file     = $request->file('file');
-        $filePath = $file->store("creator-portfolio/{$influencer->id}", 'public');
+        $file = $request->file('file');
+        $filePath = $file->store("influencer-portfolio/{$influencer->id}", 'public');
 
         InfluencerPortfolio::create([
             'influencer_id' => $influencer->id,
-            'media_type'    => $validated['media_type'],
-            'file_path'     => $filePath,
-            'title'         => $validated['title'],
-            'description'   => $validated['description'],
-            'sort_order'    => $validated['sort_order'] ?? 0,
-            'is_active'     => (bool) ($validated['is_active'] ?? true)
+            'media_type' => $validated['media_type'],
+            'file_path' => $filePath,
+            'title' => $validated['title'],
+            'description' => $validated['description'],
+            'sort_order' => $validated['sort_order'] ?? 0,
+            'is_active' => (bool) ($validated['is_active'] ?? true),
         ]);
 
         return redirect()
@@ -90,9 +90,9 @@ class InfluencerPortfolioController extends Controller
         // Ensure the portfolio belongs to this influencer
         abort_if($portfolio->influencer_id !== $influencer->id, 404);
 
-        return view('backend.pages.creators.portfolio.edit', [
+        return view('backend.pages.influencers.portfolio.edit', [
             'influencer' => $influencer,
-            'portfolio'  => $portfolio
+            'portfolio' => $portfolio,
         ]);
     }
 
@@ -106,23 +106,23 @@ class InfluencerPortfolioController extends Controller
 
         $validated = $request->validate(
             [
-                'media_type'  => 'required|in:image,video',
-                'file'        => 'nullable|file|mimes:jpeg,png,webp,jpg,mp4,webm,mov|max:10240',
-                'title'       => 'nullable|string|max:255',
+                'media_type' => 'required|in:image,video',
+                'file' => 'nullable|file|mimes:jpeg,png,webp,jpg,mp4,webm,mov|max:10240',
+                'title' => 'nullable|string|max:255',
                 'description' => 'nullable|string|max:1000',
-                'sort_order'  => 'nullable|integer|min:0',
-                'is_active'   => 'nullable|boolean'
+                'sort_order' => 'nullable|integer|min:0',
+                'is_active' => 'nullable|boolean',
             ],
             [
-                'file.file'           => 'The file must be a valid file.',
-                'file.mimes'          => 'File must be an image (JPG, PNG, WebP) or video (MP4, WebM, MOV).',
-                'file.max'            => 'File size must not exceed 10 MB.',
+                'file.file' => 'The file must be a valid file.',
+                'file.mimes' => 'File must be an image (JPG, PNG, WebP) or video (MP4, WebM, MOV).',
+                'file.max' => 'File size must not exceed 10 MB.',
                 'media_type.required' => 'Please select a media type (image or video).',
-                'media_type.in'       => 'Media type must be either image or video.',
-                'title.max'           => 'Title must not exceed 255 characters.',
-                'description.max'     => 'Description must not exceed 1000 characters.',
-                'sort_order.integer'  => 'Display order must be a valid number.',
-                'sort_order.min'      => 'Display order must be 0 or greater.'
+                'media_type.in' => 'Media type must be either image or video.',
+                'title.max' => 'Title must not exceed 255 characters.',
+                'description.max' => 'Description must not exceed 1000 characters.',
+                'sort_order.integer' => 'Display order must be a valid number.',
+                'sort_order.min' => 'Display order must be 0 or greater.',
             ]
         );
 
@@ -133,18 +133,18 @@ class InfluencerPortfolioController extends Controller
                 Storage::disk('public')->delete($portfolio->file_path);
             }
 
-            $file                   = $request->file('file');
-            $filePath               = $file->store("creator-portfolio/{$influencer->id}", 'public');
+            $file = $request->file('file');
+            $filePath = $file->store("influencer-portfolio/{$influencer->id}", 'public');
             $validated['file_path'] = $filePath;
         }
 
         $portfolio->update([
-            'media_type'  => $validated['media_type'],
-            'file_path'   => $validated['file_path'] ?? $portfolio->file_path,
-            'title'       => $validated['title'],
+            'media_type' => $validated['media_type'],
+            'file_path' => $validated['file_path'] ?? $portfolio->file_path,
+            'title' => $validated['title'],
             'description' => $validated['description'],
-            'sort_order'  => $validated['sort_order'] ?? $portfolio->sort_order,
-            'is_active'   => (bool) ($validated['is_active'] ?? $portfolio->is_active)
+            'sort_order' => $validated['sort_order'] ?? $portfolio->sort_order,
+            'is_active' => (bool) ($validated['is_active'] ?? $portfolio->is_active),
         ]);
 
         return redirect()
@@ -178,9 +178,9 @@ class InfluencerPortfolioController extends Controller
     public function reorder(Request $request, Influencer $influencer): JsonResponse
     {
         $validated = $request->validate([
-            'items'              => 'required|array',
-            'items.*.id'         => 'required|integer',
-            'items.*.sort_order' => 'required|integer'
+            'items' => 'required|array',
+            'items.*.id' => 'required|integer',
+            'items.*.sort_order' => 'required|integer',
         ]);
 
         foreach ($validated['items'] as $item) {
@@ -200,11 +200,11 @@ class InfluencerPortfolioController extends Controller
         // Ensure the portfolio belongs to this influencer
         abort_if($portfolio->influencer_id !== $influencer->id, 404);
 
-        $portfolio->update(['is_active' => !$portfolio->is_active]);
+        $portfolio->update(['is_active' => ! $portfolio->is_active]);
 
         return response()->json([
-            'success'   => true,
-            'is_active' => $portfolio->is_active
+            'success' => true,
+            'is_active' => $portfolio->is_active,
         ]);
     }
 }

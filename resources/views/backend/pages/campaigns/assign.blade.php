@@ -210,7 +210,7 @@
 						<div class="flex justify-between">
 							<span class="text-gray-600 dark:text-gray-400">Applicants:</span>
 							<span class="font-medium text-indigo-600 dark:text-indigo-400">
-								{{ count($campaign->applications) }} creator(s)
+								{{ count($campaign->applications) }} influencer(s)
 							</span>
 						</div>
 						<div class="flex justify-between">
@@ -301,7 +301,7 @@
 				},
 				updateAssignedCount() {
 					if (!this.selectedCampaignId) return;
-					fetch(`/dashboard/campaigns/${this.selectedCampaignId}/assigned-creators`)
+					fetch(`/dashboard/campaigns/${this.selectedCampaignId}/assigned-influencers`)
 						.then(r => r.json())
 						.then(data => {
 							this.campaignDetails.assignedCount = data.length || 0;

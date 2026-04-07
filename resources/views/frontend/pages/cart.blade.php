@@ -20,7 +20,7 @@
                             <thead class="bg-gray-50/50 dark:bg-gray-900/50">
                                 <tr>
                                     <th scope="col" class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Package</th>
-                                    <th scope="col" class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Creator</th>
+                                    <th scope="col" class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Influencer</th>
                                     <th scope="col" class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Price</th>
                                     <th scope="col" class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Quantity</th>
                                     <th scope="col" class="px-6 py-4 text-right text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Total</th>
@@ -30,7 +30,7 @@
                             <tbody class="divide-y divide-gray-200 dark:divide-gray-800 bg-white dark:bg-gray-900">
                                 @foreach ($items as $item)
                                     @php
-                                        $influencer = $item->package->creator;
+                                        $influencer = $item->package->influencer;
                                         $influencerName = $influencer->display_name ?? $influencer->user->name;
                                         $itemTotal = $item->unit_price * $item->quantity;
                                     @endphp
@@ -131,7 +131,7 @@
                         </form>
 
                         <p class="text-xs text-gray-500 dark:text-gray-400 mt-4 text-center">
-                            You'll be able to message creators after checkout
+                            You'll be able to message influencers after checkout
                         </p>
                     </div>
                 </div>
@@ -146,13 +146,13 @@
                     </svg>
                 </div>
                 <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-1">Your cart is empty</h3>
-                <p class="text-gray-500 dark:text-gray-400 mb-6">Browse creators and packages to get started</p>
+                <p class="text-gray-500 dark:text-gray-400 mb-6">Browse influencers and packages to get started</p>
                 <a href="{{ route('influencers') }}"
                     class="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700 transition-all">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                     </svg>
-                    Browse Creators
+                    Browse Influencers
                 </a>
             </div>
         </div>

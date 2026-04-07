@@ -27,10 +27,10 @@ class ConversationMediationTest extends TestCase
         // Create users
         $this->brand       = User::factory()->create(['user_type' => 'brand']);
         $this->moderator   = User::factory()->create(['user_type' => 'moderator']);
-        $this->creatorUser = User::factory()->create(['user_type' => 'influencer']);
+        $this->influencerUser = User::factory()->create(['user_type' => 'influencer']);
 
-        // Create creator
-        $this->creator = Influencer::factory()->create(['user_id' => $this->creatorUser->id]);
+        // Create influencer
+        $this->influencer = Influencer::factory()->create(['user_id' => $this->influencerUser->id]);
     }
 
     /**
@@ -39,11 +39,11 @@ class ConversationMediationTest extends TestCase
      */
     public function test_package_exists(): void
     {
-        $package = Package::factory()->create(['creator_id' => $this->creator->id]);
+        $package = Package::factory()->create(['influencer_id' => $this->influencer->id]);
 
         $this->assertDatabaseHas('packages', [
             'id'         => $package->id,
-            'creator_id' => $this->creator->id
+            'influencer_id' => $this->influencer->id
         ]);
     }
 
@@ -55,46 +55,46 @@ class ConversationMediationTest extends TestCase
         // Create moderator assignment
         $assignment = ModeratorAssignment::factory()->create([
             'moderator_user_id' => $this->moderator->id,
-            'creator_id'        => $this->creator->id,
+            'influencer_id'        => $this->influencer->id,
             'assigned_at'       => now()
         ]);
 
         // Create order
         $order = Order::factory()->create([
             'buyer_user_id'           => $this->brand->id,
-            'accepted_for_creator_id' => $this->creator->id
+            'accepted_for_influencer_id' => $this->influencer->id
         ]);
 
         // Create conversation via helper
         $conversation = \App\Http\Controllers\ConversationController::createForPackageOrder(
             $this->brand->id,
-            $this->creator->id,
+            $this->influencer->id,
             $order->id
         );
 
         $this->assertNotNull($conversation);
         $this->assertEquals($this->brand->id, $conversation->brand_user_id);
-        $this->assertEquals($this->creator->id, $conversation->creator_id);
+        $this->assertEquals($this->influencer->id, $conversation->influencer_id);
         $this->assertEquals($this->moderator->id, $conversation->handled_by_user_id);
     }
 
     /**
-     * Test Workflow B Step 4-5: Brand chats (thinks they're talking to creator)
+     * Test Workflow B Step 4-5: Brand chats (thinks they're talking to influencer)
      * Moderator replies AS influencer
      */
-    public function test_brand_messages_moderator_as_creator(): void
+    public function test_brand_messages_moderator_as_influencer(): void
     {
         // Create moderator assignment
         ModeratorAssignment::factory()->create([
             'moderator_user_id' => $this->moderator->id,
-            'creator_id'        => $this->creator->id,
+            'influencer_id'        => $this->influencer->id,
             'assigned_at'       => now()
         ]);
 
         // Create conversation
         $conversation = Conversation::factory()->create([
             'conversation_type'  => 'package_order',
-            'creator_id'         => $this->creator->id,
+            'influencer_id'         => $this->influencer->id,
             'brand_user_id'      => $this->brand->id,
             'handled_by_user_id' => $this->moderator->id
         ]);
@@ -117,24 +117,24 @@ class ConversationMediationTest extends TestCase
     }
 
     /**
-     * Test that creator never sees conversations directly
+     * Test that influencer never sees conversations directly
      */
-    public function test_creator_cannot_view_conversations(): void
+    public function test_influencer_cannot_view_conversations(): void
     {
         $conversation = Conversation::factory()->create([
-            'creator_id'         => $this->creator->id,
+            'influencer_id'         => $this->influencer->id,
             'brand_user_id'      => $this->brand->id,
             'handled_by_user_id' => $this->moderator->id
         ]);
 
-        $this->actingAs($this->creatorUser);
+        $this->actingAs($this->influencerUser);
 
         // Try to view conversation - should fail
         // (depending on authorization implementation)
-        // For now, just verify creator cannot list conversations
+        // For now, just verify influencer cannot list conversations
         $response = $this->get(route('conversations.index'));
 
-        // Creator should be redirected or see error
+        // Influencer should be redirected or see error
         // This depends on your authorization implementation
     }
 
@@ -144,7 +144,7 @@ class ConversationMediationTest extends TestCase
     public function test_moderator_can_view_assigned_conversations(): void
     {
         $conversation = Conversation::factory()->create([
-            'creator_id'         => $this->creator->id,
+            'influencer_id'         => $this->influencer->id,
             'brand_user_id'      => $this->brand->id,
             'handled_by_user_id' => $this->moderator->id
         ]);
@@ -158,33 +158,33 @@ class ConversationMediationTest extends TestCase
     }
 
     /**
-     * Test moderator assignment (one active per creator)
+     * Test moderator assignment (one active per influencer)
      */
-    public function test_creator_has_active_moderator(): void
+    public function test_influencer_has_active_moderator(): void
     {
         // Create assignment
         $assignment = ModeratorAssignment::factory()->create([
             'moderator_user_id' => $this->moderator->id,
-            'creator_id'        => $this->creator->id,
+            'influencer_id'        => $this->influencer->id,
             'assigned_at'       => now(),
             'unassigned_at'     => null
         ]);
 
-        $this->creator->refresh();
-        $activeModerators = $this->creator->activeModerator;
+        $this->influencer->refresh();
+        $activeModerators = $this->influencer->activeModerator;
 
         $this->assertCount(1, $activeModerators);
         $this->assertTrue($assignment->isActive());
     }
 
     /**
-     * Test unassigning moderator from creator
+     * Test unassigning moderator from influencer
      */
-    public function test_unassign_moderator_from_creator(): void
+    public function test_unassign_moderator_from_influencer(): void
     {
         $assignment = ModeratorAssignment::factory()->create([
             'moderator_user_id' => $this->moderator->id,
-            'creator_id'        => $this->creator->id,
+            'influencer_id'        => $this->influencer->id,
             'assigned_at'       => now(),
             'unassigned_at'     => null
         ]);
@@ -193,26 +193,26 @@ class ConversationMediationTest extends TestCase
         $assignment->update(['unassigned_at' => now()]);
 
         $this->assertFalse($assignment->isActive());
-        $this->assertNull($this->creator->activeModerator->first());
+        $this->assertNull($this->influencer->activeModerator->first());
     }
 
     /**
-     * Test moderator can handle multiple creators
+     * Test moderator can handle multiple influencers
      */
-    public function test_moderator_can_handle_multiple_creators(): void
+    public function test_moderator_can_handle_multiple_influencers(): void
     {
         $influencer2User = User::factory()->create(['user_type' => 'influencer']);
         $influencer2     = Influencer::factory()->create(['user_id' => $influencer2User->id]);
 
         ModeratorAssignment::factory()->create([
             'moderator_user_id' => $this->moderator->id,
-            'creator_id'        => $this->creator->id,
+            'influencer_id'        => $this->influencer->id,
             'assigned_at'       => now()
         ]);
 
         ModeratorAssignment::factory()->create([
             'moderator_user_id' => $this->moderator->id,
-            'creator_id'        => $influencer2->id,
+            'influencer_id'        => $influencer2->id,
             'assigned_at'       => now()
         ]);
 

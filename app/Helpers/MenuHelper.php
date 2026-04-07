@@ -37,10 +37,10 @@ class MenuHelper
                         ]
                     ],
                     [
-                        'icon'     => 'creators',
+                        'icon'     => 'influencers',
                         'name'     => 'Influencers',
                         'subItems' => [
-                            ['name' => 'All Influencers', 'route' => 'influencers.index', 'icon' => 'creators'],
+                            ['name' => 'All Influencers', 'route' => 'influencers.index', 'icon' => 'influencers'],
                             ['name' => 'Create Influencer', 'route' => 'influencers.create', 'icon' => 'campaign-new']
                         ]
                     ],
@@ -404,7 +404,7 @@ class MenuHelper
 
             'brands'          => '<svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M20 7L12 3L4 7M20 7L12 11M20 7V17L12 21M12 11L4 7M12 11V21M4 7V17L12 21" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>',
 
-            'creators'        => '<svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>',
+            'influencers'     => '<svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>',
 
             'moderators'      => '<svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>',
 

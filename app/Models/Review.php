@@ -17,14 +17,14 @@ class Review extends Model
         'rating',
         'title',
         'comment',
-        'is_public'
+        'is_public',
     ];
 
     protected function casts(): array
     {
         return [
-            'rating'    => 'integer',
-            'is_public' => 'boolean'
+            'rating' => 'integer',
+            'is_public' => 'boolean',
         ];
     }
 
@@ -38,7 +38,7 @@ class Review extends Model
         return $this->belongsTo(Brand::class);
     }
 
-    public function creator(): BelongsTo
+    public function influencer(): BelongsTo
     {
         return $this->belongsTo(Influencer::class);
     }

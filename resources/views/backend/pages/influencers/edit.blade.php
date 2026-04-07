@@ -1,9 +1,9 @@
 @extends('backend.layouts.app')
 
-@section('title', 'Edit Creator')
+@section('title', 'Edit Influencer')
 
 @section('content')
-	<x-backend.shell.breadcrumb pageTitle="Edit Creator" />
+	<x-backend.shell.breadcrumb pageTitle="Edit Influencer" />
 
 	<div class="rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
 		<div
@@ -16,7 +16,7 @@
 			</div>
 			<a href="{{ route('dashboard.influencers.index') }}"
 				class="inline-flex items-center gap-2 rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800">
-				Back to Creators
+				Back to Influencers
 			</a>
 		</div>
 
@@ -25,7 +25,7 @@
 			@csrf
 			@method('PUT')
 
-			@include('backend.pages.creators._form', ['creator' => $influencer, 'categoryOptions' => $categoryOptions])
+			@include('backend.pages.influencers._form', ['influencer' => $influencer, 'categoryOptions' => $categoryOptions])
 
 			<div
 				class="flex flex-col-reverse gap-3 border-t border-gray-200 pt-5 sm:flex-row sm:justify-end dark:border-gray-800">

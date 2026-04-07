@@ -37,16 +37,16 @@ class ReviewSeeder extends Seeder
         ];
 
         $reviewContents = [
-            'The creator was professional and delivered high-quality content ahead of schedule. The audience engagement was fantastic!',
+            'The influencer was professional and delivered high-quality content ahead of schedule. The audience engagement was fantastic!',
             'Great collaboration! The content resonated well with our target audience and drove excellent engagement metrics.',
-            'Very happy with the results. The creator understood our brand vision perfectly and delivered exceptional content.',
-            'Professional, reliable, and creative. Would definitely work with this creator again on future campaigns.',
-            'The campaign exceeded all our KPIs. The creator went above and beyond expectations.',
+            'Very happy with the results. The influencer understood our brand vision perfectly and delivered exceptional content.',
+            'Professional, reliable, and creative. Would definitely work with this influencer again on future campaigns.',
+            'The campaign exceeded all our KPIs. The influencer went above and beyond expectations.',
             'Excellent communication throughout the project. The deliverables were submitted on time and were of high quality.',
-            'One of the best collaborations we\'ve had. The creator was responsive and flexible with changes.',
+            'One of the best collaborations we\'ve had. The influencer was responsive and flexible with changes.',
             'The content performed exceptionally well, generating great ROI for our campaign.',
-            'Very professional approach. The creator provided regular updates and delivered outstanding work.',
-            'Smooth collaboration from start to finish. Highly recommend working with this creator.'
+            'Very professional approach. The influencer provided regular updates and delivered outstanding work.',
+            'Smooth collaboration from start to finish. Highly recommend working with this influencer.'
         ];
 
         foreach ($orderItems as $item) {

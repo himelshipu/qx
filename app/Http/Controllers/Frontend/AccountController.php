@@ -18,8 +18,8 @@ class AccountController extends Controller
      */
     public function edit(string $slug): View
     {
-        $user       = Auth::user();
-        $brand      = $user->brand;
+        $user = Auth::user();
+        $brand = $user->brand;
         $influencer = $user->influencer;
 
         // Determine if user can manage billing and payment
@@ -29,13 +29,13 @@ class AccountController extends Controller
         $paymentMethods = $user->paymentMethods;
 
         return view('frontend.pages.account', [
-            'user'                       => $user,
-            'brand'                      => $brand,
-            'influencer'                 => $influencer,
-            'slug'                       => $slug,
-            'tab'                        => request()->query('tab', 'details'),
+            'user' => $user,
+            'brand' => $brand,
+            'influencer' => $influencer,
+            'slug' => $slug,
+            'tab' => request()->query('tab', 'details'),
             'canManageBillingAndPayment' => $canManageBillingAndPayment,
-            'paymentMethods'             => $paymentMethods
+            'paymentMethods' => $paymentMethods,
         ]);
     }
 
@@ -47,14 +47,14 @@ class AccountController extends Controller
         $user = Auth::user();
 
         $validated = $request->validate([
-            'name'         => 'required|string|max:255',
-            'email'        => 'required|string|email|max:255|unique:users,email,' . $user->id,
-            'phone'        => 'nullable|string|max:20',
-            'bio'          => 'nullable|string|max:1000',
+            'name' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255|unique:users,email,'.$user->id,
+            'phone' => 'nullable|string|max:20',
+            'bio' => 'nullable|string|max:1000',
             'address_line' => 'nullable|string|max:255',
-            'city'         => 'nullable|string|max:100',
-            'country'      => 'nullable|string|max:100',
-            'postal_code'  => 'nullable|string|max:20'
+            'city' => 'nullable|string|max:100',
+            'country' => 'nullable|string|max:100',
+            'postal_code' => 'nullable|string|max:20',
         ]);
 
         $user->update($validated);
@@ -73,11 +73,11 @@ class AccountController extends Controller
 
         $validated = $request->validate([
             'current_password' => ['required', 'current_password'],
-            'password'         => ['required', 'confirmed', Password::defaults()]
+            'password' => ['required', 'confirmed', Password::defaults()],
         ]);
 
         $user->update([
-            'password' => Hash::make($validated['password'])
+            'password' => Hash::make($validated['password']),
         ]);
 
         return redirect()
@@ -94,24 +94,24 @@ class AccountController extends Controller
 
         // Get the profile owner (brand or influencer)
         $profileOwner = match ($user->user_type) {
-            'brand'   => $user->brand,
-            'creator' => $user->influencer,
-            default   => null
+            'brand' => $user->brand,
+            'influencer' => $user->influencer,
+            default => null
         };
 
-        if (!$profileOwner) {
+        if (! $profileOwner) {
             return redirect()
                 ->route('frontend.account.edit', ['slug' => $slug, 'tab' => 'billing'])
                 ->with('error', 'Billing information is not available for this account.');
         }
 
         $validated = $request->validate([
-            'legal_company_name'  => ['nullable', 'string', 'max:255'],
-            'vat_id'              => ['nullable', 'string', 'max:50'],
-            'billing_address'     => ['nullable', 'string', 'max:255'],
-            'billing_city'        => ['nullable', 'string', 'max:255'],
-            'billing_country'     => ['nullable', 'string', 'max:255'],
-            'billing_postal_code' => ['nullable', 'string', 'max:20']
+            'legal_company_name' => ['nullable', 'string', 'max:255'],
+            'vat_id' => ['nullable', 'string', 'max:50'],
+            'billing_address' => ['nullable', 'string', 'max:255'],
+            'billing_city' => ['nullable', 'string', 'max:255'],
+            'billing_country' => ['nullable', 'string', 'max:255'],
+            'billing_postal_code' => ['nullable', 'string', 'max:20'],
         ]);
 
         // Use updateOrCreate to prevent duplicate billing profiles
@@ -134,7 +134,7 @@ class AccountController extends Controller
 
         // Toggle the is_active status
         $user->update([
-            'is_active' => !$user->is_active
+            'is_active' => ! $user->is_active,
         ]);
 
         $message = $user->is_active

@@ -20,16 +20,16 @@ beforeEach(function () {
         ]);
     };
 
-    $this->makeCreatorWithPackage = function (): array {
-        $influencerUser = ($this->makeUser)('creator@example.com', 'creator');
+    $this->makeInfluencerWithPackage = function (): array {
+        $influencerUser = ($this->makeUser)('influencer@example.com', 'influencer');
 
         $influencer = Influencer::create([
             'user_id' => $influencerUser->id,
-            'display_name' => 'Creator One',
+            'display_name' => 'Influencer One',
         ]);
 
         $package = Package::create([
-            'creator_id' => $influencer->id,
+            'influencer_id' => $influencer->id,
             'platform' => 'instagram',
             'name' => 'Instagram Story',
             'base_price' => 120,
@@ -41,7 +41,7 @@ beforeEach(function () {
 });
 
 test('guest add to cart gets login redirect metadata and stores pending action', function () {
-    [, $package] = ($this->makeCreatorWithPackage)();
+    [, $package] = ($this->makeInfluencerWithPackage)();
 
     $response = $this->postJson(route('cart.add'), [
         'package_id' => $package->id,
@@ -60,7 +60,7 @@ test('guest add to cart gets login redirect metadata and stores pending action',
 
 test('pending add to cart is consumed after login and redirects to cart', function () {
     $brand = ($this->makeUser)('brand@example.com', 'brand');
-    [, $package] = ($this->makeCreatorWithPackage)();
+    [, $package] = ($this->makeInfluencerWithPackage)();
 
     session()->put(PendingPostAuthActionService::ACTION_KEY, PendingPostAuthActionService::ACTION_ADD_TO_CART);
     session()->put(PendingPostAuthActionService::PACKAGE_ID_KEY, $package->id);
@@ -74,7 +74,7 @@ test('pending add to cart is consumed after login and redirects to cart', functi
 
     $this->assertDatabaseHas('cart_items', [
         'package_id' => $package->id,
-        'creator_id' => $package->creator_id,
+        'influencer_id' => $package->influencer_id,
     ]);
 
     $this->assertNull(session(PendingPostAuthActionService::ACTION_KEY));
@@ -82,22 +82,22 @@ test('pending add to cart is consumed after login and redirects to cart', functi
 });
 
 test('guest negotiation request stores pending action and redirects to login', function () {
-    [$influencer] = ($this->makeCreatorWithPackage)();
+    [$influencer] = ($this->makeInfluencerWithPackage)();
 
-    $response = $this->get(route('conversations.start-negotiation', ['creator' => $influencer->id]));
+    $response = $this->get(route('conversations.start-negotiation', ['influencer' => $influencer->id]));
 
     $response->assertRedirect(route('login', absolute: false));
 
     $this->assertSame(PendingPostAuthActionService::ACTION_NEGOTIATE, session(PendingPostAuthActionService::ACTION_KEY));
-    $this->assertSame($influencer->id, session(PendingPostAuthActionService::CREATOR_ID_KEY));
+    $this->assertSame($influencer->id, session(PendingPostAuthActionService::INFLUENCER_ID_KEY));
 });
 
 test('pending negotiation is consumed after login and redirects to conversation', function () {
     $brand = ($this->makeUser)('brand-negotiate@example.com', 'brand');
-    [$influencer] = ($this->makeCreatorWithPackage)();
+    [$influencer] = ($this->makeInfluencerWithPackage)();
 
     session()->put(PendingPostAuthActionService::ACTION_KEY, PendingPostAuthActionService::ACTION_NEGOTIATE);
-    session()->put(PendingPostAuthActionService::CREATOR_ID_KEY, $influencer->id);
+    session()->put(PendingPostAuthActionService::INFLUENCER_ID_KEY, $influencer->id);
 
     $response = $this->post('/login', [
         'email' => $brand->email,
@@ -106,7 +106,7 @@ test('pending negotiation is consumed after login and redirects to conversation'
 
     $conversation = Conversation::query()
         ->where('brand_user_id', $brand->id)
-        ->where('creator_id', $influencer->id)
+        ->where('influencer_id', $influencer->id)
         ->first();
 
     expect($conversation)->not->toBeNull();

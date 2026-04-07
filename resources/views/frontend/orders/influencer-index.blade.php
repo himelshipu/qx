@@ -40,8 +40,8 @@
                     <tbody class="divide-y divide-gray-200 dark:divide-gray-800 bg-white dark:bg-gray-900">
                         @foreach ($orders as $order)
                             @php
-                                $influencerId = auth()->user()->creator?->id;
-                                $influencerItems = $order->items->where('creator_id', $influencerId);
+                                $influencerId = auth()->user()->influencer?->id;
+                                $influencerItems = $order->items->where('influencer_id', $influencerId);
                                 $firstItem = $influencerItems->first();
                                 $packageNames = $influencerItems->map(fn($item) => $item->package->name ?? 'N/A')->implode(', ');
                                 $totalAmount = $influencerItems->sum('unit_price');

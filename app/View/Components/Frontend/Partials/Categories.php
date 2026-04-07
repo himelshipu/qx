@@ -41,22 +41,22 @@ class Categories extends Component
             [
                 'name' => 'Fashion',
                 'slug' => 'fashion',
-                'img' => 'https://d5ik1gor6xydq.cloudfront.net/websiteImages/creatorMarketplace/categories/fashion.png',
+                'img' => 'https://d5ik1gor6xydq.cloudfront.net/websiteImages/influencerMarketplace/categories/fashion.png',
             ],
             [
                 'name' => 'Music & Dance',
                 'slug' => 'music-dance',
-                'img' => 'https://d5ik1gor6xydq.cloudfront.net/websiteImages/creatorMarketplace/categories/music%20&%20dance.png',
+                'img' => 'https://d5ik1gor6xydq.cloudfront.net/websiteImages/influencerMarketplace/categories/music%20&%20dance.png',
             ],
             [
                 'name' => 'Beauty',
                 'slug' => 'beauty',
-                'img' => 'https://d5ik1gor6xydq.cloudfront.net/websiteImages/creatorMarketplace/categories/beauty.png',
+                'img' => 'https://d5ik1gor6xydq.cloudfront.net/websiteImages/influencerMarketplace/categories/beauty.png',
             ],
             [
                 'name' => 'Travel',
                 'slug' => 'travel',
-                'img' => 'https://d5ik1gor6xydq.cloudfront.net/websiteImages/creatorMarketplace/categories/travel.png',
+                'img' => 'https://d5ik1gor6xydq.cloudfront.net/websiteImages/influencerMarketplace/categories/travel.png',
             ],
         ]);
     }

@@ -23,8 +23,8 @@ class PackageController extends Controller
      */
     public function index(Request $request): View
     {
-        $search   = trim((string) $request->string('q', ''));
-        $status   = (string) $request->string('status', 'all');
+        $search = trim((string) $request->string('q', ''));
+        $status = (string) $request->string('status', 'all');
         $platform = (string) $request->string('platform', 'all');
 
         return view('backend.pages.packages.index', $this->packageService->getListingPayload($search, $status, $platform));
@@ -73,13 +73,13 @@ class PackageController extends Controller
         $package->load([
             'createdBy',
             'influencer.user',
-            'orderItems.order.brand.user'
+            'orderItems.order.brand.user',
         ]);
 
         return view('backend.pages.packages.view', [
-            'package'    => $package,
-            'influencer' => $package->creator,
-            'orders'     => $package->orderItems()->with(['order.brand.user'])->get()->map(fn($item) => $item->order)->unique('id')->values()
+            'package' => $package,
+            'influencer' => $package->influencer,
+            'orders' => $package->orderItems()->with(['order.brand.user'])->get()->map(fn ($item) => $item->order)->unique('id')->values(),
         ]);
     }
 
@@ -106,7 +106,7 @@ class PackageController extends Controller
     {
         $result = $this->packageService->deletePackage($package);
 
-        if (!$result['deleted']) {
+        if (! $result['deleted']) {
             return redirect()
                 ->route('dashboard.packages.index')
                 ->with('error', $result['message']);
@@ -125,9 +125,9 @@ class PackageController extends Controller
         $isActive = $this->packageService->toggleStatus($package);
 
         return response()->json([
-            'success'   => true,
-            'message'   => 'Package status updated successfully.',
-            'is_active' => $isActive
+            'success' => true,
+            'message' => 'Package status updated successfully.',
+            'is_active' => $isActive,
         ]);
     }
 
@@ -145,13 +145,13 @@ class PackageController extends Controller
     public function purchaseStore(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'package_id'  => 'required|exists:packages,id',
-            'brand_ids'   => 'required|array',
-            'brand_ids.*' => 'exists:brands,id'
+            'package_id' => 'required|exists:packages,id',
+            'brand_ids' => 'required|array',
+            'brand_ids.*' => 'exists:brands,id',
         ]);
 
         $packageId = $validated['package_id'];
-        $brandIds  = $validated['brand_ids'];
+        $brandIds = $validated['brand_ids'];
 
         $purchased = $this->packageService->purchasePackageForBrands($packageId, $brandIds);
 

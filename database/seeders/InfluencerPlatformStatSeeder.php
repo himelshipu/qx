@@ -15,8 +15,8 @@ class InfluencerPlatformStatSeeder extends Seeder
         $platforms   = ['facebook', 'instagram', 'tiktok', 'linkedin', 'x', 'youtube', 'ugc'];
 
         foreach ($influencers as $influencer) {
-            $handleBase = strtolower(preg_replace('/[^a-z0-9]+/', '', (string) ($influencer->display_name ?? 'creator')));
-            $handleBase = $handleBase ?: 'creator' . $influencer->id;
+            $handleBase = strtolower(preg_replace('/[^a-z0-9]+/', '', (string) ($influencer->display_name ?? 'influencer')));
+            $handleBase = $handleBase ?: 'influencer' . $influencer->id;
 
             foreach ($platforms as $platform) {
                 $followers  = random_int(5000, 850000);

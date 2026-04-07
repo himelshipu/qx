@@ -84,7 +84,7 @@
 							<label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Content Instructions <span
 									class="text-red-500">*</span></label>
 							<textarea name="instructions" rows="5"
-							 placeholder="What should creators do? Include key messages, deliverables, hashtags, etc..."
+							 placeholder="What should influencers do? Include key messages, deliverables, hashtags, etc..."
 							 class="w-full px-4 py-3 rounded-lg border border-gray-300 bg-white text-gray-900 placeholder:text-gray-400 focus:border-purple-500 focus:ring-2 focus:ring-purple-100 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder:text-gray-500 dark:focus:border-purple-400 dark:focus:ring-purple-900/30 transition"
 							 required>{{ old('instructions', $campaign->instructions) }}</textarea>
 							@error('instructions')
@@ -187,7 +187,7 @@
 							class="flex items-center justify-between p-4 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/30">
 							<div>
 								<p class="font-semibold text-gray-700 dark:text-gray-300">Make Campaign Active</p>
-								<p class="text-sm text-gray-600 dark:text-gray-400">Creators can apply to active campaigns</p>
+								<p class="text-sm text-gray-600 dark:text-gray-400">Influencers can apply to active campaigns</p>
 							</div>
 							<label class="relative inline-block">
 								<input type="checkbox" name="is_active" value="1"

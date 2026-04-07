@@ -191,7 +191,7 @@
 					<table class="w-full text-sm">
 						<thead class="border-b border-gray-200 dark:border-gray-700">
 							<tr>
-								<th class="px-4 py-3 text-left font-semibold text-gray-700 dark:text-gray-300">Creator</th>
+								<th class="px-4 py-3 text-left font-semibold text-gray-700 dark:text-gray-300">Influencer</th>
 								<th class="px-4 py-3 text-left font-semibold text-gray-700 dark:text-gray-300">Email</th>
 								<th class="px-4 py-3 text-left font-semibold text-gray-700 dark:text-gray-300">Status</th>
 								<th class="px-4 py-3 text-left font-semibold text-gray-700 dark:text-gray-300">Proposed Rate</th>
@@ -213,13 +213,13 @@
 								@endphp
 								<tr class="hover:bg-gray-50 dark:hover:bg-gray-800/50">
 									<td class="px-4 py-3">
-										<a href="{{ route('dashboard.influencers.view', $application->creator) }}" 
+										<a href="{{ route('dashboard.influencers.view', $application->influencer) }}" 
 											class="font-medium text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300">
-											{{ $application->creator->display_name }}
+											{{ $application->influencer->display_name }}
 										</a>
 									</td>
 									<td class="px-4 py-3 text-gray-600 dark:text-gray-400">
-										{{ $application->creator->user?->email ?? 'N/A' }}
+										{{ $application->influencer->user?->email ?? 'N/A' }}
 									</td>
 									<td class="px-4 py-3">
 										<span class="inline-flex rounded-full px-2.5 py-1 text-xs font-semibold {{ $statusClass }}">

@@ -21,17 +21,17 @@ class SubOrder extends Model
         'accepted_at',
         'completed_at',
         'cancelled_at',
-        'paid_at'
+        'paid_at',
     ];
 
     protected function casts(): array
     {
         return [
-            'amount'       => 'decimal:2',
-            'accepted_at'  => 'datetime',
+            'amount' => 'decimal:2',
+            'accepted_at' => 'datetime',
             'completed_at' => 'datetime',
             'cancelled_at' => 'datetime',
-            'paid_at'      => 'datetime'
+            'paid_at' => 'datetime',
         ];
     }
 
@@ -52,9 +52,9 @@ class SubOrder extends Model
     }
 
     /**
-     * Get the creator/influencer for this sub-order
+     * Get the influencer for this sub-order
      */
-    public function creator(): BelongsTo
+    public function influencer(): BelongsTo
     {
         return $this->belongsTo(Influencer::class);
     }

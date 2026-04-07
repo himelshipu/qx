@@ -11,8 +11,8 @@
 				<div class="max-w-2xl">
 					<h1 class="text-2xl font-bold mb-2">Complete Your Profile</h1>
 					<p class="text-gray-400 text-sm leading-relaxed">
-						Your profile is the first thing creators view to learn about your brand.
-						Having a complete, detailed profile helps creators decide if you're a fit to collaborate with.
+						Your profile is the first thing influencers view to learn about your brand.
+						Having a complete, detailed profile helps influencers decide if you're a fit to collaborate with.
 					</p>
 				</div>
 

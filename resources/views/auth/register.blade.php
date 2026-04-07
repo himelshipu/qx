@@ -66,7 +66,7 @@
 							<form method="POST" action="{{ route('register') }}">
 								@csrf
 								<input type="hidden" name="user_type" value="influencer">
-								<x-frontend.signup.creator />
+								<x-frontend.signup.influencer />
 							</form>
 						</div>
 

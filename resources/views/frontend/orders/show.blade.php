@@ -49,9 +49,9 @@
 										<div class="flex-1">
 											<h3 class="font-semibold text-gray-900 dark:text-white">{{ $item->title }}</h3>
 											<p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
-												Creator:
+												Influencer:
 												<span class="font-medium">
-													{{ $item->creator?->display_name ?: $item->creator?->user?->name ?? 'N/A' }}
+													{{ $item->influencer?->display_name ?: $item->influencer?->user?->name ?? 'N/A' }}
 												</span>
 											</p>
 
@@ -170,9 +170,9 @@
 											<div class="w-0.5 h-12 bg-gray-200 dark:bg-gray-700 my-2"></div>
 										</div>
 										<div class="flex-1 pt-1">
-											<p class="font-semibold text-gray-900 dark:text-white">Awaiting Creator Response</p>
+											<p class="font-semibold text-gray-900 dark:text-white">Awaiting Influencer Response</p>
 											<p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
-												Creator will accept or negotiate this order
+												Influencer will accept or negotiate this order
 											</p>
 										</div>
 									</div>
@@ -192,7 +192,7 @@
 										<div class="flex-1 pt-1">
 											<p class="font-semibold text-gray-900 dark:text-white">In Progress</p>
 											<p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
-												Creator is working on your content
+												Influencer is working on your content
 											</p>
 										</div>
 									</div>
@@ -260,7 +260,7 @@
 						</div>
 						<div class="p-6">
 							<p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
-								Message the creator about this order. You can discuss details, ask questions, or share feedback.
+								Message the influencer about this order. You can discuss details, ask questions, or share feedback.
 							</p>
 							<a href="{{ route('frontend.conversations.index') }}"
 								class="inline-flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 dark:hover:bg-purple-600 text-white text-sm font-semibold rounded-lg transition">
@@ -292,9 +292,9 @@
 								<span class="font-medium text-gray-900 dark:text-white">{{ $order->items->count() }}</span>
 							</div>
 							<div class="flex justify-between text-sm">
-								<span class="text-gray-600 dark:text-gray-400">Creators</span>
-								<span class="font-medium text-gray-900 dark:text-white">
-									{{ $order->items->pluck('creator_id')->unique()->count() }}
+									<span class="text-gray-600 dark:text-gray-400">Influencers</span>
+									<span class="font-medium text-gray-900 dark:text-white">
+										{{ $order->items->pluck('influencer_id')->unique()->count() }}
 								</span>
 							</div>
 							<div class="border-t border-gray-200 dark:border-gray-700 pt-3 flex justify-between">

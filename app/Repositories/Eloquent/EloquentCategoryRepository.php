@@ -50,7 +50,7 @@ class EloquentCategoryRepository implements CategoryRepositoryInterface
             'active'   => Category::where('is_active', true)->count(),
             'inactive' => Category::where('is_active', false)->count(),
             'linked'   => Category::query()
-                ->whereHas('creators')
+                ->whereHas('influencers')
                 ->orWhereHas('campaigns')
                 ->orWhereHas('onboardingProfiles')
                 ->count()

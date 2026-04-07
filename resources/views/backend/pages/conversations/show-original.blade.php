@@ -16,7 +16,7 @@
 						<div>
 							<h3 class="font-semibold text-gray-900 dark:text-white">
 								@if (auth()->user()->user_type === 'brand')
-									{{ $conversation->creator->display_name ?? $conversation->creator->user->name }}
+									{{ $conversation->influencer->display_name ?? $conversation->influencer->user->name }}
 								@else
 									{{ $conversation->brandUser->name }}
 								@endif
@@ -25,7 +25,7 @@
 								@if (auth()->user()->user_type === 'brand')
 									Package Order
 								@else
-									Moderating for {{ $conversation->creator->display_name ?? $conversation->creator->user->name }}
+									Moderating for {{ $conversation->influencer->display_name ?? $conversation->influencer->user->name }}
 								@endif
 							</p>
 						</div>
@@ -50,7 +50,7 @@
 									class="mt-1 text-xs @if ($isOwn) text-blue-100 @else text-gray-500 dark:text-gray-400 @endif">
 									{{ $message->created_at->format('H:i') }}
 									@if (auth()->user()->user_type !== 'brand' && !$isOwn)
-										<span class="ml-1">(as creator)</span>
+										<span class="ml-1">(as influencer)</span>
 									@endif
 								</p>
 							</div>
@@ -114,9 +114,9 @@
 				<h4 class="font-semibold text-gray-900 dark:text-white">Participants</h4>
 				<div class="mt-4 space-y-3">
 					<div>
-						<p class="text-xs text-gray-500 dark:text-gray-400">Creator</p>
+						<p class="text-xs text-gray-500 dark:text-gray-400">Influencer</p>
 						<p class="mt-1 text-sm font-medium text-gray-900 dark:text-white">
-							{{ $conversation->creator->display_name ?? $conversation->creator->user->name }}
+							{{ $conversation->influencer->display_name ?? $conversation->influencer->user->name }}
 						</p>
 					</div>
 					<div>
@@ -144,7 +144,7 @@
 			@if (auth()->user()->user_type === 'admin' && !$conversation->handled_by_user_id)
 				<div class="rounded-xl border border-yellow-200 bg-yellow-50 p-4 dark:border-yellow-900/30 dark:bg-yellow-900/20">
 					<h4 class="font-semibold text-yellow-900 dark:text-yellow-100">Assign Moderator</h4>
-					<p class="mt-1 text-xs text-yellow-800 dark:text-yellow-300">This conversation needs a moderator to handle creator
+					<p class="mt-1 text-xs text-yellow-800 dark:text-yellow-300">This conversation needs a moderator to handle influencer
 						responses.</p>
 					<form action="{{ route('dashboard.conversations.assign-moderator', $conversation) }}" method="POST"
 						class="mt-3 space-y-2">

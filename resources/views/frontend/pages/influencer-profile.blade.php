@@ -5,7 +5,7 @@
 		$displayName =
 		    trim((string) ($influencer->display_name ?? '')) !== ''
 		        ? (string) $influencer->display_name
-		        : (string) ($influencer->user->name ?? Influencer');
+		        : (string) ($influencer->user->name ?? 'Influencer');
 		$locationParts = array_values(
 		    array_filter([
 		        trim((string) ($influencer->user->address_line ?? '')),
@@ -100,7 +100,7 @@
 		                    ? $description
 		                    : 'This package includes ' .
 		                        $package->name .
-		                        '. The content will be created in collaboration with the brand, ensuring it aligns with creator style and audience.',
+		                        '. The content will be created in collaboration with the brand, ensuring it aligns with influencer style and audience.',
 		        ];
 		    })
 		    ->values();
@@ -112,7 +112,7 @@
 		$initialPackageKey = $packageCards->first()['key'] ?? null;
 	@endphp
 
-	<section class="min-h-screen" x-data="creatorProfileData()">
+	<section class="min-h-screen" x-data="influencerProfileData()">
 
 		<main class="max-w-screen-2xl mx-auto">
 			<!-- 1. TOP CATEGORIES & EDIT -->
@@ -202,7 +202,7 @@
 							class="min-w-full lg:min-w-0 lg:col-span-4 snap-center relative overflow-hidden lg:rounded-xl border-gray-100 dark:border-gray-800">
 							<img src="{{ $image }}"
 								class="w-full h-full object-cover lg:hover:scale-105 transition-transform duration-700"
-								alt="Creator showcase image {{ $index + 1 }}">
+								alt="Influencer showcase image {{ $index + 1 }}">
 						</div>
 					@endforeach
 				</div>
@@ -242,7 +242,7 @@
 			</style>
 
 			<div class="flex flex-col lg:flex-row gap-4 lg:gap-16">
-				<!-- LEFT COLUMN: CREATOR INFO -->
+				<!-- LEFT COLUMN: INFLUENCER INFO -->
 				<div class="flex-1 space-y-6">
 					<!-- Profile Identity -->
 					<div class="flex items-center gap-6">
@@ -284,7 +284,7 @@
 							</div>
 							<div>
 								<div class="flex items-center gap-3 mb-2">
-									<h3 class="text-lg font-bold text-gray-800 dark:text-gray-300">Top Creator</h3>
+									<h3 class="text-lg font-bold text-gray-800 dark:text-gray-300">Top Influencer</h3>
 									<span
 										class="px-2.5 py-1 bg-red-50 text-red-600 rounded-lg text-[10px] font-semibold uppercase tracking-widest border border-red-100">Not
 										Earned</span>
@@ -369,7 +369,7 @@
 							<template x-if="filteredPackages.length === 0">
 								<div
 									class="p-5 border border-gray-100 dark:border-gray-800 rounded-2xl bg-white dark:bg-transparent text-sm text-gray-500 dark:text-gray-400">
-									No active packages available for this creator.
+									No active packages available for this influencer.
 								</div>
 							</template>
 						</div>
@@ -580,7 +580,7 @@
 
 	@push('scripts')
 		<script>
-			function creatorProfileData() {
+			function influencerProfileData() {
 				return {
 					openDropdown: false,
 					selectedPackageKey: @js($initialPackageKey),
@@ -592,7 +592,7 @@
 					loginUrl: @js(route('login')),
 					cartUrl: @js(route('cart.index')),
 					conversationsUrl: @js(route('dashboard.conversations.index')),
-					creatorId: @js($influencer->id),
+					influencerId: @js($influencer->id),
 								startNegotiationUrl: @js(route('conversations.start-negotiation', ['influencer' => $influencer->id])),
 					portfolioItems: @js(
     $influencer->portfolios
@@ -691,7 +691,7 @@
 							return;
 						}
 
-						// Prevent creators from adding to cart
+						// Prevent influencers from adding to cart
 						if (this.isAuthenticated && this.userType !== 'brand') {
 							window.confirmationModal.open({
 								title: 'Brand Account Required',

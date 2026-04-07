@@ -19,9 +19,9 @@ class CampaignApplicationSeeder extends Seeder
         }
 
         foreach ($campaignIds as $campaignId) {
-            $selectedCreators = collect($influencerIds)->shuffle()->take(random_int(3, min(8, count($influencerIds))));
+            $selectedInfluencers = collect($influencerIds)->shuffle()->take(random_int(3, min(8, count($influencerIds))));
 
-            foreach ($selectedCreators as $influencerId) {
+            foreach ($selectedInfluencers as $influencerId) {
                 $status = $faker->randomElement($statuses);
                 $appliedAt = now()->subDays(random_int(1, 30));
 

@@ -32,7 +32,7 @@ class CategorySeeder extends Seeder
         foreach ($categories as $index => $name) {
             $payload = [
                 'name' => $name,
-                'description' => $name . ' related creators and campaigns.',
+                'description' => $name . ' related influencers and campaigns.',
                 'icon_path' => null,
                 'image_path' => null,
                 'is_active' => true,

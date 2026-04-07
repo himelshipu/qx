@@ -20,12 +20,12 @@ class StorePackageRequest extends FormRequest
      */
     protected function prepareForValidation(): void
     {
-        $user      = Auth::user();
-        $isCreator = $user && $user->influencer()->exists();
+        $user = Auth::user();
+        $isInfluencer = $user && $user->influencer()->exists();
 
-        // If user is not a creator, ensure created_for is provided
-        // If user is a creator, remove created_for from input as it will be set automatically
-        if ($isCreator) {
+        // If user is not an influencer, ensure created_for is provided
+        // If user is an influencer, remove created_for from input as it will be set automatically
+        if ($isInfluencer) {
             $this->request->remove('created_for');
         }
     }
@@ -37,8 +37,8 @@ class StorePackageRequest extends FormRequest
      */
     public function rules(): array
     {
-        $user      = Auth::user();
-        $isCreator = $user && $user->influencer()->exists();
+        $user = Auth::user();
+        $isInfluencer = $user && $user->influencer()->exists();
 
         $rules = [
             'platform'           => ['required', 'string', 'in:facebook,instagram,tiktok,linkedin,x,youtube,ugc,other'],
@@ -51,8 +51,8 @@ class StorePackageRequest extends FormRequest
             'is_active'          => ['sometimes', 'boolean']
         ];
 
-        // Only require created_for if user is not a creator
-        if (!$isCreator) {
+        // Only require created_for if user is not an influencer
+        if (!$isInfluencer) {
             $rules['created_for'] = ['required', 'exists:influencers,id'];
         }
 

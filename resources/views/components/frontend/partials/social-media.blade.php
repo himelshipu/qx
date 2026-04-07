@@ -39,8 +39,8 @@
 							$profileUrl = !empty($influencer['slug']) ? route('influencer.profile', ['slug' => $influencer['slug']]) : '#';
 						@endphp
 						<a href="{{ $profileUrl }}"
-							class="flex-shrink-0 w-[80%] sm:w-[60%] lg:w-auto group overflow-hidden font-sans cursor-pointer creator-card block"
-							data-creator-id="{{ $influencer['id'] }}">
+							class="flex-shrink-0 w-[80%] sm:w-[60%] lg:w-auto group overflow-hidden font-sans cursor-pointer influencer-card block"
+							data-influencer-id="{{ $influencer['id'] }}">
 							<div class="relative overflow-hidden rounded-xl">
 								<button type="button"
 									class="wishlist-btn absolute top-3 right-3 z-30 p-1.5 transition-all duration-300 hover:scale-110 drop-shadow-md"
@@ -56,7 +56,7 @@
 								<div class="absolute top-3 left-3 flex flex-wrap gap-1.5">
 									<span
 										class="bg-black/80 backdrop-blur-sm text-white text-[10px] font-normal px-2 py-1 rounded-md border border-white/20 flex items-center gap-1">
-										<x-icons.heart-badge class="w-4 h-4 text-purple-400" /> {{ $platformLabel }} Creator
+										<x-icons.heart-badge class="w-4 h-4 text-purple-400" /> {{ $platformLabel }} Influencer
 									</span>
 									<span
 										class="bg-black/80 backdrop-blur-sm text-white text-[10px] font-normal px-2 py-1 rounded-md border border-white/20 flex items-center gap-1">

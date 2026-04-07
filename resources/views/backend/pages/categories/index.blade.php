@@ -30,7 +30,7 @@
 				class="flex flex-col gap-4 border-b border-gray-200 p-5 sm:flex-row sm:items-center sm:justify-between dark:border-gray-800">
 				<div>
 					<h3 class="text-lg font-semibold text-gray-900 dark:text-white">Category Management</h3>
-					<p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Create and maintain categories used by creators, campaigns,
+					<p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Create and maintain categories used by influencers, campaigns,
 						and onboarding flows.</p>
 				</div>
 				<a href="{{ route('dashboard.categories.create') }}"
@@ -93,7 +93,7 @@
 						<tbody class="divide-y divide-gray-100 dark:divide-gray-800">
 							@forelse ($categories as $category)
 								@php
-									$usageCount = $category->creators_count + $category->campaigns_count + $category->onboarding_profiles_count;
+									$usageCount = $category->influencers_count + $category->campaigns_count + $category->onboarding_profiles_count;
 									$previewPath = $category->icon_path ?: $category->image_path;
 									$previewUrl = $previewPath ? \App\Helpers\ImageHelper::url($previewPath) : null;
 								@endphp
@@ -120,8 +120,8 @@
 									<td class="px-4 py-3 text-sm text-gray-700 dark:text-gray-300">{{ $category->sort_order }}</td>
 									<td class="px-4 py-3">
 										<div class="text-xs text-gray-600 dark:text-gray-300">
-											<span class="inline-flex rounded bg-gray-100 px-2 py-1 dark:bg-gray-800">Creators:
-												{{ $category->creators_count }}</span>
+											<span class="inline-flex rounded bg-gray-100 px-2 py-1 dark:bg-gray-800">Influencers:
+												{{ $category->influencers_count }}</span>
 											<span class="inline-flex rounded bg-gray-100 px-2 py-1 dark:bg-gray-800">Campaigns:
 												{{ $category->campaigns_count }}</span>
 											<span class="inline-flex rounded bg-gray-100 px-2 py-1 dark:bg-gray-800">Onboarding:

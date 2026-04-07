@@ -22,9 +22,9 @@
 					<a href="{{ route('register', ['user-type' => 'brand']) }}" class="nav-link">Join as Brand</a>
 				@endauth
 
-				<!-- Creator link -->
+				<!-- Influencer link -->
 				<a href="{{ route('register', ['user-type' => 'influencer']) }}" class="nav-link nav-gradient font-bold">
-					Join as Creator
+					Join as Influencer
 				</a>
 
 			</nav>

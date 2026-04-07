@@ -13,8 +13,8 @@ class InfluencerSocialLinkSeeder extends Seeder
         $influencers = DB::table('influencers')->get();
 
         foreach ($influencers as $influencer) {
-            $handle = strtolower(preg_replace('/[^a-z0-9]+/', '', (string) ($influencer->display_name ?? 'creator')));
-            $handle = $handle ?: 'creator' . $influencer->id;
+            $handle = strtolower(preg_replace('/[^a-z0-9]+/', '', (string) ($influencer->display_name ?? 'influencer')));
+            $handle = $handle ?: 'influencer' . $influencer->id;
 
             $payload = [
                 'instagram_url' => 'https://instagram.com/' . $handle,

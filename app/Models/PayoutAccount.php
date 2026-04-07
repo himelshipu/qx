@@ -17,20 +17,20 @@ class PayoutAccount extends Model
         'account_identifier',
         'account_name',
         'is_default',
-        'is_active'
+        'is_active',
     ];
 
     protected function casts(): array
     {
         return [
             'is_default' => 'boolean',
-            'is_active'  => 'boolean',
+            'is_active' => 'boolean',
             'created_at' => 'datetime',
-            'updated_at' => 'datetime'
+            'updated_at' => 'datetime',
         ];
     }
 
-    public function creator(): BelongsTo
+    public function influencer(): BelongsTo
     {
         return $this->belongsTo(Influencer::class, 'influencer_id');
     }

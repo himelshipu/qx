@@ -26,7 +26,7 @@ class InfluencerController extends Controller
         $search = trim((string) $request->string('q', ''));
         $status = (string) $request->string('status', 'all');
 
-        return view('backend.pages.creators.index', $this->influencerService->getListingPayload($search, $status));
+        return view('backend.pages.influencers.index', $this->influencerService->getListingPayload($search, $status));
     }
 
     /**
@@ -34,7 +34,7 @@ class InfluencerController extends Controller
      */
     public function create(): View
     {
-        return view('backend.pages.creators.create', $this->influencerService->getFormPayload());
+        return view('backend.pages.influencers.create', $this->influencerService->getFormPayload());
     }
 
     /**
@@ -61,7 +61,7 @@ class InfluencerController extends Controller
      */
     public function view(Influencer $influencer): View
     {
-        return view('backend.pages.creators.view', $this->influencerService->getDetailPayload($influencer));
+        return view('backend.pages.influencers.view', $this->influencerService->getDetailPayload($influencer));
     }
 
     /**
@@ -69,7 +69,7 @@ class InfluencerController extends Controller
      */
     public function edit(Influencer $influencer): View
     {
-        return view('backend.pages.creators.edit', [
+        return view('backend.pages.influencers.edit', [
             'influencer' => $influencer->load(['user', 'categories']),
             ...$this->influencerService->getFormPayload()
         ]);

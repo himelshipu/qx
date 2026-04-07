@@ -21,9 +21,9 @@ class InfluencerSeeder extends Seeder
             $payload = [
                 'display_name'       => $user->name,
                 'title_name'         => $faker->randomElement([
-                    'Lifestyle Creator',
+                    'Lifestyle Influencer',
                     'Travel Storyteller',
-                    'UGC Creator',
+                    'UGC Content Influencer',
                     'Beauty Reviewer',
                     'Fitness Coach'
                 ]),

@@ -58,7 +58,7 @@ class BillingProfileSeeder extends Seeder
             DB::table('billing_profiles')->updateOrInsert(
                 [
                     'user_id' => $influencer->id,
-                    'user_type' => 'creator'
+                    'user_type' => 'influencer'
                 ],
                 $payload
             );

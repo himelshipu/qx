@@ -1,6 +1,6 @@
 @extends('backend.layouts.app')
 
-@section('title', 'Creator Details')
+@section('title', 'Influencer Details')
 
 @section('content')
 	@php
@@ -12,7 +12,7 @@
 			: null;
 	@endphp
 
-	<x-backend.shell.breadcrumb pageTitle="Creator Details" />
+	<x-backend.shell.breadcrumb pageTitle="Influencer Details" />
 
 	<div class="space-y-6">
 		<div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
@@ -58,11 +58,11 @@
 							<x-icons.camera class="h-4 w-4" />
 							Manage Portfolio
 						</a>
-						<a href="{{ route('dashboard.influencers.edit', $influencer) }}"
-							class="inline-flex items-center gap-2 rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800">
-							<x-icons.edit class="h-4 w-4" />
-							Edit Creator
-						</a>
+					<a href="{{ route('dashboard.influencers.edit', $influencer) }}"
+						class="inline-flex items-center gap-2 rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800">
+						<x-icons.edit class="h-4 w-4" />
+						Edit Influencer
+					</a>
 						<a href="{{ route('dashboard.influencers.index') }}"
 							class="inline-flex items-center rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-gray-800 dark:bg-gray-700 dark:hover:bg-gray-600">
 							Back to List

@@ -18,16 +18,16 @@ class CampaignApplication extends Model
         'proposed_rate',
         'agreed_rate',
         'applied_at',
-        'decided_at'
+        'decided_at',
     ];
 
     protected function casts(): array
     {
         return [
             'proposed_rate' => 'decimal:2',
-            'agreed_rate'   => 'decimal:2',
-            'applied_at'    => 'datetime',
-            'decided_at'    => 'datetime'
+            'agreed_rate' => 'decimal:2',
+            'applied_at' => 'datetime',
+            'decided_at' => 'datetime',
         ];
     }
 
@@ -36,7 +36,7 @@ class CampaignApplication extends Model
         return $this->belongsTo(Campaign::class);
     }
 
-    public function creator(): BelongsTo
+    public function influencer(): BelongsTo
     {
         return $this->belongsTo(Influencer::class);
     }

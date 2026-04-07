@@ -12,7 +12,7 @@ class RestrictDashboardAccess
      * Handle an incoming request.
      *
      * Only admin, superadmin, and moderator users can access the dashboard.
-     * Brand and creator users are redirected to the frontend.
+     * Brand and Influencer users are redirected to the frontend.
      */
     public function handle(Request $request, Closure $next): Response
     {
@@ -23,7 +23,7 @@ class RestrictDashboardAccess
             return $next($request);
         }
 
-        // Redirect brand and creator to frontend
+        // Redirect brand and Influencer to frontend
 
         return redirect('/');
     }

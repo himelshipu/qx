@@ -10,7 +10,7 @@
 					Case Studies
 				</h1>
 				<p class="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-					Discover how brands have successfully collaborated with creators on our platform.
+					Discover how brands have successfully collaborated with influencers on our platform.
 				</p>
 			</div>
 		</div>
@@ -93,11 +93,11 @@
 					Ready to collaborate?
 				</h2>
 				<p class="text-gray-600 dark:text-gray-300 mb-8 max-w-2xl mx-auto">
-					Join thousands of creators and brands building successful partnerships.
+					Join thousands of influencers and brands building successful partnerships.
 				</p>
 				<a href="{{ route('influencers') }}"
 					class="inline-flex items-center gap-2 px-8 py-3 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-xl font-bold hover:opacity-90 transition">
-					Browse Creators
+					Browse Influencers
 					<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
 					</svg>

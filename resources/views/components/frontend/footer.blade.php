@@ -5,7 +5,7 @@
 			<div>
 				<h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4">QX Marketplace</h3>
 				<p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
-					Connect brands with creators for authentic influencer marketing campaigns.
+					Connect brands with influencers for authentic influencer marketing campaigns.
 				</p>
 				<div class="flex gap-4">
 					<a href="#"
@@ -46,15 +46,15 @@
 				</ul>
 			</div>
 
-			<!-- For Creators -->
+			<!-- For Influencers -->
 			<div>
-				<h4 class="font-semibold text-gray-900 dark:text-white mb-4">For Creators</h4>
+				<h4 class="font-semibold text-gray-900 dark:text-white mb-4">For Influencers</h4>
 				<ul class="space-y-3 text-sm">
 					<li><a href="{{ route('home') }}"
 							class="text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">Get
 							Started</a></li>
 					<li><a href="{{ route('home') }}"
-							class="text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">Creator
+							class="text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">Influencer
 							Guide</a></li>
 					<li><a href="{{ route('home') }}"
 							class="text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">Earnings</a>

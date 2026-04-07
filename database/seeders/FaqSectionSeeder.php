@@ -25,8 +25,8 @@ class FaqSectionSeeder extends Seeder
                 'is_active'     => true
             ],
             [
-                'section_code'  => 'for-creators',
-                'section_title' => 'For Creators',
+                'section_code'  => 'for-influencers',
+                'section_title' => 'For Influencers',
                 'audience_type' => 'influencer',
                 'sort_order'    => 3,
                 'is_active'     => true

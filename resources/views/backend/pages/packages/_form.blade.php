@@ -2,24 +2,24 @@
 	/** @var \App\Models\Package|null $package */
 	$package = $package ?? null;
 	$resolvedCurrency = strtoupper((string) old('currency', $package?->currency ?? 'USD'));
-	$isCreator = $isCreator ?? false;
+	$isInfluencer = $isInfluencer ?? false;
 	$influencers = $influencers ?? null;
 @endphp
 
 <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
 	<div class="space-y-5 lg:col-span-2">
-		<!-- Creator Selection (Admin/Moderator Only) -->
-		@if (!$isCreator && $influencers)
+		<!-- Influencer Selection (Admin/Moderator Only) -->
+		@if (!$isInfluencer && $influencers)
 			<div>
 				<label for="created_for" class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
 					Create For (Select Influencer) <span class="text-red-500">*</span>
 				</label>
 				<select id="created_for" name="created_for" required
 					class="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-3 text-sm text-gray-900 focus:border-gray-500 focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-white">
-					<option value="" disabled {{ old('created_for', $package?->creator_id) ? '' : 'selected' }}>Select an influencer</option>
+					<option value="" disabled {{ old('created_for', $package?->influencer_id) ? '' : 'selected' }}>Select an influencer</option>
 					@foreach ($influencers as $influencer)
 						<option value="{{ $influencer->id }}"
-							{{ old('created_for', $package?->creator_id) == $influencer->id ? 'selected' : '' }}>
+							{{ old('created_for', $package?->influencer_id) == $influencer->id ? 'selected' : '' }}>
 							{{ $influencer->user?->name ?? $influencer->display_name ?? 'Unknown' }}
 						</option>
 					@endforeach
@@ -28,8 +28,8 @@
 					<p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
 				@enderror
 			</div>
-		@elseif ($isCreator && $package)
-			<!-- Show Creator Info (Read-only for creators) -->
+		@elseif ($isInfluencer && $package)
+			<!-- Show Influencer Info (Read-only for influencers) -->
 			<div class="rounded-lg border border-blue-200 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-900/20">
 				<p class="text-xs font-semibold uppercase tracking-wider text-blue-600 dark:text-blue-400">Your Package</p>
 				<p class="mt-2 text-sm font-medium text-gray-900 dark:text-white">

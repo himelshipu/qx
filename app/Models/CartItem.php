@@ -18,14 +18,14 @@ class CartItem extends Model
         'quantity',
         'unit_price',
         'currency',
-        'notes'
+        'notes',
     ];
 
     protected function casts(): array
     {
         return [
-            'quantity'   => 'integer',
-            'unit_price' => 'decimal:2'
+            'quantity' => 'integer',
+            'unit_price' => 'decimal:2',
         ];
     }
 
@@ -39,7 +39,7 @@ class CartItem extends Model
         return $this->belongsTo(Package::class);
     }
 
-    public function creator(): BelongsTo
+    public function influencer(): BelongsTo
     {
         return $this->belongsTo(Influencer::class);
     }

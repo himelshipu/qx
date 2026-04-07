@@ -11,7 +11,7 @@
 			<div>
 				<h3 class="text-lg font-semibold text-gray-900 dark:text-white">New Campaign</h3>
 				<p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Create campaign targeting, budget, and scheduling details for
-					creator applications.</p>
+					influencer applications.</p>
 			</div>
 			<div class="flex flex-wrap items-center gap-2">
 				<a href="{{ route('dashboard.campaigns.standard') }}"

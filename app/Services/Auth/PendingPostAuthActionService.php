@@ -6,6 +6,7 @@ use App\Models\Cart;
 use App\Models\CartItem;
 use App\Models\Conversation;
 use App\Models\Influencer;
+use App\Models\Message;
 use App\Models\Package;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
@@ -14,37 +15,41 @@ class PendingPostAuthActionService
 {
     private const MAX_CART_INFLUENCERS = 5;
 
-    public const ACTION_KEY         = 'auth_pending_action';
+    public const ACTION_KEY = 'auth_pending_action';
+
     public const ACTION_ADD_TO_CART = 'add_to_cart';
-    public const ACTION_NEGOTIATE   = 'negotiate';
+
+    public const ACTION_NEGOTIATE = 'negotiate';
 
     public const PACKAGE_ID_KEY = 'auth_pending_package_id';
-    public const CREATOR_ID_KEY = 'auth_pending_creator_id';
+
+    public const INFLUENCER_ID_KEY = 'auth_pending_influencer_id';
+
     public const RETURN_URL_KEY = 'auth_pending_return_url';
 
     private const BRAND_ONLY_MESSAGE = 'Only brand accounts can add to cart or negotiate packages.';
 
     private const LEGACY_KEYS = [
         'pending_conversation_id',
-        'pending_creator_id',
-        'pending_package_id'
+        'pending_influencer_id',
+        'pending_package_id',
     ];
 
     public function rememberAddToCart(int $packageId, ?string $returnUrl = null): void
     {
         session([
-            self::ACTION_KEY     => self::ACTION_ADD_TO_CART,
+            self::ACTION_KEY => self::ACTION_ADD_TO_CART,
             self::PACKAGE_ID_KEY => $packageId,
-            self::RETURN_URL_KEY => $returnUrl ?: url()->previous()
+            self::RETURN_URL_KEY => $returnUrl ?: url()->previous(),
         ]);
     }
 
     public function rememberNegotiate(int $influencerId, ?string $returnUrl = null): void
     {
         session([
-            self::ACTION_KEY     => self::ACTION_NEGOTIATE,
-            self::CREATOR_ID_KEY => $influencerId,
-            self::RETURN_URL_KEY => $returnUrl ?: url()->previous()
+            self::ACTION_KEY => self::ACTION_NEGOTIATE,
+            self::INFLUENCER_ID_KEY => $influencerId,
+            self::RETURN_URL_KEY => $returnUrl ?: url()->previous(),
         ]);
     }
 
@@ -88,7 +93,7 @@ class PendingPostAuthActionService
 
         $package = Package::find($packageId);
 
-        if (!$package) {
+        if (! $package) {
             return redirect($returnUrl)->with('error', 'The selected package is no longer available.');
         }
 
@@ -102,7 +107,7 @@ class PendingPostAuthActionService
             ->where('influencer_id', $package->influencer_id)
             ->exists();
 
-        if (!$existingItem && !$influencerAlreadyInCart) {
+        if (! $existingItem && ! $influencerAlreadyInCart) {
             $influencerCount = (int) $cart->items()
                 ->distinct('influencer_id')
                 ->count('influencer_id');
@@ -116,21 +121,21 @@ class PendingPostAuthActionService
 
         if ($existingItem) {
             $existingItem->update([
-                'quantity' => $existingItem->quantity + 1
+                'quantity' => $existingItem->quantity + 1,
             ]);
         } else {
             CartItem::create([
-                'cart_id'       => $cart->id,
-                'package_id'    => $package->id,
+                'cart_id' => $cart->id,
+                'package_id' => $package->id,
                 'influencer_id' => $package->influencer_id,
-                'quantity'      => 1,
-                'unit_price'    => $package->base_price,
-                'currency'      => $package->currency ?? 'USD'
+                'quantity' => 1,
+                'unit_price' => $package->base_price,
+                'currency' => $package->currency ?? 'USD',
             ]);
         }
 
         $cart->update([
-            'status' => 'active'
+            'status' => 'active',
         ]);
 
         return redirect($returnUrl)
@@ -140,8 +145,8 @@ class PendingPostAuthActionService
 
     private function consumeNegotiate(User $user): RedirectResponse
     {
-        $influencerId = (int) session(self::CREATOR_ID_KEY);
-        $returnUrl    = $this->resolveReturnUrl();
+        $influencerId = (int) session(self::INFLUENCER_ID_KEY);
+        $returnUrl = $this->resolveReturnUrl();
 
         if ($user->user_type !== 'brand') {
             $this->clearPendingKeys();
@@ -156,8 +161,8 @@ class PendingPostAuthActionService
 
         $influencer = Influencer::find($influencerId);
 
-        if (!$influencer) {
-            return redirect($returnUrl)->with('error', 'The selected creator is no longer available.');
+        if (! $influencer) {
+            return redirect($returnUrl)->with('error', 'The selected influencer is no longer available.');
         }
 
         $conversation = Conversation::query()
@@ -165,22 +170,22 @@ class PendingPostAuthActionService
             ->where('influencer_id', $influencer->id)
             ->first();
 
-        if (!$conversation) {
+        if (! $conversation) {
             $conversation = Conversation::create([
                 'brand_user_id' => $user->id,
-                'influencer_id' => $influencer->id
+                'influencer_id' => $influencer->id,
             ]);
         }
 
         $influencerName = $influencer->display_name ?: ($influencer->user?->name ?? 'there');
-        $messageText    = sprintf('hello %s,i want to discuss with you for a custom package', $influencerName);
+        $messageText = sprintf('hello %s,i want to discuss with you for a custom package', $influencerName);
 
-        \App\Models\Message::create([
+        Message::create([
             'conversation_id' => $conversation->id,
-            'sender_user_id'  => $user->id,
-            'sender_role'     => $user->user_type,
-            'message'         => $messageText,
-            'read_at'         => null
+            'sender_user_id' => $user->id,
+            'sender_role' => $user->user_type,
+            'message' => $messageText,
+            'read_at' => null,
         ]);
 
         $conversation->touch();
@@ -206,9 +211,9 @@ class PendingPostAuthActionService
         session()->forget([
             self::ACTION_KEY,
             self::PACKAGE_ID_KEY,
-            self::CREATOR_ID_KEY,
+            self::INFLUENCER_ID_KEY,
             self::RETURN_URL_KEY,
-            ...self::LEGACY_KEYS
+            ...self::LEGACY_KEYS,
         ]);
     }
 }

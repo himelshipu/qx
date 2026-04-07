@@ -2,7 +2,7 @@
 	$currentUser = Auth::user();
 	$avatarPath =
 	    $currentUser?->brand?->profile_image_path ??
-	    ($currentUser?->creator?->profile_image_path ?? $currentUser?->profile_image_path);
+	    ($currentUser?->influencer?->profile_image_path ?? $currentUser?->profile_image_path);
 	$avatarUrl = filled($avatarPath) ? image_url($avatarPath) : null;
 	$userInitials = $currentUser
 	    ? Str::of($currentUser->name)
@@ -20,17 +20,17 @@
 	if ($currentUser) {
 	    $cart = \App\Models\Cart::where('user_id', $currentUser->id)->first();
 	    if ($cart) {
-	        $cart->load(['items.package.creator.user']);
+	        	    $cart->load(['items.package.influencer.user']);
 	        foreach ($cart->items as $item) {
-	            $influencerUser = $item->package->creator->user;
+	            $influencerUser = $item->package->influencer->user;
 	            $cartItemsData[] = [
 	                'id' => $item->id,
 	                'name' => $influencerUser->name,
 	                'package' => $item->package->name,
 	                'price' => (int) $item->unit_price,
 	                'quantity' => $item->quantity,
-	                'image' => image_url($item->package->creator->profile_image_path ?? '/default.webp'),
-	                'creator_id' => $item->creator_id,
+	                'image' => image_url($item->package->influencer->profile_image_path ?? '/default.webp'),
+	                'influencer_id' => $item->influencer_id,
 	                'country' => $influencerUser->country ?? null,
 	            ];
 	            $cartTotal += $item->unit_price * $item->quantity;

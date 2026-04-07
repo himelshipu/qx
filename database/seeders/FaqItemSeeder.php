@@ -15,27 +15,27 @@ class FaqItemSeeder extends Seeder
             'general' => [
                 [
                     'question' => 'What is ROCKIES and who is it for?',
-                    'answer' => 'ROCKIES is a collaboration platform that helps brands discover and work with creators for campaigns, UGC content, and long-term partnerships.',
+                    'answer' => 'ROCKIES is a collaboration platform that helps brands discover and work with influencers for campaigns, UGC content, and long-term partnerships.',
                 ],
                 [
                     'question' => 'Do I need to pay to create an account?',
-                    'answer' => 'Creating an account is free. Brands pay when they launch campaigns or place creator orders, depending on their workflow.',
+                    'answer' => 'Creating an account is free. Brands pay when they launch campaigns or place influencer orders, depending on their workflow.',
                 ],
             ],
             'for-brands' => [
                 [
-                    'question' => 'How do I choose the right creators for my campaign?',
-                    'answer' => 'Start with your audience, campaign objective, and budget. Use category fit, content quality, and platform performance to shortlist creators.',
+                    'question' => 'How do I choose the right influencers for my campaign?',
+                    'answer' => 'Start with your audience, campaign objective, and budget. Use category fit, content quality, and platform performance to shortlist influencers.',
                 ],
                 [
                     'question' => 'Can I run multiple campaigns at the same time?',
                     'answer' => 'Yes. You can run concurrent campaigns and target different audiences, markets, and content types simultaneously.',
                 ],
             ],
-            'for-creators' => [
+            'for-influencers' => [
                 [
-                    'question' => 'How do creators get selected for campaigns?',
-                    'answer' => 'Creators are evaluated based on profile quality, category relevance, audience fit, and campaign requirements defined by brands.',
+                    'question' => 'How do influencers get selected for campaigns?',
+                    'answer' => 'Influencers are evaluated based on profile quality, category relevance, audience fit, and campaign requirements defined by brands.',
                 ],
                 [
                     'question' => 'Can I reject a collaboration request?',

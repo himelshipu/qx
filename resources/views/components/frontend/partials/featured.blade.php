@@ -28,8 +28,8 @@
 				@endphp
 
 			<a href="{{ $profileUrl }}"
-				class="flex-shrink-0 w-[80%] sm:w-[60%] lg:w-auto group overflow-hidden font-sans cursor-pointer creator-card block"
-				data-creator-id="{{ $influencer['id'] }}">
+				class="flex-shrink-0 w-[80%] sm:w-[60%] lg:w-auto group overflow-hidden font-sans cursor-pointer influencer-card block"
+				data-influencer-id="{{ $influencer['id'] }}">
 
 				<div class="relative overflow-hidden rounded-xl">
 					<button type="button"
@@ -43,9 +43,9 @@
 						alt="{{ $influencer['name'] }}">
 
 					<div class="absolute top-3 left-3 flex flex-wrap gap-1.5">
-						<span class="bg-black/80 backdrop-blur-sm text-white text-[10px] font-normal px-2 py-1 rounded-md border border-white/20 flex items-center gap-1">
-							<x-icons.heart-badge class="w-4 h-4 text-purple-400" /> Featured Creator
-						</span>
+					<span class="bg-black/80 backdrop-blur-sm text-white text-[10px] font-normal px-2 py-1 rounded-md border border-white/20 flex items-center gap-1">
+						<x-icons.heart-badge class="w-4 h-4 text-purple-400" /> Featured Influencer
+					</span>
 						<span class="bg-black/80 backdrop-blur-sm text-white text-[10px] font-normal px-2 py-1 rounded-md border border-white/20 flex items-center gap-1">
 							<x-icons.checkmark class="w-4 h-4 text-green-500" /> {{ $influencer['engagement_label'] }} ER
 						</span>

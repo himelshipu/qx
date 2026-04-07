@@ -163,11 +163,11 @@
 					},
 
 					get uniqueInfluencerCount() {
-						const creatorIds = this.cartItems
-							.map((item) => item.creator_id)
+						const influencerIds = this.cartItems
+							.map((item) => item.influencer_id)
 							.filter((id) => id !== null && id !== undefined);
 
-						return new Set(creatorIds).size;
+						return new Set(influencerIds).size;
 					},
 
 					get topAudienceLocations() {

@@ -12,9 +12,9 @@
 					<h3 class="text-lg font-semibold text-gray-900 dark:text-white">Messages & Conversations</h3>
 					<p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
 						@if (auth()->user()->user_type === 'brand')
-							Chat with creators about packages and campaigns
+							Chat with influencers about packages and campaigns
 						@elseif(in_array(auth()->user()->user_type, ['moderator', 'admin']))
-							Manage conversations and chat on behalf of creators
+							Manage conversations and chat on behalf of influencers
 						@else
 							Conversations are not available for your role
 						@endif
@@ -30,7 +30,7 @@
 						<tr>
 							<th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
 								@if (auth()->user()->user_type === 'brand')
-									Creator
+									Influencer
 								@else
 									Brand
 								@endif
@@ -50,7 +50,7 @@
 							<tr class="hover:bg-gray-50 dark:hover:bg-gray-800/50">
 								<td class="px-4 py-3 text-sm font-medium text-gray-900 dark:text-white">
 									@if (auth()->user()->user_type === 'brand')
-										{{ $conversation->creator->display_name ?? $conversation->creator->user->name }}
+										{{ $conversation->influencer->display_name ?? $conversation->influencer->user->name }}
 									@else
 										{{ $conversation->brandUser->name }}
 									@endif

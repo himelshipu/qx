@@ -56,10 +56,10 @@
 						@forelse ($influencers as $influencer)
 							<tr class="hover:bg-gray-50 dark:hover:bg-gray-800/50">
 								<td class="px-4 py-3 text-sm font-medium text-gray-900 dark:text-white">
-									{{ $influencer->creator->display_name ?? $influencer->creator->user->name }}
+									{{ $influencer->influencer->display_name ?? $influencer->influencer->user->name }}
 								</td>
 								<td class="px-4 py-3 text-sm text-gray-700 dark:text-gray-300">
-									{{ $influencer->creator->user->email }}
+									{{ $influencer->influencer->user->email }}
 								</td>
 								<td class="px-4 py-3 text-sm">
 									@if ($influencer->status === 'approved')

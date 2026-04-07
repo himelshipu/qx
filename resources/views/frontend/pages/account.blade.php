@@ -160,7 +160,7 @@
 							@php
 								$profileOwner = match ($user->user_type) {
 								    'brand' => $user->brand,
-								    'creator' => $user->influencer,
+								    'influencer' => $user->influencer,
 								    default => null,
 								};
 								$billingProfile = optional($profileOwner)->billingProfiles->first();

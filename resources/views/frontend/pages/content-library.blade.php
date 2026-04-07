@@ -85,11 +85,11 @@
 							@php
 								$personName =
 								    $perspective === 'brand'
-								        ? $entry->creator?->user?->name ?? ($entry->creator?->display_name ?? 'N/A')
+								        ? $entry->influencer?->user?->name ?? ($entry->influencer?->display_name ?? 'N/A')
 								        : $entry->order?->brand?->brand_name ?? 'N/A';
 								$avatarPath =
 								    $perspective === 'brand'
-								        ? $entry->creator?->user?->profile_image_path ?? null
+								        ? $entry->influencer?->user?->profile_image_path ?? null
 								        : $entry->order?->brand?->user?->profile_image_path ?? null;
 
 								$statusClasses = [

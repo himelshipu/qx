@@ -54,7 +54,7 @@
                        placeholder="e.g., Brands"
                        required>
                 <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                    Common modules: Users, Brands, Creators, Campaigns, Categories, Settings
+                    Common modules: Users, Brands, Influencers, Campaigns, Categories, Settings
                 </p>
                 @error('module')
                     <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>

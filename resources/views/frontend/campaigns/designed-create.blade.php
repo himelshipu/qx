@@ -345,7 +345,7 @@
 
 					<div>
 						<label class="mb-1.5 block text-base font-medium text-gray-800 dark:text-gray-400">Product Instructions</label>
-						<textarea name="instructions" rows="6" placeholder="Describe what you want creators to do, key messages, and deliverables..."
+						<textarea name="instructions" rows="6" placeholder="Describe what you want influencers to do, key messages, and deliverables..."
 							class="dark:bg-dark-900 shadow-theme-xs focus:border-pink-50 focus:ring-gray-500/10 dark:focus:border-gray-800 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 focus:ring-1 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">{{ old('instructions') }}</textarea>
 						@error('instructions')
 							<p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
@@ -359,7 +359,7 @@
 						</div>
 						<div class="rounded-xl border border-gray-100 bg-gray-50 p-6 dark:border-gray-800 dark:bg-gray-900">
 							<p class="mb-2 text-xs font-bold uppercase tracking-widest text-gray-400">Hiring Limit</p>
-							<p class="text-xl font-bold text-gray-800 dark:text-purple-400"><span x-text="influencerCount || 'Not set'"></span> Creators</p>
+							<p class="text-xl font-bold text-gray-800 dark:text-purple-400"><span x-text="influencerCount || 'Not set'"></span> Influencers</p>
 						</div>
 					</div>
 
@@ -522,25 +522,25 @@
 						const rangeFactor = Math.max(this.selectedFollowerRangeIds.length, 1);
 						const countryFactor = Math.max(this.selectedCountryCodes.length, 1);
 
-						// Realistic estimation based on typical creator marketplace data
-						// Average: 15-45 creators per niche, adjusted by targeting specificity
-						const baseCreatorsPerNiche = 25;
+						// Realistic estimation based on typical influencer marketplace data
+						// Average: 15-45 influencers per niche, adjusted by targeting specificity
+						const baseInfluencersPerNiche = 25;
 						const nicheMultiplier = Math.min(nicheFactor, 3); // Diminishing returns after 3 niches
 						const rangeMultiplier = Math.min(rangeFactor, 2); // Diminishing returns after 2 ranges
 						const countryMultiplier = Math.min(countryFactor, 5); // Cap at 5 major markets
 
 						// Calculate estimated matches
-						const minCreators = Math.round(count * baseCreatorsPerNiche * nicheMultiplier * 0.4);
-						const maxCreators = Math.round(count * baseCreatorsPerNiche * nicheMultiplier * rangeMultiplier * countryMultiplier * 0.9);
+						const minInfluencers = Math.round(count * baseInfluencersPerNiche * nicheMultiplier * 0.4);
+						const maxInfluencers = Math.round(count * baseInfluencersPerNiche * nicheMultiplier * rangeMultiplier * countryMultiplier * 0.9);
 
-						// Average followers per creator: 35K-280K depending on range
+						// Average followers per influencer: 35K-280K depending on range
 						const avgFollowersMin = 35000;
 						const avgFollowersMax = 280000;
-						const reachMin = Math.round((minCreators * avgFollowersMin) / 1000000 * 10) / 10;
-						const reachMax = Math.round((maxCreators * avgFollowersMax) / 1000000 * 10) / 10;
+						const reachMin = Math.round((minInfluencers * avgFollowersMin) / 1000000 * 10) / 10;
+						const reachMax = Math.round((maxInfluencers * avgFollowersMax) / 1000000 * 10) / 10;
 
 						return {
-							influencers: minCreators === maxCreators ? `${minCreators}` : `${minCreators}-${maxCreators}`,
+							influencers: minInfluencers === maxInfluencers ? `${minInfluencers}` : `${minInfluencers}-${maxInfluencers}`,
 							reach: reachMin === reachMax ? `${reachMin}M` : `${reachMin}-${reachMax}M`
 						};
 					}

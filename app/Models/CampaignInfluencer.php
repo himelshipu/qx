@@ -17,14 +17,14 @@ class CampaignInfluencer extends Model
         'approved_by',
         'approved_at',
         'cancelled_at',
-        'rejection_reason'
+        'rejection_reason',
     ];
 
     protected function casts(): array
     {
         return [
-            'approved_at'  => 'datetime',
-            'cancelled_at' => 'datetime'
+            'approved_at' => 'datetime',
+            'cancelled_at' => 'datetime',
         ];
     }
 
@@ -37,9 +37,9 @@ class CampaignInfluencer extends Model
     }
 
     /**
-     * Get the creator/influencer this assignment is for
+     * Get the influencer this assignment is for
      */
-    public function creator(): BelongsTo
+    public function influencer(): BelongsTo
     {
         return $this->belongsTo(Influencer::class);
     }

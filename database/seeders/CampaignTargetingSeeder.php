@@ -23,7 +23,7 @@ class CampaignTargetingSeeder extends Seeder
                     'target_gender' => $faker->randomElement(['any', 'male', 'female', 'other']),
                     'age_min' => $ageMin,
                     'age_max' => $ageMax,
-                    'notes' => 'Prefer creators with consistent posting cadence and strong audience authenticity.',
+                    'notes' => 'Prefer influencers with consistent posting cadence and strong audience authenticity.',
                     'created_at' => now(),
                     'updated_at' => now(),
                 ]

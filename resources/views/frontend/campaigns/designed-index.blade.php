@@ -175,7 +175,7 @@
 							<span>{{ $campaign->applications_count }} Applications</span>
 							<span>{{ $campaign->categories_count }} Niches</span>
 							@if ($campaign->targeting?->influencer_count)
-								<span>{{ $campaign->targeting->influencer_count }} Creators Target</span>
+								<span>{{ $campaign->targeting->influencer_count }} Influencers Target</span>
 							@endif
 						</div>
 					</div>

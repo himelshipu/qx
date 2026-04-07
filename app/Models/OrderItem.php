@@ -28,20 +28,20 @@ class OrderItem extends Model
         'accepted_at',
         'delivered_at',
         'approved_at',
-        'paid_at'
+        'paid_at',
     ];
 
     protected function casts(): array
     {
         return [
-            'quantity'     => 'integer',
-            'unit_price'   => 'decimal:2',
-            'line_total'   => 'decimal:2',
-            'due_date'     => 'date',
-            'accepted_at'  => 'datetime',
+            'quantity' => 'integer',
+            'unit_price' => 'decimal:2',
+            'line_total' => 'decimal:2',
+            'due_date' => 'date',
+            'accepted_at' => 'datetime',
             'delivered_at' => 'datetime',
-            'approved_at'  => 'datetime',
-            'paid_at'      => 'datetime'
+            'approved_at' => 'datetime',
+            'paid_at' => 'datetime',
         ];
     }
 
@@ -50,17 +50,9 @@ class OrderItem extends Model
         return $this->belongsTo(Order::class);
     }
 
-    public function creator(): BelongsTo
-    {
-        return $this->belongsTo(Influencer::class, 'influencer_id');
-    }
-
-    /**
-     * Alias for creator() to match model naming convention
-     */
     public function influencer(): BelongsTo
     {
-        return $this->creator();
+        return $this->belongsTo(Influencer::class, 'influencer_id');
     }
 
     public function package(): BelongsTo

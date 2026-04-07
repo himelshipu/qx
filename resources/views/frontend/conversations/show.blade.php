@@ -30,10 +30,10 @@
         };
 
         $getPartyForSidebar = static function (\App\Models\Conversation $item) use ($user) {
-            return $item->creator?->user;
+            return $item->influencer?->user;
         };
 
-        $currentTitle = $conversation->creator->display_name ?? $conversation->creator->user->name;
+        $currentTitle = $conversation->influencer->display_name ?? $conversation->influencer->user->name;
         
         // Helper to get status color
         $getOrderStatusColor = function ($status) {

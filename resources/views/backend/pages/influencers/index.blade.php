@@ -1,9 +1,9 @@
 @extends('backend.layouts.app')
 
-@section('title', 'Creators')
+@section('title', 'Influencers')
 
 @section('content')
-	<x-backend.shell.breadcrumb pageTitle="Creators" />
+	<x-backend.shell.breadcrumb pageTitle="Influencers" />
 
 	<div class="space-y-6">
 		<div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -29,18 +29,18 @@
 			<div
 				class="flex flex-col gap-4 border-b border-gray-200 p-5 sm:flex-row sm:items-center sm:justify-between dark:border-gray-800">
 				<div>
-					<h3 class="text-lg font-semibold text-gray-900 dark:text-white">Creator Management</h3>
-					<p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Manage creator accounts, niches, and activity status.</p>
+					<h3 class="text-lg font-semibold text-gray-900 dark:text-white">Influencer Management</h3>
+					<p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Manage influencer accounts, niches, and activity status.</p>
 				</div>
 				<a href="{{ route('dashboard.influencers.create') }}"
 					class="inline-flex items-center gap-2 rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-gray-800 dark:bg-gray-700 dark:hover:bg-gray-600">
 					<x-icons.plus class="h-4 w-4" />
-					New Creator
+					New Influencer
 				</a>
 			</div>
 
 			<div class="p-5">
-				<form id="creator-filters-form" method="GET" action="{{ route('dashboard.influencers.index') }}"
+				<form id="influencer-filters-form" method="GET" action="{{ route('dashboard.influencers.index') }}"
 					class="mb-5 grid grid-cols-1 gap-3 md:grid-cols-5">
 					<div class="md:col-span-3">
 						<div class="relative">
@@ -69,13 +69,13 @@
 					</div>
 				</form>
 
-				<div id="creators-results">
+				<div id="influencers-results">
 					<div class="overflow-x-auto">
 						<table class="min-w-full divide-y divide-gray-200 dark:divide-gray-800">
 							<thead class="bg-gray-50 dark:bg-gray-800/50">
 								<tr>
 									<th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-										Creator</th>
+										Influencer</th>
 									<th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
 										Categories</th>
 									<th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
@@ -144,7 +144,7 @@
 											<div class="flex items-center gap-2">
 												<label class="relative inline-flex cursor-pointer items-center">
 													<input type="checkbox" {{ $influencer->is_featured ? 'checked' : '' }}
-														onchange="toggleCreatorFeatured({{ $influencer->id }}, this)" class="peer sr-only" />
+														onchange="toggleInfluencerFeatured({{ $influencer->id }}, this)" class="peer sr-only" />
 													<div
 														class="h-6 w-11 rounded-full bg-gray-200 transition-colors duration-200 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-amber-400 peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:ring-4 peer-focus:ring-amber-300 dark:bg-gray-700 dark:peer-focus:ring-amber-800">
 													</div>
@@ -156,7 +156,7 @@
 											<div class="flex items-center">
 												<label class="relative inline-flex cursor-pointer items-center">
 													<input type="checkbox" {{ $influencer->is_active ? 'checked' : '' }}
-														onchange="toggleCreatorStatus({{ $influencer->id }}, this)" class="peer sr-only" />
+														onchange="toggleInfluencerStatus({{ $influencer->id }}, this)" class="peer sr-only" />
 													<div
 														class="h-6 w-11 rounded-full bg-gray-200 transition-colors duration-200 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-green-400 peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:ring-4 peer-focus:ring-green-300 dark:bg-gray-700 dark:peer-focus:ring-green-800">
 													</div>
@@ -168,14 +168,14 @@
 										</td>
 										<td class="px-4 py-3">
 											<div class="flex items-center justify-end gap-2">
-												<a href="{{ route('dashboard.influencers.view', $influencer) }}"
-													class="inline-flex items-center rounded-lg border border-gray-200 p-2 text-gray-600 transition hover:bg-gray-100 hover:text-gray-900 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-white"
-													title="View creator">
+											<a href="{{ route('dashboard.influencers.view', $influencer) }}"
+												class="inline-flex items-center rounded-lg border border-gray-200 p-2 text-gray-600 transition hover:bg-gray-100 hover:text-gray-900 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-white"
+												title="View influencer">
 													<x-icons.eye class="h-4 w-4" />
 												</a>
 												<a href="{{ route('dashboard.influencers.edit', $influencer) }}"
 													class="inline-flex items-center rounded-lg border border-gray-200 p-2 text-gray-600 transition hover:bg-gray-100 hover:text-gray-900 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-white"
-													title="Edit creator">
+													title="Edit influencer">
 													<x-icons.edit class="h-4 w-4" />
 												</a>
 												<form action="{{ route('dashboard.influencers.destroy', $influencer) }}" method="POST">
@@ -183,9 +183,9 @@
 													@method('DELETE')
 													<button type="submit"
 														class="js-confirmable inline-flex items-center rounded-lg border border-gray-200 p-2 text-gray-600 transition hover:bg-red-50 hover:text-red-600 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-red-900/20 dark:hover:text-red-300"
-														data-confirm-title="Delete Creator"
-														data-confirm-message="Delete this creator? This action cannot be undone." data-confirm-button="Delete"
-														data-confirm-variant="danger" title="Delete creator">
+														data-confirm-title="Delete Influencer"
+														data-confirm-message="Delete this influencer? This action cannot be undone." data-confirm-button="Delete"
+														data-confirm-variant="danger" title="Delete influencer">
 														<x-icons.trash class="h-4 w-4" />
 													</button>
 												</form>
@@ -195,11 +195,11 @@
 								@empty
 									<tr>
 										<td colspan="8" class="px-4 py-12 text-center">
-											<p class="text-sm text-gray-500 dark:text-gray-400">No creators found for the current filters.</p>
+											<p class="text-sm text-gray-500 dark:text-gray-400">No influencers found for the current filters.</p>
 											<a href="{{ route('dashboard.influencers.create') }}"
 												class="mt-3 inline-flex items-center gap-2 rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-gray-800 dark:bg-gray-700 dark:hover:bg-gray-600">
 												<x-icons.plus class="h-4 w-4" />
-												Create First Creator
+												Create First Influencer
 											</a>
 										</td>
 									</tr>
@@ -221,8 +221,8 @@
 	@push('scripts')
 		<script>
 			document.addEventListener('DOMContentLoaded', function() {
-				const form = document.getElementById('creator-filters-form');
-				const resultsId = 'creators-results';
+				const form = document.getElementById('influencer-filters-form');
+				const resultsId = 'influencers-results';
 				const searchInput = document.getElementById('q');
 				const statusSelect = document.getElementById('status');
 				let debounceTimer;
@@ -294,7 +294,7 @@
 				});
 			});
 
-			function toggleCreatorStatus(creatorId, checkbox) {
+			function toggleInfluencerStatus(influencerId, checkbox) {
 				if (checkbox?.disabled) {
 					return;
 				}
@@ -304,7 +304,7 @@
 				}
 
 				const urlTemplate = @json(route('dashboard.influencers.toggle-status', ['influencer' => '__ID__']));
-				const url = urlTemplate.replace('__ID__', String(creatorId));
+				const url = urlTemplate.replace('__ID__', String(influencerId));
 
 				fetch(url, {
 						method: 'POST',
@@ -327,7 +327,7 @@
 								checkbox.checked = Boolean(data.is_active);
 							}
 
-							const message = data.message || 'Creator status updated successfully.';
+							const message = data.message || 'Influencer status updated successfully.';
 							if (window.toast) {
 								window.toast.success(message);
 							}
@@ -335,11 +335,11 @@
 							return;
 						}
 
-						throw new Error(data.message || 'Failed to update creator status.');
+						throw new Error(data.message || 'Failed to update influencer status.');
 					})
 					.catch((error) => {
 						console.error(error);
-						const message = error?.message || 'Unable to update creator status right now.';
+						const message = error?.message || 'Unable to update influencer status right now.';
 						if (window.toast) {
 							window.toast.error(message);
 						}
@@ -355,7 +355,7 @@
 					});
 			}
 
-			function toggleCreatorFeatured(creatorId, checkbox) {
+			function toggleInfluencerFeatured(influencerId, checkbox) {
 				if (checkbox?.disabled) {
 					return;
 				}
@@ -365,7 +365,7 @@
 				}
 
 				const urlTemplate = @json(route('dashboard.influencers.toggle-featured', ['influencer' => '__ID__']));
-				const url = urlTemplate.replace('__ID__', String(creatorId));
+				const url = urlTemplate.replace('__ID__', String(influencerId));
 
 				fetch(url, {
 						method: 'POST',
@@ -388,7 +388,7 @@
 								checkbox.checked = Boolean(data.is_featured);
 							}
 
-							const message = data.message || 'Creator featured status updated successfully.';
+							const message = data.message || 'Influencer featured status updated successfully.';
 							if (window.toast) {
 								window.toast.success(message);
 							}
@@ -396,11 +396,11 @@
 							return;
 						}
 
-						throw new Error(data.message || 'Failed to update creator featured status.');
+						throw new Error(data.message || 'Failed to update influencer featured status.');
 					})
 					.catch((error) => {
 						console.error(error);
-						const message = error?.message || 'Unable to update creator featured status right now.';
+						const message = error?.message || 'Unable to update influencer featured status right now.';
 						if (window.toast) {
 							window.toast.error(message);
 						}

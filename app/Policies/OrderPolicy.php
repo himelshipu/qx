@@ -22,7 +22,7 @@ class OrderPolicy
             return true;
         }
 
-        // Creator can view orders where they have items
+        // Influencer can view orders where they have items
         if ($user->user_type === 'influencer') {
             return $order->items()
                 ->where('influencer_id', $user->influencer?->id)

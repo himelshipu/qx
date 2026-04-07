@@ -23,7 +23,7 @@ class CartManagerController extends Controller
 
         if ($isAdmin) {
             // Admin/Superadmin: Show all carts with filters
-            $query = Cart::with(['user.brand', 'items.package.creator.user']);
+            $query = Cart::with(['user.brand', 'items.package.influencer.user']);
 
             // Filter by brand if requested
             if ($request->filled('brand_id')) {
@@ -54,24 +54,24 @@ class CartManagerController extends Controller
             $brands = User::whereHas('brand')->with('brand')->get()->pluck('brand')->unique('id');
 
             return view('backend.commerce.carts.index', [
-                'carts'   => $carts,
-                'brands'  => $brands,
-                'isAdmin' => true
+                'carts' => $carts,
+                'brands' => $brands,
+                'isAdmin' => true,
             ]);
         }
 
         // Brand user: Show only their cart
         $cart = Cart::where('user_id', $user->id)
-            ->with(['items.package.creator.user'])
+            ->with(['items.package.influencer.user'])
             ->first();
 
-        if (!$cart) {
+        if (! $cart) {
             $cart = Cart::create(['user_id' => $user->id]);
         }
 
         return view('backend.commerce.carts.show', [
-            'cart'    => $cart,
-            'isAdmin' => false
+            'cart' => $cart,
+            'isAdmin' => false,
         ]);
     }
 
@@ -80,19 +80,19 @@ class CartManagerController extends Controller
      */
     public function show(Cart $cart): View
     {
-        $user    = auth()->user();
+        $user = auth()->user();
         $isAdmin = $user && ($user->hasRole('super_admin') || $user->hasRole('admin'));
 
         // Authorization: Brand can only view their own cart
-        if (!$isAdmin && $cart->user_id !== $user->id) {
+        if (! $isAdmin && $cart->user_id !== $user->id) {
             abort(403, 'Unauthorized to view this cart.');
         }
 
-        $cart->load(['user.brand', 'items.package.creator.user']);
+        $cart->load(['user.brand', 'items.package.influencer.user']);
 
         return view('backend.commerce.carts.show', [
-            'cart'    => $cart,
-            'isAdmin' => $isAdmin
+            'cart' => $cart,
+            'isAdmin' => $isAdmin,
         ]);
     }
 
@@ -109,9 +109,9 @@ class CartManagerController extends Controller
 
         return [
             'itemCount' => $cart->items->count(),
-            'subtotal'  => $subtotal,
-            'tax'       => 0, // Add tax calculation if needed
-            'total'     => $subtotal
+            'subtotal' => $subtotal,
+            'tax' => 0, // Add tax calculation if needed
+            'total' => $subtotal,
         ];
     }
 }

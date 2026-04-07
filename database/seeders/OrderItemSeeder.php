@@ -11,7 +11,7 @@ class OrderItemSeeder extends Seeder
     {
         $faker             = \Faker\Factory::create('en_US');
         $orders            = DB::table('orders')->get();
-        $packagesByCreator = DB::table('packages')->get()->groupBy('influencer_id');
+        $packagesByInfluencer = DB::table('packages')->get()->groupBy('influencer_id');
         $orderItemStatuses = ['pending', 'accepted', 'in_progress', 'delivered', 'approved', 'rejected', 'cancelled'];
 
         foreach ($orders as $order) {
@@ -20,7 +20,7 @@ class OrderItemSeeder extends Seeder
                 continue;
             }
 
-            $packageId = ($packagesByCreator[$influencerId] ?? collect())->random()->id ?? null;
+            $packageId = ($packagesByInfluencer[$influencerId] ?? collect())->random()->id ?? null;
             $quantity  = random_int(1, 2);
             $unitPrice = $packageId
             ? (float) DB::table('packages')->where('id', $packageId)->value('base_price')
@@ -34,7 +34,7 @@ class OrderItemSeeder extends Seeder
             DB::table('order_items')->updateOrInsert(
                 [
                     'order_id' => $order->id,
-                    'title'    => $packageId ? (DB::table('packages')->where('id', $packageId)->value('name') ?? 'Creator deliverable') : 'Creator deliverable'
+                    'title'    => $packageId ? (DB::table('packages')->where('id', $packageId)->value('name') ?? 'Influencer deliverable') : 'Influencer deliverable'
                 ],
                 [
                     'influencer_id'       => $influencerId,

@@ -1,6 +1,6 @@
 <?php
 
-declare (strict_types = 1);
+declare(strict_types=1);
 
 use App\Http\Controllers\AccountController;
 use App\Http\Controllers\Backend\BrandController;
@@ -89,7 +89,7 @@ Route::middleware(['web'])->group(function () {
 
 /*
 |--------------------------------------------------------------------------
-| Frontend Authenticated Routes (Brand & Creator Users)
+| Frontend Authenticated Routes (Brand & Influencer Users)
 |--------------------------------------------------------------------------
  */
 Route::middleware(['auth', 'verified'])->group(function () {
@@ -102,7 +102,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::put('/campaigns/{campaign}', [FrontendCampaignController::class, 'update'])->name('frontend.campaigns.update');
     Route::delete('/campaigns/{campaign}', [FrontendCampaignController::class, 'destroy'])->name('frontend.campaigns.destroy');
 
-    // Frontend Packages (Creator)
+    // Frontend Packages (Influencer)
     Route::get('/packages', [FrontendPackageController::class, 'index'])->name('frontend.packages.index');
     Route::get('/packages/create', [FrontendPackageController::class, 'create'])->name('frontend.packages.create');
     Route::post('/packages', [FrontendPackageController::class, 'store'])->name('frontend.packages.store');
@@ -132,7 +132,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Frontend Content Library
     Route::get('/content-library', [ContentLibraryController::class, 'index'])->name('frontend.content-library');
 
-    // Account Management (shared for both brand and creator)
+    // Account Management (shared for both brand and Influencer)
     Route::get('/account/{slug}', [App\Http\Controllers\Frontend\AccountController::class, 'edit'])->name('frontend.account.edit');
     Route::post('/account/{slug}/details', [App\Http\Controllers\Frontend\AccountController::class, 'updateDetails'])->name('frontend.account.details.update');
     Route::post('/account/{slug}/billing', [App\Http\Controllers\Frontend\AccountController::class, 'updateBilling'])->name('frontend.account.billing.update');
@@ -147,7 +147,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/brand-profile/{slug}/toggle-verification', [BrandProfileController::class, 'toggleVerification'])->name('brand.profile.toggle-verification');
     Route::post('/brand-profile/{slug}/toggle-status', [BrandProfileController::class, 'toggleStatus'])->name('brand.profile.toggle-status');
 
-    // Creator Profile routes
+    // Influencer Profile routes
     Route::get('/influencer-profile/{slug}/edit', [InfluencerProfileController::class, 'edit'])->name('influencer.profile.edit');
     Route::post('/influencer-profile/{slug}/update', [InfluencerProfileController::class, 'update'])->name('influencer.profile.update');
     Route::delete('/influencer-profile/{slug}/profile-image', [InfluencerProfileController::class, 'deleteProfileImage'])->name('influencer.profile.delete-image');
@@ -223,7 +223,7 @@ Route::prefix('dashboard')->name('dashboard.')->middleware(['auth', 'verified', 
     Route::delete('/campaigns/{campaign}', [CampaignController::class, 'destroy'])->name('campaigns.destroy');
     Route::get('/campaigns/assign', [CampaignController::class, 'assign'])->name('campaigns.assign');
     Route::post('/campaigns/assign', [CampaignController::class, 'assignStore'])->name('campaigns.assign.store');
-    Route::get('/campaigns/{campaign}/assigned-creators', [CampaignController::class, 'assignedCreatorsJson'])->name('campaigns.assigned-creators');
+    Route::get('/campaigns/{campaign}/assigned-influencers', [CampaignController::class, 'assignedInfluencersJson'])->name('campaigns.assigned-influencers');
 
     // Campaign Influencer Management (Workflow A)
     Route::prefix('campaigns/{campaign}/influencers')->name('campaigns.influencers.')->group(function () {
@@ -393,4 +393,4 @@ Route::prefix('dashboard')->name('dashboard.')->middleware(['auth', 'verified', 
 |--------------------------------------------------------------------------
  */
 
-require __DIR__ . '/auth.php';
+require __DIR__.'/auth.php';
