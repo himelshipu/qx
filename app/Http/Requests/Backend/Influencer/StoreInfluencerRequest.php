@@ -5,7 +5,7 @@ namespace App\Http\Requests\Backend\Creator;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rules\Password;
 
-class StoreCreatorRequest extends FormRequest
+class StoreInfluencerRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.

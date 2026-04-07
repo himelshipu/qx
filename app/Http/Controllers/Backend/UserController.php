@@ -21,9 +21,9 @@ class UserController extends Controller
         $usersQuery = User::query()
             ->with([
                 'brand:id,user_id',
-                'creator:id,user_id',
+                'creator:id,user_id'
             ])
-            ->whereIn('user_type', ['brand', 'creator', 'moderator', 'admin'])
+            ->whereIn('user_type', ['brand', 'influencer', 'moderator', 'admin'])
             ->when($search !== '', function ($query) use ($search) {
                 $query->where(function ($subQuery) use ($search) {
                     $subQuery
@@ -42,20 +42,20 @@ class UserController extends Controller
         $users = $usersQuery->paginate(12)->withQueryString();
 
         $stats = [
-            'total'      => User::whereIn('user_type', ['brand', 'creator', 'moderator', 'admin'])->count(),
-            'brands'     => User::where('user_type', 'brand')->count(),
-            'creators'   => User::where('user_type', 'creator')->count(),
-            'moderators' => User::where('user_type', 'moderator')->count(),
-            'admins'     => User::where('user_type', 'admin')->count(),
-            'active'     => User::whereIn('user_type', ['brand', 'creator', 'moderator', 'admin'])->where('is_active', true)->count(),
-            'inactive'   => User::whereIn('user_type', ['brand', 'creator', 'moderator', 'admin'])->where('is_active', false)->count(),
+            'total'       => User::whereIn('user_type', ['brand', 'influencer', 'moderator', 'admin'])->count(),
+            'brands'      => User::where('user_type', 'brand')->count(),
+            'influencers' => User::where('user_type', 'influencer')->count(),
+            'moderators'  => User::where('user_type', 'moderator')->count(),
+            'admins'      => User::where('user_type', 'admin')->count(),
+            'active'      => User::whereIn('user_type', ['brand', 'influencer', 'moderator', 'admin'])->where('is_active', true)->count(),
+            'inactive'    => User::whereIn('user_type', ['brand', 'influencer', 'moderator', 'admin'])->where('is_active', false)->count()
         ];
 
         $payload = [
             'users'  => $users,
             'stats'  => $stats,
             'search' => $search,
-            'status' => $status,
+            'status' => $status
         ];
 
         if ($request->ajax()) {
@@ -71,13 +71,13 @@ class UserController extends Controller
     public function toggleStatus(User $user): JsonResponse
     {
         $user->update([
-            'is_active' => !$user->is_active,
+            'is_active' => !$user->is_active
         ]);
 
         return response()->json([
             'success'   => true,
             'message'   => 'User status updated successfully.',
-            'is_active' => $user->is_active,
+            'is_active' => $user->is_active
         ]);
     }
 }

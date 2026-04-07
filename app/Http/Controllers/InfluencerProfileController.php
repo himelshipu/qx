@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Creator;
-use App\Models\CreatorPortfolio;
+use App\Models\Influencer;
+use App\Models\InfluencerPortfolio;
 use App\Models\Package;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -11,9 +11,9 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 
-class CreatorProfileController extends Controller
+class InfluencerProfileController extends Controller
 {
-    private function getDashboardCreatorBySlug(string $slug): ?Creator
+    private function getDashboardInfluencerBySlug(string $slug): ?Influencer
     {
         $user = Auth::user();
 
@@ -21,15 +21,15 @@ class CreatorProfileController extends Controller
             return null;
         }
 
-        return $user->creator;
+        return $user->influencer;
     }
 
     /**
-     * Show public creator profile
+     * Show public influencer profile
      */
     public function show(string $slug)
     {
-        $creator = Creator::query()
+        $influencer = Influencer::query()
             ->with([
                 'user',
                 'categories:id,name',
@@ -41,12 +41,12 @@ class CreatorProfileController extends Controller
             ->withAvg('reviews', 'rating')
             ->withCount('reviews')
             ->whereHas('user', function ($query) use ($slug): void {
-                $query->where('slug', $slug)->where('user_type', 'creator');
+                $query->where('slug', $slug)->where('user_type', 'influencer');
             })
             ->firstOrFail();
 
         $packages = Package::query()
-            ->where('creator_id', $creator->id)
+            ->where('influencer_id', $influencer->id)
             ->where('is_active', true)
             ->orderBy('platform')
             ->orderBy('name')
@@ -59,45 +59,45 @@ class CreatorProfileController extends Controller
                 'currency'
             ]);
 
-        return view('frontend.pages.creator-profile', [
-            'creator'  => $creator,
-            'packages' => $packages,
-            'title'    => $creator->user->name . ' — Creator'
+        return view('frontend.pages.influencer-profile', [
+            'influencer' => $influencer,
+            'packages'   => $packages,
+            'title'      => $influencer->user->name . ' — Influencer'
         ]);
     }
 
     /**
-     * Show creator profile edit form
+     * Show influencer profile edit form
      */
     public function edit(string $slug)
     {
-        $user    = Auth::user();
-        $creator = $this->getDashboardCreatorBySlug($slug);
+        $user       = Auth::user();
+        $influencer = $this->getDashboardInfluencerBySlug($slug);
 
-        if (!$creator) {
+        if (!$influencer) {
             abort(404);
         }
 
-        $creator->load(['user', 'socialLinks', 'portfolios']);
+        $influencer->load(['user', 'socialLinks', 'portfolios']);
 
-        return view('frontend.pages.creator-edit-profile', [
-            'user'    => $creator->user,
-            'creator' => $creator,
-            'brand'   => $creator,
-            'slug'    => $slug
+        return view('frontend.pages.influencer-edit-profile', [
+            'user'       => $influencer->user,
+            'influencer' => $influencer,
+            'brand'      => $influencer,
+            'slug'       => $slug
         ]);
     }
 
     /**
-     * Update creator profile information
+     * Update influencer profile information
      */
     public function update(Request $request, string $slug)
     {
-        $user    = Auth::user();
-        $creator = $this->getDashboardCreatorBySlug($slug);
+        $user       = Auth::user();
+        $influencer = $this->getDashboardInfluencerBySlug($slug);
 
-        if (!$creator) {
-            return redirect()->route('creator.profile.edit', ['slug' => auth()->user()->slug])->with('error', 'Creator profile not found');
+        if (!$influencer) {
+            return redirect()->route('influencer.profile.edit', ['slug' => auth()->user()->slug])->with('error', 'Influencer profile not found');
         }
 
         $activeTab = $request->string('active_tab')->toString() ?: 'details';
@@ -141,11 +141,11 @@ class CreatorProfileController extends Controller
         $validated = $request->validate($rulesByTab[$activeTab]);
 
         if ($activeTab === 'details') {
-            $creator->display_name       = $validated['display_name'] ?? $creator->display_name;
-            $creator->title_name         = $validated['title_name'] ?? $creator->title_name;
-            $creator->audience           = $validated['audience'] ?? $creator->audience;
-            $creator->brands_worked_with = $validated['brands_worked_with'] ?? $creator->brands_worked_with;
-            $creator->save();
+            $influencer->display_name       = $validated['display_name'] ?? $influencer->display_name;
+            $influencer->title_name         = $validated['title_name'] ?? $influencer->title_name;
+            $influencer->audience           = $validated['audience'] ?? $influencer->audience;
+            $influencer->brands_worked_with = $validated['brands_worked_with'] ?? $influencer->brands_worked_with;
+            $influencer->save();
 
             $user->city         = $validated['city'] ?? $user->city;
             $user->country      = $validated['country'] ?? $user->country;
@@ -160,9 +160,9 @@ class CreatorProfileController extends Controller
             $user->save();
         }
 
-        if ($activeTab === 'social' && Schema::hasTable('creator_social_links')) {
-            $creator->socialLinks()->updateOrCreate(
-                ['creator_id' => $creator->id],
+        if ($activeTab === 'social' && Schema::hasTable('influencer_social_links')) {
+            $influencer->socialLinks()->updateOrCreate(
+                ['influencer_id' => $influencer->id],
                 [
                     'instagram_url' => $validated['instagram_url'] ?? null,
                     'tiktok_url'    => $validated['tiktok_url'] ?? null,
@@ -181,8 +181,8 @@ class CreatorProfileController extends Controller
                     if ($user->profile_image_path && Storage::disk('public')->exists($user->profile_image_path)) {
                         Storage::disk('public')->delete($user->profile_image_path);
                     }
-                    Storage::disk('public')->makeDirectory('creators/profile');
-                    $path                     = $request->file('profile_image')->store('creators/profile', 'public');
+                    Storage::disk('public')->makeDirectory('influencers/profile');
+                    $path                     = $request->file('profile_image')->store('influencers/profile', 'public');
                     $user->profile_image_path = $path;
                     $user->save();
                 } catch (\Exception $e) {
@@ -197,8 +197,8 @@ class CreatorProfileController extends Controller
                     if ($user->cover_image_path && Storage::disk('public')->exists($user->cover_image_path)) {
                         Storage::disk('public')->delete($user->cover_image_path);
                     }
-                    Storage::disk('public')->makeDirectory('creators/cover');
-                    $path                   = $request->file('cover_image')->store('creators/cover', 'public');
+                    Storage::disk('public')->makeDirectory('influencers/cover');
+                    $path                   = $request->file('cover_image')->store('influencers/cover', 'public');
                     $user->cover_image_path = $path;
                     $user->save();
                 } catch (\Exception $e) {
@@ -210,14 +210,14 @@ class CreatorProfileController extends Controller
 
             if ($request->hasFile('portfolio_images')) {
                 try {
-                    Storage::disk('public')->makeDirectory('creators/portfolio');
-                    foreach ($request->file('portfolio_images') as $index => $portfolioImage) {
-                        $path = $portfolioImage->store('creators/portfolio', 'public');
-                        $creator->portfolios()->create([
+                    Storage::disk('public')->makeDirectory('influencers/portfolio');
+                    foreach ($request->file('portfolio_images', []) as $portfolioImage) {
+                        $path = $portfolioImage->store('influencers/portfolio', 'public');
+                        $influencer->portfolios()->create([
                             'media_type' => 'image',
                             'file_path'  => $path,
-                            'title'      => 'Portfolio Image ' . ($creator->portfolios()->max('sort_order') + 1),
-                            'sort_order' => $creator->portfolios()->max('sort_order') + 1,
+                            'title'      => 'Portfolio Image ' . ($influencer->portfolios()->max('sort_order') + 1),
+                            'sort_order' => $influencer->portfolios()->max('sort_order') + 1,
                             'is_active'  => true
                         ]);
                     }
@@ -241,19 +241,19 @@ class CreatorProfileController extends Controller
             return response()->json(['message' => $message, 'active_tab' => $activeTab]);
         }
 
-        return redirect()->route('creator.profile.edit', ['slug' => $slug])->with('success', $message)->with('active_tab', $activeTab);
+        return redirect()->route('influencer.profile.edit', ['slug' => $slug])->with('success', $message)->with('active_tab', $activeTab);
     }
 
     /**
-     * Delete creator profile image
+     * Delete influencer profile image
      */
     public function deleteProfileImage(Request $request, string $slug)
     {
-        $user    = Auth::user();
-        $creator = $this->getDashboardCreatorBySlug($slug);
+        $user       = Auth::user();
+        $influencer = $this->getDashboardInfluencerBySlug($slug);
 
-        if (!$creator) {
-            return response()->json(['error' => 'Creator not found'], 404);
+        if (!$influencer) {
+            return response()->json(['error' => 'Influencer not found'], 404);
         }
 
         if ($user->profile_image_path && Storage::disk('public')->exists($user->profile_image_path)) {
@@ -262,19 +262,19 @@ class CreatorProfileController extends Controller
 
         $user->update(['profile_image_path' => null]);
 
-        return redirect()->route('creator.profile.edit', ['slug' => $slug])->with('status', 'profile-image-deleted');
+        return redirect()->route('influencer.profile.edit', ['slug' => $slug])->with('status', 'profile-image-deleted');
     }
 
     /**
-     * Delete creator cover image (kept for backward compatibility)
+     * Delete influencer cover image (kept for backward compatibility)
      */
     public function deleteCoverImage(Request $request, string $slug)
     {
-        $user    = Auth::user();
-        $creator = $this->getDashboardCreatorBySlug($slug);
+        $user       = Auth::user();
+        $influencer = $this->getDashboardInfluencerBySlug($slug);
 
-        if (!$creator) {
-            return response()->json(['error' => 'Creator not found'], 404);
+        if (!$influencer) {
+            return response()->json(['error' => 'Influencer not found'], 404);
         }
 
         // Delete cover image if exists
@@ -284,25 +284,25 @@ class CreatorProfileController extends Controller
 
         $user->update(['cover_image_path' => null]);
 
-        return redirect()->route('creator.profile.edit', ['slug' => $slug])->with('status', 'cover-image-deleted');
+        return redirect()->route('influencer.profile.edit', ['slug' => $slug])->with('status', 'cover-image-deleted');
     }
 
     /**
-     * Delete creator portfolio image
+     * Delete influencer portfolio image
      */
     public function deletePortfolioImage(Request $request, string $slug, int $portfolio)
     {
-        $user    = Auth::user();
-        $creator = $this->getDashboardCreatorBySlug($slug);
+        $user       = Auth::user();
+        $influencer = $this->getDashboardInfluencerBySlug($slug);
 
-        if (!$creator) {
-            return redirect()->route('creator.profile.edit', ['slug' => $slug])->with('error', 'Creator not found');
+        if (!$influencer) {
+            return redirect()->route('influencer.profile.edit', ['slug' => $slug])->with('error', 'Influencer not found');
         }
 
-        $portfolioItem = CreatorPortfolio::where('creator_id', $creator->id)->where('id', $portfolio)->first();
+        $portfolioItem = InfluencerPortfolio::where('influencer_id', $influencer->id)->where('id', $portfolio)->first();
 
         if (!$portfolioItem) {
-            return redirect()->route('creator.profile.edit', ['slug' => $slug])->with('error', 'Portfolio item not found');
+            return redirect()->route('influencer.profile.edit', ['slug' => $slug])->with('error', 'Portfolio item not found');
         }
 
         // Delete file from storage
@@ -313,23 +313,23 @@ class CreatorProfileController extends Controller
         // Delete portfolio record
         $portfolioItem->delete();
 
-        return redirect()->route('creator.profile.edit', ['slug' => $slug])->with('success', 'Portfolio image deleted successfully.');
+        return redirect()->route('influencer.profile.edit', ['slug' => $slug])->with('success', 'Portfolio image deleted successfully.');
     }
 
     public function toggleStatus(Request $request, string $slug)
     {
-        $user    = Auth::user();
-        $creator = $this->getDashboardCreatorBySlug($slug);
+        $user       = Auth::user();
+        $influencer = $this->getDashboardInfluencerBySlug($slug);
 
-        if (!$creator) {
-            return response()->json(['error' => 'Creator not found'], 404);
+        if (!$influencer) {
+            return response()->json(['error' => 'Influencer not found'], 404);
         }
 
-        $creator->update(['is_active' => !$creator->is_active]);
+        $influencer->update(['is_active' => !$influencer->is_active]);
 
-        return redirect()->route('creator.profile.edit', ['slug' => $slug])->with(
+        return redirect()->route('influencer.profile.edit', ['slug' => $slug])->with(
             'status',
-            $creator->is_active ? 'creator-activated' : 'creator-deactivated'
+            $influencer->is_active ? 'influencer-activated' : 'influencer-deactivated'
         );
     }
 }

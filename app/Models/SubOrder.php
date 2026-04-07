@@ -13,7 +13,7 @@ class SubOrder extends Model
     protected $fillable = [
         'order_id',
         'campaign_influencer_id',
-        'creator_id',
+        'influencer_id',
         'status',
         'deliverables',
         'amount',
@@ -56,6 +56,6 @@ class SubOrder extends Model
      */
     public function creator(): BelongsTo
     {
-        return $this->belongsTo(Creator::class);
+        return $this->belongsTo(Influencer::class);
     }
 }

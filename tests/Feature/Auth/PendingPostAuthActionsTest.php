@@ -2,7 +2,7 @@
 
 use App\Models\CartItem;
 use App\Models\Conversation;
-use App\Models\Creator;
+use App\Models\Influencer;
 use App\Models\Package;
 use App\Models\User;
 use App\Services\Auth\PendingPostAuthActionService;
@@ -21,22 +21,22 @@ beforeEach(function () {
     };
 
     $this->makeCreatorWithPackage = function (): array {
-        $creatorUser = ($this->makeUser)('creator@example.com', 'creator');
+        $influencerUser = ($this->makeUser)('creator@example.com', 'creator');
 
-        $creator = Creator::create([
-            'user_id' => $creatorUser->id,
+        $influencer = Influencer::create([
+            'user_id' => $influencerUser->id,
             'display_name' => 'Creator One',
         ]);
 
         $package = Package::create([
-            'creator_id' => $creator->id,
+            'creator_id' => $influencer->id,
             'platform' => 'instagram',
             'name' => 'Instagram Story',
             'base_price' => 120,
             'currency' => 'USD',
         ]);
 
-        return [$creator, $package];
+        return [$influencer, $package];
     };
 });
 
@@ -82,22 +82,22 @@ test('pending add to cart is consumed after login and redirects to cart', functi
 });
 
 test('guest negotiation request stores pending action and redirects to login', function () {
-    [$creator] = ($this->makeCreatorWithPackage)();
+    [$influencer] = ($this->makeCreatorWithPackage)();
 
-    $response = $this->get(route('conversations.start-negotiation', ['creator' => $creator->id]));
+    $response = $this->get(route('conversations.start-negotiation', ['creator' => $influencer->id]));
 
     $response->assertRedirect(route('login', absolute: false));
 
     $this->assertSame(PendingPostAuthActionService::ACTION_NEGOTIATE, session(PendingPostAuthActionService::ACTION_KEY));
-    $this->assertSame($creator->id, session(PendingPostAuthActionService::CREATOR_ID_KEY));
+    $this->assertSame($influencer->id, session(PendingPostAuthActionService::CREATOR_ID_KEY));
 });
 
 test('pending negotiation is consumed after login and redirects to conversation', function () {
     $brand = ($this->makeUser)('brand-negotiate@example.com', 'brand');
-    [$creator] = ($this->makeCreatorWithPackage)();
+    [$influencer] = ($this->makeCreatorWithPackage)();
 
     session()->put(PendingPostAuthActionService::ACTION_KEY, PendingPostAuthActionService::ACTION_NEGOTIATE);
-    session()->put(PendingPostAuthActionService::CREATOR_ID_KEY, $creator->id);
+    session()->put(PendingPostAuthActionService::CREATOR_ID_KEY, $influencer->id);
 
     $response = $this->post('/login', [
         'email' => $brand->email,
@@ -106,7 +106,7 @@ test('pending negotiation is consumed after login and redirects to conversation'
 
     $conversation = Conversation::query()
         ->where('brand_user_id', $brand->id)
-        ->where('creator_id', $creator->id)
+        ->where('creator_id', $influencer->id)
         ->first();
 
     expect($conversation)->not->toBeNull();

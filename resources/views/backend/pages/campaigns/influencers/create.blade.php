@@ -29,16 +29,16 @@
 					Select Influencers <span class="text-red-500">*</span>
 				</label>
 				<div class="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
-					@forelse ($creators as $creator)
+					@forelse ($influencers as $influencer)
 						<label
 							class="flex items-start gap-3 rounded-lg border border-gray-200 p-4 transition hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800/50 cursor-pointer"
-							@if (in_array($creator->id, $assignedCreatorIds)) style="background-color: rgba(59, 130, 246, 0.05);" @endif>
-							<input type="checkbox" name="creator_ids[]" value="{{ $creator->id }}"
-								@if (in_array($creator->id, $assignedCreatorIds)) checked disabled @endif class="mt-1 rounded border-gray-300 text-blue-600">
+							@if (in_array($influencer->id, $assignedInfluencerIds)) style="background-color: rgba(59, 130, 246, 0.05);" @endif>
+							<input type="checkbox" name="influencer_ids[]" value="{{ $influencer->id }}"
+								@if (in_array($influencer->id, $assignedInfluencerIds)) checked disabled @endif class="mt-1 rounded border-gray-300 text-blue-600">
 							<div class="flex-1">
-								<p class="font-medium text-gray-900 dark:text-white">{{ $creator->display_name }}</p>
-								<p class="text-sm text-gray-600 dark:text-gray-400">{{ $creator->user->email }}</p>
-								@if (in_array($creator->id, $assignedCreatorIds))
+								<p class="font-medium text-gray-900 dark:text-white">{{ $influencer->display_name }}</p>
+								<p class="text-sm text-gray-600 dark:text-gray-400">{{ $influencer->user->email }}</p>
+								@if (in_array($influencer->id, $assignedInfluencerIds))
 									<p class="mt-1 text-xs text-yellow-600 dark:text-yellow-400">Already assigned</p>
 								@endif
 							</div>
@@ -48,7 +48,7 @@
 					@endforelse
 				</div>
 
-				@error('creator_ids')
+				@error('influencer_ids')
 					<p class="mt-2 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
 				@enderror
 			</div>

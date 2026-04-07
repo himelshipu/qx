@@ -14,7 +14,7 @@ class OrderItem extends Model
 
     protected $fillable = [
         'order_id',
-        'creator_id',
+        'influencer_id',
         'package_id',
         'campaign_id',
         'title',
@@ -52,7 +52,15 @@ class OrderItem extends Model
 
     public function creator(): BelongsTo
     {
-        return $this->belongsTo(Creator::class);
+        return $this->belongsTo(Influencer::class, 'influencer_id');
+    }
+
+    /**
+     * Alias for creator() to match model naming convention
+     */
+    public function influencer(): BelongsTo
+    {
+        return $this->creator();
     }
 
     public function package(): BelongsTo

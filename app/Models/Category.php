@@ -25,14 +25,14 @@ class Category extends Model
     protected function casts(): array
     {
         return [
-            'is_active' => 'boolean',
+            'is_active'   => 'boolean',
             'is_featured' => 'boolean'
         ];
     }
 
-    public function creators(): BelongsToMany
+    public function influencers(): BelongsToMany
     {
-        return $this->belongsToMany(Creator::class, 'creator_categories')->withTimestamps();
+        return $this->belongsToMany(Influencer::class, 'influencer_categories', 'category_id', 'influencer_id')->withTimestamps();
     }
 
     public function campaigns(): BelongsToMany

@@ -53,7 +53,7 @@
 								<i class="fas fa-comments mr-2"></i>Messages
 							</a>
 						@endif
-					@elseif(auth()->user()->user_type === 'creator')
+					@elseif(auth()->user()->user_type === 'influencer')
 						{{-- Creator Navigation --}}
 						<a href="{{ route('frontend.packages.index') }}"
 							class="px-3 py-2 text-sm font-medium rounded-md transition-colors
@@ -126,7 +126,7 @@
 
 							<!-- View Profile -->
 							<a
-								href="@if (auth()->user()->user_type === 'creator') {{ route('creator.profile', auth()->user()->slug) }}@else{{ route('brand.profile', auth()->user()->slug) }} @endif"
+								href="@if (auth()->user()->user_type === 'influencer') {{ route('influencer.profile', auth()->user()->slug) }}@else{{ route('brand.profile', auth()->user()->slug) }} @endif"
 								class="block w-full text-left px-4 py-3 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 first:rounded-t-lg">
 								<i class="fas fa-eye mr-2"></i>View Profile
 							</a>

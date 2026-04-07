@@ -1,11 +1,11 @@
 @extends('backend.layouts.app')
 
-@section('title', "Portfolio - {$creator->display_name}")
+@section('title', "Portfolio - {$influencer->display_name}")
 
 @section('content')
 	<x-backend.shell.breadcrumb :items="[
-	    ['label' => 'Creators', 'route' => 'dashboard.creators.index'],
-	    ['label' => $creator->display_name, 'route' => 'dashboard.creators.view', 'params' => $creator->id],
+	    ['label' => 'Influencers', 'route' => 'dashboard.influencers.index'],
+	    ['label' => $influencer->display_name, 'route' => 'dashboard.influencers.view', 'params' => $influencer->id],
 	    ['label' => 'Portfolio'],
 	]" />
 
@@ -13,9 +13,9 @@
 		<div class="flex items-center justify-between">
 			<div>
 				<h1 class="text-2xl font-bold text-gray-900 dark:text-white">Portfolio Management</h1>
-				<p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Manage photos and videos for {{ $creator->display_name }}</p>
+				<p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Manage photos and videos for {{ $influencer->display_name }}</p>
 			</div>
-			<a href="{{ route('dashboard.creators.portfolio.create', $creator) }}"
+			<a href="{{ route('dashboard.influencers.portfolio.create', $influencer) }}"
 				class="inline-flex items-center gap-2 rounded-lg bg-purple-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-purple-700 dark:bg-purple-700 dark:hover:bg-purple-600">
 				<x-icons.plus class="h-4 w-4" />
 				Add Portfolio Item
@@ -95,7 +95,7 @@
 							<div class="flex items-center gap-2">
 								<!-- Visibility Toggle -->
 								<button data-portfolio-id="{{ $portfolio->id }}"
-									data-toggle-url="{{ route('dashboard.creators.portfolio.toggle', [$creator, $portfolio]) }}"
+									data-toggle-url="{{ route('dashboard.influencers.portfolio.toggle', [$influencer, $portfolio]) }}"
 									class="toggle-visibility inline-flex items-center justify-center rounded-lg p-2 text-gray-500 transition hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800"
 									title="{{ $portfolio->is_active ? 'Hide' : 'Show' }}">
 									@if ($portfolio->is_active)
@@ -113,7 +113,7 @@
 								</button>
 
 								<!-- Edit Button -->
-								<a href="{{ route('dashboard.creators.portfolio.edit', [$creator, $portfolio]) }}"
+								<a href="{{ route('dashboard.influencers.portfolio.edit', [$influencer, $portfolio]) }}"
 									class="inline-flex items-center justify-center rounded-lg p-2 text-gray-500 transition hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800">
 									<svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -122,7 +122,7 @@
 								</a>
 
 								<!-- Delete Button -->
-								<form action="{{ route('dashboard.creators.portfolio.destroy', [$creator, $portfolio]) }}" method="POST"
+								<form action="{{ route('dashboard.influencers.portfolio.destroy', [$influencer, $portfolio]) }}" method="POST"
 									class="inline js-confirmable"
 									data-confirm-title="Delete Portfolio Item"
 									data-confirm-message="Are you sure you want to delete this portfolio item?"
@@ -152,7 +152,7 @@
 						<h3 class="mt-4 text-sm font-medium text-gray-900 dark:text-white">No portfolio items yet</h3>
 						<p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Get started by adding your first photo or video.</p>
 						<div class="mt-6">
-							<a href="{{ route('dashboard.creators.portfolio.create', $creator) }}"
+							<a href="{{ route('dashboard.influencers.portfolio.create', $influencer) }}"
 								class="inline-flex items-center gap-2 rounded-lg bg-purple-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-purple-700">
 								<x-icons.plus class="h-4 w-4" />
 								Add Your First Item

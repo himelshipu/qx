@@ -5,9 +5,9 @@ declare (strict_types = 1);
 namespace App\Services\Web;
 
 use App\DTOs\HomeDataDTO;
-use App\Models\Creator;
-use App\Models\CreatorPlatformStat;
 use App\Models\FaqItem;
+use App\Models\Influencer;
+use App\Models\InfluencerPlatformStat;
 use App\Models\Review;
 use App\Models\Testimonial;
 use App\Repositories\Contracts\UserRepositoryInterface;
@@ -68,7 +68,7 @@ final class HomeService
      * Get influencers grouped by platform for homepage sections.
      *
      * @param  int             $limitPerPlatform
-     * @return Collection<int, array{key:string,label:string,creators:Collection<int, array<string, mixed>>}>
+     * @return Collection<int, array{key:string,label:string,influencers:Collection<int, array<string, mixed>>
      */
     public function getInfluencersByPlatform(int $limitPerPlatform = 4): Collection
     {
@@ -85,27 +85,27 @@ final class HomeService
 
         $mandatoryPlatforms = ['facebook', 'instagram', 'ugc'];
 
-        $stats = CreatorPlatformStat::query()
+        $stats = InfluencerPlatformStat::query()
             ->with([
-                'creator:id,user_id,display_name,title_name,is_active',
-                'creator.user:id,name,slug,city,country,bio,profile_image_path,is_active'
+                'influencer:id,user_id,display_name,title_name,is_active',
+                'influencer.user:id,name,slug,city,country,bio,profile_image_path,is_active'
             ])
             ->where('is_active', true)
-            ->whereHas('creator', function ($query) {
+            ->whereHas('influencer', function ($query) {
                 $query->where('is_active', true)
                     ->whereHas('user', fn($userQuery) => $userQuery->where('is_active', true));
             })
             ->orderByDesc('follower_count')
             ->get();
 
-        $creatorIds = $stats->pluck('creator_id')->unique()->values()->all();
+        $influencerIds = $stats->pluck('influencer_id')->unique()->values()->all();
 
         $reviewsByCreator = Review::query()
-            ->whereIn('creator_id', $creatorIds)
-            ->selectRaw('creator_id, AVG(rating) as average_rating, COUNT(*) as reviews_count')
-            ->groupBy('creator_id')
+            ->whereIn('influencer_id', $influencerIds)
+            ->selectRaw('influencer_id, AVG(rating) as average_rating, COUNT(*) as reviews_count')
+            ->groupBy('influencer_id')
             ->get()
-            ->keyBy('creator_id');
+            ->keyBy('influencer_id');
 
         $statsByPlatform = $stats->groupBy('platform');
 
@@ -120,29 +120,29 @@ final class HomeService
                     ->take($limitPerPlatform)
                     ->values();
 
-                $creators = $platformStats
-                    ->map(function (CreatorPlatformStat $stat) use ($reviewsByCreator, $platform): ?array {
-                        $creator = $stat->creator;
+                $influencers = $platformStats
+                    ->map(function (InfluencerPlatformStat $stat) use ($reviewsByCreator, $platform): ?array {
+                        $influencer = $stat->influencer;
 
-                        if (!$creator || !$creator->user) {
+                        if (!$influencer || !$influencer->user) {
                             return null;
                         }
 
-                        $reviewSummary = $reviewsByCreator->get($creator->id);
+                        $reviewSummary = $reviewsByCreator->get($influencer->id);
                         $averageRating = $reviewSummary && $reviewSummary->average_rating !== null
                         ? (float) $reviewSummary->average_rating
                         : null;
 
                         return [
-                            'id'               => $creator->id,
-                            'slug'             => $creator->user->slug,
-                            'name'             => $this->resolveCreatorName($creator),
-                            'title'            => $this->resolveCreatorTitle($creator),
-                            'location'         => $this->resolveCreatorLocation($creator),
-                            'image_url'        => $creator->user->profile_image_path,
+                            'id'               => $influencer->id,
+                            'slug'             => $influencer->user->slug,
+                            'name'             => $this->resolveInfluencerName($influencer),
+                            'title'            => $this->resolveInfluencerTitle($influencer),
+                            'location'         => $this->resolveInfluencerLocation($influencer),
+                            'image_url'        => $influencer->user->profile_image_path,
                             'platform'         => $platform,
                             'platform_label'   => $this->humanizePlatform($platform),
-                            'handle'           => $this->resolveHandle($stat->handle, $creator->user->slug),
+                            'handle'           => $this->resolveHandle($stat->handle, $influencer->user->slug),
                             'followers_label'  => $this->formatFollowers($stat->follower_count),
                             'engagement_label' => $this->formatPercentage($stat->engagement_rate),
                             'rating_label'     => $averageRating !== null ? number_format($averageRating, 1) : 'N/A',
@@ -153,44 +153,44 @@ final class HomeService
                     ->values();
 
                 return [
-                    'key'      => $platform,
-                    'label'    => $this->humanizePlatform($platform),
-                    'creators' => $creators
+                    'key'         => $platform,
+                    'label'       => $this->humanizePlatform($platform),
+                    'influencers' => $influencers
                 ];
             })
             ->filter(fn(array $group): bool =>
-                $group['creators']->isNotEmpty() || in_array($group['key'], $mandatoryPlatforms, true)
+                $group['influencers']->isNotEmpty() || in_array($group['key'], $mandatoryPlatforms, true)
             )
             ->values();
     }
 
     /**
-     * Resolve creator display name.
+     * Resolve influencer display name.
      */
-    private function resolveCreatorName(Creator $creator): string
+    private function resolveInfluencerName(Influencer $influencer): string
     {
-        $displayName = trim((string) ($creator->display_name ?? ''));
+        $displayName = trim((string) ($influencer->display_name ?? ''));
 
         if ($displayName !== '') {
             return $displayName;
         }
 
-        return trim((string) $creator->user?->name) !== ''
-        ? (string) $creator->user?->name
-    : ($creator->user?->slug ?? 'N/A');
+        return trim((string) $influencer->user?->name) !== ''
+        ? (string) $influencer->user?->name
+        : ($influencer->user?->slug ?? 'N/A');
     }
 
     /**
-     * Resolve creator title text for cards.
+     * Resolve influencer title text for cards.
      */
-    private function resolveCreatorTitle(Creator $creator): string
+    private function resolveInfluencerTitle(Influencer $influencer): string
     {
-        $title = trim((string) ($creator->title_name ?? ''));
+        $title = trim((string) ($influencer->title_name ?? ''));
         if ($title !== '') {
             return $title;
         }
 
-        $bio = trim((string) ($creator->user?->bio ?? ''));
+        $bio = trim((string) ($influencer->user?->bio ?? ''));
         if ($bio !== '') {
             return Str::limit($bio, 56);
         }
@@ -199,13 +199,13 @@ final class HomeService
     }
 
     /**
-     * Resolve creator location text.
+     * Resolve influencer location text.
      */
-    private function resolveCreatorLocation(Creator $creator): string
+    private function resolveInfluencerLocation(Influencer $influencer): string
     {
         $parts = array_values(array_filter([
-            trim((string) ($creator->user?->city ?? '')),
-            trim((string) ($creator->user?->country ?? ''))
+            trim((string) ($influencer->user?->city ?? '')),
+            trim((string) ($influencer->user?->country ?? ''))
         ]));
 
         return $parts !== [] ? implode(', ', $parts) : 'N/A';
@@ -273,7 +273,7 @@ final class HomeService
     }
 
     /**
-     * Get active FAQ items for the homepage (audience: all or creator).
+     * Get active FAQ items for the homepage (audience: all or influencer).
      *
      * @return Collection<int, FaqItem>
      */
@@ -282,7 +282,7 @@ final class HomeService
         return FaqItem::query()
             ->where('is_active', true)
             ->whereHas('section', fn($q) => $q->where('is_active', true)
-                    ->whereIn('audience_type', ['all', 'creator']))
+                    ->whereIn('audience_type', ['all', 'influencer']))
             ->orderBy('sort_order')
             ->get(['id', 'faq_section_id', 'question', 'answer', 'sort_order']);
     }

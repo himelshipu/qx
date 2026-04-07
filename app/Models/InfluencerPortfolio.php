@@ -5,10 +5,10 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class CreatorPortfolio extends Model
+class InfluencerPortfolio extends Model
 {
     protected $fillable = [
-        'creator_id',
+        'influencer_id',
         'media_type',
         'file_path',
         'title',
@@ -23,8 +23,8 @@ class CreatorPortfolio extends Model
         'is_active'  => 'boolean'
     ];
 
-    public function creator(): BelongsTo
+    public function influencer(): BelongsTo
     {
-        return $this->belongsTo(Creator::class);
+        return $this->belongsTo(Influencer::class, 'influencer_id');
     }
 }

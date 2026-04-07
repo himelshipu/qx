@@ -11,11 +11,11 @@ return new class extends Migration
         Schema::create('wishlist_items', function (Blueprint $table): void {
             $table->id();
             $table->foreignId('wishlist_id')->constrained('wishlists')->cascadeOnDelete();
-            $table->foreignId('creator_id')->constrained('creators')->cascadeOnDelete();
+            $table->foreignId('influencer_id')->constrained('influencers')->cascadeOnDelete();
             $table->string('notes')->nullable();
             $table->timestamps();
 
-            $table->unique(['wishlist_id', 'creator_id']);
+            $table->unique(['wishlist_id', 'influencer_id']);
         });
     }
 

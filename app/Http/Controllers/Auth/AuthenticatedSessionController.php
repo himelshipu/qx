@@ -25,7 +25,7 @@ class AuthenticatedSessionController extends Controller
      *
      * Redirects based on user type:
      * - admin/superadmin/moderator → /dashboard
-     * - brand/creator → /
+     * - brand/influencer → /
      */
     public function store(LoginRequest $request): RedirectResponse
     {
@@ -47,7 +47,7 @@ class AuthenticatedSessionController extends Controller
             return redirect()->intended(route('dashboard.index', absolute: false));
         }
 
-        // Brand and Creator users go to frontend
+        // Brand and Influencer users go to frontend
 
         return redirect()->intended(route('home', absolute: false));
     }

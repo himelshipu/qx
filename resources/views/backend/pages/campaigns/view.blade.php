@@ -213,7 +213,7 @@
 								@endphp
 								<tr class="hover:bg-gray-50 dark:hover:bg-gray-800/50">
 									<td class="px-4 py-3">
-										<a href="{{ route('dashboard.creators.view', $application->creator) }}" 
+										<a href="{{ route('dashboard.influencers.view', $application->creator) }}" 
 											class="font-medium text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300">
 											{{ $application->creator->display_name }}
 										</a>

@@ -12,7 +12,7 @@ class BillingProfileSeeder extends Seeder
     {
         $faker = \Faker\Factory::create('en_US');
         $brands = DB::table('brands')->get();
-        $creators = DB::table('creators')->get();
+        $influencers = DB::table('influencers')->get();
 
         foreach ($brands as $brand) {
             $payload = [
@@ -39,7 +39,7 @@ class BillingProfileSeeder extends Seeder
             );
         }
 
-        foreach ($creators as $creator) {
+        foreach ($influencers as $influencer) {
             $payload = [
                 'legal_company_name' => null,
                 'vat_id' => strtoupper($faker->bothify('TAX-??####??')),
@@ -57,7 +57,7 @@ class BillingProfileSeeder extends Seeder
 
             DB::table('billing_profiles')->updateOrInsert(
                 [
-                    'user_id' => $creator->id,
+                    'user_id' => $influencer->id,
                     'user_type' => 'creator'
                 ],
                 $payload

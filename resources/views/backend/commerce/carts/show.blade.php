@@ -16,7 +16,7 @@
 					@endif
 				</p>
 			</div>
-			<a href="{{ $isAdmin ? route('carts.index') : route('dashboard.index') }}"
+			<a href="{{ $isAdmin ? route('dashboard.carts.index') : route('dashboard.index') }}"
 				class="px-6 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-white rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors font-medium">
 				← Back
 			</a>
@@ -143,7 +143,7 @@
 						</div>
 
 						<div class="flex justify-between text-gray-600 dark:text-gray-400">
-							<span>Influences:</span>
+							<span>Influencers:</span>
 							<span class="font-medium">{{ $cart->items->count() }} creator{{ $cart->items->count() !== 1 ? 's' : '' }}</span>
 						</div>
 

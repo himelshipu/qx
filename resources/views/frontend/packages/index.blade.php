@@ -4,16 +4,16 @@
 @section('content')
 	<div class="container mx-auto px-4 py-8">
 		<div class="flex justify-between items-center mb-8">
-			<h1 class="text-3xl font-bold">{{ auth()->user()->user_type === 'creator' ? 'My Packages' : 'Available Packages' }}
+			<h1 class="text-3xl font-bold">{{ auth()->user()->user_type === 'influencer' ? 'My Packages' : 'Available Packages' }}
 			</h1>
-			@if (auth()->user()->user_type === 'creator')
+			@if (auth()->user()->user_type === 'influencer')
 				<a href="{{ route('frontend.packages.create') }}" class="btn btn-primary">Create Package</a>
 			@endif
 		</div>
 
 		@if ($packages->isEmpty())
 			<div class="alert alert-info">
-				No packages available. {{ auth()->user()->user_type === 'creator' ? 'Create your first package!' : '' }}
+				No packages available. {{ auth()->user()->user_type === 'influencer' ? 'Create your first package!' : '' }}
 			</div>
 		@else
 			<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -24,7 +24,7 @@
 						<p class="text-lg font-bold text-primary mb-4">${{ number_format($package->base_price, 2) }}</p>
 						<div class="flex justify-between">
 							<a href="{{ route('frontend.packages.show', $package) }}" class="btn btn-sm btn-outline">View</a>
-							@if (auth()->user()->user_type === 'creator' && $package->creator_id === auth()->user()->creator?->id)
+							@if (auth()->user()->user_type === 'influencer' && $package->influencer_id === auth()->user()->influencer?->id)
 								<a href="{{ route('frontend.packages.edit', $package) }}" class="btn btn-sm btn-outline">Edit</a>
 							@endif
 						</div>

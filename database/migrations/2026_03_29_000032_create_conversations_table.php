@@ -10,12 +10,12 @@ return new class extends Migration
     {
         Schema::create('conversations', function (Blueprint $table): void {
             $table->id();
-            $table->enum('conversation_type', ['creator_profile', 'order'])->default('creator_profile');
-            $table->foreignId('creator_id')->constrained('creators')->cascadeOnDelete();
+            $table->enum('conversation_type', ['influencer_profile', 'order'])->default('influencer_profile');
+            $table->foreignId('influencer_id')->constrained('influencers')->cascadeOnDelete();
             $table->foreignId('brand_user_id')->constrained('users')->cascadeOnDelete();
             $table->foreignId('handled_by_user_id')->nullable()->constrained('users')->nullOnDelete();
             $table->foreignId('order_id')->nullable()->constrained('orders')->nullOnDelete();
-            $table->boolean('creator_direct_message_enabled')->default(false);
+            $table->boolean('influencer_direct_message_enabled')->default(false);
             $table->string('title')->nullable();
             $table->timestamps();
         });

@@ -12,7 +12,7 @@ class CampaignApplication extends Model
 
     protected $fillable = [
         'campaign_id',
-        'creator_id',
+        'influencer_id',
         'status',
         'pitch_message',
         'proposed_rate',
@@ -38,6 +38,6 @@ class CampaignApplication extends Model
 
     public function creator(): BelongsTo
     {
-        return $this->belongsTo(Creator::class);
+        return $this->belongsTo(Influencer::class);
     }
 }

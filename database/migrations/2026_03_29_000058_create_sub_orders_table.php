@@ -12,7 +12,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('order_id')->constrained('orders')->cascadeOnDelete();
             $table->foreignId('campaign_influencer_id')->constrained('campaign_influencers')->cascadeOnDelete();
-            $table->foreignId('creator_id')->constrained('creators')->cascadeOnDelete();
+            $table->foreignId('influencer_id')->constrained('influencers')->cascadeOnDelete();
             $table->enum('status', ['pending', 'accepted', 'in_progress', 'on_review', 'completed', 'cancelled'])->default('pending');
             $table->longText('deliverables')->nullable();
             $table->decimal('amount', 12, 2);
@@ -25,7 +25,7 @@ return new class extends Migration
 
             // Index for quick lookups
             $table->index('order_id');
-            $table->index('creator_id');
+            $table->index('influencer_id');
         });
     }
 

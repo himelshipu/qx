@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Backend;
 use App\Http\Controllers\Controller;
 use App\Models\Campaign;
 use App\Models\CampaignInfluencer;
-use App\Models\Creator;
+use App\Models\Influencer;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -17,22 +17,22 @@ class CampaignInfluencerController extends Controller
      */
     public function create(Campaign $campaign): View
     {
-        $campaign->load(['brand', 'influencerAssignments.creator.user']);
+        $campaign->load(['brand', 'influencerAssignments.influencer.user']);
 
-        $activeCreators = Creator::with('user:id,email,name')
+        $activeInfluencers = Influencer::with('user:id,email,name')
             ->where('is_active', true)
             ->orderBy('display_name')
             ->get(['id', 'user_id', 'display_name']);
 
-        $assignedCreatorIds = $campaign->influencerAssignments()
+        $assignedInfluencerIds = $campaign->influencerAssignments()
             ->whereIn('status', ['assigned', 'approved'])
-            ->pluck('creator_id')
+            ->pluck('influencer_id')
             ->toArray();
 
         return view('backend.pages.campaigns.influencers.create', [
-            'campaign'           => $campaign,
-            'creators'           => $activeCreators,
-            'assignedCreatorIds' => $assignedCreatorIds
+            'campaign'              => $campaign,
+            'influencers'           => $activeInfluencers,
+            'assignedInfluencerIds' => $assignedInfluencerIds
         ]);
     }
 
@@ -42,22 +42,22 @@ class CampaignInfluencerController extends Controller
     public function store(Request $request, Campaign $campaign): RedirectResponse
     {
         $validated = $request->validate([
-            'creator_ids'   => 'required|array|min:1',
-            'creator_ids.*' => 'exists:creators,id'
+            'influencer_ids'   => 'required|array|min:1',
+            'influencer_ids.*' => 'exists:influencers,id'
         ]);
 
-        foreach ($validated['creator_ids'] as $creatorId) {
+        foreach ($validated['influencer_ids'] as $influencerId) {
             // Skip if already assigned
             if (CampaignInfluencer::where('campaign_id', $campaign->id)
-                ->where('creator_id', $creatorId)
+                ->where('influencer_id', $influencerId)
                 ->exists()) {
                 continue;
             }
 
             CampaignInfluencer::create([
-                'campaign_id' => $campaign->id,
-                'creator_id'  => $creatorId,
-                'status'      => 'assigned'
+                'campaign_id'   => $campaign->id,
+                'influencer_id' => $influencerId,
+                'status'        => 'assigned'
             ]);
         }
 
@@ -72,7 +72,7 @@ class CampaignInfluencerController extends Controller
     public function index(Campaign $campaign): View
     {
         $campaign->load(['influencerAssignments' => function ($query) {
-            $query->with('creator.user')->orderBy('created_at');
+            $query->with('influencer.user')->orderBy('created_at');
         }]);
 
         return view('backend.pages.campaigns.influencers.index', [

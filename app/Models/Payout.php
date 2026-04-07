@@ -12,7 +12,7 @@ class Payout extends Model
     use HasFactory;
 
     protected $fillable = [
-        'creator_id',
+        'influencer_id',
         'payout_account_id',
         'amount',
         'currency',
@@ -33,7 +33,7 @@ class Payout extends Model
 
     public function creator(): BelongsTo
     {
-        return $this->belongsTo(Creator::class);
+        return $this->belongsTo(Influencer::class, 'influencer_id');
     }
 
     public function payoutAccount(): BelongsTo

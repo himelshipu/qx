@@ -2,7 +2,7 @@
 
 @section('content')
 	@php
-		$canManageBillingAndPayment = in_array($user->user_type, ['brand', 'creator'], true);
+		$canManageBillingAndPayment = in_array($user->user_type, ['brand', 'influencer'], true);
 	@endphp
 	<div class="max-w-5xl mx-auto" x-data="accountPageData({
     initialTab: @js(request('tab', session('tab', 'details'))),
@@ -160,7 +160,7 @@
 							@php
 								$profileOwner = match ($user->user_type) {
 								    'brand' => $user->brand,
-								    'creator' => $user->creator,
+								    'creator' => $user->influencer,
 								    default => null,
 								};
 								$billingProfile = optional($profileOwner)->billingProfiles->first();

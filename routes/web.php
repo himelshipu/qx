@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types=1);
+declare (strict_types = 1);
 
 use App\Http\Controllers\AccountController;
 use App\Http\Controllers\Backend\BrandController;
@@ -9,11 +9,11 @@ use App\Http\Controllers\Backend\CampaignInfluencerController;
 use App\Http\Controllers\Backend\CartManagerController;
 use App\Http\Controllers\Backend\CaseStudyController;
 use App\Http\Controllers\Backend\CategoryController;
-use App\Http\Controllers\Backend\CreatorController;
-use App\Http\Controllers\Backend\CreatorPortfolioController;
 use App\Http\Controllers\Backend\DashboardController;
 use App\Http\Controllers\Backend\FaqController;
 use App\Http\Controllers\Backend\FeaturedCollaborationController;
+use App\Http\Controllers\Backend\InfluencerController;
+use App\Http\Controllers\Backend\InfluencerPortfolioController;
 use App\Http\Controllers\Backend\KnowledgeBaseController;
 use App\Http\Controllers\Backend\ModeratorController;
 use App\Http\Controllers\Backend\OrderController;
@@ -27,7 +27,6 @@ use App\Http\Controllers\Backend\UserController;
 use App\Http\Controllers\BrandProfileController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\ConversationController;
-use App\Http\Controllers\CreatorProfileController;
 use App\Http\Controllers\Frontend\CampaignController as FrontendCampaignController;
 use App\Http\Controllers\Frontend\CaseStudyController as FrontendCaseStudyController;
 use App\Http\Controllers\Frontend\ContentLibraryController;
@@ -37,6 +36,7 @@ use App\Http\Controllers\Frontend\KnowledgeBaseController as FrontendKnowledgeBa
 use App\Http\Controllers\Frontend\PackageController as FrontendPackageController;
 use App\Http\Controllers\Frontend\StaticPagesController;
 use App\Http\Controllers\Frontend\SupportTicketController as FrontendSupportTicketController;
+use App\Http\Controllers\InfluencerProfileController;
 use App\Http\Controllers\PaymentMethodController;
 use Illuminate\Support\Facades\Route;
 
@@ -67,11 +67,11 @@ Route::middleware(['web'])->group(function () {
     Route::post('/support-tickets', [FrontendSupportTicketController::class, 'store'])->name('support-tickets.store');
 
     // Public profile pages
-    Route::get('/creator/{slug}', [CreatorProfileController::class, 'show'])->name('creator.profile');
+    Route::get('/influencer/{slug}', [InfluencerProfileController::class, 'show'])->name('influencer.profile');
     Route::get('/brand/{slug}', [BrandProfileController::class, 'show'])->name('brand.profile');
 
     // Authenticated conversation negotiation
-    Route::get('/creator/{creator}/start-negotiation', [ConversationController::class, 'startNegotiation'])->name('conversations.start-negotiation');
+    Route::get('/influencer/{influencer}/start-negotiation', [ConversationController::class, 'startNegotiation'])->name('conversations.start-negotiation');
 
     // Influencers pages
     Route::get('/influencers', [InfluencersController::class, 'index'])->name('influencers');
@@ -148,13 +148,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/brand-profile/{slug}/toggle-status', [BrandProfileController::class, 'toggleStatus'])->name('brand.profile.toggle-status');
 
     // Creator Profile routes
-    Route::get('/creator-profile/{slug}/edit', [CreatorProfileController::class, 'edit'])->name('creator.profile.edit');
-    Route::post('/creator-profile/{slug}/update', [CreatorProfileController::class, 'update'])->name('creator.profile.update');
-    Route::delete('/creator-profile/{slug}/profile-image', [CreatorProfileController::class, 'deleteProfileImage'])->name('creator.profile.delete-image');
-    Route::delete('/creator-profile/{slug}/cover-image', [CreatorProfileController::class, 'deleteCoverImage'])->name('creator.profile.delete-cover');
-    Route::delete('/creator-profile/{slug}/portfolio/{portfolio}', [CreatorProfileController::class, 'deletePortfolioImage'])->name('creator.portfolio.delete');
-    Route::post('/creator-profile/{slug}/portfolio/{portfolio}/delete', [CreatorProfileController::class, 'deletePortfolioImage'])->name('creator.portfolio.delete.post');
-    Route::post('/creator-profile/{slug}/toggle-status', [CreatorProfileController::class, 'toggleStatus'])->name('creator.profile.toggle-status');
+    Route::get('/influencer-profile/{slug}/edit', [InfluencerProfileController::class, 'edit'])->name('influencer.profile.edit');
+    Route::post('/influencer-profile/{slug}/update', [InfluencerProfileController::class, 'update'])->name('influencer.profile.update');
+    Route::delete('/influencer-profile/{slug}/profile-image', [InfluencerProfileController::class, 'deleteProfileImage'])->name('influencer.profile.delete-image');
+    Route::delete('/influencer-profile/{slug}/cover-image', [InfluencerProfileController::class, 'deleteCoverImage'])->name('influencer.profile.delete-cover');
+    Route::delete('/influencer-profile/{slug}/portfolio/{portfolio}', [InfluencerProfileController::class, 'deletePortfolioImage'])->name('influencer.portfolio.delete');
+    Route::post('/influencer-profile/{slug}/portfolio/{portfolio}/delete', [InfluencerProfileController::class, 'deletePortfolioImage'])->name('influencer.portfolio.delete.post');
+    Route::post('/influencer-profile/{slug}/toggle-status', [InfluencerProfileController::class, 'toggleStatus'])->name('influencer.profile.toggle-status');
 
     // Payment Method routes (for authenticated users)
     Route::get('/payment-methods', [PaymentMethodController::class, 'index'])->name('payment-methods.index');
@@ -174,13 +174,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
  */
 Route::prefix('dashboard')->name('dashboard.')->middleware(['auth', 'verified', 'restrict-dashboard-access'])->group(function () {
 
-    // Assign creators to campaigns
-    Route::get('/campaigns/assign', [CampaignController::class, 'assign'])->name('campaigns.assign');
-    Route::post('/campaigns/assign', [CampaignController::class, 'assignStore'])->name('campaigns.assign.store');
-    // AJAX: Get assigned creators for a campaign
-    Route::get('/campaigns/{campaign}/assigned-creators', [CampaignController::class, 'assignedCreatorsJson'])->name('campaigns.assigned-creators');
     // Dashboard
-
     Route::get('/', [DashboardController::class, 'index'])->name('index');
     Route::get('/categories', [CategoryController::class, 'index'])->name('categories.index');
     Route::get('/categories/create', [CategoryController::class, 'create'])->name('categories.create');
@@ -199,25 +193,25 @@ Route::prefix('dashboard')->name('dashboard.')->middleware(['auth', 'verified', 
     Route::delete('/brands/{brand}', [BrandController::class, 'destroy'])->name('brands.destroy');
     Route::post('/brands/{brand}/toggle-status', [BrandController::class, 'toggleStatus'])->name('brands.toggle-status');
 
-    Route::get('/creators', [CreatorController::class, 'index'])->name('creators.index');
-    Route::get('/creators/create', [CreatorController::class, 'create'])->name('creators.create');
-    Route::post('/creators', [CreatorController::class, 'store'])->name('creators.store');
-    Route::get('/creators/details/{creator}', [CreatorController::class, 'view'])->name('creators.view');
-    Route::get('/creators/{creator}/edit', [CreatorController::class, 'edit'])->name('creators.edit');
-    Route::put('/creators/{creator}', [CreatorController::class, 'update'])->name('creators.update');
-    Route::delete('/creators/{creator}', [CreatorController::class, 'destroy'])->name('creators.destroy');
-    Route::post('/creators/{creator}/toggle-status', [CreatorController::class, 'toggleStatus'])->name('creators.toggle-status');
-    Route::post('/creators/{creator}/toggle-featured', [CreatorController::class, 'toggleFeatured'])->name('creators.toggle-featured');
+    Route::get('/influencers', [InfluencerController::class, 'index'])->name('influencers.index');
+    Route::get('/influencers/create', [InfluencerController::class, 'create'])->name('influencers.create');
+    Route::post('/influencers', [InfluencerController::class, 'store'])->name('influencers.store');
+    Route::get('/influencers/details/{influencer}', [InfluencerController::class, 'view'])->name('influencers.view');
+    Route::get('/influencers/{influencer}/edit', [InfluencerController::class, 'edit'])->name('influencers.edit');
+    Route::put('/influencers/{influencer}', [InfluencerController::class, 'update'])->name('influencers.update');
+    Route::delete('/influencers/{influencer}', [InfluencerController::class, 'destroy'])->name('influencers.destroy');
+    Route::post('/influencers/{influencer}/toggle-status', [InfluencerController::class, 'toggleStatus'])->name('influencers.toggle-status');
+    Route::post('/influencers/{influencer}/toggle-featured', [InfluencerController::class, 'toggleFeatured'])->name('influencers.toggle-featured');
 
-    // Creator Portfolio Management
-    Route::get('/creators/{creator}/portfolio', [CreatorPortfolioController::class, 'index'])->name('creators.portfolio.index');
-    Route::get('/creators/{creator}/portfolio/create', [CreatorPortfolioController::class, 'create'])->name('creators.portfolio.create');
-    Route::post('/creators/{creator}/portfolio', [CreatorPortfolioController::class, 'store'])->name('creators.portfolio.store');
-    Route::get('/creators/{creator}/portfolio/{portfolio}/edit', [CreatorPortfolioController::class, 'edit'])->name('creators.portfolio.edit');
-    Route::put('/creators/{creator}/portfolio/{portfolio}', [CreatorPortfolioController::class, 'update'])->name('creators.portfolio.update');
-    Route::delete('/creators/{creator}/portfolio/{portfolio}', [CreatorPortfolioController::class, 'destroy'])->name('creators.portfolio.destroy');
-    Route::post('/creators/{creator}/portfolio/reorder', [CreatorPortfolioController::class, 'reorder'])->name('creators.portfolio.reorder');
-    Route::post('/creators/{creator}/portfolio/{portfolio}/toggle', [CreatorPortfolioController::class, 'toggle'])->name('creators.portfolio.toggle');
+    // Influencer Portfolio Management
+    Route::get('/influencers/{influencer}/portfolio', [InfluencerPortfolioController::class, 'index'])->name('influencers.portfolio.index');
+    Route::get('/influencers/{influencer}/portfolio/create', [InfluencerPortfolioController::class, 'create'])->name('influencers.portfolio.create');
+    Route::post('/influencers/{influencer}/portfolio', [InfluencerPortfolioController::class, 'store'])->name('influencers.portfolio.store');
+    Route::get('/influencers/{influencer}/portfolio/{portfolio}/edit', [InfluencerPortfolioController::class, 'edit'])->name('influencers.portfolio.edit');
+    Route::put('/influencers/{influencer}/portfolio/{portfolio}', [InfluencerPortfolioController::class, 'update'])->name('influencers.portfolio.update');
+    Route::delete('/influencers/{influencer}/portfolio/{portfolio}', [InfluencerPortfolioController::class, 'destroy'])->name('influencers.portfolio.destroy');
+    Route::post('/influencers/{influencer}/portfolio/reorder', [InfluencerPortfolioController::class, 'reorder'])->name('influencers.portfolio.reorder');
+    Route::post('/influencers/{influencer}/portfolio/{portfolio}/toggle', [InfluencerPortfolioController::class, 'toggle'])->name('influencers.portfolio.toggle');
 
     // Admin campaigns
     Route::get('/campaigns/standard', [CampaignController::class, 'index'])->name('campaigns.standard');
@@ -399,4 +393,4 @@ Route::prefix('dashboard')->name('dashboard.')->middleware(['auth', 'verified', 
 |--------------------------------------------------------------------------
  */
 
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';

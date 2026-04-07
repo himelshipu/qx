@@ -16,7 +16,7 @@
 
         $sidebarConversations = $sidebarConversations
             ->with([
-                'creator.user',
+                'influencer.user',
                 'brandUser',
                 'handledBy',
                 'messages' => fn($query) => $query->latest()->limit(1),

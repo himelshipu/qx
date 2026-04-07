@@ -5,26 +5,26 @@ declare (strict_types = 1);
 namespace App\Repositories\Eloquent;
 
 use App\Models\Category;
-use App\Models\Creator;
+use App\Models\Influencer;
 use App\Models\Review;
 use App\Models\User;
-use App\Repositories\Contracts\CreatorRepositoryInterface;
+use App\Repositories\Contracts\InfluencerRepositoryInterface;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 
 /**
- * Class EloquentCreatorRepository
+ * Class EloquentInfluencerRepository
  *
- * Handles creator data access using Eloquent ORM.
+ * Handles influencer data access using Eloquent ORM.
  */
-class EloquentCreatorRepository implements CreatorRepositoryInterface
+class EloquentInfluencerRepository implements InfluencerRepositoryInterface
 {
     /**
-     * Get paginated creators for dashboard listing.
+     * Get paginated influencers for dashboard listing.
      */
     public function paginateForDashboard(string $search, string $status, int $perPage = 12): LengthAwarePaginator
     {
-        return Creator::query()
+        return Influencer::query()
             ->with(['user:id,name,email,is_active,profile_image_path,cover_image_path', 'categories:id,name'])
             ->withCount(['categories', 'campaignApplications', 'orderItems'])
             ->when($search !== '', function ($query) use ($search) {
@@ -53,23 +53,23 @@ class EloquentCreatorRepository implements CreatorRepositoryInterface
     }
 
     /**
-     * Get creator summary stats for dashboard.
+     * Get influencer summary stats for dashboard.
      *
      * @return array{total:int,active:int,inactive:int,categorized:int}
      */
     public function getStats(): array
     {
         return [
-            'total'       => Creator::count(),
-            'active'      => Creator::where('is_active', true)->count(),
-            'inactive'    => Creator::where('is_active', false)->count(),
-            'categorized' => Creator::whereHas('categories')->count(),
-            'featured'    => Creator::where('is_featured', true)->count()
+            'total'       => Influencer::count(),
+            'active'      => Influencer::where('is_active', true)->count(),
+            'inactive'    => Influencer::where('is_active', false)->count(),
+            'categorized' => Influencer::whereHas('categories')->count(),
+            'featured'    => Influencer::where('is_featured', true)->count()
         ];
     }
 
     /**
-     * Get active categories for creator assignment.
+     * Get active categories for influencer assignment.
      *
      * @return Collection<int, array{id:int,name:string}>
      */
@@ -86,7 +86,7 @@ class EloquentCreatorRepository implements CreatorRepositoryInterface
     }
 
     /**
-     * Create a user account for a creator.
+     * Create a user account for an influencer.
      *
      * @param array<string, mixed> $data
      */
@@ -96,7 +96,7 @@ class EloquentCreatorRepository implements CreatorRepositoryInterface
     }
 
     /**
-     * Update a creator user account.
+     * Update an influencer user account.
      *
      * @param array<string, mixed> $data
      */
@@ -108,35 +108,35 @@ class EloquentCreatorRepository implements CreatorRepositoryInterface
     }
 
     /**
-     * Create a creator profile.
+     * Create an influencer profile.
      *
      * @param array<string, mixed> $data
      */
-    public function createCreator(array $data): Creator
+    public function createInfluencer(array $data): Influencer
     {
-        return Creator::create($data);
+        return Influencer::create($data);
     }
 
     /**
-     * Update a creator profile.
+     * Update an influencer profile.
      *
      * @param array<string, mixed> $data
      */
-    public function updateCreator(Creator $creator, array $data): Creator
+    public function updateInfluencer(Influencer $influencer, array $data): Influencer
     {
-        $creator->update($data);
+        $influencer->update($data);
 
-        return $creator->refresh();
+        return $influencer->refresh();
     }
 
     /**
-     * Sync creator categories.
+     * Sync influencer categories.
      *
      * @param array<int, int|string> $categoryIds
      */
-    public function syncCategories(Creator $creator, array $categoryIds): void
+    public function syncCategories(Influencer $influencer, array $categoryIds): void
     {
-        $creator->categories()->sync($categoryIds);
+        $influencer->categories()->sync($categoryIds);
     }
 
     /**
@@ -148,48 +148,48 @@ class EloquentCreatorRepository implements CreatorRepositoryInterface
     }
 
     /**
-     * Delete a creator profile.
+     * Delete an influencer profile.
      */
-    public function deleteCreator(Creator $creator): bool
+    public function deleteInfluencer(Influencer $influencer): bool
     {
-        return (bool) $creator->delete();
+        return (bool) $influencer->delete();
     }
 
     /**
-     * Count records that should block creator deletion.
+     * Count records that should block influencer deletion.
      */
-    public function getDependencyCount(Creator $creator): int
+    public function getDependencyCount(Influencer $influencer): int
     {
-        $reviewCount = Review::where('creator_id', $creator->id)->count();
+        $reviewCount = Review::where('influencer_id', $influencer->id)->count();
 
-        return $creator->campaignApplications()->count()
-         + $creator->orderItems()->count()
-         + $creator->cartItems()->count()
-         + $creator->conversations()->count()
+        return $influencer->campaignApplications()->count()
+         + $influencer->orderItems()->count()
+         + $influencer->cartItems()->count()
+         + $influencer->conversations()->count()
              + $reviewCount;
     }
 
     /**
-     * Toggle creator status and return updated record.
+     * Toggle influencer status and return updated record.
      */
-    public function toggleStatus(Creator $creator): Creator
+    public function toggleStatus(Influencer $influencer): Influencer
     {
-        $creator->update([
-            'is_active' => !$creator->is_active
+        $influencer->update([
+            'is_active' => !$influencer->is_active
         ]);
 
-        return $creator->refresh();
+        return $influencer->refresh();
     }
 
     /**
-     * Toggle creator featured status and return updated record.
+     * Toggle influencer featured status and return updated record.
      */
-    public function toggleFeatured(Creator $creator): Creator
+    public function toggleFeatured(Influencer $influencer): Influencer
     {
-        $creator->update([
-            'is_featured' => !$creator->is_featured
+        $influencer->update([
+            'is_featured' => !$influencer->is_featured
         ]);
 
-        return $creator->refresh();
+        return $influencer->refresh();
     }
 }

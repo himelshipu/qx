@@ -9,7 +9,7 @@
         $sidebarConversations = \App\Models\Conversation::query()
             ->where('brand_user_id', $user->id)
             ->with([
-                'creator.user',
+                'influencer.user',
                 'brandUser',
                 'messages' => fn($query) => $query->latest()->limit(1),
             ])

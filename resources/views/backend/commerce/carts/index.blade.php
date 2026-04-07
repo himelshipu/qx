@@ -61,7 +61,7 @@
 						class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium">
 						Apply Filters
 					</button>
-					<a href="{{ route('carts.index') }}"
+					<a href="{{ route('dashboard.carts.index') }}"
 						class="px-6 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-white rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors font-medium">
 						Reset
 					</a>
@@ -122,7 +122,7 @@
 									{{ $cart->created_at->format('M d, Y') }}
 								</td>
 								<td class="px-6 py-4 text-right">
-									<a href="{{ route('carts.show', $cart) }}"
+									<a href="{{ route('dashboard.carts.show', $cart) }}"
 										class="inline-flex items-center px-3 py-2 text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-900 dark:hover:text-blue-300">
 										View Details
 										<svg class="ml-2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

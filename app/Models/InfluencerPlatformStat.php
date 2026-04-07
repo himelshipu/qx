@@ -6,12 +6,12 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class CreatorPlatformStat extends Model
+class InfluencerPlatformStat extends Model
 {
     use HasFactory;
 
     protected $fillable = [
-        'creator_id',
+        'influencer_id',
         'platform',
         'handle',
         'profile_url',
@@ -31,8 +31,8 @@ class CreatorPlatformStat extends Model
         ];
     }
 
-    public function creator(): BelongsTo
+    public function influencer(): BelongsTo
     {
-        return $this->belongsTo(Creator::class);
+        return $this->belongsTo(Influencer::class, 'influencer_id');
     }
 }

@@ -8,9 +8,9 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('creator_social_links', function (Blueprint $table): void {
+        Schema::create('influencer_social_links', function (Blueprint $table): void {
             $table->id();
-            $table->foreignId('creator_id')->constrained('creators')->cascadeOnDelete();
+            $table->foreignId('influencer_id')->constrained('influencers')->cascadeOnDelete();
             $table->string('facebook_url', 500)->nullable();
             $table->string('instagram_url', 500)->nullable();
             $table->string('tiktok_url', 500)->nullable();
@@ -24,6 +24,6 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::dropIfExists('creator_social_links');
+        Schema::dropIfExists('influencer_social_links');
     }
 };

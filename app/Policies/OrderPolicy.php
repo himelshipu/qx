@@ -23,9 +23,9 @@ class OrderPolicy
         }
 
         // Creator can view orders where they have items
-        if ($user->user_type === 'creator') {
+        if ($user->user_type === 'influencer') {
             return $order->items()
-                ->where('creator_id', $user->creator?->id)
+                ->where('influencer_id', $user->influencer?->id)
                 ->exists();
         }
 

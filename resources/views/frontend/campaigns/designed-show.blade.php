@@ -101,8 +101,8 @@
 						</div>
 					</div>
 
-					<!-- Application Status for Creators -->
-					@if (auth()->user()->user_type === 'creator')
+					<!-- Application Status for Influencers -->
+					@if (auth()->user()->user_type === 'influencer')
 						@php
 							$application = $campaign->applications?->first();
 						@endphp
@@ -199,7 +199,7 @@
 										Back to List
 									</a>
 								</div>
-							@elseif (auth()->user()->user_type === 'creator')
+							@elseif (auth()->user()->user_type === 'influencer')
 								<div class="pt-6 border-t border-gray-200 dark:border-gray-700">
 									<a href="{{ route('frontend.campaigns.index') }}"
 										class="w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 font-semibold transition">

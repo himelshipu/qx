@@ -7,14 +7,14 @@ namespace App\Providers;
 use App\Repositories\Contracts\BrandRepositoryInterface;
 use App\Repositories\Contracts\CampaignRepositoryInterface;
 use App\Repositories\Contracts\CategoryRepositoryInterface;
-use App\Repositories\Contracts\CreatorRepositoryInterface;
+use App\Repositories\Contracts\InfluencerRepositoryInterface;
 use App\Repositories\Contracts\ModeratorRepositoryInterface;
 use App\Repositories\Contracts\PackageRepositoryInterface;
 use App\Repositories\Contracts\UserRepositoryInterface;
 use App\Repositories\Eloquent\EloquentBrandRepository;
 use App\Repositories\Eloquent\EloquentCampaignRepository;
 use App\Repositories\Eloquent\EloquentCategoryRepository;
-use App\Repositories\Eloquent\EloquentCreatorRepository;
+use App\Repositories\Eloquent\EloquentInfluencerRepository;
 use App\Repositories\Eloquent\EloquentModeratorRepository;
 use App\Repositories\Eloquent\EloquentPackageRepository;
 use App\Repositories\Eloquent\EloquentUserRepository;
@@ -50,8 +50,8 @@ class RepositoryServiceProvider extends ServiceProvider
         );
 
         $this->app->bind(
-            CreatorRepositoryInterface::class,
-            EloquentCreatorRepository::class
+            InfluencerRepositoryInterface::class,
+            EloquentInfluencerRepository::class
         );
 
         $this->app->bind(

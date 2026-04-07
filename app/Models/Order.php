@@ -18,7 +18,7 @@ class Order extends Model
         'campaign_id',
         'status',
         'accepted_by_user_id',
-        'accepted_for_creator_id',
+        'accepted_for_influencer_id',
         'subtotal',
         'service_fee',
         'tax_amount',
@@ -64,9 +64,9 @@ class Order extends Model
         return $this->belongsTo(User::class, 'accepted_by_user_id');
     }
 
-    public function acceptedForCreator(): BelongsTo
+    public function acceptedForInfluencer(): BelongsTo
     {
-        return $this->belongsTo(Creator::class, 'accepted_for_creator_id');
+        return $this->belongsTo(Influencer::class, 'accepted_for_influencer_id');
     }
 
     public function items(): HasMany

@@ -1,10 +1,10 @@
 @php
-	/** @var \App\Models\Creator|null $creator */
-	$creator = $creator ?? null;
-	$user = $creator?->user;
-	$isEditMode = $creator !== null;
+	/** @var \App\Models\Creator|null $influencer */
+	$influencer = $influencer ?? null;
+	$user = $influencer?->user;
+	$isEditMode = $influencer !== null;
 
-	$selectedCategories = old('categories', $creator?->categories?->pluck('id')->all() ?? []);
+	$selectedCategories = old('categories', $influencer?->categories?->pluck('id')->all() ?? []);
 	$selectedCategoryIds = array_values(array_unique(array_map('intval', (array) $selectedCategories)));
 
 	$initialProfilePreview = $user?->profile_image_path ? \App\Helpers\ImageHelper::url($user->profile_image_path) : null;
@@ -35,7 +35,7 @@
 				<label for="display_name" class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Display
 					Name</label>
 				<input id="display_name" name="display_name" type="text"
-					value="{{ old('display_name', $creator?->display_name) }}" placeholder="Public profile name"
+					value="{{ old('display_name', $influencer?->display_name) }}" placeholder="Public profile name"
 					class="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-3 text-sm text-gray-900 focus:border-gray-500 focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-white">
 				@error('display_name')
 					<p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
@@ -93,7 +93,7 @@
 
 			<div>
 				<label for="title_name" class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Title</label>
-				<input id="title_name" name="title_name" type="text" value="{{ old('title_name', $creator?->title_name) }}"
+				<input id="title_name" name="title_name" type="text" value="{{ old('title_name', $influencer?->title_name) }}"
 					placeholder="e.g., Fashion UGC Creator"
 					class="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-3 text-sm text-gray-900 focus:border-gray-500 focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-white">
 				@error('title_name')
@@ -194,7 +194,7 @@
 		<div>
 			<label for="audience" class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Audience</label>
 			<textarea id="audience" name="audience" rows="3" placeholder="Audience profile summary"
-			 class="w-full rounded-lg border border-gray-300 bg-transparent px-3 py-2 text-sm text-gray-900 focus:border-gray-500 focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-white">{{ old('audience', $creator?->audience) }}</textarea>
+			 class="w-full rounded-lg border border-gray-300 bg-transparent px-3 py-2 text-sm text-gray-900 focus:border-gray-500 focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-white">{{ old('audience', $influencer?->audience) }}</textarea>
 			@error('audience')
 				<p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
 			@enderror
@@ -326,7 +326,7 @@
 			<label for="is_active" class="flex cursor-pointer items-center justify-between gap-3">
 				<span class="text-sm font-medium text-gray-700 dark:text-gray-300">Active Status</span>
 				<input id="is_active" name="is_active" type="checkbox" value="1"
-					{{ old('is_active', $creator?->is_active ?? true) ? 'checked' : '' }}
+					{{ old('is_active', $influencer?->is_active ?? true) ? 'checked' : '' }}
 					class="h-4 w-4 rounded border-gray-300 text-gray-900 focus:ring-gray-500 dark:border-gray-600 dark:bg-gray-800">
 			</label>
 			@error('is_active')
@@ -335,7 +335,7 @@
 		</div>
 
 		<div class="rounded-lg border border-amber-200 bg-amber-50 px-3 py-3 dark:border-amber-800/60 dark:bg-amber-900/20"
-			x-data="{ featured: {{ old('is_featured', $creator?->is_featured ?? false) ? 'true' : 'false' }} }">
+			x-data="{ featured: {{ old('is_featured', $influencer?->is_featured ?? false) ? 'true' : 'false' }} }">
 			<input type="hidden" name="is_featured" value="0">
 			<label for="is_featured" class="flex cursor-pointer items-center justify-between gap-3">
 				<div>
@@ -344,7 +344,7 @@
 						and on /influencer/featured</p>
 				</div>
 				<input id="is_featured" name="is_featured" type="checkbox" value="1"
-					{{ old('is_featured', $creator?->is_featured ?? false) ? 'checked' : '' }} x-model="featured"
+					{{ old('is_featured', $influencer?->is_featured ?? false) ? 'checked' : '' }} x-model="featured"
 					class="h-4 w-4 rounded border-amber-300 text-amber-600 focus:ring-amber-500 dark:border-amber-600 dark:bg-gray-800">
 			</label>
 
@@ -352,7 +352,7 @@
 				<label for="featured_priority" class="mb-1 block text-xs font-medium text-amber-800 dark:text-amber-300">Featured
 					Priority <span class="font-normal opacity-70">(lower = shown first)</span></label>
 				<input id="featured_priority" name="featured_priority" type="number" min="1" max="999"
-					value="{{ old('featured_priority', $creator?->featured_priority) }}" placeholder="e.g. 1, 2, 3 …"
+					value="{{ old('featured_priority', $influencer?->featured_priority) }}" placeholder="e.g. 1, 2, 3 …"
 					class="h-10 w-40 rounded-lg border border-amber-300 bg-transparent px-3 text-sm text-gray-900 focus:border-amber-500 focus:outline-none dark:border-amber-700 dark:bg-gray-800 dark:text-white">
 				@error('featured_priority')
 					<p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>

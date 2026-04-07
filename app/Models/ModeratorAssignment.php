@@ -12,7 +12,7 @@ class ModeratorAssignment extends Model
 
     protected $fillable = [
         'moderator_user_id',
-        'creator_id',
+        'influencer_id',
         'assigned_at',
         'unassigned_at'
     ];
@@ -38,7 +38,7 @@ class ModeratorAssignment extends Model
      */
     public function creator(): BelongsTo
     {
-        return $this->belongsTo(Creator::class);
+        return $this->belongsTo(Influencer::class);
     }
 
     /**

@@ -21,7 +21,7 @@ class EloquentCategoryRepository implements CategoryRepositoryInterface
     public function paginateForDashboard(string $search, string $status, int $perPage = 12): LengthAwarePaginator
     {
         return Category::query()
-            ->withCount(['creators', 'campaigns', 'onboardingProfiles'])
+            ->withCount(['influencers', 'campaigns', 'onboardingProfiles'])
             ->when($search !== '', function ($query) use ($search) {
                 $query->where(function ($subQuery) use ($search) {
                     $subQuery
@@ -111,7 +111,7 @@ class EloquentCategoryRepository implements CategoryRepositoryInterface
      */
     public function getDependencyCount(Category $category): int
     {
-        return $category->creators()->count()
+        return $category->influencers()->count()
          + $category->campaigns()->count()
          + $category->onboardingProfiles()->count();
     }

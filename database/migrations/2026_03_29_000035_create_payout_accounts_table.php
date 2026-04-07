@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('payout_accounts', function (Blueprint $table): void {
             $table->id();
-            $table->foreignId('creator_id')->constrained('creators')->cascadeOnDelete();
+            $table->foreignId('influencer_id')->constrained('influencers')->cascadeOnDelete();
             $table->string('provider', 80);
             $table->string('account_identifier');
             $table->string('account_name')->nullable();

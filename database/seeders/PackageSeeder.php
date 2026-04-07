@@ -10,8 +10,8 @@ class PackageSeeder extends Seeder
 {
     public function run(): void
     {
-        $creatorIds = DB::table('creators')->pluck('id');
-        $creatorUserByCreatorId = DB::table('creators')->pluck('user_id', 'id');
+        $influencerIds = DB::table('influencers')->pluck('id');
+        $influencerUserByCreatorId = DB::table('influencers')->pluck('user_id', 'id');
         $managerIds = DB::table('users')->whereIn('user_type', ['admin', 'moderator'])->pluck('id')->all();
         $hasCreatedByColumn = Schema::hasColumn('packages', 'created_by');
 
@@ -26,10 +26,10 @@ class PackageSeeder extends Seeder
             ['platform' => 'other', 'name' => 'Custom Platform Deliverable', 'price' => [120, 900]],
         ];
 
-        foreach ($creatorIds as $creatorId) {
+        foreach ($influencerIds as $influencerId) {
             foreach ($templates as $index => $template) {
                 $price = random_int($template['price'][0], $template['price'][1]);
-                $ownerUserId = $creatorUserByCreatorId[$creatorId] ?? null;
+                $ownerUserId = $influencerUserByCreatorId[$influencerId] ?? null;
                 $createdByUserId = $ownerUserId;
 
                 // Some packages are created by admin/moderator on behalf of creators.
@@ -55,7 +55,7 @@ class PackageSeeder extends Seeder
 
                 DB::table('packages')->updateOrInsert(
                     [
-                        'creator_id' => $creatorId,
+                        'influencer_id' => $influencerId,
                         'name' => $template['name'],
                     ],
                     $payload

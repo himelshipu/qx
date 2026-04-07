@@ -3,26 +3,26 @@
 @section('content')
 	@php
 		$displayName =
-		    trim((string) ($creator->display_name ?? '')) !== ''
-		        ? (string) $creator->display_name
-		        : (string) ($creator->user->name ?? 'Creator');
+		    trim((string) ($influencer->display_name ?? '')) !== ''
+		        ? (string) $influencer->display_name
+		        : (string) ($influencer->user->name ?? Influencer');
 		$locationParts = array_values(
 		    array_filter([
-		        trim((string) ($creator->user->address_line ?? '')),
-		        trim((string) ($creator->user->city ?? '')),
-		        trim((string) ($creator->user->postal_code ?? '')),
-		        trim((string) ($creator->user->country ?? '')),
+		        trim((string) ($influencer->user->address_line ?? '')),
+		        trim((string) ($influencer->user->city ?? '')),
+		        trim((string) ($influencer->user->postal_code ?? '')),
+		        trim((string) ($influencer->user->country ?? '')),
 		    ]),
 		);
 		$locationText = $locationParts !== [] ? implode(', ', $locationParts) : '';
 
-		$categoryNames = $creator->categories->pluck('name')->filter()->take(5)->values();
+		$categoryNames = $influencer->categories->pluck('name')->filter()->take(5)->values();
 		if ($categoryNames->isEmpty()) {
 		    $categoryNames = collect(['Tech', 'Tesla', 'Health & Fitness', 'Car', 'Pet']);
 		}
 
 		// Get first 3 portfolio images for grid display
-		$portfolioItems = $creator->portfolios->where('media_type', 'image')->take(3);
+		$portfolioItems = $influencer->portfolios->where('media_type', 'image')->take(3);
 		$gridImages = $portfolioItems->pluck('file_path')->map(fn($path) => \App\Helpers\ImageHelper::url($path))->values();
 
 		// Fill with defaults if not enough images
@@ -30,9 +30,9 @@
 		    $gridImages->push(asset('default.webp'));
 		}
 
-		$profileImageUrl = image_url($creator->user?->profile_image_path);
+		$profileImageUrl = image_url($influencer->user?->profile_image_path);
 
-		$platformBadges = $creator->platformStats
+		$platformBadges = $influencer->platformStats
 		    ->take(2)
 		    ->map(static function ($platformStat): array {
 		        $followers = (int) ($platformStat->follower_count ?? 0);
@@ -71,7 +71,7 @@
 		    ]);
 		}
 
-		$bioText = trim((string) ($creator->user->bio ?? ''));
+		$bioText = trim((string) ($influencer->user->bio ?? ''));
 
 		$packageCards = $packages
 		    ->map(static function ($package): array {
@@ -132,8 +132,8 @@
 						Share
 					</button>
 					@auth
-						@if (optional(Auth::user()->creator)->id === optional($creator)->id)
-							<a href="{{ route('creator.profile.edit', ['slug' => Auth::user()->slug]) }}"
+							@if (optional(Auth::user()->influencer)->id === optional($influencer)->id)
+							<a href="{{ route('influencer.profile.edit', ['slug' => Auth::user()->slug]) }}"
 								class="flex items-center gap-2 px-5 py-2 border border-gray-200 dark:border-gray-800 rounded-lg text-sm font-bold text-[#222] hover:bg-purple-50 transition active:scale-95">
 								<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
 									<path d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
@@ -208,7 +208,7 @@
 				</div>
 
 				<!-- Show All Photos Button (Desktop Only) -->
-				@if ($creator->portfolios->count() > 3)
+				@if ($influencer->portfolios->count() > 3)
 					<div class="hidden lg:block absolute bottom-6 right-6 z-10">
 						<a href="#portfolio-gallery"
 							class="flex items-center gap-2 bg-white/90 backdrop-blur-md px-5 py-2.5 rounded-2xl text-sm font-bold text-gray-900 border border-gray-100 shadow-xl hover:bg-white transition active:scale-95">
@@ -452,7 +452,7 @@
 		</main>
 
 		<!-- PORTFOLIO SECTION (now inside the main Alpine component) -->
-		@if ($creator->portfolios->count() > 0)
+		@if ($influencer->portfolios->count() > 0)
 			<section id="portfolio-gallery" class="py-20 px-4 sm:px-6 lg:px-8 max-w-screen-2xl mx-auto scroll-mt-24">
 				<div class="mb-12">
 					<h2 class="text-3xl font-bold text-gray-900 dark:text-white mb-2">Portfolio</h2>
@@ -461,7 +461,7 @@
 
 				<!-- Portfolio Grid -->
 				<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-					@foreach ($creator->portfolios as $item)
+					@foreach ($influencer->portfolios as $item)
 						<button @click="openGallery({{ $item->id }})" type="button"
 							class="portfolio-item group relative rounded-2xl overflow-hidden border border-gray-100 dark:border-gray-800 hover:shadow-xl transition-all duration-300 cursor-pointer w-full text-left bg-transparent p-0">
 							@if ($item->media_type === 'image')
@@ -592,10 +592,10 @@
 					loginUrl: @js(route('login')),
 					cartUrl: @js(route('cart.index')),
 					conversationsUrl: @js(route('dashboard.conversations.index')),
-					creatorId: @js($creator->id),
-					startNegotiationUrl: @js(route('conversations.start-negotiation', ['creator' => $creator->id])),
+					creatorId: @js($influencer->id),
+								startNegotiationUrl: @js(route('conversations.start-negotiation', ['influencer' => $influencer->id])),
 					portfolioItems: @js(
-    $creator->portfolios
+    $influencer->portfolios
         ->map(
             fn($p) => [
                 'id' => $p->id,

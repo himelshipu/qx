@@ -13,11 +13,14 @@
 			</div>
 			<div class="rounded-xl border border-blue-200 bg-blue-50 p-4 dark:border-blue-900/40 dark:bg-blue-900/20">
 				<p class="text-xs font-semibold uppercase tracking-wider text-blue-700 dark:text-blue-300">Brands + Creators</p>
-				<p class="mt-2 text-2xl font-semibold text-blue-700 dark:text-blue-200">{{ $stats['brands'] + $stats['creators'] }}</p>
+				<p class="mt-2 text-2xl font-semibold text-blue-700 dark:text-blue-200">{{ $stats['brands'] + $stats['influencers'] }}
+				</p>
 			</div>
 			<div class="rounded-xl border border-indigo-200 bg-indigo-50 p-4 dark:border-indigo-900/40 dark:bg-indigo-900/20">
-				<p class="text-xs font-semibold uppercase tracking-wider text-indigo-700 dark:text-indigo-300">Moderators + Admins</p>
-				<p class="mt-2 text-2xl font-semibold text-indigo-700 dark:text-indigo-200">{{ $stats['moderators'] + $stats['admins'] }}</p>
+				<p class="text-xs font-semibold uppercase tracking-wider text-indigo-700 dark:text-indigo-300">Moderators + Admins
+				</p>
+				<p class="mt-2 text-2xl font-semibold text-indigo-700 dark:text-indigo-200">
+					{{ $stats['moderators'] + $stats['admins'] }}</p>
 			</div>
 			<div class="rounded-xl border border-green-200 bg-green-50 p-4 dark:border-green-900/40 dark:bg-green-900/20">
 				<p class="text-xs font-semibold uppercase tracking-wider text-green-700 dark:text-green-300">Active</p>
@@ -26,10 +29,12 @@
 		</div>
 
 		<div class="rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
-			<div class="flex flex-col gap-4 border-b border-gray-200 p-5 sm:flex-row sm:items-center sm:justify-between dark:border-gray-800">
+			<div
+				class="flex flex-col gap-4 border-b border-gray-200 p-5 sm:flex-row sm:items-center sm:justify-between dark:border-gray-800">
 				<div>
 					<h3 class="text-lg font-semibold text-gray-900 dark:text-white">User Directory</h3>
-					<p class="mt-1 text-sm text-gray-500 dark:text-gray-400">All brands, creators, moderators, and admins in one place.</p>
+					<p class="mt-1 text-sm text-gray-500 dark:text-gray-400">All brands, creators, moderators, and admins in one place.
+					</p>
 				</div>
 			</div>
 

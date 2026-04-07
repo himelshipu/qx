@@ -21,17 +21,17 @@
                 <div class="divide-y divide-gray-200 dark:divide-gray-800">
                     @foreach ($items as $item)
                         @php
-                            $creator = $item->package->creator;
-                            $creatorName = $creator->display_name ?? $creator->user->name;
+                            $influencer = $item->package->creator;
+                            $influencerName = $influencer->display_name ?? $influencer->user->name;
                         @endphp
                         <div class="p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                             <div class="flex items-start gap-4">
                                 <div class="h-12 w-12 rounded-full bg-gradient-to-br from-indigo-100 to-purple-100 dark:from-indigo-900/30 dark:to-purple-900/30 flex items-center justify-center text-sm font-semibold text-indigo-700 dark:text-indigo-300 flex-shrink-0">
-                                    {{ strtoupper(substr($creatorName, 0, 2)) }}
+                                    {{ strtoupper(substr($influencerName, 0, 2)) }}
                                 </div>
                                 <div>
                                     <h3 class="font-semibold text-gray-900 dark:text-white">{{ $item->package->name }}</h3>
-                                    <p class="text-sm text-gray-600 dark:text-gray-400">by {{ $creatorName }}</p>
+                                    <p class="text-sm text-gray-600 dark:text-gray-400">by {{ $influencerName }}</p>
                                     @if ($item->package->description)
                                         <p class="text-xs text-gray-500 dark:text-gray-500 mt-1 line-clamp-1">{{ $item->package->description }}</p>
                                     @endif

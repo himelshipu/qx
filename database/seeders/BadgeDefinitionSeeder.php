@@ -12,15 +12,17 @@ class BadgeDefinitionSeeder extends Seeder
         $faker = \Faker\Factory::create();
 
         for ($i = 0; $i < 20; $i++) {
-            DB::table('badge_definitions')->insert([
-                    'code' => $faker->word,
-                    'name' => $faker->name,
+            $code = 'badge_' . $i; // Unique code
+            DB::table('badge_definitions')->updateOrInsert(
+                ['code' => $code],
+                [
+                    'name'        => $faker->name,
                     'description' => $faker->paragraph,
-                    'is_active' => $faker->boolean,
-
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
+                    'is_active'   => $faker->boolean,
+                    'created_at'  => now(),
+                    'updated_at'  => now()
+                ]
+            );
         }
     }
 }

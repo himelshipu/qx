@@ -13,7 +13,7 @@ return new class extends Migration
             $table->foreignId('conversation_id')->constrained('conversations')->cascadeOnDelete();
             $table->foreignId('sender_user_id')->constrained('users')->cascadeOnDelete();
             $table->enum('sender_role', ['brand', 'moderator', 'admin', 'system']);
-            $table->foreignId('on_behalf_of_creator_id')->nullable()->constrained('creators')->nullOnDelete();
+            $table->foreignId('on_behalf_of_influencer_id')->nullable()->constrained('influencers')->nullOnDelete();
             $table->longText('message');
             $table->string('attachment_path', 500)->nullable();
             $table->timestamp('read_at')->nullable();

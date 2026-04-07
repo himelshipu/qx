@@ -9,37 +9,37 @@ class RolePermissionSeeder extends Seeder
 {
     public function run(): void
     {
-        $roles = DB::table('roles')->pluck('id', 'slug');
+        $roles       = DB::table('roles')->pluck('id', 'slug');
         $permissions = DB::table('permissions')->pluck('id', 'slug');
 
         $map = [
-            'admin' => array_keys($permissions->toArray()),
-            'moderator' => [
+            'admin'      => array_keys($permissions->toArray()),
+            'moderator'  => [
                 'dashboard.view',
                 'brands.view',
-                'creators.view',
+                'influencers.view',
                 'campaigns.view',
                 'orders.manage',
                 'reviews.manage',
                 'support.view',
                 'support.manage',
-                'content.manage',
+                'content.manage'
             ],
-            'brand' => [
+            'brand'      => [
                 'dashboard.view',
                 'campaigns.view',
                 'campaigns.manage',
                 'orders.manage',
                 'reviews.manage',
-                'support.view',
+                'support.view'
             ],
-            'creator' => [
+            'influencer' => [
                 'dashboard.view',
                 'campaigns.view',
                 'orders.manage',
                 'reviews.manage',
-                'support.view',
-            ],
+                'support.view'
+            ]
         ];
 
         foreach ($map as $roleSlug => $permissionSlugs) {
@@ -56,16 +56,15 @@ class RolePermissionSeeder extends Seeder
 
                 DB::table('role_permissions')->updateOrInsert(
                     [
-                        'role_id' => $roleId,
-                        'permission_id' => $permissionId,
+                        'role_id'       => $roleId,
+                        'permission_id' => $permissionId
                     ],
                     [
                         'created_at' => now(),
-                        'updated_at' => now(),
+                        'updated_at' => now()
                     ]
                 );
             }
         }
     }
 }
-

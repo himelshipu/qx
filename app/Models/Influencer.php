@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 
-class Creator extends Model
+class Influencer extends Model
 {
     use HasFactory;
 
@@ -43,22 +43,22 @@ class Creator extends Model
 
     public function socialLinks(): HasOne
     {
-        return $this->hasOne(CreatorSocialLink::class);
+        return $this->hasOne(InfluencerSocialLink::class, 'influencer_id');
     }
 
     public function platformStats(): HasMany
     {
-        return $this->hasMany(CreatorPlatformStat::class);
+        return $this->hasMany(InfluencerPlatformStat::class, 'influencer_id');
     }
 
     public function categories(): BelongsToMany
     {
-        return $this->belongsToMany(Category::class, 'creator_categories')->withTimestamps();
+        return $this->belongsToMany(Category::class, 'influencer_categories')->withTimestamps();
     }
 
     public function badges(): BelongsToMany
     {
-        return $this->belongsToMany(BadgeDefinition::class, 'creator_badges')->withPivot(['earned_at', 'is_active'])->withTimestamps();
+        return $this->belongsToMany(BadgeDefinition::class, 'influencer_badges')->withPivot(['earned_at', 'is_active'])->withTimestamps();
     }
 
     public function campaignApplications(): HasMany
@@ -88,7 +88,7 @@ class Creator extends Model
 
     public function portfolios(): HasMany
     {
-        return $this->hasMany(CreatorPortfolio::class)->orderBy('sort_order');
+        return $this->hasMany(InfluencerPortfolio::class, 'influencer_id')->orderBy('sort_order');
     }
 
     public function packages(): HasMany
@@ -115,7 +115,7 @@ class Creator extends Model
 
     public function acceptedOrders(): HasMany
     {
-        return $this->hasMany(Order::class, 'accepted_for_creator_id');
+        return $this->hasMany(Order::class, 'accepted_for_influencer_id');
     }
 
     public function billingProfiles(): MorphMany
@@ -124,7 +124,7 @@ class Creator extends Model
     }
 
     /**
-     * Get all campaign assignments for this creator
+     * Get all campaign assignments for this influencer
      */
     public function campaignAssignments(): HasMany
     {
@@ -148,7 +148,7 @@ class Creator extends Model
     }
 
     /**
-     * Get all sub-orders for this creator
+     * Get all sub-orders for this influencer
      */
     public function subOrders(): HasMany
     {

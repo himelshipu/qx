@@ -13,7 +13,7 @@ class CartItem extends Model
     protected $fillable = [
         'cart_id',
         'package_id',
-        'creator_id',
+        'influencer_id',
         'campaign_id',
         'quantity',
         'unit_price',
@@ -41,7 +41,7 @@ class CartItem extends Model
 
     public function creator(): BelongsTo
     {
-        return $this->belongsTo(Creator::class);
+        return $this->belongsTo(Influencer::class);
     }
 
     public function campaign(): BelongsTo

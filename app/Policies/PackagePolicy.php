@@ -18,7 +18,7 @@ class PackagePolicy
         }
 
         // Creator can view their own packages
-        if ($user->user_type === 'creator' && $package->creator_id === $user->creator?->id) {
+        if ($user->user_type === 'influencer' && $package->influencer_id === $user->influencer?->id) {
             return true;
         }
 
@@ -35,7 +35,7 @@ class PackagePolicy
      */
     public function create(User $user): bool
     {
-        return in_array($user->user_type, ['creator', 'admin', 'superadmin']);
+        return in_array($user->user_type, ['influencer', 'admin', 'superadmin']);
     }
 
     /**
@@ -50,7 +50,7 @@ class PackagePolicy
 
         // Creator can update only their own
 
-        return $user->user_type === 'creator' && $package->creator_id === $user->creator?->id;
+        return $user->user_type === 'influencer' && $package->influencer_id === $user->influencer?->id;
     }
 
     /**
@@ -65,6 +65,6 @@ class PackagePolicy
 
         // Creator can delete only their own
 
-        return $user->user_type === 'creator' && $package->creator_id === $user->creator?->id;
+        return $user->user_type === 'influencer' && $package->influencer_id === $user->influencer?->id;
     }
 }

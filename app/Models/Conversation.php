@@ -13,13 +13,13 @@ class Conversation extends Model
 
     protected $fillable = [
         'conversation_type',
-        'creator_id',
+        'influencer_id',
         'brand_user_id',
         'handled_by_user_id',
         'order_id',
         'creator_direct_message_enabled',
         'title',
-        'public_id',
+        'public_id'
     ];
 
     protected static function booted()
@@ -40,73 +40,64 @@ class Conversation extends Model
 
     public function creator(): BelongsTo
     {
-        return $this->belongsTo(Creator::class);
+        return $this->belongsTo(Influencer::class, 'influencer_id');
     }
+}
 
-    public function brandUser(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'brand_user_id');
-    }
+function:{returnpublic brandUser()BelongsTo $this->belongsTo(User::class, 'brand_user_id');
+}
 
-    public function handledBy(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'handled_by_user_id');
-    }
+function:{returnpublic handledBy()BelongsTo $this->belongsTo(User::class, 'handled_by_user_id');
+}
 
-    public function order(): BelongsTo
-    {
-        return $this->belongsTo(Order::class);
-    }
+function:{returnpublic order()BelongsTo $this->belongsTo(Order::class);
+}
 
-    public function participants(): HasMany
-    {
-        return $this->hasMany(ConversationParticipant::class);
-    }
+function:{returnpublic participants()HasMany $this->hasMany(ConversationParticipant::class);
+}
 
-    public function messages(): HasMany
-    {
-        return $this->hasMany(Message::class);
-    }
+function:{returnpublic messages()HasMany $this->hasMany(Message::class);
+}
 
-    /**
-     * Scope: Brand conversations ordered by most recent
-     */
-    public function scopeForBrand($query, $brandUserId)
-    {
-        return $query->where('brand_user_id', $brandUserId)
-            ->with([
-                'creator.user',
-                'handledBy',
-                'messages' => fn($q) => $q->orderByDesc('created_at')->limit(1)
-            ])
-            ->orderByDesc('updated_at');
-    }
-
-    /**
-     * Scope: All conversations (admin view)
-     */
-    public function scopeForAdmin($query)
-    {
-        return $query->with([
-            'creator.user',
-            'brandUser',
+/**
+ * Scope: Brand conversations ordered by most recent
+ */
+functionpublic scopeForBrand( $query, $brandUserId)
+{
+    return $query->where('brand_user_id', $brandUserId)
+        ->with([
+            'influencer.user',
             'handledBy',
             'messages' => fn($q) => $q->orderByDesc('created_at')->limit(1)
         ])
-            ->orderByDesc('updated_at');
-    }
-
-    /**
-     * Scope: Moderator's assigned conversations
-     */
-    public function scopeForModerator($query, $moderatorId)
-    {
-        return $query->where('handled_by_user_id', $moderatorId)
-            ->with([
-                'creator.user',
-                'brandUser',
-                'messages' => fn($q) => $q->orderByDesc('created_at')->limit(1)
-            ])
-            ->orderByDesc('updated_at');
-    }
+        ->orderByDesc('updated_at');
 }
+
+/**
+ * Scope: All conversations (admin view)
+ */
+functionpublic scopeForAdmin( $query)
+{
+    return $query->with([
+        'influencer.user',
+        'brandUser',
+        'handledBy',
+        'messages' => fn($q) => $q->orderByDesc('created_at')->limit(1)
+    ])
+        ->orderByDesc('updated_at');
+}
+
+/**
+ * Scope: Moderator's assigned conversations
+ */
+functionpublic scopeForModerator( $query, $moderatorId)
+{
+    return $query->where('handled_by_user_id', $moderatorId)
+        ->with([
+            'influencer.user',
+            'brandUser',
+            'messages' => fn($q) => $q->orderByDesc('created_at')->limit(1)
+        ])
+        ->orderByDesc('updated_at');
+}
+};

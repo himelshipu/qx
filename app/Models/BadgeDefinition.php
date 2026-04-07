@@ -24,8 +24,8 @@ class BadgeDefinition extends Model
         ];
     }
 
-    public function creators(): BelongsToMany
+    public function influencers(): BelongsToMany
     {
-        return $this->belongsToMany(Creator::class, 'creator_badges')->withPivot(['earned_at', 'is_active'])->withTimestamps();
+        return $this->belongsToMany(Influencer::class, 'creator_badges')->withPivot(['earned_at', 'is_active'])->withTimestamps();
     }
 }

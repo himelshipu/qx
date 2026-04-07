@@ -67,7 +67,7 @@ class CartController extends Controller
                 ->with('warning', 'Please login first to add packages to your cart.');
         }
 
-        $user    = auth()->user();
+        $user = auth()->user();
 
         if ($user->user_type !== 'brand') {
             $message = 'Only brand accounts can add packages to cart.';
@@ -75,7 +75,7 @@ class CartController extends Controller
             if ($request->wantsJson()) {
                 return response()->json([
                     'success' => false,
-                    'message' => $message,
+                    'message' => $message
                 ], 403);
             }
 
@@ -94,14 +94,14 @@ class CartController extends Controller
             ->where('package_id', $package->id)
             ->first();
 
-        $creatorAlreadyInCart = $cart->items()
-            ->where('creator_id', $package->creator_id)
+        $influencerAlreadyInCart = $cart->items()
+            ->where('influencer_id', $package->influencer_id)
             ->exists();
 
-        if (!$existingItem && !$creatorAlreadyInCart) {
+        if (!$existingItem && !$influencerAlreadyInCart) {
             $influencerCount = (int) $cart->items()
-                ->distinct('creator_id')
-                ->count('creator_id');
+                ->distinct('influencer_id')
+                ->count('influencer_id');
 
             if ($influencerCount >= self::MAX_CART_INFLUENCERS) {
                 $limitMessage = 'You can not add more than 5 influencers before placing your current orders.';
@@ -109,7 +109,7 @@ class CartController extends Controller
                 if ($request->wantsJson()) {
                     return response()->json([
                         'success' => false,
-                        'message' => $limitMessage,
+                        'message' => $limitMessage
                     ], 422);
                 }
 
@@ -123,12 +123,12 @@ class CartController extends Controller
             ]);
         } else {
             CartItem::create([
-                'cart_id'    => $cart->id,
-                'package_id' => $package->id,
-                'creator_id' => $package->creator_id,
-                'quantity'   => 1,
-                'unit_price' => $package->base_price,
-                'currency'   => $package->currency ?? 'USD'
+                'cart_id'       => $cart->id,
+                'package_id'    => $package->id,
+                'influencer_id' => $package->influencer_id,
+                'quantity'      => 1,
+                'unit_price'    => $package->base_price,
+                'currency'      => $package->currency ?? 'USD'
             ]);
         }
 
@@ -301,11 +301,11 @@ class CartController extends Controller
             $latestConversation = null;
 
             // Group by influencer to keep one conversation message per influencer.
-            foreach ($cart->items->groupBy('creator_id') as $creatorId => $creatorCartItems) {
+            foreach ($cart->items->groupBy('influencer_id') as $influencerId => $influencerCartItems) {
                 $latestOrderId = null;
-                $packageLines = [];
+                $packageLines  = [];
 
-                foreach ($creatorCartItems as $cartItem) {
+                foreach ($influencerCartItems as $cartItem) {
                     $package = $cartItem->package;
 
                     // Create order
@@ -321,57 +321,57 @@ class CartController extends Controller
 
                     // Create order item
                     \App\Models\OrderItem::create([
-                        'order_id'   => $order->id,
-                        'package_id' => $package->id,
-                        'creator_id' => $package->creator_id,
-                        'title'      => $package->name,
-                        'quantity'   => $cartItem->quantity,
-                        'unit_price' => $cartItem->unit_price,
-                        'line_total' => $cartItem->unit_price * $cartItem->quantity,
-                        'status'     => 'pending'
+                        'order_id'      => $order->id,
+                        'package_id'    => $package->id,
+                        'influencer_id' => $package->influencer_id,
+                        'title'         => $package->name,
+                        'quantity'      => $cartItem->quantity,
+                        'unit_price'    => $cartItem->unit_price,
+                        'line_total'    => $cartItem->unit_price * $cartItem->quantity,
+                        'status'        => 'pending'
                     ]);
 
-                    $latestOrderId = $order->id;
+                    $latestOrderId  = $order->id;
                     $packageLines[] = sprintf('%dx %s', (int) $cartItem->quantity, $package->name);
                 }
 
-                $creatorSampleItem = $creatorCartItems->first();
-                $creator = $creatorSampleItem?->package?->creator;
+                $influencerSampleItem = $influencerCartItems->first();
+                $influencer           = $influencerSampleItem?->package?->creator;
 
                 $conversation = Conversation::query()
                     ->where('brand_user_id', $user->id)
-                    ->where('creator_id', (int) $creatorId)
+                    ->where('influencer_id', (int) $influencerId)
                     ->latest('updated_at')
                     ->first();
 
                 if (!$conversation) {
                     $conversation = \App\Http\Controllers\ConversationController::createForPackageOrder(
                         $user->id,
-                        (int) $creatorId,
+                        (int) $influencerId,
                         (int) $latestOrderId
                     );
                 }
 
                 if (!$conversation->order_id && $latestOrderId) {
                     $conversation->update([
-                        'order_id' => $latestOrderId,
-                        'conversation_type' => $conversation->conversation_type ?: 'order',
+                        'order_id'          => $latestOrderId,
+                        'conversation_type' => $conversation->conversation_type ?: 'order'
                     ]);
                 }
 
-                $creatorName = $creator?->display_name ?: ($creator?->user?->name ?? 'there');
+                $influencerName           = $influencer?->display_name ?: ($influencer?->user?->name ?? 'there');
                 $orderConfirmationMessage = sprintf(
                     "hello %s,i want to confirm order for this package:\n- %s",
-                    $creatorName,
+                    $influencerName,
                     implode("\n- ", $packageLines)
                 );
 
                 Message::create([
                     'conversation_id' => $conversation->id,
-                    'sender_user_id' => $user->id,
-                    'sender_role' => $user->user_type,
-                    'message' => $orderConfirmationMessage,
-                    'read_at' => null,
+                    'sender_user_id'  => $user->id,
+                    'sender_role'     => $user->user_type,
+                    'message'         => $orderConfirmationMessage,
+                    'read_at'         => null
                 ]);
 
                 $conversation->touch();
@@ -382,9 +382,9 @@ class CartController extends Controller
             $cart->items()->delete();
 
             if ($latestConversation) {
-                    return redirect()
-                        ->route('frontend.conversations.show', $latestConversation->public_id)
-                        ->with('success', 'Orders created! Latest conversation opened.');
+                return redirect()
+                    ->route('frontend.conversations.show', $latestConversation->public_id)
+                    ->with('success', 'Orders created! Latest conversation opened.');
             }
 
             return redirect()
@@ -405,17 +405,17 @@ class CartController extends Controller
         $cart->load(['items.package.creator.user']);
 
         $items = $cart->items->map(function ($item) {
-            $creatorUser = $item->package->creator->user;
+            $influencerUser = $item->package->creator->user;
 
             return [
-                'id'       => $item->id,
-                'name'     => $creatorUser->name,
-                'package'  => $item->package->name,
-                'price'    => (int) $item->unit_price,
-                'quantity' => $item->quantity,
-                'image'    => image_url($item->package->creator->profile_image_path ?? '/default.webp'),
-                'creator_id' => $item->creator_id,
-                'country' => $creatorUser->country ?? null,
+                'id'            => $item->id,
+                'name'          => $influencerUser->name,
+                'package'       => $item->package->name,
+                'price'         => (int) $item->unit_price,
+                'quantity'      => $item->quantity,
+                'image'         => image_url($item->package->creator->profile_image_path ?? '/default.webp'),
+                'influencer_id' => $item->influencer_id,
+                'country'       => $influencerUser->country ?? null
             ];
         })->toArray();
 
@@ -424,10 +424,10 @@ class CartController extends Controller
         });
 
         return [
-            'items'     => $items,
-            'subtotal'  => $subtotal,
-            'itemCount' => $cart->items->count(),
-            'totalQuantity' => $cart->items->sum('quantity'),
+            'items'         => $items,
+            'subtotal'      => $subtotal,
+            'itemCount'     => $cart->items->count(),
+            'totalQuantity' => $cart->items->sum('quantity')
         ];
     }
 

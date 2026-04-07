@@ -23,7 +23,7 @@ class CampaignController extends Controller
     /**
      * Display a listing of campaigns.
      * Brands see: their own campaigns
-     * Creators see: campaigns they've applied to
+     * Influencers see: campaigns they've applied to
      */
     public function index(Request $request): View
     {
@@ -74,10 +74,10 @@ class CampaignController extends Controller
                 'statusOptions' => $statusOptions,
                 'typeOptions'   => $typeOptions
             ]);
-        } elseif ($user->user_type === 'creator') {
-            // Creator sees campaigns they've applied to
+        } elseif ($user->user_type === 'influencer') {
+            // Influencer sees campaigns they've applied to
             $campaigns = Campaign::whereHas('applications', function ($query) use ($user) {
-                $query->where('creator_id', $user->creator->id);
+                $query->where('influencer_id', $user->influencer->id);
             })
                 ->where('is_active', true)
                 ->when($search, fn($q) => $q->where('title', 'like', "%{$search}%"))
@@ -88,7 +88,7 @@ class CampaignController extends Controller
 
             return view('frontend.campaigns.designed-index', [
                 'campaigns'     => $campaigns,
-                'userType'      => 'creator',
+                'userType'      => 'influencer',
                 'search'        => $search,
                 'status'        => $status,
                 'type'          => $type,
@@ -171,15 +171,15 @@ class CampaignController extends Controller
 
         // Authorization:
         // - Brands can see their own campaigns
-        // - Creators can see campaigns they've applied to
+        // - Influencers can see campaigns they've applied to
         if ($user->user_type === 'brand') {
             if ($campaign->created_by !== $user->id) {
                 abort(403, 'Unauthorized');
             }
-        } elseif ($user->user_type === 'creator') {
-            // Check if creator has applied to this campaign
+        } elseif ($user->user_type === 'influencer') {
+            // Check if influencer has applied to this campaign
             $applied = $campaign->applications()
-                ->where('creator_id', $user->creator->id)
+                ->where('influencer_id', $user->influencer->id)
                 ->exists();
 
             if (!$applied) {

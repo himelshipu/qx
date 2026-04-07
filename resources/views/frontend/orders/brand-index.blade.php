@@ -45,7 +45,7 @@
                     <tbody class="divide-y divide-gray-200 dark:divide-gray-800 bg-white dark:bg-gray-900">
                         @foreach ($orders as $order)
                             @php
-                                $creatorNames = $order->items->map(fn($item) => $item->creator->user->name ?? 'N/A')->implode(', ');
+                                $influencerNames = $order->items->map(fn($item) => $item->creator->user->name ?? 'N/A')->implode(', ');
                                 $statusColor = match($order->status) {
                                     'completed' => 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400',
                                     'processing' => 'bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-400',
@@ -61,9 +61,9 @@
                                 <td class="px-6 py-4">
                                     <div class="flex items-center gap-2">
                                         <div class="h-8 w-8 rounded-full bg-gradient-to-br from-indigo-100 to-purple-100 dark:from-indigo-900/30 dark:to-purple-900/30 flex items-center justify-center text-xs font-semibold text-indigo-700 dark:text-indigo-300">
-                                            {{ strtoupper(substr($creatorNames, 0, 2)) }}
+                                            {{ strtoupper(substr($influencerNames, 0, 2)) }}
                                         </div>
-                                        <span class="text-sm text-gray-700 dark:text-gray-300 line-clamp-1">{{ $creatorNames }}</span>
+                                        <span class="text-sm text-gray-700 dark:text-gray-300 line-clamp-1">{{ $influencerNames }}</span>
                                     </div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">

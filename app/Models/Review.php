@@ -13,7 +13,7 @@ class Review extends Model
     protected $fillable = [
         'order_item_id',
         'brand_id',
-        'creator_id',
+        'influencer_id',
         'rating',
         'title',
         'comment',
@@ -40,6 +40,6 @@ class Review extends Model
 
     public function creator(): BelongsTo
     {
-        return $this->belongsTo(Creator::class);
+        return $this->belongsTo(Influencer::class);
     }
 }

@@ -44,7 +44,7 @@
 						<option value="">Select audience type</option>
 						<option value="all" {{ old('audience_type') == 'all' ? 'selected' : '' }}>All (visible to everyone)</option>
 						<option value="brand" {{ old('audience_type') == 'brand' ? 'selected' : '' }}>Brands only</option>
-						<option value="creator" {{ old('audience_type') == 'creator' ? 'selected' : '' }}>Creators/Influencers only
+						<option value="influencer" {{ old('audience_type') == 'influencer' ? 'selected' : '' }}>Influencers only</option>
 						</option>
 					</select>
 					@error('audience_type')

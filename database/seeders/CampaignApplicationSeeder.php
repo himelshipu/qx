@@ -11,24 +11,24 @@ class CampaignApplicationSeeder extends Seeder
     {
         $faker = \Faker\Factory::create('en_US');
         $campaignIds = DB::table('campaigns')->pluck('id');
-        $creatorIds = DB::table('creators')->pluck('id')->all();
+        $influencerIds = DB::table('influencers')->pluck('id')->all();
         $statuses = ['invited', 'applied', 'shortlisted', 'approved', 'rejected', 'completed'];
 
-        if (empty($creatorIds)) {
+        if (empty($influencerIds)) {
             return;
         }
 
         foreach ($campaignIds as $campaignId) {
-            $selectedCreators = collect($creatorIds)->shuffle()->take(random_int(3, min(8, count($creatorIds))));
+            $selectedCreators = collect($influencerIds)->shuffle()->take(random_int(3, min(8, count($influencerIds))));
 
-            foreach ($selectedCreators as $creatorId) {
+            foreach ($selectedCreators as $influencerId) {
                 $status = $faker->randomElement($statuses);
                 $appliedAt = now()->subDays(random_int(1, 30));
 
                 DB::table('campaign_applications')->updateOrInsert(
                     [
                         'campaign_id' => $campaignId,
-                        'creator_id' => $creatorId,
+                        'influencer_id' => $influencerId,
                     ],
                     [
                         'status' => $status,

@@ -72,14 +72,14 @@ class PackageController extends Controller
         // Load all relationships needed for detailed view
         $package->load([
             'createdBy',
-            'creator.user',
+            'influencer.user',
             'orderItems.order.brand.user'
         ]);
 
         return view('backend.pages.packages.view', [
-            'package' => $package,
-            'creator' => $package->creator,
-            'orders' => $package->orderItems()->with(['order.brand.user'])->get()->map(fn($item) => $item->order)->unique('id')->values()
+            'package'    => $package,
+            'influencer' => $package->creator,
+            'orders'     => $package->orderItems()->with(['order.brand.user'])->get()->map(fn($item) => $item->order)->unique('id')->values()
         ]);
     }
 
@@ -145,13 +145,13 @@ class PackageController extends Controller
     public function purchaseStore(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'package_id' => 'required|exists:packages,id',
-            'brand_ids'  => 'required|array',
+            'package_id'  => 'required|exists:packages,id',
+            'brand_ids'   => 'required|array',
             'brand_ids.*' => 'exists:brands,id'
         ]);
 
         $packageId = $validated['package_id'];
-        $brandIds = $validated['brand_ids'];
+        $brandIds  = $validated['brand_ids'];
 
         $purchased = $this->packageService->purchasePackageForBrands($packageId, $brandIds);
 

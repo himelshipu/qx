@@ -45,8 +45,8 @@
 							to everyone)</option>
 						<option value="brand" {{ old('audience_type', $section->audience_type) == 'brand' ? 'selected' : '' }}>Brands only
 						</option>
-						<option value="creator" {{ old('audience_type', $section->audience_type) == 'creator' ? 'selected' : '' }}>
-							Creators/Influencers only</option>
+						<option value="influencer" {{ old('audience_type', $section->audience_type) == 'influencer' ? 'selected' : '' }}>
+							Influencers only</option>
 					</select>
 					@error('audience_type')
 						<p class="mt-1 text-sm text-red-500">{{ $message }}</p>

@@ -30,8 +30,8 @@
                             <tbody class="divide-y divide-gray-200 dark:divide-gray-800 bg-white dark:bg-gray-900">
                                 @foreach ($items as $item)
                                     @php
-                                        $creator = $item->package->creator;
-                                        $creatorName = $creator->display_name ?? $creator->user->name;
+                                        $influencer = $item->package->creator;
+                                        $influencerName = $influencer->display_name ?? $influencer->user->name;
                                         $itemTotal = $item->unit_price * $item->quantity;
                                     @endphp
                                     <tr class="hover:bg-gray-50/50 dark:hover:bg-gray-800/50 transition-colors duration-150">
@@ -41,9 +41,9 @@
                                         <td class="px-6 py-4">
                                             <div class="flex items-center gap-2">
                                                 <div class="h-8 w-8 rounded-full bg-gradient-to-br from-indigo-100 to-purple-100 dark:from-indigo-900/30 dark:to-purple-900/30 flex items-center justify-center text-xs font-semibold text-indigo-700 dark:text-indigo-300">
-                                                    {{ strtoupper(substr($creatorName, 0, 2)) }}
+                                                    {{ strtoupper(substr($influencerName, 0, 2)) }}
                                                 </div>
-                                                <span class="text-sm text-gray-700 dark:text-gray-300">{{ $creatorName }}</span>
+                                                <span class="text-sm text-gray-700 dark:text-gray-300">{{ $influencerName }}</span>
                                             </div>
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap">

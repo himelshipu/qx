@@ -3,7 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Conversation;
-use App\Models\Creator;
+use App\Models\Influencer;
 use App\Models\ModeratorAssignment;
 use App\Models\Order;
 use App\Models\Package;
@@ -17,8 +17,8 @@ class ConversationMediationTest extends TestCase
 
     protected User $brand;
     protected User $moderator;
-    protected User $creatorUser;
-    protected Creator $creator;
+    protected User $influencerUser;
+    protected Influencer $influencer;
 
     protected function setUp(): void
     {
@@ -30,7 +30,7 @@ class ConversationMediationTest extends TestCase
         $this->creatorUser = User::factory()->create(['user_type' => 'influencer']);
 
         // Create creator
-        $this->creator = Creator::factory()->create(['user_id' => $this->creatorUser->id]);
+        $this->creator = Influencer::factory()->create(['user_id' => $this->creatorUser->id]);
     }
 
     /**
@@ -201,8 +201,8 @@ class ConversationMediationTest extends TestCase
      */
     public function test_moderator_can_handle_multiple_creators(): void
     {
-        $creator2User = User::factory()->create(['user_type' => 'influencer']);
-        $creator2     = Creator::factory()->create(['user_id' => $creator2User->id]);
+        $influencer2User = User::factory()->create(['user_type' => 'influencer']);
+        $influencer2     = Influencer::factory()->create(['user_id' => $influencer2User->id]);
 
         ModeratorAssignment::factory()->create([
             'moderator_user_id' => $this->moderator->id,
@@ -212,7 +212,7 @@ class ConversationMediationTest extends TestCase
 
         ModeratorAssignment::factory()->create([
             'moderator_user_id' => $this->moderator->id,
-            'creator_id'        => $creator2->id,
+            'creator_id'        => $influencer2->id,
             'assigned_at'       => now()
         ]);
 

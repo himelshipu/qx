@@ -1,4 +1,4 @@
-{{-- frontend/pages/orders/creator-index.blade.php --}}
+{{-- frontend/pages/orders/influencer-index.blade.php --}}
 @extends('frontend.layouts.app')
 
 @section('title', 'My Orders')
@@ -40,11 +40,11 @@
                     <tbody class="divide-y divide-gray-200 dark:divide-gray-800 bg-white dark:bg-gray-900">
                         @foreach ($orders as $order)
                             @php
-                                $creatorId = auth()->user()->creator?->id;
-                                $creatorItems = $order->items->where('creator_id', $creatorId);
-                                $firstItem = $creatorItems->first();
-                                $packageNames = $creatorItems->map(fn($item) => $item->package->name ?? 'N/A')->implode(', ');
-                                $totalAmount = $creatorItems->sum('unit_price');
+                                $influencerId = auth()->user()->creator?->id;
+                                $influencerItems = $order->items->where('creator_id', $influencerId);
+                                $firstItem = $influencerItems->first();
+                                $packageNames = $influencerItems->map(fn($item) => $item->package->name ?? 'N/A')->implode(', ');
+                                $totalAmount = $influencerItems->sum('unit_price');
                                 
                                 $statusColor = match($order->status) {
                                     'completed' => 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400',

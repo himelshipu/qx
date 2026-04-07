@@ -3,25 +3,25 @@
 namespace App\Http\Controllers\Backend;
 
 use App\Http\Controllers\Controller;
-use App\Models\Creator;
-use App\Models\CreatorPortfolio;
+use App\Models\Influencer;
+use App\Models\InfluencerPortfolio;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 
-class CreatorPortfolioController extends Controller
+class InfluencerPortfolioController extends Controller
 {
     /**
      * Display portfolio items for a specific creator
      */
-    public function index(Creator $creator): View
+    public function index(Influencer $influencer): View
     {
-        $portfolios = $creator->portfolios()->orderBy('sort_order')->get();
+        $portfolios = $influencer->portfolios()->orderBy('sort_order')->get();
 
         return view('backend.pages.creators.portfolio.index', [
-            'creator'    => $creator,
+            'influencer' => $influencer,
             'portfolios' => $portfolios
         ]);
     }
@@ -29,17 +29,17 @@ class CreatorPortfolioController extends Controller
     /**
      * Show the form for creating a new portfolio item
      */
-    public function create(Creator $creator): View
+    public function create(Influencer $influencer): View
     {
         return view('backend.pages.creators.portfolio.create', [
-            'creator' => $creator
+            'influencer' => $influencer
         ]);
     }
 
     /**
      * Store a newly created portfolio item
      */
-    public function store(Request $request, Creator $creator): RedirectResponse
+    public function store(Request $request, Influencer $influencer): RedirectResponse
     {
         $validated = $request->validate(
             [
@@ -65,44 +65,44 @@ class CreatorPortfolioController extends Controller
         );
 
         $file     = $request->file('file');
-        $filePath = $file->store("creator-portfolio/{$creator->id}", 'public');
+        $filePath = $file->store("creator-portfolio/{$influencer->id}", 'public');
 
-        CreatorPortfolio::create([
-            'creator_id'  => $creator->id,
-            'media_type'  => $validated['media_type'],
-            'file_path'   => $filePath,
-            'title'       => $validated['title'],
-            'description' => $validated['description'],
-            'sort_order'  => $validated['sort_order'] ?? 0,
-            'is_active'   => (bool) ($validated['is_active'] ?? true)
+        InfluencerPortfolio::create([
+            'influencer_id' => $influencer->id,
+            'media_type'    => $validated['media_type'],
+            'file_path'     => $filePath,
+            'title'         => $validated['title'],
+            'description'   => $validated['description'],
+            'sort_order'    => $validated['sort_order'] ?? 0,
+            'is_active'     => (bool) ($validated['is_active'] ?? true)
         ]);
 
         return redirect()
-            ->route('dashboard.creators.portfolio.index', $creator)
+            ->route('dashboard.influencers.portfolio.index', $influencer)
             ->with('success', '✓ Portfolio item added successfully! The file has been uploaded and is now visible in the portfolio.');
     }
 
     /**
      * Show the form for editing a portfolio item
      */
-    public function edit(Creator $creator, CreatorPortfolio $portfolio): View
+    public function edit(Influencer $influencer, InfluencerPortfolio $portfolio): View
     {
-        // Ensure the portfolio belongs to this creator
-        abort_if($portfolio->creator_id !== $creator->id, 404);
+        // Ensure the portfolio belongs to this influencer
+        abort_if($portfolio->influencer_id !== $influencer->id, 404);
 
         return view('backend.pages.creators.portfolio.edit', [
-            'creator'   => $creator,
-            'portfolio' => $portfolio
+            'influencer' => $influencer,
+            'portfolio'  => $portfolio
         ]);
     }
 
     /**
      * Update the specified portfolio item
      */
-    public function update(Request $request, Creator $creator, CreatorPortfolio $portfolio): RedirectResponse
+    public function update(Request $request, Influencer $influencer, InfluencerPortfolio $portfolio): RedirectResponse
     {
-        // Ensure the portfolio belongs to this creator
-        abort_if($portfolio->creator_id !== $creator->id, 404);
+        // Ensure the portfolio belongs to this influencer
+        abort_if($portfolio->influencer_id !== $influencer->id, 404);
 
         $validated = $request->validate(
             [
@@ -134,7 +134,7 @@ class CreatorPortfolioController extends Controller
             }
 
             $file                   = $request->file('file');
-            $filePath               = $file->store("creator-portfolio/{$creator->id}", 'public');
+            $filePath               = $file->store("creator-portfolio/{$influencer->id}", 'public');
             $validated['file_path'] = $filePath;
         }
 
@@ -148,17 +148,17 @@ class CreatorPortfolioController extends Controller
         ]);
 
         return redirect()
-            ->route('dashboard.creators.portfolio.index', $creator)
+            ->route('dashboard.influencers.portfolio.index', $influencer)
             ->with('success', '✓ Portfolio item updated successfully! All changes have been saved.');
     }
 
     /**
      * Delete a portfolio item
      */
-    public function destroy(Creator $creator, CreatorPortfolio $portfolio): RedirectResponse
+    public function destroy(Influencer $influencer, InfluencerPortfolio $portfolio): RedirectResponse
     {
-        // Ensure the portfolio belongs to this creator
-        abort_if($portfolio->creator_id !== $creator->id, 404);
+        // Ensure the portfolio belongs to this influencer
+        abort_if($portfolio->influencer_id !== $influencer->id, 404);
 
         // Delete the file from storage
         if ($portfolio->file_path) {
@@ -168,14 +168,14 @@ class CreatorPortfolioController extends Controller
         $portfolio->delete();
 
         return redirect()
-            ->route('dashboard.creators.portfolio.index', $creator)
+            ->route('dashboard.influencers.portfolio.index', $influencer)
             ->with('success', '✓ Portfolio item deleted successfully! The file has been removed.');
     }
 
     /**
      * Reorder portfolio items via AJAX
      */
-    public function reorder(Request $request, Creator $creator): JsonResponse
+    public function reorder(Request $request, Influencer $influencer): JsonResponse
     {
         $validated = $request->validate([
             'items'              => 'required|array',
@@ -184,8 +184,8 @@ class CreatorPortfolioController extends Controller
         ]);
 
         foreach ($validated['items'] as $item) {
-            CreatorPortfolio::where('id', $item['id'])
-                ->where('creator_id', $creator->id)
+            InfluencerPortfolio::where('id', $item['id'])
+                ->where('influencer_id', $influencer->id)
                 ->update(['sort_order' => $item['sort_order']]);
         }
 
@@ -195,10 +195,10 @@ class CreatorPortfolioController extends Controller
     /**
      * Toggle portfolio item visibility
      */
-    public function toggle(Creator $creator, CreatorPortfolio $portfolio): JsonResponse
+    public function toggle(Influencer $influencer, InfluencerPortfolio $portfolio): JsonResponse
     {
-        // Ensure the portfolio belongs to this creator
-        abort_if($portfolio->creator_id !== $creator->id, 404);
+        // Ensure the portfolio belongs to this influencer
+        abort_if($portfolio->influencer_id !== $influencer->id, 404);
 
         $portfolio->update(['is_active' => !$portfolio->is_active]);
 

@@ -11,7 +11,7 @@ return new class extends Migration
         Schema::create('campaign_influencers', function (Blueprint $table): void {
             $table->id();
             $table->foreignId('campaign_id')->constrained('campaigns')->cascadeOnDelete();
-            $table->foreignId('creator_id')->constrained('creators')->cascadeOnDelete();
+            $table->foreignId('influencer_id')->constrained('influencers')->cascadeOnDelete();
             $table->enum('status', ['assigned', 'approved', 'rejected', 'cancelled'])->default('assigned');
             $table->foreignId('approved_by')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamp('approved_at')->nullable();
@@ -20,7 +20,7 @@ return new class extends Migration
             $table->timestamps();
 
             // Ensure no duplicate assignments
-            $table->unique(['campaign_id', 'creator_id']);
+            $table->unique(['campaign_id', 'influencer_id']);
         });
     }
 

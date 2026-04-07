@@ -12,7 +12,7 @@ class Package extends Model
     use HasFactory;
 
     protected $fillable = [
-        'creator_id',
+        'influencer_id',
         'platform',
         'name',
         'description',
@@ -38,7 +38,7 @@ class Package extends Model
 
     public function creator(): BelongsTo
     {
-        return $this->belongsTo(Creator::class);
+        return $this->belongsTo(Influencer::class, 'influencer_id');
     }
 
     public function createdBy(): BelongsTo

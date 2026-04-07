@@ -97,9 +97,9 @@ class Campaign extends Model
         return $this->hasMany(OrderItem::class);
     }
 
-    public function creators(): BelongsToMany
+    public function influencers(): BelongsToMany
     {
-        return $this->belongsToMany(Creator::class, 'campaign_applications')
+        return $this->belongsToMany(Influencer::class, 'campaign_applications')
             ->withPivot(['status', 'pitch_message', 'proposed_rate', 'agreed_rate', 'applied_at', 'decided_at'])
             ->withTimestamps();
     }

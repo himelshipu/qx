@@ -4,7 +4,7 @@
 	<div class="min-h-screen">
 		<div class="max-w-4xl mx-auto px-4 py-8">
 			<div class="mb-6">
-				<a href="{{ route('creator.profile', ['slug' => $slug]) }}"
+				<a href="{{ route('influencer.profile', ['slug' => $slug]) }}"
 					class="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-800 rounded-full text-sm font-medium text-gray-800 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
 					<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
@@ -26,14 +26,14 @@
 			</div>
 
 			<div class="tab-content" id="tab-details">
-				<form id="detailsForm" action="{{ route('creator.profile.update', ['slug' => $slug]) }}" method="POST"
+				<form id="detailsForm" action="{{ route('influencer.profile.update', ['slug' => $slug]) }}" method="POST"
 					class="space-y-6">
 					@csrf
 					<input type="hidden" name="active_tab" value="details">
 
 					<div>
 						<label class="block text-sm font-medium text-gray-800 dark:text-gray-400 mb-1.5">Display Name</label>
-						<input type="text" name="display_name" value="{{ old('display_name', $creator->display_name ?? '') }}"
+						<input type="text" name="display_name" value="{{ old('display_name', $influencer->display_name ?? '') }}"
 							placeholder="Enter your display name"
 							class="h-12 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30" />
 						@error('display_name')
@@ -43,7 +43,7 @@
 
 					<div>
 						<label class="block text-sm font-medium text-gray-800 dark:text-gray-400 mb-1.5">Title Name</label>
-						<input type="text" name="title_name" value="{{ old('title_name', $creator->title_name ?? '') }}"
+						<input type="text" name="title_name" value="{{ old('title_name', $influencer->title_name ?? '') }}"
 							placeholder="e.g. Beauty Influencer, Fitness Coach"
 							class="h-12 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30" />
 						@error('title_name')
@@ -63,7 +63,7 @@
 					<div>
 						<label class="block text-sm font-medium text-gray-800 dark:text-gray-400 mb-2">Who is your audience?</label>
 						<textarea name="audience" rows="5" placeholder="Describe your target audience"
-						 class="w-full rounded-lg border border-gray-300 bg-transparent px-4 py-3 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 resize-none">{{ old('audience', $creator->audience ?? '') }}</textarea>
+						 class="w-full rounded-lg border border-gray-300 bg-transparent px-4 py-3 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 resize-none">{{ old('audience', $influencer->audience ?? '') }}</textarea>
 						@error('audience')
 							<p class="mt-1 text-xs text-red-500">{{ $message }}</p>
 						@enderror
@@ -73,7 +73,7 @@
 						<label class="block text-sm font-medium text-gray-800 dark:text-gray-400 mb-1.5">What brands have you worked
 							with?</label>
 						<input type="text" name="brands_worked_with"
-							value="{{ old('brands_worked_with', $creator->brands_worked_with ?? '') }}"
+							value="{{ old('brands_worked_with', $influencer->brands_worked_with ?? '') }}"
 							placeholder="Enter brands you've worked with"
 							class="h-12 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30" />
 						@error('brands_worked_with')
@@ -171,7 +171,7 @@
 			</div>
 
 			<div class="tab-content hidden" id="tab-social">
-				<form id="socialForm" action="{{ route('creator.profile.update', ['slug' => $slug]) }}" method="POST"
+				<form id="socialForm" action="{{ route('influencer.profile.update', ['slug' => $slug]) }}" method="POST"
 					class="space-y-6">
 					@csrf
 					<input type="hidden" name="active_tab" value="social">
@@ -179,7 +179,7 @@
 					<div>
 						<label class="block text-sm font-medium text-gray-800 dark:text-gray-400 mb-2">Instagram</label>
 						<input type="url" name="instagram_url"
-							value="{{ old('instagram_url', $creator->socialLinks?->instagram_url ?? '') }}"
+							value="{{ old('instagram_url', $influencer->socialLinks?->instagram_url ?? '') }}"
 							placeholder="https://instagram.com/yourprofile"
 							class="h-12 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30" />
 						@error('instagram_url')
@@ -190,7 +190,7 @@
 					<div>
 						<label class="block text-sm font-medium text-gray-800 dark:text-gray-400 mb-2">TikTok</label>
 						<input type="url" name="tiktok_url"
-							value="{{ old('tiktok_url', $creator->socialLinks?->tiktok_url ?? '') }}"
+							value="{{ old('tiktok_url', $influencer->socialLinks?->tiktok_url ?? '') }}"
 							placeholder="https://tiktok.com/@yourprofile"
 							class="h-12 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30" />
 						@error('tiktok_url')
@@ -201,7 +201,7 @@
 					<div>
 						<label class="block text-sm font-medium text-gray-800 dark:text-gray-400 mb-2">Facebook</label>
 						<input type="url" name="facebook_url"
-							value="{{ old('facebook_url', $creator->socialLinks?->facebook_url ?? '') }}"
+							value="{{ old('facebook_url', $influencer->socialLinks?->facebook_url ?? '') }}"
 							placeholder="https://facebook.com/yourprofile"
 							class="h-12 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30" />
 						@error('facebook_url')
@@ -211,7 +211,7 @@
 
 					<div>
 						<label class="block text-sm font-medium text-gray-800 dark:text-gray-400 mb-2">X (Twitter)</label>
-						<input type="url" name="x_url" value="{{ old('x_url', $creator->socialLinks?->x_url ?? '') }}"
+						<input type="url" name="x_url" value="{{ old('x_url', $influencer->socialLinks?->x_url ?? '') }}"
 							placeholder="https://x.com/yourprofile"
 							class="h-12 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30" />
 						@error('x_url')
@@ -222,7 +222,7 @@
 					<div>
 						<label class="block text-sm font-medium text-gray-800 dark:text-gray-400 mb-2">YouTube</label>
 						<input type="url" name="youtube_url"
-							value="{{ old('youtube_url', $creator->socialLinks?->youtube_url ?? '') }}"
+							value="{{ old('youtube_url', $influencer->socialLinks?->youtube_url ?? '') }}"
 							placeholder="https://youtube.com/c/yourchannel"
 							class="h-12 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30" />
 						@error('youtube_url')
@@ -233,7 +233,7 @@
 					<div>
 						<label class="block text-sm font-medium text-gray-800 dark:text-gray-400 mb-2">LinkedIn</label>
 						<input type="url" name="linkedin_url"
-							value="{{ old('linkedin_url', $creator->socialLinks?->linkedin_url ?? '') }}"
+							value="{{ old('linkedin_url', $influencer->socialLinks?->linkedin_url ?? '') }}"
 							placeholder="https://linkedin.com/in/yourprofile"
 							class="h-12 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30" />
 						@error('linkedin_url')
@@ -243,7 +243,7 @@
 
 					<div>
 						<label class="block text-sm font-medium text-gray-800 dark:text-gray-400 mb-2">Other Website</label>
-						<input type="url" name="other_url" value="{{ old('other_url', $creator->socialLinks?->other_url ?? '') }}"
+						<input type="url" name="other_url" value="{{ old('other_url', $influencer->socialLinks?->other_url ?? '') }}"
 							placeholder="https://yourwebsite.com"
 							class="h-12 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30" />
 						@error('other_url')
@@ -261,7 +261,7 @@
 			</div>
 
 			<div class="tab-content hidden" id="tab-images">
-				<form id="imagesForm" action="{{ route('creator.profile.update', ['slug' => $slug]) }}" method="POST"
+				<form id="imagesForm" action="{{ route('influencer.profile.update', ['slug' => $slug]) }}" method="POST"
 					enctype="multipart/form-data" class="space-y-8">
 					@csrf
 					<input type="hidden" name="active_tab" value="images">
@@ -319,9 +319,9 @@
 
 					<div>
 						<h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-4">Portfolio Images</h3>
-						@php $totalPortfolioCount = $creator->portfolios->count(); @endphp
+						@php $totalPortfolioCount = $influencer->portfolios->count(); @endphp
 						<div id="portfolioGrid" class="grid grid-cols-2 md:grid-cols-3 gap-4 mb-4">
-							@foreach ($creator->portfolios->sortByDesc('sort_order')->take(5) as $portfolio)
+							@foreach ($influencer->portfolios->sortByDesc('sort_order')->take(5) as $portfolio)
 								<div
 									class="portfolio-item relative aspect-3/4 rounded-lg overflow-hidden border border-gray-100 dark:border-gray-800 shadow-sm bg-gray-50 dark:bg-gray-900"
 									data-id="{{ $portfolio->id }}">
@@ -510,7 +510,7 @@
 							const form = document.createElement('form');
 							form.method = 'POST';
 							form.action =
-								`{{ route('creator.profile.edit', ['slug' => $slug]) }}`
+								`{{ route('influencer.profile.edit', ['slug' => $slug]) }}`
 								.replace('/edit', `/portfolio/${portfolioId}/delete`);
 							form.innerHTML =
 								`<input type="hidden" name="_token" value="{{ csrf_token() }}">`;

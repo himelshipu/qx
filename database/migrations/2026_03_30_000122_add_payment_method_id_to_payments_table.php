@@ -20,8 +20,15 @@ return new class extends Migration
 
     public function down(): void
     {
+        // Drop foreign key first using raw SQL
+        try {
+            \DB::statement('ALTER TABLE payments DROP FOREIGN KEY payments_payment_method_id_foreign');
+        } catch (\Exception $e) {
+            // Foreign key doesn't exist, skip
+        }
+
+        // Drop column
         Schema::table('payments', function (Blueprint $table): void {
-            $table->dropForeignIdFor(\App\Models\PaymentMethod::class);
             $table->dropColumn('payment_method_id');
         });
     }

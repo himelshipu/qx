@@ -18,8 +18,8 @@ class PackageController extends Controller
     ) {}
 
     /**
-     * Display a listing of packages for the creator.
-     * Creators see their own packages.
+     * Display a listing of packages for the influencer.
+     * Influencers see their own packages.
      * Public users can browse all public packages.
      */
     public function index(Request $request): View
@@ -28,22 +28,22 @@ class PackageController extends Controller
         $search   = trim((string) $request->input('q', ''));
         $platform = (string) $request->input('platform', 'all');
 
-        if ($user->user_type === 'creator') {
-            // Creator sees only their own packages
-            $creator = $user->creator;
+        if ($user->user_type === 'influencer') {
+            // Influencer sees only their own packages
+            $influencer = $user->influencer;
 
-            $packages = Package::where('creator_id', $creator->id)
+            $packages = Package::where('influencer_id', $influencer->id)
                 ->when($search, fn($q) => $q->where('name', 'like', "%{$search}%"))
                 ->when($platform !== 'all', fn($q) => $q->where('platform', $platform))
                 ->where('is_active', true)
                 ->orderByDesc('created_at')
                 ->paginate(12);
 
-            return view('frontend.packages.creator-index', compact('packages', 'search', 'platform'));
+            return view('frontend.packages.influencer-index', compact('packages', 'search', 'platform'));
         } else {
-            // Non-creators (guests, brands) see published packages
+            // Non-influencers (guests, brands) see published packages
             $packages = Package::where('is_active', true)
-                ->with('creator.user')
+                ->with('influencer.user')
                 ->when($search, fn($q) => $q->where('name', 'like', "%{$search}%"))
                 ->when($platform !== 'all', fn($q) => $q->where('platform', $platform))
                 ->orderByDesc('created_at')
@@ -60,8 +60,8 @@ class PackageController extends Controller
     {
         $user = auth()->user();
 
-        if ($user->user_type !== 'creator') {
-            abort(403, 'Only creators can create packages');
+        if ($user->user_type !== 'influencer') {
+            abort(403, 'Only influencers can create packages');
         }
 
         return view('frontend.packages.create', $this->packageService->getFormPayload());
@@ -74,12 +74,12 @@ class PackageController extends Controller
     {
         $user = auth()->user();
 
-        if ($user->user_type !== 'creator') {
-            abort(403, 'Only creators can create packages');
+        if ($user->user_type !== 'influencer') {
+            abort(403, 'Only influencers can create packages');
         }
 
-        $data               = $request->validated();
-        $data['creator_id'] = $user->creator->id;
+        $data                  = $request->validated();
+        $data['influencer_id'] = $user->influencer->id;
 
         $this->packageService->createPackage(
             $data,
@@ -96,7 +96,7 @@ class PackageController extends Controller
      */
     public function show(Package $package): View
     {
-        $package->load(['creator.user', 'orderItems']);
+        $package->load(['influencer.user', 'orderItems']);
 
         return view('frontend.packages.show', compact('package'));
     }
@@ -108,8 +108,8 @@ class PackageController extends Controller
     {
         $user = auth()->user();
 
-        // Only creator who owns the package can edit
-        if ($user->user_type !== 'creator' || $package->creator_id !== $user->creator->id) {
+        // Only influencer who owns the package can edit
+        if ($user->user_type !== 'influencer' || $package->influencer_id !== $user->influencer->id) {
             abort(403, 'Unauthorized');
         }
 
@@ -126,8 +126,8 @@ class PackageController extends Controller
     {
         $user = auth()->user();
 
-        // Only creator who owns the package can update
-        if ($user->user_type !== 'creator' || $package->creator_id !== $user->creator->id) {
+        // Only influencer who owns the package can update
+        if ($user->user_type !== 'influencer' || $package->influencer_id !== $user->influencer->id) {
             abort(403, 'Unauthorized');
         }
 
@@ -149,8 +149,8 @@ class PackageController extends Controller
     {
         $user = auth()->user();
 
-        // Only creator who owns the package can delete
-        if ($user->user_type !== 'creator' || $package->creator_id !== $user->creator->id) {
+        // Only influencer who owns the package can delete
+        if ($user->user_type !== 'influencer' || $package->influencer_id !== $user->influencer->id) {
             abort(403, 'Unauthorized');
         }
 

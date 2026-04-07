@@ -4,11 +4,11 @@ declare (strict_types = 1);
 
 namespace App\Services\Web;
 
-use App\Models\Creator;
-use App\Models\CreatorPlatformStat;
+use App\Models\Influencer;
+use App\Models\InfluencerPlatformStat;
 use App\Models\Review;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 
@@ -91,7 +91,7 @@ final class InfluencerService
      */
     public function getPlatformFilters(): Collection
     {
-        $discoveredPlatforms = CreatorPlatformStat::query()
+        $discoveredPlatforms = InfluencerPlatformStat::query()
             ->where('is_active', true)
             ->select('platform')
             ->distinct()
@@ -132,7 +132,7 @@ final class InfluencerService
      */
     public function getFeaturedInfluencers(int $limit = 4): Collection
     {
-        $creators = Creator::query()
+        $influencers = Influencer::query()
             ->with([
                 'user:id,name,slug,city,country,profile_image_path,is_active',
                 'platformStats' => fn($q) => $q->where('is_active', true)->orderByDesc('follower_count')
@@ -145,17 +145,17 @@ final class InfluencerService
             ->limit($limit)
             ->get();
 
-        $creatorIds = $creators->pluck('id')->all();
+        $influencerIds = $influencers->pluck('id')->all();
 
         $reviewsByCreator = Review::query()
-            ->whereIn('creator_id', $creatorIds)
-            ->selectRaw('creator_id, AVG(rating) as average_rating, COUNT(*) as reviews_count')
-            ->groupBy('creator_id')
+            ->whereIn('influencer_id', $influencerIds)
+            ->selectRaw('influencer_id, AVG(rating) as average_rating, COUNT(*) as reviews_count')
+            ->groupBy('influencer_id')
             ->get()
-            ->keyBy('creator_id');
+            ->keyBy('influencer_id');
 
-        return $creators
-            ->map(fn(Creator $creator): ?array=> $this->normalizeCreatorCard($creator, $reviewsByCreator))
+        return $influencers
+            ->map(fn(Influencer $influencer): ?array=> $this->normalizeInfluencerCard($influencer, $reviewsByCreator))
             ->filter()
             ->values();
     }
@@ -167,7 +167,7 @@ final class InfluencerService
      */
     public function paginateFeaturedInfluencers(int $perPage = 20): LengthAwarePaginator
     {
-        $paginator = Creator::query()
+        $paginator = Influencer::query()
             ->with([
                 'user:id,name,slug,city,country,profile_image_path,is_active',
                 'platformStats' => fn($q) => $q->where('is_active', true)->orderByDesc('follower_count')
@@ -180,17 +180,17 @@ final class InfluencerService
             ->paginate($perPage)
             ->withQueryString();
 
-        $creatorIds = $paginator->getCollection()->pluck('id')->unique()->values()->all();
+        $influencerIds = $paginator->getCollection()->pluck('id')->unique()->values()->all();
 
         $reviewsByCreator = Review::query()
-            ->whereIn('creator_id', $creatorIds)
-            ->selectRaw('creator_id, AVG(rating) as average_rating, COUNT(*) as reviews_count')
-            ->groupBy('creator_id')
+            ->whereIn('influencer_id', $influencerIds)
+            ->selectRaw('influencer_id, AVG(rating) as average_rating, COUNT(*) as reviews_count')
+            ->groupBy('influencer_id')
             ->get()
-            ->keyBy('creator_id');
+            ->keyBy('influencer_id');
 
         $mapped = $paginator->getCollection()
-            ->map(fn(Creator $creator): ?array=> $this->normalizeCreatorCard($creator, $reviewsByCreator))
+            ->map(fn(Influencer $influencer): ?array=> $this->normalizeInfluencerCard($influencer, $reviewsByCreator))
             ->filter()
             ->values();
 
@@ -200,7 +200,7 @@ final class InfluencerService
     }
 
     /**
-     * @param  array{categories?:array<int, int|string>,sort?:string} $filters
+     * @param array{categories?:array<int, int|string>,sort?:string} $filters
      */
     public function paginateInfluencers(?string $platformKey, int $perPage = 20, array $filters = []): LengthAwarePaginator
     {
@@ -217,10 +217,10 @@ final class InfluencerService
             return $this->paginateFeaturedInfluencers($perPage);
         }
 
-        $query = CreatorPlatformStat::query()
+        $query = InfluencerPlatformStat::query()
             ->with([
                 'creator:id,user_id,display_name,title_name,is_active',
-                'creator.user:id,name,slug,city,country,bio,profile_image_path,is_active'
+                'influencer.user:id,name,slug,city,country,bio,profile_image_path,is_active'
             ])
             ->where('is_active', true)
             ->whereHas('creator', function ($query) use ($selectedCategoryIds) {
@@ -237,46 +237,46 @@ final class InfluencerService
 
         $paginator = $query->paginate($perPage)->withQueryString();
 
-        $creatorIds = $paginator->getCollection()
-            ->pluck('creator_id')
+        $influencerIds = $paginator->getCollection()
+            ->pluck('influencer_id')
             ->unique()
             ->values()
             ->all();
 
         $reviewsByCreator = Review::query()
-            ->whereIn('creator_id', $creatorIds)
-            ->selectRaw('creator_id, AVG(rating) as average_rating, COUNT(*) as reviews_count')
-            ->groupBy('creator_id')
+            ->whereIn('influencer_id', $influencerIds)
+            ->selectRaw('influencer_id, AVG(rating) as average_rating, COUNT(*) as reviews_count')
+            ->groupBy('influencer_id')
             ->get()
-            ->keyBy('creator_id');
+            ->keyBy('influencer_id');
 
         $influencers = $paginator->getCollection()
-            ->map(function (CreatorPlatformStat $stat) use ($reviewsByCreator): ?array {
-                $creator = $stat->creator;
+            ->map(function (InfluencerPlatformStat $stat) use ($reviewsByCreator): ?array {
+                $influencer = $stat->influencer;
 
-                if (!$creator || !$creator->user) {
+                if (!$influencer || !$influencer->user) {
                     return null;
                 }
 
                 $platformKey  = $this->normalizePlatformKey((string) $stat->platform);
                 $platformMeta = $this->platformMeta($platformKey);
 
-                $reviewSummary = $reviewsByCreator->get($creator->id);
+                $reviewSummary = $reviewsByCreator->get($influencer->id);
                 $averageRating = $reviewSummary && $reviewSummary->average_rating !== null
                 ? (float) $reviewSummary->average_rating
                 : null;
 
                 return [
-                    'id'               => $creator->id,
-                    'slug'             => $creator->user->slug,
-                    'name'             => $this->resolveCreatorName($creator),
-                    'title'            => $this->resolveCreatorTitle($creator),
-                    'location'         => $this->resolveCreatorLocation($creator),
-                    'image_url'        => $creator->user->profile_image_path,
+                    'id'               => $influencer->id,
+                    'slug'             => $influencer->user->slug,
+                    'name'             => $this->resolveInfluencerName($influencer),
+                    'title'            => $this->resolveInfluencerTitle($influencer),
+                    'location'         => $this->resolveInfluencerLocation($influencer),
+                    'image_url'        => $influencer->user->profile_image_path,
                     'platform'         => $platformKey,
                     'platform_label'   => $platformMeta['label'],
                     'platform_slug'    => $platformMeta['slug'],
-                    'handle'           => $this->resolveHandle($stat->handle, $creator->user->slug),
+                    'handle'           => $this->resolveHandle($stat->handle, $influencer->user->slug),
                     'followers_label'  => $this->formatFollowers($stat->follower_count),
                     'engagement_label' => $this->formatPercentage($stat->engagement_rate),
                     'rating_label'     => $averageRating !== null ? number_format($averageRating, 1) : 'N/A',
@@ -292,40 +292,40 @@ final class InfluencerService
     }
 
     /**
-     * Normalize a Creator model (with eager-loaded platformStats + user) to a card array.
+     * Normalize an Influencer model (with eager-loaded platformStats + user) to a card array.
      * Used by both getFeaturedInfluencers and paginateFeaturedInfluencers.
      *
      * @param  \Illuminate\Support\Collection<int, mixed>        $reviewsByCreator
      * @return array<string,                       mixed>|null
      */
-    private function normalizeCreatorCard(Creator $creator, \Illuminate\Support\Collection $reviewsByCreator): ?array
+    private function normalizeInfluencerCard(Influencer $influencer, \Illuminate\Support\Collection $reviewsByCreator): ?array
     {
-        if (!$creator->user) {
+        if (!$influencer->user) {
             return null;
         }
 
-        $stat        = $creator->platformStats->first();
+        $stat        = $influencer->platformStats->first();
         $platformKey = $stat !== null
         ? $this->normalizePlatformKey((string) $stat->platform)
         : 'other';
         $platformMeta = $this->platformMeta($platformKey);
 
-        $reviewSummary = $reviewsByCreator->get($creator->id);
+        $reviewSummary = $reviewsByCreator->get($influencer->id);
         $averageRating = $reviewSummary && $reviewSummary->average_rating !== null
         ? (float) $reviewSummary->average_rating
         : null;
 
         return [
-            'id'               => $creator->id,
-            'slug'             => $creator->user->slug,
-            'name'             => $this->resolveCreatorName($creator),
-            'title'            => $this->resolveCreatorTitle($creator),
-            'location'         => $this->resolveCreatorLocation($creator),
-            'image_url'        => $creator->user->profile_image_path,
+            'id'               => $influencer->id,
+            'slug'             => $influencer->user->slug,
+            'name'             => $this->resolveInfluencerName($influencer),
+            'title'            => $this->resolveInfluencerTitle($influencer),
+            'location'         => $this->resolveInfluencerLocation($influencer),
+            'image_url'        => $influencer->user->profile_image_path,
             'platform'         => $platformKey,
             'platform_label'   => $platformMeta['label'],
             'platform_slug'    => $platformMeta['slug'],
-            'handle'           => $this->resolveHandle($stat?->handle, $creator->user->slug),
+            'handle'           => $this->resolveHandle($stat?->handle, $influencer->user->slug),
             'followers_label'  => $this->formatFollowers($stat?->follower_count),
             'engagement_label' => $this->formatPercentage($stat?->engagement_rate),
             'rating_label'     => $averageRating !== null ? number_format($averageRating, 1) : 'N/A',
@@ -374,30 +374,30 @@ final class InfluencerService
     /**
      * Resolve creator display name.
      */
-    private function resolveCreatorName(Creator $creator): string
+    private function resolveInfluencerName(Influencer $influencer): string
     {
-        $displayName = trim((string) ($creator->display_name ?? ''));
+        $displayName = trim((string) ($influencer->display_name ?? ''));
 
         if ($displayName !== '') {
             return $displayName;
         }
 
-        return trim((string) $creator->user?->name) !== ''
-        ? (string) $creator->user?->name
-    : ($creator->user?->slug ?? 'N/A');
+        return trim((string) $influencer->user?->name) !== ''
+        ? (string) $influencer->user?->name
+        : ($influencer->user?->slug ?? 'N/A');
     }
 
     /**
      * Resolve creator title text for cards.
      */
-    private function resolveCreatorTitle(Creator $creator): string
+    private function resolveInfluencerTitle(Influencer $influencer): string
     {
-        $title = trim((string) ($creator->title_name ?? ''));
+        $title = trim((string) ($influencer->title_name ?? ''));
         if ($title !== '') {
             return $title;
         }
 
-        $bio = trim((string) ($creator->user?->bio ?? ''));
+        $bio = trim((string) ($influencer->user?->bio ?? ''));
         if ($bio !== '') {
             return Str::limit($bio, 56);
         }
@@ -408,14 +408,14 @@ final class InfluencerService
     /**
      * Resolve creator location text.
      */
-    private function resolveCreatorLocation(Creator $creator): string
+    private function resolveInfluencerLocation(Influencer $influencer): string
     {
         $parts = array_values(array_filter([
-            trim((string) ($creator->user?->city ?? '')),
-            trim((string) ($creator->user?->country ?? ''))
+            trim((string) ($influencer->user?->city ?? '')),
+            trim((string) ($influencer->user?->country ?? ''))
         ]));
 
-    return $parts !== [] ? implode(', ', $parts) : 'N/A';
+        return $parts !== [] ? implode(', ', $parts) : 'N/A';
     }
 
     /**
@@ -440,11 +440,11 @@ final class InfluencerService
     private function applySorting(Builder $query, string $sort): void
     {
         match ($sort) {
-            'followers_asc'  => $query->orderBy('follower_count'),
+            'followers_asc'   => $query->orderBy('follower_count'),
             'engagement_desc' => $query->orderByDesc('engagement_rate')->orderByDesc('follower_count'),
-            'engagement_asc' => $query->orderBy('engagement_rate')->orderByDesc('follower_count'),
-            'recent'         => $query->orderByDesc('created_at'),
-            default          => $query->orderByDesc('follower_count')
+            'engagement_asc'  => $query->orderBy('engagement_rate')->orderByDesc('follower_count'),
+            'recent'          => $query->orderByDesc('created_at'),
+            default           => $query->orderByDesc('follower_count')
         };
     }
 

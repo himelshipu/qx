@@ -14,7 +14,7 @@ class Message extends Model
         'conversation_id',
         'sender_user_id',
         'sender_role',
-        'on_behalf_of_creator_id',
+        'on_behalf_of_influencer_id',
         'message',
         'attachment_path',
         'read_at'
@@ -37,9 +37,9 @@ class Message extends Model
         return $this->belongsTo(User::class, 'sender_user_id');
     }
 
-    public function onBehalfOfCreator(): BelongsTo
+    public function onBehalfOfInfluencer(): BelongsTo
     {
-        return $this->belongsTo(Creator::class, 'on_behalf_of_creator_id');
+        return $this->belongsTo(Influencer::class, 'on_behalf_of_influencer_id');
     }
 
     /**

@@ -5,8 +5,8 @@ namespace App\Http\Controllers\Backend;
 use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Models\OrderItem;
-use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class OrderController extends Controller
@@ -66,9 +66,9 @@ class OrderController extends Controller
             'brand:id,brand_name',
             'campaign:id,title,status',
             'acceptedBy:id,name,email',
-            'acceptedForCreator:id,user_id,display_name',
-            'acceptedForCreator.user:id,name',
-            'items:id,order_id,creator_id,package_id,title,quantity,unit_price,line_total,status,due_date,paid_at',
+            'acceptedForInfluencer:id,user_id,display_name',
+            'acceptedForInfluencer.user:id,name',
+            'items:id,order_id,influencer_id,package_id,title,quantity,unit_price,line_total,status,due_date,paid_at',
             'items.creator:id,user_id,display_name',
             'items.creator.user:id,name',
             'items.package:id,name,base_price,currency',
@@ -160,12 +160,12 @@ class OrderController extends Controller
         // Create sub-orders for each approved influencer
         foreach ($approvedInfluencers as $influencer) {
             \App\Models\SubOrder::create([
-                'order_id'               => $order->id,
-                'campaign_influencer_id' => $influencer->id,
-                'creator_id'             => $influencer->creator_id,
-                'status'                 => 'pending',
-                'amount'                 => $influencer->pivot->agreed_rate ?? 0,
-                'currency'               => 'USD'
+                'order_id'                   => $order->id,
+                'campaign_influencer_id'     => $influencer->id,
+                'accepted_for_influencer_id' => $influencer->id,
+                'status'                     => 'pending',
+                'amount'                     => $influencer->pivot->agreed_rate ?? 0,
+                'currency'                   => 'USD'
             ]);
         }
 

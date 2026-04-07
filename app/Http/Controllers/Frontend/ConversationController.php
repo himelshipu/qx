@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Frontend;
 
 use App\Http\Controllers\Controller;
 use App\Models\Conversation;
-use App\Models\Creator;
+use App\Models\Influencer;
 use App\Models\Message;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -15,14 +15,14 @@ class ConversationController extends Controller
     /**
      * Display conversations for frontend users.
      * Brands see their conversations.
-     * Creators don't directly access conversations (handled by moderators).
+     * Influencers don't directly access conversations (handled by moderators).
      */
     public function index(): View
     {
         $user = auth()->user();
 
         if ($user->user_type === 'brand') {
-            // Brands see their conversations with creators
+            // Brands see their conversations with influencers
             $conversations = Conversation::forBrand($user->id)->paginate(15);
 
             return view('frontend.conversations.index', compact('conversations'));
@@ -44,7 +44,7 @@ class ConversationController extends Controller
             abort(403, 'Unauthorized');
         }
 
-        $conversation->load(['creator.user', 'handledBy', 'brandUser', 'order']);
+        $conversation->load(['influencer.user', 'handledBy', 'brandUser', 'order']);
 
         $messages = Message::forConversation($conversation->id);
 
@@ -79,8 +79,8 @@ class ConversationController extends Controller
         // Update conversation timestamp
         $conversation->touch();
 
-            return redirect()
-                ->route('frontend.conversations.show', $conversation->public_id)
-                ->with('success', 'Message sent');
+        return redirect()
+            ->route('frontend.conversations.show', $conversation->public_id)
+            ->with('success', 'Message sent');
     }
 }

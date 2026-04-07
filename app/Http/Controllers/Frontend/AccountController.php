@@ -18,12 +18,12 @@ class AccountController extends Controller
      */
     public function edit(string $slug): View
     {
-        $user    = Auth::user();
-        $brand   = $user->brand;
-        $creator = $user->creator;
+        $user       = Auth::user();
+        $brand      = $user->brand;
+        $influencer = $user->influencer;
 
         // Determine if user can manage billing and payment
-        $canManageBillingAndPayment = in_array($user->user_type, ['brand', 'creator'], true);
+        $canManageBillingAndPayment = in_array($user->user_type, ['brand', 'influencer'], true);
 
         // Get payment methods for the user
         $paymentMethods = $user->paymentMethods;
@@ -31,7 +31,7 @@ class AccountController extends Controller
         return view('frontend.pages.account', [
             'user'                       => $user,
             'brand'                      => $brand,
-            'creator'                    => $creator,
+            'influencer'                 => $influencer,
             'slug'                       => $slug,
             'tab'                        => request()->query('tab', 'details'),
             'canManageBillingAndPayment' => $canManageBillingAndPayment,
@@ -92,10 +92,10 @@ class AccountController extends Controller
     {
         $user = Auth::user();
 
-        // Get the profile owner (brand or creator)
+        // Get the profile owner (brand or influencer)
         $profileOwner = match ($user->user_type) {
             'brand'   => $user->brand,
-            'creator' => $user->creator,
+            'creator' => $user->influencer,
             default   => null
         };
 

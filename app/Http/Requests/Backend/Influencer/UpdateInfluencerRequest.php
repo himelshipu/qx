@@ -2,12 +2,12 @@
 
 namespace App\Http\Requests\Backend\Creator;
 
-use App\Models\Creator;
+use App\Models\Influencer;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
 
-class UpdateCreatorRequest extends FormRequest
+class UpdateInfluencerRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -24,8 +24,8 @@ class UpdateCreatorRequest extends FormRequest
      */
     public function rules(): array
     {
-        $creator      = $this->route('creator');
-        $ignoreUserId = $creator instanceof Creator ? $creator->user_id : null;
+        $influencer      = $this->route('creator');
+        $ignoreUserId = $influencer instanceof Creator ? $influencer->user_id : null;
 
         return [
             'full_name'          => ['required', 'string', 'max:255'],

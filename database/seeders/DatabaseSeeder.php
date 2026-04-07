@@ -18,16 +18,19 @@ class DatabaseSeeder extends Seeder
             \Database\Seeders\CategorySeeder::class,
             \Database\Seeders\FollowerRangeSeeder::class,
 
-            // Brand and creator profiles
+            // Brand and influencer profiles
             \Database\Seeders\BrandSeeder::class,
             \Database\Seeders\BrandSocialLinkSeeder::class,
             \Database\Seeders\BillingProfileSeeder::class,
             \Database\Seeders\BrandOnboardingProfileSeeder::class,
             \Database\Seeders\BrandOnboardingIndustrySeeder::class,
-            \Database\Seeders\CreatorSeeder::class,
-            \Database\Seeders\CreatorSocialLinkSeeder::class,
-            \Database\Seeders\CreatorPlatformStatSeeder::class,
-            \Database\Seeders\CreatorCategorySeeder::class,
+            \Database\Seeders\InfluencerSeeder::class,
+            \Database\Seeders\InfluencerSocialLinkSeeder::class,
+            \Database\Seeders\InfluencerPlatformStatSeeder::class,
+            \Database\Seeders\InfluencerCategorySeeder::class,
+            \Database\Seeders\BadgeDefinitionSeeder::class,
+            \Database\Seeders\InfluencerBadgeSeeder::class,
+            \Database\Seeders\InfluencerPortfolioSeeder::class,
 
             // Campaign and package commerce sources
             \Database\Seeders\CampaignSeeder::class,
@@ -56,7 +59,7 @@ class DatabaseSeeder extends Seeder
             \Database\Seeders\FaqSectionSeeder::class,
             \Database\Seeders\FaqItemSeeder::class,
             \Database\Seeders\KnowledgeBaseSeeder::class,
-            \Database\Seeders\FeaturedCollaborationSeeder::class,
+            \Database\Seeders\FeaturedCollaborationSeeder::class
         ]);
     }
 }

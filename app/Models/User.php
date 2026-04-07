@@ -113,9 +113,9 @@ class User extends Authenticatable
         return $this->hasOne(Brand::class);
     }
 
-    public function creator(): HasOne
+    public function influencer(): HasOne
     {
-        return $this->hasOne(Creator::class);
+        return $this->hasOne(Influencer::class);
     }
 
     public function roles(): BelongsToMany

@@ -20,8 +20,8 @@ class UpdatePackageRequest extends FormRequest
      */
     protected function prepareForValidation(): void
     {
-        $user = Auth::user();
-        $isCreator = $user && $user->creator()->exists();
+        $user      = Auth::user();
+        $isCreator = $user && $user->influencer()->exists();
 
         // If user is a creator, remove created_for from input as they cannot change it
         if ($isCreator) {
@@ -36,8 +36,8 @@ class UpdatePackageRequest extends FormRequest
      */
     public function rules(): array
     {
-        $user = Auth::user();
-        $isCreator = $user && $user->creator()->exists();
+        $user      = Auth::user();
+        $isCreator = $user && $user->influencer()->exists();
 
         $rules = [
             'platform'           => ['required', 'string', 'in:facebook,instagram,tiktok,linkedin,x,youtube,ugc,other'],
@@ -52,7 +52,7 @@ class UpdatePackageRequest extends FormRequest
 
         // Only allow created_for if user is not a creator
         if (!$isCreator) {
-            $rules['created_for'] = ['sometimes', 'exists:creators,id'];
+            $rules['created_for'] = ['sometimes', 'exists:influencers,id'];
         }
 
         return $rules;

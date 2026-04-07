@@ -1,12 +1,12 @@
 @extends('backend.layouts.app')
 
-@section('title', "Add Portfolio - {$creator->display_name}")
+@section('title', "Add Portfolio - {$influencer->display_name}")
 
 @section('content')
 	<x-backend.shell.breadcrumb :items="[
-	    ['label' => 'Creators', 'route' => 'dashboard.creators.index'],
-	    ['label' => $creator->display_name, 'route' => 'dashboard.creators.view', 'params' => $creator->id],
-	    ['label' => 'Portfolio', 'route' => 'dashboard.creators.portfolio.index', 'params' => $creator->id],
+	    ['label' => 'Influencers', 'route' => 'dashboard.influencers.index'],
+	    ['label' => $influencer->display_name, 'route' => 'dashboard.influencers.view', 'params' => $influencer->id],
+	    ['label' => 'Portfolio', 'route' => 'dashboard.influencers.portfolio.index', 'params' => $influencer->id],
 	    ['label' => 'Add Item'],
 	]" />
 
@@ -14,11 +14,11 @@
 		<div class="space-y-6">
 			<div>
 				<h1 class="text-2xl font-bold text-gray-900 dark:text-white">Add Portfolio Item</h1>
-				<p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Add a new photo or video to {{ $creator->display_name }}'s
+				<p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Add a new photo or video to {{ $influencer->display_name }}'s
 					portfolio</p>
 			</div>
 
-			<form action="{{ route('dashboard.creators.portfolio.store', $creator) }}" method="POST" enctype="multipart/form-data"
+			<form action="{{ route('dashboard.influencers.portfolio.store', $influencer) }}" method="POST" enctype="multipart/form-data"
 				class="rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
 				@csrf
 
@@ -118,7 +118,7 @@
 				</div>
 
 				<div class="flex gap-3 border-t border-gray-200 bg-gray-50 p-5 dark:border-gray-800 dark:bg-gray-800/50">
-					<a href="{{ route('dashboard.creators.portfolio.index', $creator) }}"
+					<a href="{{ route('dashboard.influencers.portfolio.index', $influencer) }}"
 						class="flex-1 rounded-lg border border-gray-300 bg-white px-4 py-2 text-center font-medium text-gray-700 transition hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:hover:bg-gray-800">
 						Cancel
 					</a>

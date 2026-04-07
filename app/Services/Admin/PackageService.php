@@ -4,7 +4,7 @@ declare (strict_types = 1);
 
 namespace App\Services\Admin;
 
-use App\Models\Creator;
+use App\Models\Influencer;
 use App\Models\Package;
 use App\Repositories\Contracts\PackageRepositoryInterface;
 use Illuminate\Support\Facades\Auth;
@@ -46,17 +46,17 @@ final class PackageService
     /**
      * Build form payload for create/edit pages.
      *
-     * @return array{platformOptions:array<int, array{value:string,label:string}>,isCreator:bool,creators:?\Illuminate\Database\Eloquent\Collection}
+     * @return array{platformOptions:array<int, array{value:string,label:string}>,isInfluencer:bool,influencers:?\Illuminate\Database\Eloquent\Collection}
      */
     public function getFormPayload(): array
     {
-        $user = Auth::user();
-        $isCreator = $user && $user->creator()->exists();
+        $user         = Auth::user();
+        $isInfluencer = $user && $user->influencer()->exists();
 
         return [
             'platformOptions' => $this->getPlatformOptions(),
-            'isCreator'       => $isCreator,
-            'creators'        => !$isCreator ? Creator::query()->whereHas('user')->get() : null
+            'isInfluencer'    => $isInfluencer,
+            'influencers'     => !$isInfluencer ? Influencer::query()->whereHas('user')->get() : null
         ];
     }
 
@@ -68,19 +68,19 @@ final class PackageService
     public function createPackage(array $validated, bool $isActive): Package
     {
         $createdByUserId = $this->resolveAuthenticatedUserId();
-        $user = Auth::user();
-        
-        // Determine creator_id based on user type
-        // If user is a creator, they are creating a package for themselves
-        // If user is admin/moderator, they are creating a package for a selected creator
-        $creatorId = null;
-        
-        if ($user && $user->creator()->exists()) {
-            // User is a creator, set creator_id to their creator id
-            $creatorId = $user->creator->id;
-        } elseif (isset($validated['created_for']) && (int)$validated['created_for'] > 0) {
-            // Admin/moderator creating package for a specific creator
-            $creatorId = (int)$validated['created_for'];
+        $user            = Auth::user();
+
+        // Determine influencer_id based on user type
+        // If user is an influencer, they are creating a package for themselves
+        // If user is admin/moderator, they are creating a package for a selected influencer
+        $influencerId = null;
+
+        if ($user && $user->influencer()->exists()) {
+            // User is an influencer, set influencer_id to their influencer id
+            $influencerId = $user->influencer->id;
+        } elseif (isset($validated['created_for']) && (int) $validated['created_for'] > 0) {
+            // Admin/moderator creating package for a specific influencer
+            $influencerId = (int) $validated['created_for'];
         }
 
         return $this->packageRepository->create([
@@ -91,7 +91,7 @@ final class PackageService
             'currency'           => $this->normalizeCurrency((string) $validated['currency']),
             'delivery_days'      => $this->nullableInteger($validated['delivery_days'] ?? null),
             'revisions_included' => $this->nullableInteger($validated['revisions_included'] ?? null),
-            'creator_id'         => $creatorId,
+            'influencer_id'      => $influencerId,
             'created_by'         => $createdByUserId,
             'is_active'          => $isActive
         ]);
@@ -104,7 +104,7 @@ final class PackageService
      */
     public function updatePackage(Package $package, array $validated, bool $isActive): Package
     {
-        $user = Auth::user();
+        $user       = Auth::user();
         $updateData = [
             'platform'           => $validated['platform'],
             'name'               => $validated['name'],
@@ -116,9 +116,9 @@ final class PackageService
             'is_active'          => $isActive
         ];
 
-        // Only allow updating creator_id if user is admin/moderator and created_for is provided
-        if ($user && !$user->creator()->exists() && isset($validated['created_for']) && (int)$validated['created_for'] > 0) {
-            $updateData['creator_id'] = (int)$validated['created_for'];
+        // Only allow updating influencer_id if user is admin/moderator and created_for is provided
+        if ($user && !$user->influencer()->exists() && isset($validated['created_for']) && (int) $validated['created_for'] > 0) {
+            $updateData['influencer_id'] = (int) $validated['created_for'];
         }
 
         return $this->packageRepository->update($package, $updateData);
@@ -258,15 +258,15 @@ final class PackageService
     public function getPurchasePayload(): array
     {
         $packages = Package::where('is_active', true)
-            ->with(['creator:id,display_name', 'creator.user:id,email,name'])
+            ->with(['influencer:id,display_name', 'influencer.user:id,email,name'])
             ->orderByDesc('created_at')
-            ->get(['id', 'name', 'description', 'base_price', 'currency', 'platform', 'delivery_days', 'revisions_included', 'creator_id']);
+            ->get(['id', 'name', 'description', 'base_price', 'currency', 'platform', 'delivery_days', 'revisions_included', 'influencer_id']);
 
         $brands = \App\Models\Brand::with('user:id,email,name')
             ->orderBy('brand_name')
             ->get(['id', 'user_id', 'brand_name']);
 
-        $activeBrandsCount = $brands->count();
+        $activeBrandsCount   = $brands->count();
         $activePackagesCount = $packages->count();
 
         // Get latest purchased packages
@@ -284,7 +284,7 @@ final class PackageService
      */
     public function purchasePackageForBrands(int $packageId, array $brandIds): int
     {
-        $package = Package::findOrFail($packageId);
+        $package   = Package::findOrFail($packageId);
         $purchased = 0;
 
         foreach ($brandIds as $brandId) {
@@ -298,30 +298,30 @@ final class PackageService
             if (!$existingOrder) {
                 // Create order
                 $order = \App\Models\Order::create([
-                    'order_number' => 'ORD-' . strtoupper(uniqid()),
+                    'order_number'  => 'ORD-' . strtoupper(uniqid()),
                     'buyer_user_id' => Auth::id(),
-                    'brand_id' => $brandId,
-                    'status' => 'pending',
-                    'subtotal' => $package->base_price,
-                    'service_fee' => 0,
-                    'tax_amount' => 0,
-                    'total_amount' => $package->base_price,
-                    'currency' => $package->currency,
-                    'placed_at' => now()
+                    'brand_id'      => $brandId,
+                    'status'        => 'pending',
+                    'subtotal'      => $package->base_price,
+                    'service_fee'   => 0,
+                    'tax_amount'    => 0,
+                    'total_amount'  => $package->base_price,
+                    'currency'      => $package->currency,
+                    'placed_at'     => now()
                 ]);
 
                 // Create order item
                 \App\Models\OrderItem::create([
-                    'order_id' => $order->id,
-                    'creator_id' => $package->creator_id,
-                    'package_id' => $packageId,
-                    'title' => $package->name,
-                    'description' => $package->description,
-                    'quantity' => 1,
-                    'unit_price' => $package->base_price,
-                    'line_total' => $package->base_price,
-                    'status' => 'pending',
-                    'due_date' => $package->delivery_days ? now()->addDays($package->delivery_days)->toDateString() : null
+                    'order_id'      => $order->id,
+                    'influencer_id' => $package->influencer_id,
+                    'package_id'    => $packageId,
+                    'title'         => $package->name,
+                    'description'   => $package->description,
+                    'quantity'      => 1,
+                    'unit_price'    => $package->base_price,
+                    'line_total'    => $package->base_price,
+                    'status'        => 'pending',
+                    'due_date'      => $package->delivery_days ? now()->addDays($package->delivery_days)->toDateString() : null
                 ]);
 
                 $purchased++;

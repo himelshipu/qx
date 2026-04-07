@@ -3,13 +3,13 @@
 	$package = $package ?? null;
 	$resolvedCurrency = strtoupper((string) old('currency', $package?->currency ?? 'USD'));
 	$isCreator = $isCreator ?? false;
-	$creators = $creators ?? null;
+	$influencers = $influencers ?? null;
 @endphp
 
 <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
 	<div class="space-y-5 lg:col-span-2">
 		<!-- Creator Selection (Admin/Moderator Only) -->
-		@if (!$isCreator && $creators)
+		@if (!$isCreator && $influencers)
 			<div>
 				<label for="created_for" class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
 					Create For (Select Influencer) <span class="text-red-500">*</span>
@@ -17,10 +17,10 @@
 				<select id="created_for" name="created_for" required
 					class="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-3 text-sm text-gray-900 focus:border-gray-500 focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-white">
 					<option value="" disabled {{ old('created_for', $package?->creator_id) ? '' : 'selected' }}>Select an influencer</option>
-					@foreach ($creators as $creator)
-						<option value="{{ $creator->id }}"
-							{{ old('created_for', $package?->creator_id) == $creator->id ? 'selected' : '' }}>
-							{{ $creator->user?->name ?? $creator->display_name ?? 'Unknown' }}
+					@foreach ($influencers as $influencer)
+						<option value="{{ $influencer->id }}"
+							{{ old('created_for', $package?->creator_id) == $influencer->id ? 'selected' : '' }}>
+							{{ $influencer->user?->name ?? $influencer->display_name ?? 'Unknown' }}
 						</option>
 					@endforeach
 				</select>

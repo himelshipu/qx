@@ -1,11 +1,12 @@
 <?php
 
 namespace App\View\Components\backend\dropdowns;
+
 use Closure;
 use Illuminate\Contracts\View\View;
-use Illuminate\View\Component;
-use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
+use Illuminate\View\Component;
 
 class User extends Component
 {
@@ -18,15 +19,13 @@ class User extends Component
     {
         $this->user = Auth::user();
 
-        $avatarPath = $this->user?->brand?->profile_image_path
-            ?? $this->user?->creator?->profile_image_path
-            ?? $this->user?->profile_image_path;
+        $avatarPath = $this->user?->brand?->profile_image_path ?? $this->user?->influencer?->profile_image_path ?? $this->user?->profile_image_path;
 
         $this->avatarUrl = filled($avatarPath) ? image_url($avatarPath) : null;
 
         $this->initials = Str::of($this->user?->name ?? 'U')
             ->explode(' ')
-            ->map(fn ($word) => Str::upper($word[0] ?? ''))
+            ->map(fn($word) => Str::upper($word[0] ?? ''))
             ->filter()
             ->take(2)
             ->join('');
@@ -34,7 +33,7 @@ class User extends Component
         $this->firstName = Str::before($this->user?->name ?? 'User', ' ');
     }
 
-    public function render(): View|Closure|string
+    public function render(): View | Closure | string
     {
         return view('components.backend.dropdowns.user');
     }

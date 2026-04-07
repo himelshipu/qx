@@ -12,7 +12,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('order_item_id')->unique()->constrained('order_items')->cascadeOnDelete();
             $table->foreignId('brand_id')->constrained('brands')->cascadeOnDelete();
-            $table->foreignId('creator_id')->constrained('creators')->cascadeOnDelete();
+            $table->foreignId('influencer_id')->constrained('influencers')->cascadeOnDelete();
             $table->unsignedTinyInteger('rating');
             $table->string('title')->nullable();
             $table->text('comment')->nullable();

@@ -6,12 +6,12 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class CreatorSocialLink extends Model
+class InfluencerSocialLink extends Model
 {
     use HasFactory;
 
     protected $fillable = [
-        'creator_id',
+        'influencer_id',
         'facebook_url',
         'instagram_url',
         'tiktok_url',
@@ -21,8 +21,8 @@ class CreatorSocialLink extends Model
         'other_url'
     ];
 
-    public function creator(): BelongsTo
+    public function influencer(): BelongsTo
     {
-        return $this->belongsTo(Creator::class);
+        return $this->belongsTo(Influencer::class, 'influencer_id');
     }
 }

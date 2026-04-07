@@ -9,7 +9,7 @@
 		@php
 			$platformKey = $platformGroup['key'];
 			$platformLabel = $platformGroup['label'];
-			$creators = $platformGroup['creators'];
+			$influencers = $platformGroup['influencers'];
 			$platformSlug = $platformKey === 'ugc' ? 'user-generated-content' : \Illuminate\Support\Str::slug($platformLabel);
 		@endphp
 
@@ -27,19 +27,20 @@
 				</a>
 			</div>
 
-			@if ($creators->isEmpty())
+			@if ($influencers->isEmpty())
 				<div class="rounded-xl border border-dashed border-gray-200 dark:border-gray-700 p-8 text-center">
 					<p class="text-sm text-gray-500 dark:text-gray-400">No active influencers available on {{ $platformLabel }} right
 						now.</p>
 				</div>
 			@else
 				<div class="flex overflow-x-auto gap-4 pb-2 lg:grid lg:grid-cols-4 sm:grid-cols-2 lg:gap-8 lg:px-0 scroll-smooth">
-					@foreach ($creators as $creator)
+					@foreach ($influencers as $influencer)
 						@php
-							$profileUrl = !empty($creator['slug']) ? route('creator.profile', ['slug' => $creator['slug']]) : '#';
+							$profileUrl = !empty($influencer['slug']) ? route('influencer.profile', ['slug' => $influencer['slug']]) : '#';
 						@endphp
-						<a href="{{ $profileUrl }}" class="flex-shrink-0 w-[80%] sm:w-[60%] lg:w-auto group overflow-hidden font-sans cursor-pointer creator-card block"
-							data-creator-id="{{ $creator['id'] }}">
+						<a href="{{ $profileUrl }}"
+							class="flex-shrink-0 w-[80%] sm:w-[60%] lg:w-auto group overflow-hidden font-sans cursor-pointer creator-card block"
+							data-creator-id="{{ $influencer['id'] }}">
 							<div class="relative overflow-hidden rounded-xl">
 								<button type="button"
 									class="wishlist-btn absolute top-3 right-3 z-30 p-1.5 transition-all duration-300 hover:scale-110 drop-shadow-md"
@@ -48,9 +49,9 @@
 
 								</button>
 
-								<img src="{{ image_url($creator['image_url']) }}"
+								<img src="{{ image_url($influencer['image_url']) }}"
 									class="w-full h-48 sm:h-64 object-cover transition-transform duration-500 ease-out group-hover:scale-110"
-									alt="{{ $creator['name'] }}">
+									alt="{{ $influencer['name'] }}">
 
 								<div class="absolute top-3 left-3 flex flex-wrap gap-1.5">
 									<span
@@ -59,7 +60,7 @@
 									</span>
 									<span
 										class="bg-black/80 backdrop-blur-sm text-white text-[10px] font-normal px-2 py-1 rounded-md border border-white/20 flex items-center gap-1">
-										<x-icons.checkmark class="w-4 h-4 text-green-500" /> {{ $creator['engagement_label'] }} ER
+										<x-icons.checkmark class="w-4 h-4 text-green-500" /> {{ $influencer['engagement_label'] }} ER
 									</span>
 								</div>
 
@@ -80,13 +81,13 @@
 											@else
 												<x-icons.group class="w-4 h-4 text-gray-700" />
 											@endif
-											{{ $creator['followers_label'] }}
+											{{ $influencer['followers_label'] }}
 										</div>
 									</div>
 									<div class="flex items-center gap-1 text-white drop-shadow-md">
-										<span class="font-bold text-sm">{{ $creator['name'] }}</span>
+										<span class="font-bold text-sm">{{ $influencer['name'] }}</span>
 										<span class="flex items-center text-xs gap-0.5">
-											<x-icons.star class="w-4 h-4 text-yellow-400" /> {{ $creator['rating_label'] }}
+											<x-icons.star class="w-4 h-4 text-yellow-400" /> {{ $influencer['rating_label'] }}
 										</span>
 									</div>
 								</div>
@@ -95,11 +96,12 @@
 							<div class="pt-3 px-1">
 								<div class="flex items-start justify-between gap-3">
 									<h3 class="text-gray-800 dark:text-gray-300 text-[15px] leading-tight font-medium line-clamp-1">
-										{{ $creator['title'] }}
+										{{ $influencer['title'] }}
 									</h3>
-									<span class="text-[#222] dark:text-white font-medium text-sm leading-none">{{ $creator['handle'] ?: (!empty($creator['slug']) ? '@' . $creator['slug'] : 'N/A') }}</span>
+									<span
+										class="text-[#222] dark:text-white font-medium text-sm leading-none">{{ $influencer['handle'] ?: (!empty($influencer['slug']) ? '@' . $influencer['slug'] : 'N/A') }}</span>
 								</div>
-								<p class="text-sm text-gray-400 dark:text-gray-400 font-normal mt-1">{{ $creator['location'] ?: 'N/A' }}</p>
+								<p class="text-sm text-gray-400 dark:text-gray-400 font-normal mt-1">{{ $influencer['location'] ?: 'N/A' }}</p>
 							</div>
 						</a>
 					@endforeach

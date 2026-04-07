@@ -72,7 +72,7 @@
 				<table class="min-w-full">
 					<thead class="bg-gray-50/50 dark:bg-gray-800/50 border-y border-gray-200 dark:border-gray-700">
 						<tr class="text-xs font-bold text-gray-400 uppercase tracking-widest text-left">
-							<th class="px-6 py-4">{{ $perspective === 'brand' ? 'Creator' : 'Brand' }}</th>
+							<th class="px-6 py-4">{{ $perspective === 'brand' ? 'Influencer' : 'Brand' }}</th>
 							<th class="px-6 py-4">Campaign Name</th>
 							<th class="px-6 py-4">{{ $perspective === 'brand' ? 'Date Ordered' : 'Date Accepted' }}</th>
 							<th class="px-6 py-4">Price</th>

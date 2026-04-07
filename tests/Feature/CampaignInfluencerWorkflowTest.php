@@ -5,7 +5,7 @@ namespace Tests\Feature;
 use App\Models\Brand;
 use App\Models\Campaign;
 use App\Models\CampaignInfluencer;
-use App\Models\Creator;
+use App\Models\Influencer;
 use App\Models\Order;
 use App\Models\SubOrder;
 use App\Models\User;
@@ -20,8 +20,8 @@ class CampaignInfluencerWorkflowTest extends TestCase
     protected User $brand;
     protected Brand $brandModel;
     protected Campaign $campaign;
-    protected Creator $creator1;
-    protected Creator $creator2;
+    protected Influencer $influencer1;
+    protected Influencer $influencer2;
 
     protected function setUp(): void
     {
@@ -42,8 +42,8 @@ class CampaignInfluencerWorkflowTest extends TestCase
         ]);
 
         // Create creators
-        $this->creator1 = Creator::factory()->create();
-        $this->creator2 = Creator::factory()->create();
+        $this->creator1 = Influencer::factory()->create();
+        $this->creator2 = Influencer::factory()->create();
     }
 
     /**
@@ -66,7 +66,7 @@ class CampaignInfluencerWorkflowTest extends TestCase
         $this->actingAs($this->admin);
 
         $response = $this->post(route('dashboard.campaigns.influencers.store', $this->campaign), [
-            'creator_ids' => [$this->creator1->id, $this->creator2->id]
+            'influencer_ids' => [$this->creator1->id, $this->creator2->id]
         ]);
 
         $response->assertRedirect();

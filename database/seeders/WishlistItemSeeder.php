@@ -14,7 +14,7 @@ class WishlistItemSeeder extends Seeder
         for ($i = 0; $i < 20; $i++) {
             DB::table('wishlist_items')->insert([
                     'wishlist_id' => 1,
-                    'creator_id' => 1,
+                    'influencer_id' => 1,
                     'notes' => $faker->word,
 
                 'created_at' => now(),

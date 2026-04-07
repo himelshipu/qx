@@ -5,31 +5,31 @@ namespace Database\Seeders;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 
-class CreatorCategorySeeder extends Seeder
+class InfluencerCategorySeeder extends Seeder
 {
     public function run(): void
     {
-        $creatorIds = DB::table('creators')->pluck('id');
-        $categoryIds = DB::table('categories')->pluck('id')->all();
+        $influencerIds = DB::table('influencers')->pluck('id');
+        $categoryIds   = DB::table('categories')->pluck('id')->all();
 
         if (empty($categoryIds)) {
             return;
         }
 
-        foreach ($creatorIds as $creatorId) {
+        foreach ($influencerIds as $influencerId) {
             $selected = collect($categoryIds)
                 ->shuffle()
                 ->take(random_int(1, min(4, count($categoryIds))));
 
             foreach ($selected as $categoryId) {
-                DB::table('creator_categories')->updateOrInsert(
+                DB::table('influencer_categories')->updateOrInsert(
                     [
-                        'creator_id' => $creatorId,
-                        'category_id' => $categoryId,
+                        'influencer_id' => $influencerId,
+                        'category_id'   => $categoryId
                     ],
                     [
                         'created_at' => now(),
-                        'updated_at' => now(),
+                        'updated_at' => now()
                     ]
                 );
             }

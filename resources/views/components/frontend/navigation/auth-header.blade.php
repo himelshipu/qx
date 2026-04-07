@@ -22,22 +22,21 @@
 	    if ($cart) {
 	        $cart->load(['items.package.creator.user']);
 	        foreach ($cart->items as $item) {
-	            $creatorUser = $item->package->creator->user;
+	            $influencerUser = $item->package->creator->user;
 	            $cartItemsData[] = [
 	                'id' => $item->id,
-	                'name' => $creatorUser->name,
+	                'name' => $influencerUser->name,
 	                'package' => $item->package->name,
 	                'price' => (int) $item->unit_price,
 	                'quantity' => $item->quantity,
 	                'image' => image_url($item->package->creator->profile_image_path ?? '/default.webp'),
 	                'creator_id' => $item->creator_id,
-	                'country' => $creatorUser->country ?? null,
+	                'country' => $influencerUser->country ?? null,
 	            ];
 	            $cartTotal += $item->unit_price * $item->quantity;
 	        }
 	    }
 	}
-
 @endphp
 
 
@@ -134,8 +133,8 @@
 										class="px-7 py-3.5 text-[15px] font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
 										<i class="fas fa-user mr-2"></i>Profile
 									</a>
-								@elseif(Auth::user()->creator)
-									<a href="{{ route('creator.profile', Auth::user()->slug) }}"
+								@elseif(Auth::user()->influencer)
+									<a href="{{ route('influencer.profile', Auth::user()->slug) }}"
 										class="px-7 py-3.5 text-[15px] font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
 										<i class="fas fa-user mr-2"></i>Profile
 									</a>
@@ -225,8 +224,7 @@
 										<div class="h-full bg-white transition-all duration-1000"
 											:style="`width: ${uniqueInfluencerCount > 0 ? (1 / uniqueInfluencerCount) * 100 : 0}%`"></div>
 									</div>
-									<div class="text-right mt-3 text-sm font-bold text-gray-500"
-										x-text="uniqueInfluencerCount + ' Influencers'">
+									<div class="text-right mt-3 text-sm font-bold text-gray-500" x-text="uniqueInfluencerCount + ' Influencers'">
 									</div>
 								</div>
 

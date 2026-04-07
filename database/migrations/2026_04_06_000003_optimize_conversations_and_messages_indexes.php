@@ -4,7 +4,8 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration {
+return new class extends Migration
+{
     /**
      * Add indexes for scalability and performance on conversations/messages tables
      */
@@ -17,8 +18,8 @@ return new class extends Migration {
             }
 
             // Index for querying creator conversations
-            if (!Schema::hasIndex('conversations', 'conversations_creator_id_index')) {
-                $table->index('creator_id');
+            if (!Schema::hasIndex('conversations', 'conversations_influencer_id_index')) {
+                $table->index('influencer_id');
             }
 
             // Index for moderator-assigned conversations
@@ -38,7 +39,7 @@ return new class extends Migration {
 
             // Composite index for brand + creator lookups (finding or creating conversations)
             if (!Schema::hasIndex('conversations', 'conversations_brand_creator_index')) {
-                $table->index(['brand_user_id', 'creator_id']);
+                $table->index(['brand_user_id', 'influencer_id']);
             }
         });
 
@@ -67,20 +68,70 @@ return new class extends Migration {
 
     public function down()
     {
-        Schema::table('conversations', function (Blueprint $table) {
-            $table->dropIndexIfExists('conversations_brand_user_id_updated_at_index');
-            $table->dropIndexIfExists('conversations_creator_id_index');
-            $table->dropIndexIfExists('conversations_handled_by_user_id_index');
-            $table->dropIndexIfExists('conversations_order_id_index');
-            $table->dropIndexIfExists('conversations_public_id_index');
-            $table->dropIndexIfExists('conversations_brand_creator_index');
-        });
+        // Use raw SQL to safely drop foreign keys and indexes
+        try {
+            \DB::statement('ALTER TABLE conversations DROP FOREIGN KEY conversations_brand_user_id_foreign');
+        } catch (\Exception $e) {}
 
-        Schema::table('messages', function (Blueprint $table) {
-            $table->dropIndexIfExists('messages_conversation_id_created_at_index');
-            $table->dropIndexIfExists('messages_conversation_id_read_at_index');
-            $table->dropIndexIfExists('messages_sender_user_id_index');
-            $table->dropIndexIfExists('messages_created_at_index');
-        });
+        try {
+            \DB::statement('ALTER TABLE conversations DROP FOREIGN KEY conversations_influencer_id_foreign');
+        } catch (\Exception $e) {}
+
+        try {
+            \DB::statement('ALTER TABLE conversations DROP FOREIGN KEY conversations_handled_by_user_id_foreign');
+        } catch (\Exception $e) {}
+
+        try {
+            \DB::statement('ALTER TABLE conversations DROP FOREIGN KEY conversations_order_id_foreign');
+        } catch (\Exception $e) {}
+
+        try {
+            \DB::statement('ALTER TABLE messages DROP FOREIGN KEY messages_conversation_id_foreign');
+        } catch (\Exception $e) {}
+
+        try {
+            \DB::statement('ALTER TABLE messages DROP FOREIGN KEY messages_sender_user_id_foreign');
+        } catch (\Exception $e) {}
+
+        // Drop indexes using raw SQL
+        try {
+            \DB::statement('ALTER TABLE conversations DROP INDEX conversations_brand_user_id_updated_at_index');
+        } catch (\Exception $e) {}
+
+        try {
+            \DB::statement('ALTER TABLE conversations DROP INDEX conversations_influencer_id_index');
+        } catch (\Exception $e) {}
+
+        try {
+            \DB::statement('ALTER TABLE conversations DROP INDEX conversations_handled_by_user_id_index');
+        } catch (\Exception $e) {}
+
+        try {
+            \DB::statement('ALTER TABLE conversations DROP INDEX conversations_order_id_index');
+        } catch (\Exception $e) {}
+
+        try {
+            \DB::statement('ALTER TABLE conversations DROP INDEX conversations_public_id_index');
+        } catch (\Exception $e) {}
+
+        try {
+            \DB::statement('ALTER TABLE conversations DROP INDEX conversations_brand_creator_index');
+        } catch (\Exception $e) {}
+
+        try {
+            \DB::statement('ALTER TABLE messages DROP INDEX messages_conversation_id_created_at_index');
+        } catch (\Exception $e) {}
+
+        try {
+            \DB::statement('ALTER TABLE messages DROP INDEX messages_conversation_id_read_at_index');
+        } catch (\Exception $e) {}
+
+        try {
+            \DB::statement('ALTER TABLE messages DROP INDEX messages_sender_user_id_index');
+        } catch (\Exception $e) {}
+
+        try {
+            \DB::statement('ALTER TABLE messages DROP INDEX messages_created_at_index');
+        } catch (\Exception $e) {}
     }
 };

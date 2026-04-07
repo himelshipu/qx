@@ -4,36 +4,36 @@ declare (strict_types = 1);
 
 namespace App\Services\Admin;
 
-use App\Models\Creator;
-use App\Repositories\Contracts\CreatorRepositoryInterface;
+use App\Models\Influencer;
+use App\Repositories\Contracts\InfluencerRepositoryInterface;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 /**
- * Class CreatorService
+ * Class InfluencerService
  *
- * Handles business rules for dashboard creator management.
+ * Handles business rules for dashboard influencer management.
  */
-final class CreatorService
+final class InfluencerService
 {
     public function __construct(
-        private readonly CreatorRepositoryInterface $creatorRepository
+        private readonly InfluencerRepositoryInterface $influencerRepository
     ) {}
 
     /**
-     * Build creator listing payload for dashboard index page.
+     * Build influencer listing payload for dashboard index page.
      *
-     * @return array{creators:\Illuminate\Contracts\Pagination\LengthAwarePaginator,stats:array{total:int,active:int,inactive:int,categorized:int},search:string,status:string}
+     * @return array{influencers:\Illuminate\Contracts\Pagination\LengthAwarePaginator,stats:array{total:int,active:int,inactive:int,categorized:int},search:string,status:string}
      */
     public function getListingPayload(string $search, string $status): array
     {
         return [
-            'creators' => $this->creatorRepository->paginateForDashboard($search, $status),
-            'stats'    => $this->creatorRepository->getStats(),
-            'search'   => $search,
-            'status'   => $status
+            'influencers' => $this->influencerRepository->paginateForDashboard($search, $status),
+            'stats'       => $this->influencerRepository->getStats(),
+            'search'      => $search,
+            'status'      => $status
         ];
     }
 
@@ -45,58 +45,58 @@ final class CreatorService
     public function getFormPayload(): array
     {
         return [
-            'categoryOptions' => $this->creatorRepository->getCategoryOptions()
+            'categoryOptions' => $this->influencerRepository->getCategoryOptions()
         ];
     }
 
     /**
-     * Build detail payload for a single creator.
+     * Build detail payload for a single influencer.
      *
-     * @return array{creator:Creator}
+     * @return array{ influencer:Influencer}
      */
-    public function getDetailPayload(Creator $creator): array
+    public function getDetailPayload(Influencer $influencer): array
     {
-        $creator->load(['user:id,name,email,phone,gender,city,country,postal_code,address_line,is_active,created_at,profile_image_path,cover_image_path', 'categories:id,name'])
+        $influencer->load(['user:id,name,email,phone,gender,city,country,postal_code,address_line,is_active,created_at,profile_image_path,cover_image_path', 'categories:id,name'])
             ->loadCount(['campaignApplications', 'orderItems', 'cartItems', 'conversations']);
 
         return [
-            'creator' => $creator
+            'influencer' => $influencer
         ];
     }
 
     /**
-     * Create a new creator account and profile.
+     * Create a new influencer account and profile.
      *
      * @param array<string, mixed> $validated
      */
-    public function createCreator(
+    public function createInfluencer(
         array         $validated,
         bool          $isActive,
         bool          $isFeatured,
         ?int          $featuredPriority,
         ?UploadedFile $profileImageFile,
         ?UploadedFile $coverImageFile
-    ): Creator {
-        return DB::transaction(function () use ($validated, $isActive, $isFeatured, $featuredPriority, $profileImageFile, $coverImageFile): Creator {
-            $user = $this->creatorRepository->createUser([
-                'name'              => $validated['full_name'],
-                'email'             => $validated['email'],
-                'password'          => $validated['password'],
-                'phone'             => $this->nullableString($validated['phone'] ?? null),
-                'gender'            => $validated['gender'] ?? null,
-                'city'              => $this->nullableString($validated['city'] ?? null),
-                'country'           => $this->nullableString($validated['country'] ?? null),
-                'postal_code'       => $this->nullableString($validated['postal_code'] ?? null),
-                'address_line'      => $this->nullableString($validated['location'] ?? null),
-                'bio'               => $this->nullableString($validated['bio'] ?? null),
+    ): Influencer {
+        return DB::transaction(function () use ($validated, $isActive, $isFeatured, $featuredPriority, $profileImageFile, $coverImageFile): Influencer {
+            $user = $this->influencerRepository->createUser([
+                'name'               => $validated['full_name'],
+                'email'              => $validated['email'],
+                'password'           => $validated['password'],
+                'phone'              => $this->nullableString($validated['phone'] ?? null),
+                'gender'             => $validated['gender'] ?? null,
+                'city'               => $this->nullableString($validated['city'] ?? null),
+                'country'            => $this->nullableString($validated['country'] ?? null),
+                'postal_code'        => $this->nullableString($validated['postal_code'] ?? null),
+                'address_line'       => $this->nullableString($validated['location'] ?? null),
+                'bio'                => $this->nullableString($validated['bio'] ?? null),
                 'profile_image_path' => $this->storeUploadedAsset($profileImageFile, 'users/profile'),
                 'cover_image_path'   => $this->storeUploadedAsset($coverImageFile, 'users/cover'),
-                'user_type'         => 'creator',
-                'is_active'         => $isActive,
-                'email_verified_at' => now()
+                'user_type'          => 'influencer',
+                'is_active'          => $isActive,
+                'email_verified_at'  => now()
             ]);
 
-            $creator = $this->creatorRepository->createCreator([
+            $influencer = $this->influencerRepository->createInfluencer([
                 'user_id'           => $user->id,
                 'display_name'      => $this->nullableString($validated['display_name'] ?? null) ?? $validated['full_name'],
                 'title_name'        => $this->nullableString($validated['title_name'] ?? null),
@@ -106,51 +106,51 @@ final class CreatorService
                 'featured_priority' => $isFeatured ? $featuredPriority : null
             ]);
 
-            $this->creatorRepository->syncCategories($creator, $this->normalizeCategoryIds($validated['categories'] ?? []));
+            $this->influencerRepository->syncCategories($influencer, $this->normalizeCategoryIds($validated['categories'] ?? []));
 
-            return $creator;
+            return $influencer;
         });
     }
 
     /**
-     * Update a creator account and profile.
+     * Update an influencer account and profile.
      *
      * @param array<string, mixed> $validated
      */
-    public function updateCreator(
-        Creator       $creator,
+    public function updateInfluencer(
+        Influencer    $influencer,
         array         $validated,
         bool          $isActive,
         bool          $isFeatured,
         ?int          $featuredPriority,
         ?UploadedFile $profileImageFile,
         ?UploadedFile $coverImageFile
-    ): Creator {
-        return DB::transaction(function () use ($creator, $validated, $isActive, $isFeatured, $featuredPriority, $profileImageFile, $coverImageFile): Creator {
-            $profileImagePath = $creator->user?->profile_image_path;
+    ): Influencer {
+        return DB::transaction(function () use ($influencer, $validated, $isActive, $isFeatured, $featuredPriority, $profileImageFile, $coverImageFile): Influencer {
+            $profileImagePath = $influencer->user?->profile_image_path;
             if ($profileImageFile) {
-                $this->deleteStoredAsset($creator->user?->profile_image_path);
+                $this->deleteStoredAsset($influencer->user?->profile_image_path);
                 $profileImagePath = $this->storeUploadedAsset($profileImageFile, 'users/profile');
             }
 
-            $coverImagePath = $creator->user?->cover_image_path;
+            $coverImagePath = $influencer->user?->cover_image_path;
             if ($coverImageFile) {
-                $this->deleteStoredAsset($creator->user?->cover_image_path);
+                $this->deleteStoredAsset($influencer->user?->cover_image_path);
                 $coverImagePath = $this->storeUploadedAsset($coverImageFile, 'users/cover');
             }
 
-            if ($creator->user) {
+            if ($influencer->user) {
                 $userData = [
-                    'name'        => $validated['full_name'],
-                    'email'       => $validated['email'],
-                    'phone'       => $this->nullableString($validated['phone'] ?? null),
-                    'gender'      => $validated['gender'] ?? null,
-                    'city'        => $this->nullableString($validated['city'] ?? null),
-                    'country'     => $this->nullableString($validated['country'] ?? null),
-                    'postal_code' => $this->nullableString($validated['postal_code'] ?? null),
+                    'name'         => $validated['full_name'],
+                    'email'        => $validated['email'],
+                    'phone'        => $this->nullableString($validated['phone'] ?? null),
+                    'gender'       => $validated['gender'] ?? null,
+                    'city'         => $this->nullableString($validated['city'] ?? null),
+                    'country'      => $this->nullableString($validated['country'] ?? null),
+                    'postal_code'  => $this->nullableString($validated['postal_code'] ?? null),
                     'address_line' => $this->nullableString($validated['location'] ?? null),
-                    'bio'         => $this->nullableString($validated['bio'] ?? null),
-                    'is_active'   => $isActive
+                    'bio'          => $this->nullableString($validated['bio'] ?? null),
+                    'is_active'    => $isActive
                 ];
 
                 if ($profileImageFile) {
@@ -165,10 +165,10 @@ final class CreatorService
                     $userData['password'] = $validated['password'];
                 }
 
-                $this->creatorRepository->updateUser($creator->user, $userData);
+                $this->influencerRepository->updateUser($influencer->user, $userData);
             }
 
-            $creator = $this->creatorRepository->updateCreator($creator, [
+            $influencer = $this->influencerRepository->updateInfluencer($influencer, [
                 'display_name'      => $this->nullableString($validated['display_name'] ?? null) ?? $validated['full_name'],
                 'title_name'        => $this->nullableString($validated['title_name'] ?? null),
                 'audience'          => $this->nullableString($validated['audience'] ?? null),
@@ -177,41 +177,41 @@ final class CreatorService
                 'featured_priority' => $isFeatured ? $featuredPriority : null
             ]);
 
-            $this->creatorRepository->syncCategories($creator, $this->normalizeCategoryIds($validated['categories'] ?? []));
+            $this->influencerRepository->syncCategories($influencer, $this->normalizeCategoryIds($validated['categories'] ?? []));
 
-            return $creator;
+            return $influencer;
         });
     }
 
     /**
-     * Delete a creator if no critical dependencies exist.
+     * Delete an influencer if no critical dependencies exist.
      *
      * @return array{deleted:bool,message:string}
      */
-    public function deleteCreator(Creator $creator): array
+    public function deleteInfluencer(Influencer $influencer): array
     {
-        $dependencyCount = $this->creatorRepository->getDependencyCount($creator);
+        $dependencyCount = $this->influencerRepository->getDependencyCount($influencer);
 
         if ($dependencyCount > 0) {
             return [
                 'deleted' => false,
-                'message' => 'Creator cannot be deleted because it has related applications, orders, or activity records.'
+                'message' => 'Influencer cannot be deleted because it has related applications, orders, or activity records.'
             ];
         }
 
-        return DB::transaction(function () use ($creator): array {
-            $this->deleteStoredAsset($creator->user?->profile_image_path);
-            $this->deleteStoredAsset($creator->user?->cover_image_path);
+        return DB::transaction(function () use ($influencer): array {
+            $this->deleteStoredAsset($influencer->user?->profile_image_path);
+            $this->deleteStoredAsset($influencer->user?->cover_image_path);
 
-            if ($creator->user) {
-                $this->creatorRepository->deleteUser($creator->user);
+            if ($influencer->user) {
+                $this->influencerRepository->deleteUser($influencer->user);
             } else {
-                $this->creatorRepository->deleteCreator($creator);
+                $this->influencerRepository->deleteInfluencer($influencer);
             }
 
             return [
                 'deleted' => true,
-                'message' => 'Creator deleted successfully.'
+                'message' => 'Influencer deleted successfully.'
             ];
         });
     }
@@ -219,27 +219,27 @@ final class CreatorService
     /**
      * Toggle active status and keep linked user in sync.
      */
-    public function toggleStatus(Creator $creator): bool
+    public function toggleStatus(Influencer $influencer): bool
     {
-        $updatedCreator = $this->creatorRepository->toggleStatus($creator);
+        $updatedInfluencer = $this->influencerRepository->toggleStatus($influencer);
 
-        if ($updatedCreator->user) {
-            $this->creatorRepository->updateUser($updatedCreator->user, [
-                'is_active' => $updatedCreator->is_active
+        if ($updatedInfluencer->user) {
+            $this->influencerRepository->updateUser($updatedInfluencer->user, [
+                'is_active' => $updatedInfluencer->is_active
             ]);
         }
 
-        return $updatedCreator->is_active;
+        return $updatedInfluencer->is_active;
     }
 
     /**
      * Toggle featured status.
      */
-    public function toggleFeatured(Creator $creator): bool
+    public function toggleFeatured(Influencer $influencer): bool
     {
-        $updatedCreator = $this->creatorRepository->toggleFeatured($creator);
+        $updatedInfluencer = $this->influencerRepository->toggleFeatured($influencer);
 
-        return $updatedCreator->is_featured;
+        return $updatedInfluencer->is_featured;
     }
 
     /**

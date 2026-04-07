@@ -3,14 +3,22 @@
 		<table class="min-w-full divide-y divide-gray-200 dark:divide-gray-800">
 			<thead class="bg-gray-50 dark:bg-gray-800/50">
 				<tr>
-					<th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">User</th>
-					<th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Type</th>
-					<th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Email</th>
-					<th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Phone</th>
-					<th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Location</th>
-					<th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Status</th>
-					<th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Joined</th>
-					<th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Actions</th>
+					<th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">User
+					</th>
+					<th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Type
+					</th>
+					<th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+						Email</th>
+					<th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+						Phone</th>
+					<th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+						Location</th>
+					<th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+						Status</th>
+					<th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+						Joined</th>
+					<th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+						Actions</th>
 				</tr>
 			</thead>
 			<tbody class="divide-y divide-gray-100 dark:divide-gray-800">
@@ -29,9 +37,9 @@
 						if ($user->user_type === 'brand' && $user->brand) {
 						    $viewUrl = route('dashboard.brands.view', $user->brand);
 						    $editUrl = route('dashboard.brands.edit', $user->brand);
-						} elseif ($user->user_type === 'creator' && $user->creator) {
-						    $viewUrl = route('dashboard.creators.view', $user->creator);
-						    $editUrl = route('dashboard.creators.edit', $user->creator);
+						} elseif ($user->user_type === 'influencer' && $user->influencer) {
+						    $viewUrl = route('dashboard.influencers.view', $user->influencer);
+						    $editUrl = route('dashboard.influencers.edit', $user->influencer);
 						} elseif ($user->user_type === 'moderator') {
 						    $viewUrl = route('dashboard.moderators.show', $user);
 						    $editUrl = route('dashboard.moderators.edit', $user);
@@ -40,11 +48,13 @@
 					<tr class="transition hover:bg-gray-50/70 dark:hover:bg-gray-800/40">
 						<td class="px-4 py-3">
 							<div class="flex items-center gap-3">
-								<div class="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-gray-100 dark:bg-gray-800">
+								<div
+									class="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-gray-100 dark:bg-gray-800">
 									@if ($previewUrl)
 										<img src="{{ $previewUrl }}" alt="{{ $user->name }}" class="h-10 w-10 object-cover">
 									@else
-										<span class="text-sm font-semibold text-gray-500 dark:text-gray-300">{{ strtoupper(substr($user->name ?? 'U', 0, 1)) }}</span>
+										<span
+											class="text-sm font-semibold text-gray-500 dark:text-gray-300">{{ strtoupper(substr($user->name ?? 'U', 0, 1)) }}</span>
 									@endif
 								</div>
 								<div>
@@ -54,7 +64,8 @@
 							</div>
 						</td>
 						<td class="px-4 py-3">
-							<span class="inline-flex rounded-full px-2.5 py-1 text-xs font-semibold {{ $user->user_type === 'brand' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' : ($user->user_type === 'creator' ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300' : ($user->user_type === 'moderator' ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300' : 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300')) }}">
+							<span
+								class="inline-flex rounded-full px-2.5 py-1 text-xs font-semibold {{ $user->user_type === 'brand' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' : ($user->user_type === 'influencer' ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300' : ($user->user_type === 'moderator' ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300' : 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300')) }}">
 								{{ ucfirst($user->user_type) }}
 							</span>
 						</td>
@@ -66,9 +77,10 @@
 						<td class="px-4 py-3">
 							<div class="flex items-center">
 								<label class="relative inline-flex cursor-pointer items-center">
-									<input type="checkbox" {{ $user->is_active ? 'checked' : '' }} onchange="toggleUserStatus({{ $user->id }}, this)"
-										class="peer sr-only" />
-									<div class="h-6 w-11 rounded-full bg-gray-200 transition-colors duration-200 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-green-400 peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:ring-4 peer-focus:ring-green-300 dark:bg-gray-700 dark:peer-focus:ring-green-800">
+									<input type="checkbox" {{ $user->is_active ? 'checked' : '' }}
+										onchange="toggleUserStatus({{ $user->id }}, this)" class="peer sr-only" />
+									<div
+										class="h-6 w-11 rounded-full bg-gray-200 transition-colors duration-200 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-green-400 peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:ring-4 peer-focus:ring-green-300 dark:bg-gray-700 dark:peer-focus:ring-green-800">
 									</div>
 								</label>
 							</div>

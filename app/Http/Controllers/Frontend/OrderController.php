@@ -32,16 +32,16 @@ class OrderController extends Controller
                 ->paginate(15);
 
             return view('frontend.orders.brand-index', compact('orders', 'search', 'status'));
-        } elseif ($user->user_type === 'creator') {
-            // Creator sees orders where they have items
-            $orders = Order::whereHas('items', fn($q) => $q->where('creator_id', $user->creator->id))
+        } elseif ($user->user_type === 'influencer') {
+            // Influencer sees orders where they have items
+            $orders = Order::whereHas('items', fn($q) => $q->where('influencer_id', $user->influencer->id))
                 ->with(['buyer.brand', 'items.package', 'items.creator.user'])
                 ->when($search !== '', fn($q) => $q->where('order_number', 'like', "%{$search}%"))
                 ->when($status !== 'all', fn($q) => $q->where('status', $status))
                 ->orderByDesc('created_at')
                 ->paginate(15);
 
-            return view('frontend.orders.creator-index', compact('orders', 'search', 'status'));
+            return view('frontend.orders.influencer-index', compact('orders', 'search', 'status'));
         } else {
             abort(403, 'Unauthorized');
         }
@@ -56,7 +56,7 @@ class OrderController extends Controller
         $user = auth()->user();
 
         // Authorization check
-        if (!in_array($user->user_type, ['brand', 'creator'])) {
+        if (!in_array($user->user_type, ['brand', 'influencer'])) {
             abort(403, 'Unauthorized');
         }
 
@@ -68,9 +68,9 @@ class OrderController extends Controller
             }
         }
 
-        // Creator user: check if they have items in this order
-        if ($user->user_type === 'creator') {
-            $hasItems = $order->items()->where('creator_id', $user->creator->id)->exists();
+        // Influencer user: check if they have items in this order
+        if ($user->user_type === 'influencer') {
+            $hasItems = $order->items()->where('influencer_id', $user->influencer->id)->exists();
             if (!$hasItems) {
                 abort(403, 'Unauthorized');
             }
@@ -78,7 +78,7 @@ class OrderController extends Controller
 
         $order->load([
             'buyer:id,name,email,phone',
-            'items:id,order_id,creator_id,package_id,title,description,quantity,unit_price,line_total,status,due_date,paid_at',
+            'items:id,order_id,influencer_id,package_id,title,description,quantity,unit_price,line_total,status,due_date,paid_at',
             'items.creator:id,user_id,display_name',
             'items.creator.user'
         ]);

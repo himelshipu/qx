@@ -5,7 +5,7 @@ namespace App\Providers;
 use App\Models\Brand;
 use App\Models\Campaign;
 use App\Models\Conversation;
-use App\Models\Creator;
+use App\Models\Influencer;
 use App\Models\Order;
 use App\Models\Package;
 use App\Policies\CampaignPolicy;
@@ -32,8 +32,8 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Relation::enforceMorphMap([
-            'brand'   => Brand::class,
-            'creator' => Creator::class
+            'brand'      => Brand::class,
+            'influencer' => Influencer::class
         ]);
 
         // Register authorization policies
