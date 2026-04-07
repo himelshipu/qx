@@ -1,8 +1,9 @@
 <?php
 
-namespace App\Http\Requests\Backend\Creator;
+namespace App\Http\Requests\Backend\Influencer;
 
 use App\Models\Influencer;
+use App\Models\User;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
@@ -24,8 +25,10 @@ class UpdateInfluencerRequest extends FormRequest
      */
     public function rules(): array
     {
-        $influencer      = $this->route('creator');
-        $ignoreUserId = $influencer instanceof Creator ? $influencer->user_id : null;
+        $influencer = $this->route('influencer');
+        
+        // Get the user_id from the influencer model
+        $ignoreUserId = $influencer instanceof Influencer ? $influencer->user_id : null;
 
         return [
             'full_name'          => ['required', 'string', 'max:255'],

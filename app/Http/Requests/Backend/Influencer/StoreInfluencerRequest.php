@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Requests\Backend\Creator;
+namespace App\Http\Requests\Backend\Influencer;
 
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rules\Password;
@@ -35,7 +35,7 @@ class StoreInfluencerRequest extends FormRequest
             'city'               => ['nullable', 'string', 'max:120'],
             'country'            => ['nullable', 'string', 'max:120'],
             'postal_code'        => ['nullable', 'string', 'max:30'],
-            'gender'             => ['nullable', 'in:male,female,other'],
+            'gender'             => ['nullable', 'string', 'in:male,female,other'],
             'categories'         => ['nullable', 'array'],
             'categories.*'       => ['integer', 'exists:categories,id'],
             'profile_image_file' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp,avif,gif', 'max:5120'],
