@@ -1,6 +1,6 @@
 <?php
 
-declare (strict_types = 1);
+declare(strict_types=1);
 
 namespace App\Repositories\Eloquent;
 
@@ -22,24 +22,24 @@ class EloquentBrandRepository implements BrandRepositoryInterface
     public function paginateForDashboard(string $search, string $status, int $perPage = 12): LengthAwarePaginator
     {
         return Brand::query()
-            ->with(['user:id,name,email,is_active'])
+            ->with(['user:id,name,email,is_active,profile_image_path'])
             ->withCount(['orders', 'reviews'])
             ->when($search !== '', function ($query) use ($search) {
                 $query->where(function ($subQuery) use ($search) {
                     $subQuery
-                        ->where('brand_name', 'like', '%' . $search . '%')
-                        ->orWhere('industry', 'like', '%' . $search . '%')
+                        ->where('brand_name', 'like', '%'.$search.'%')
+                        ->orWhere('industry', 'like', '%'.$search.'%')
                         ->orWhereHas('user', function ($userQuery) use ($search) {
                             $userQuery
-                                ->where('name', 'like', '%' . $search . '%')
-                                ->orWhere('email', 'like', '%' . $search . '%')
-                                ->orWhere('city', 'like', '%' . $search . '%')
-                                ->orWhere('country', 'like', '%' . $search . '%');
+                                ->where('name', 'like', '%'.$search.'%')
+                                ->orWhere('email', 'like', '%'.$search.'%')
+                                ->orWhere('city', 'like', '%'.$search.'%')
+                                ->orWhere('country', 'like', '%'.$search.'%');
                         });
                 });
             })
-            ->when($status === 'active', fn($query) => $query->whereHas('user', fn($userQuery) => $userQuery->where('is_active', true)))
-            ->when($status === 'inactive', fn($query) => $query->whereHas('user', fn($userQuery) => $userQuery->where('is_active', false)))
+            ->when($status === 'active', fn ($query) => $query->whereHas('user', fn ($userQuery) => $userQuery->where('is_active', true)))
+            ->when($status === 'inactive', fn ($query) => $query->whereHas('user', fn ($userQuery) => $userQuery->where('is_active', false)))
             ->orderByDesc('updated_at')
             ->paginate($perPage)
             ->withQueryString();
@@ -53,17 +53,17 @@ class EloquentBrandRepository implements BrandRepositoryInterface
     public function getStats(): array
     {
         return [
-            'total'    => Brand::count(),
-            'active'   => Brand::whereHas('user', fn($userQuery) => $userQuery->where('is_active', true))->count(),
-            'inactive' => Brand::whereHas('user', fn($userQuery) => $userQuery->where('is_active', false))->count(),
-            'verified' => Brand::where('is_verified', true)->count()
+            'total' => Brand::count(),
+            'active' => Brand::whereHas('user', fn ($userQuery) => $userQuery->where('is_active', true))->count(),
+            'inactive' => Brand::whereHas('user', fn ($userQuery) => $userQuery->where('is_active', false))->count(),
+            'verified' => Brand::where('is_verified', true)->count(),
         ];
     }
 
     /**
      * Create a user account for a brand.
      *
-     * @param array<string, mixed> $data
+     * @param  array<string, mixed>  $data
      */
     public function createUser(array $data): User
     {
@@ -73,7 +73,7 @@ class EloquentBrandRepository implements BrandRepositoryInterface
     /**
      * Update a brand user account.
      *
-     * @param array<string, mixed> $data
+     * @param  array<string, mixed>  $data
      */
     public function updateUser(User $user, array $data): User
     {
@@ -85,7 +85,7 @@ class EloquentBrandRepository implements BrandRepositoryInterface
     /**
      * Create a brand profile.
      *
-     * @param array<string, mixed> $data
+     * @param  array<string, mixed>  $data
      */
     public function createBrand(array $data): Brand
     {
@@ -95,7 +95,7 @@ class EloquentBrandRepository implements BrandRepositoryInterface
     /**
      * Update a brand profile.
      *
-     * @param array<string, mixed> $data
+     * @param  array<string, mixed>  $data
      */
     public function updateBrand(Brand $brand, array $data): Brand
     {
@@ -135,7 +135,7 @@ class EloquentBrandRepository implements BrandRepositoryInterface
     {
         if ($brand->user) {
             $brand->user->update([
-                'is_active' => !$brand->user->is_active
+                'is_active' => ! $brand->user->is_active,
             ]);
         }
 
