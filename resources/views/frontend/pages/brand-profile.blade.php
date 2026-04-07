@@ -171,7 +171,7 @@
 				@if ($campaigns && count($campaigns) > 0)
 					<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
 						@foreach ($campaigns as $campaign)
-							<a href="#"
+							<a href="{{ route('frontend.campaigns.show', ['campaign' => $campaign->id]) }}"
 								class="group relative overflow-hidden rounded-2xl bg-gray-200 aspect-video flex items-center justify-center hover:shadow-xl transition duration-300 cursor-pointer">
 								<!-- Campaign background or image -->
 								<div class="absolute inset-0 bg-gradient-to-br from-gray-300 to-gray-400"></div>

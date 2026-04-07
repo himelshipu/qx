@@ -6,7 +6,9 @@
     errors: {},
     isSaving: false,
     profilePreview: null,
+    profileRemoved: false,
     coverPreview: null,
+    coverRemoved: false,
     init() {
         // Check if we're returning from image upload
         const storedTab = sessionStorage.getItem('activeBrandProfileTab');
@@ -23,6 +25,7 @@
     },
     removeProfile() {
         this.profilePreview = null;
+        this.profileRemoved = true;
         if (this.$refs.profileInput) this.$refs.profileInput.value = '';
     },
     handleCoverUpload(e) {
@@ -33,6 +36,7 @@
     },
     removeCover() {
         this.coverPreview = null;
+        this.coverRemoved = true;
         if (this.$refs.coverInput) this.$refs.coverInput.value = '';
     },
     fieldError(field) {
@@ -152,11 +156,11 @@
 					:class="tab === 'details' ? 'border-b-2 border-black dark:border-white text-black dark:text-white' :
 					    'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'"
 					class="pb-4 text-base font-medium transition-all whitespace-nowrap">Details</button>
-				<button @click="tab = 'socia
+				<button @click="tab = 'social'"
 					:class="tab === 'social'
 					? 'border-b-2 border-black dark:border-white text-black dark:text-white'
 					: 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'"
-									class="pb-4 text-base font-medium transition-all whitespace-nowrap">Social Media</button>
+					class="pb-4 text-base font-medium transition-all whitespace-nowrap">Social Media</button>
 								<button @click="tab = 'images'"
 									:class="tab === 'images' ? 'border-b-2 border-black dark:border-white text-black dark:text-white' :
 									    'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'"
@@ -363,11 +367,11 @@
 												<template x-if="profilePreview">
 													<img :src="profilePreview" class="w-full h-full object-cover">
 												</template>
-												<template x-if="!profilePreview && {{ !is_null($user?->profile_image_path) ? 'true' : 'false' }}">
-													<img src="{{ $user?->profile_image_path ? \App\Helpers\ImageHelper::url($user->profile_image_path) : '' }}"
-														class="w-full h-full object-cover">
-												</template>
-												<template x-if="!profilePreview && !{{ !is_null($user?->profile_image_path) ? 'true' : 'false' }}">
+<template x-if="!profilePreview && !profileRemoved">
+						<img src="{{ $user?->profile_image_path ? \App\Helpers\ImageHelper::url($user->profile_image_path) : '' }}"
+							class="w-full h-full object-cover">
+					</template>
+					<template x-if="!profilePreview && profileRemoved">
 													<svg class="w-12 h-12 text-gray-400" fill="currentColor" viewBox="0 0 24 24">
 														<path
 															d=" M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8
@@ -376,13 +380,14 @@
 				</template>
 			</div>
 			<div
-				class="absolute bottom-0 right-0 bg-purple-400 text-white p-2 rounded-full shadow-lg hover:bg-purple-500 transition cursor-pointer">
+				class="absolute bottom-0 right-0 bg-purple-400 text-white p-2 rounded-full shadow-lg hover:bg-purple-500 transition cursor-pointer"
+				@click="$el.closest('.group').querySelector('input[name=profile_image]').click()">
 				<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
 					<path
 						d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z" />
 				</svg>
 			</div>
-			<button x-show="profilePreview" @click.stop="removeProfile" type="button"
+			<button x-show="profilePreview || !profileRemoved" @click.stop="removeProfile" type="button"
 				class="absolute -top-1 -right-1 bg-red-500 text-white rounded-full p-1 shadow-lg hover:bg-red-600 transition">
 				<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"></path>
@@ -410,12 +415,12 @@
 				<img :src="coverPreview" class="absolute inset-0 w-full h-full object-cover rounded-2xl z-0">
 			</template>
 
-			<template x-if="!coverPreview && {{ !is_null($user?->cover_image_path) ? 'true' : 'false' }}">
+			<template x-if="!coverPreview && !coverRemoved">
 				<img src="{{ $user?->cover_image_path ? \App\Helpers\ImageHelper::url($user->cover_image_path) : '' }}"
 					class="absolute inset-0 w-full h-full object-cover rounded-2xl z-0">
 			</template>
 
-			<div x-show="!coverPreview && !{{ !is_null($user?->cover_image_path) ? 'true' : 'false' }}"
+			<div x-show="!coverPreview && coverRemoved"
 				class="flex flex-col items-center z-10">
 				<div class="bg-gray-100 dark:bg-gray-800 p-4 rounded-full mb-4">
 					<svg class="w-8 h-8 text-gray-400" fill="currentColor" viewBox="0 0 24 24">
@@ -428,7 +433,7 @@
 			</div>
 		</div>
 
-		<template x-if="coverPreview || {{ !is_null($user?->cover_image_path) ? 'true' : 'false' }}">
+		<template x-if="coverPreview || !coverRemoved">
 			<button @click.stop="removeCover" type="button"
 				class="absolute top-4 right-4 z-30 flex items-center gap-2 bg-red-500 text-white px-3 py-2 rounded-lg font-bold text-xs shadow-lg hover:bg-red-600 transition-all active:scale-95">
 				<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

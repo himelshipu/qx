@@ -27,14 +27,12 @@ class CampaignController extends Controller
      */
     public function assign(): View
     {
-        // Get ALL active campaigns (no date restrictions for assignment)
-        $campaigns = Campaign::where('is_active', true)
-            ->orderByDesc('created_at')
+        // Get ALL campaigns (including inactive for assignment purposes) - dashboard sees all
+        $campaigns = Campaign::orderByDesc('created_at')
             ->get(['id', 'title', 'description', 'campaign_type', 'status', 'start_date', 'end_date', 'budget_min', 'budget_max', 'currency']);
 
-        // Get active creators
+        // Get all creators - dashboard sees all
         $creators = Creator::with('user:id,email,name,phone')
-            ->where('is_active', true)
             ->orderBy('display_name')
             ->get(['id', 'display_name', 'user_id']);
 
@@ -42,11 +40,8 @@ class CampaignController extends Controller
         $activeCreatorsCount = $creators->count();
         $activeCampaignsCount = $campaigns->count();
 
-        // Get latest active campaigns for display purposes (latest 10)
-        $latestCampaigns = Campaign::where('is_active', true)
-            ->with(['applications' => function ($query) {
-                $query->select('campaign_id');
-            }])
+        // Get latest campaigns for display purposes (latest 10)
+        $latestCampaigns = Campaign::withCount(['applications', 'orders', 'orderItems', 'cartItems'])
             ->orderByDesc('created_at')
             ->limit(10)
             ->get(['id', 'title', 'description', 'start_date', 'end_date', 'status', 'is_active']);
@@ -60,19 +55,19 @@ class CampaignController extends Controller
     public function assignStore(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'campaign_id'   => 'required|exists:campaigns,id',
-            'creator_ids'   => 'required|array|min:1',
-            'creator_ids.*' => 'exists:creators,id'
+            'campaign_id' => 'required|exists:campaigns,id',
+            'creator_ids' => 'required|array|min:1',
+            'creator_ids.*' => 'exists:creators,id',
         ], [
             'creator_ids.required' => 'Please select at least one creator to assign to the campaign.',
             'creator_ids.min' => 'Please select at least one creator to assign to the campaign.',
-            'creator_ids.*.exists' => 'One or more selected creators are invalid.'
+            'creator_ids.*.exists' => 'One or more selected creators are invalid.',
         ]);
 
         $campaignId = $validated['campaign_id'];
         $creatorIds = $validated['creator_ids'];
 
-        $now     = now();
+        $now = now();
         $created = 0;
 
         foreach ($creatorIds as $creatorId) {
@@ -80,12 +75,12 @@ class CampaignController extends Controller
                 ->where('creator_id', $creatorId)
                 ->exists();
 
-            if (!$exists) {
+            if (! $exists) {
                 CampaignApplication::create([
                     'campaign_id' => $campaignId,
-                    'creator_id'  => $creatorId,
-                    'status'      => 'invited', // valid enum value
-                    'applied_at'  => $now
+                    'creator_id' => $creatorId,
+                    'status' => 'invited', // valid enum value
+                    'applied_at' => $now,
                 ]);
                 $created++;
             }
@@ -108,9 +103,9 @@ class CampaignController extends Controller
             ->get()
             ->map(function ($application) {
                 return [
-                    'id'           => $application->creator->id,
+                    'id' => $application->creator->id,
                     'display_name' => $application->creator->display_name,
-                    'email'        => $application->creator->user?->email,
+                    'email' => $application->creator->user?->email,
                 ];
             });
 
@@ -141,7 +136,7 @@ class CampaignController extends Controller
 
             return redirect()
                 ->route('dashboard.campaigns.standard')
-                ->with('success', 'Campaign "' . $campaign->title . '" has been created successfully.');
+                ->with('success', 'Campaign "'.$campaign->title.'" has been created successfully.');
 
         } catch (ValidationException $e) {
             return redirect()
@@ -167,7 +162,7 @@ class CampaignController extends Controller
     {
         $search = trim((string) $request->input('q', ''));
         $status = (string) $request->input('status', 'all');
-        $type   = (string) $request->input('type', 'all');
+        $type = (string) $request->input('type', 'all');
 
         return view(
             'backend.pages.campaigns.index',
@@ -193,7 +188,7 @@ class CampaignController extends Controller
     {
         return view('backend.pages.campaigns.edit', [
             'campaign' => $campaign->load(['targeting', 'brand', 'categories', 'followerRanges', 'targetCountries']),
-            ...$this->campaignService->getFormPayload()
+            ...$this->campaignService->getFormPayload(),
         ]);
     }
 
@@ -211,7 +206,7 @@ class CampaignController extends Controller
 
             return redirect()
                 ->route('dashboard.campaigns.standard')
-                ->with('success', 'Campaign "' . $campaign->title . '" has been updated successfully.');
+                ->with('success', 'Campaign "'.$campaign->title.'" has been updated successfully.');
 
         } catch (ValidationException $e) {
             return redirect()
