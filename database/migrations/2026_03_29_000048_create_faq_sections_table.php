@@ -12,7 +12,7 @@ return new class extends Migration
             $table->id();
             $table->string('section_code', 120)->unique();
             $table->string('section_title');
-            $table->enum('audience_type', ['all', 'brand', 'creator'])->default('all');
+            $table->enum('audience_type', ['all', 'brand', 'influencer'])->default('all');
             $table->integer('sort_order')->default(0);
             $table->boolean('is_active')->default(true);
             $table->timestamps();

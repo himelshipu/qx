@@ -11,7 +11,7 @@ return new class extends Migration
         Schema::create('billing_profiles', function (Blueprint $table): void {
             $table->id();
             $table->unsignedBigInteger('user_id');
-            $table->enum('user_type', ['brand', 'creator']);
+            $table->enum('user_type', ['brand', 'influencer']);
             $table->string('legal_company_name')->nullable();
             $table->string('vat_id', 120)->nullable();
             $table->string('billing_address')->nullable();

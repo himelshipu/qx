@@ -10,6 +10,7 @@ return new class extends Migration
     {
         Schema::create('conversations', function (Blueprint $table): void {
             $table->id();
+            $table->string('public_id', 32)->nullable()->unique();
             $table->enum('conversation_type', ['influencer_profile', 'order'])->default('influencer_profile');
             $table->foreignId('influencer_id')->constrained('influencers')->cascadeOnDelete();
             $table->foreignId('brand_user_id')->constrained('users')->cascadeOnDelete();
@@ -18,6 +19,13 @@ return new class extends Migration
             $table->boolean('influencer_direct_message_enabled')->default(false);
             $table->string('title')->nullable();
             $table->timestamps();
+
+            $table->index(['brand_user_id', 'updated_at'], 'conversations_brand_user_id_updated_at_index');
+            $table->index('influencer_id');
+            $table->index('handled_by_user_id');
+            $table->index('order_id');
+            $table->index('public_id');
+            $table->index(['brand_user_id', 'influencer_id']);
         });
     }
 

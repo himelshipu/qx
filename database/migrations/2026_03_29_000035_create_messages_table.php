@@ -18,6 +18,8 @@ return new class extends Migration
             $table->string('attachment_path', 500)->nullable();
             $table->timestamp('read_at')->nullable();
             $table->timestamps();
+
+            $table->index(['conversation_id', 'created_at'], 'messages_conversation_id_created_at_index');
         });
     }
 

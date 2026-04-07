@@ -13,6 +13,7 @@ return new class extends Migration
             $table->foreignId('order_id')->constrained('orders')->cascadeOnDelete();
             $table->string('payment_provider', 80);
             $table->string('provider_payment_id', 120)->nullable();
+            $table->foreignId('payment_method_id')->nullable()->constrained('payment_methods')->nullOnDelete();
             $table->decimal('amount', 12, 2);
             $table->char('currency', 3)->default('USD');
             $table->enum('status', ['pending', 'authorized', 'captured', 'failed', 'refunded', 'partially_refunded'])->default('pending');
