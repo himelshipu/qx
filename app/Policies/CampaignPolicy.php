@@ -18,7 +18,7 @@ class CampaignPolicy
         }
 
         // Brand can view their own campaigns
-        if ($user->user_type === 'brand' && $campaign->created_by_user_id === $user->id) {
+        if ($user->user_type === 'brand' && $campaign->created_by === $user->id) {
             return true;
         }
 
@@ -49,8 +49,7 @@ class CampaignPolicy
         }
 
         // Brand can update only their own
-
-        return $user->user_type === 'brand' && $campaign->created_by_user_id === $user->id;
+        return $user->user_type === 'brand' && $campaign->created_by === $user->id;
     }
 
     /**
@@ -64,7 +63,6 @@ class CampaignPolicy
         }
 
         // Brand can delete only their own
-
-        return $user->user_type === 'brand' && $campaign->created_by_user_id === $user->id;
+        return $user->user_type === 'brand' && $campaign->created_by === $user->id;
     }
 }
