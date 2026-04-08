@@ -3,24 +3,6 @@
 @section('title', isset($isEditMode) && $isEditMode ? 'Edit Campaign' : 'Create Campaign')
 
 @section('content')
-	@php
-		$stepTwoFields = [
-			'title',
-			'description',
-			'instructions',
-			'status',
-			'currency',
-			'budget_min',
-			'budget_max',
-			'start_date',
-			'end_date',
-		];
-
-		$requestedStep = (int) old('wizard_step', 1);
-		$hasStepTwoErrors = collect($stepTwoFields)->contains(static fn(string $field): bool => $errors->has($field));
-		$initialStep = $hasStepTwoErrors ? max($requestedStep, 2) : max($requestedStep, 1);
-	@endphp
-
 	<x-backend.shell.breadcrumb :pageTitle="isset($isEditMode) && $isEditMode ? 'Edit Campaign' : 'Create Campaign'" />
 
 	<div class="max-w-6xl px-2 py-2 transition-colors duration-300"
@@ -33,16 +15,13 @@
 			categoryOptions: @js($categoryOptions->values()),
 			followerRangeOptions: @js($followerRangeOptions->values()),
 			countryOptions: @js($countryOptions),
-			selectedCategoryIds: @js(array_values(array_unique(array_map('intval', (array) old('categories', isset($campaignData) ? $campaignData['categories'] : []))))),
-			selectedFollowerRangeIds: @js(array_values(array_unique(array_map('intval', (array) old('follower_ranges', isset($campaignData) ? $campaignData['follower_ranges'] : []))))),
-			selectedCountryCodes: @js(array_values(array_unique(array_map(static function ($code): string { return strtoupper((string) $code); }, (array) old('target_countries', isset($campaignData) ? $campaignData['target_countries'] : []))))),
-			influencerCount: @js((string) old('influencer_count', isset($campaignData) ? $campaignData['influencer_count'] : '1')),
-			isAdvancedOpen: @js(old('target_gender') || old('age_min') || old('age_max') || old('targeting_notes') || (isset($campaignData) && ($campaignData['target_gender'] || $campaignData['age_min'] || $campaignData['age_max'] || $campaignData['targeting_notes']))),
+			selectedCategoryIds: @js($selectedCategoryIds),
+			selectedFollowerRangeIds: @js($selectedFollowerRangeIds),
+			selectedCountryCodes: @js($selectedCountryCodes),
+			influencerCount: @js($influencerCount),
+			isAdvancedOpen: @js($isAdvancedOpen),
 		})">
-		<div class="mb-6">
-			@include('backend.pages.campaigns._alerts')
-		</div>
-
+		
 		<div class="mb-4 flex flex-wrap items-center justify-between gap-3">
 			<div class="flex items-center gap-12 border-b border-gray-100 pb-4 dark:border-gray-800">
 				<div class="flex items-center gap-3">
@@ -73,11 +52,6 @@
 			<input type="hidden" name="ui_variant" value="designed">
 			<input type="hidden" name="wizard_step" x-model="step">
 			<input type="hidden" name="is_active" value="0">
-
-			@php
-				$selectedBrandId = auth()->user()->brand?->id ?? 0;
-			@endphp
-
 			<input type="hidden" name="brand_id" value="{{ $selectedBrandId }}">
 
 			<div x-show="step === 1" x-cloak x-transition class="grid grid-cols-1 items-start gap-8 md:grid-cols-[1fr_380px]">

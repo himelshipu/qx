@@ -208,28 +208,21 @@
 
 					<!-- Invited Influencers Section (Brand Only) -->
 					@if (auth()->user()?->user_type === 'brand' && $campaign->created_by === auth()->user()->id)
-						@php
-							$invitedInfluencers = $campaign->applications->where('status', 'invited')->values();
-						@endphp
 						@if ($invitedInfluencers->count() > 0)
 							<div class="rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-gray-900">
 								<h2 class="text-lg font-bold text-gray-900 dark:text-white mb-4">Invited Influencers</h2>
 								<div class="space-y-3">
 									@foreach ($invitedInfluencers as $application)
-										@php
-											$influencer = $application->influencer;
-											$user = $influencer->user;
-										@endphp
 										<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800/50">
 											<div class="flex items-center gap-3 flex-1">
 												<!-- Avatar -->
 												<div class="w-10 h-10 rounded-full bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center flex-shrink-0">
-													<span class="text-sm font-bold text-white">{{ substr($user->name ?? 'N', 0, 1) }}</span>
+													<span class="text-sm font-bold text-white">{{ substr($application->influencer->user->name ?? 'N', 0, 1) }}</span>
 												</div>
 												<!-- Influencer Details -->
 												<div class="flex-1 min-w-0">
-													<h3 class="font-semibold text-gray-900 dark:text-white truncate">{{ $user->name ?? 'Unknown' }}</h3>
-													<p class="text-xs text-gray-600 dark:text-gray-400">{{ $influencer->display_name ?? 'Influencer' }}</p>
+													<h3 class="font-semibold text-gray-900 dark:text-white truncate">{{ $application->influencer->user->name ?? 'Unknown' }}</h3>
+													<p class="text-xs text-gray-600 dark:text-gray-400">{{ $application->influencer->display_name ?? 'Influencer' }}</p>
 													@if ($application->proposed_rate)
 														<p class="text-xs text-gray-500 dark:text-gray-500 mt-1">Rate: <span class="font-semibold text-gray-700 dark:text-gray-300">{{ $campaign->currency }} {{ number_format((float) $application->proposed_rate, 2) }}</span></p>
 													@endif
@@ -262,12 +255,9 @@
 						@endif
 					@endif
 
-					<!-- Application Status for Influencer -->
-					@if (auth()->user()?->user_type === 'influencer')
-						@php
-							$application = $campaign->applications?->first();
-						@endphp
-						@if ($application)
+				<!-- Application Status for Influencer -->
+				@if (auth()->user()?->user_type === 'influencer')
+					@if ($influencerApplication)
 							<div class="rounded-lg border border-blue-200 bg-blue-50 p-6 dark:border-blue-900/30 dark:bg-blue-900/20">
 								<h3 class="text-lg font-bold text-blue-900 dark:text-blue-300 mb-4">Your Application Status</h3>
 								<div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -280,18 +270,18 @@
 											    : ($application->status === 'rejected'
 											        ? 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300'
 											        : 'bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300') }}">
-											{{ \Illuminate\Support\Str::headline($application->status) }}
+							{{ \Illuminate\Support\Str::headline($influencerApplication->status) }}
 										</span>
 									</div>
 									<div>
 										<p class="text-sm text-blue-700 dark:text-blue-400 mb-1">Applied on:</p>
-										<p class="font-semibold text-blue-900 dark:text-blue-300">{{ $application->applied_at?->format('M d, Y') }}</p>
+										<p class="font-semibold text-blue-900 dark:text-blue-300">{{ $influencerApplication->applied_at?->format('M d, Y') }}</p>
 									</div>
 								</div>
-								@if ($application->pitch_message)
+								@if ($influencerApplication->pitch_message)
 									<div class="mt-4 border-t border-blue-200 pt-4 dark:border-blue-900/30">
 										<p class="text-sm font-semibold text-blue-900 dark:text-blue-300 mb-2">Your Pitch:</p>
-										<p class="text-sm text-blue-800 dark:text-blue-200">{{ $application->pitch_message }}</p>
+										<p class="text-sm text-blue-800 dark:text-blue-200">{{ $influencerApplication->pitch_message }}</p>
 									</div>
 								@endif
 							</div>
@@ -304,9 +294,6 @@
 					<!-- Brand Info -->
 					<div class="rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-gray-900">
 						<h3 class="text-sm font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-4">Campaign Owner</h3>
-						@php
-							$brandName = $campaign->brand?->brand_name ?? ($campaign->createdBy?->name ?? 'Unknown');
-						@endphp
 						<div class="space-y-3">
 							<div>
 								<p class="text-xs uppercase tracking-wider text-gray-500 dark:text-gray-400">Brand Name</p>
@@ -324,27 +311,21 @@
 					<!-- Quick Stats -->
 					<div class="space-y-3">
 						@if ($campaign->applications->count() > 0)
-							@php
-								$invited = $campaign->applications->where('status', 'invited')->count();
-								$applied = $campaign->applications->where('status', 'applied')->count();
-								$accepted = $campaign->applications->where('status', 'accepted')->count();
-								$rejected = $campaign->applications->where('status', 'rejected')->count();
-							@endphp
 							<div class="rounded-lg border border-blue-200 bg-blue-50 p-4 dark:border-blue-900/30 dark:bg-blue-900/20">
 								<p class="text-xs font-semibold text-blue-600 dark:text-blue-400">Invited</p>
-								<p class="mt-1 text-lg font-bold text-blue-700 dark:text-blue-300">{{ $invited }}</p>
+								<p class="mt-1 text-lg font-bold text-blue-700 dark:text-blue-300">{{ $applicationStats['invited'] }}</p>
 							</div>
 							<div class="rounded-lg border border-amber-200 bg-amber-50 p-4 dark:border-amber-900/30 dark:bg-amber-900/20">
 								<p class="text-xs font-semibold text-amber-600 dark:text-amber-400">Applied</p>
-								<p class="mt-1 text-lg font-bold text-amber-700 dark:text-amber-300">{{ $applied }}</p>
+								<p class="mt-1 text-lg font-bold text-amber-700 dark:text-amber-300">{{ $applicationStats['applied'] }}</p>
 							</div>
 							<div class="rounded-lg border border-emerald-200 bg-emerald-50 p-4 dark:border-emerald-900/30 dark:bg-emerald-900/20">
 								<p class="text-xs font-semibold text-emerald-600 dark:text-emerald-400">Accepted</p>
-								<p class="mt-1 text-lg font-bold text-emerald-700 dark:text-emerald-300">{{ $accepted }}</p>
+								<p class="mt-1 text-lg font-bold text-emerald-700 dark:text-emerald-300">{{ $applicationStats['accepted'] }}</p>
 							</div>
 							<div class="rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-900/30 dark:bg-red-900/20">
 								<p class="text-xs font-semibold text-red-600 dark:text-red-400">Rejected</p>
-								<p class="mt-1 text-lg font-bold text-red-700 dark:text-red-300">{{ $rejected }}</p>
+								<p class="mt-1 text-lg font-bold text-red-700 dark:text-red-300">{{ $applicationStats['rejected'] }}</p>
 							</div>
 						@endif
 					</div>

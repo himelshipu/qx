@@ -55,18 +55,59 @@ class CampaignController extends Controller
             ['value' => 'other', 'label' => 'Other']
         ];
 
+        // Helper function to resolve campaign image
+        $resolveImage = function ($campaign) {
+            $categoryImagePath = $campaign->categories->firstWhere('image_path', '!=', null)?->image_path;
+            if (!$categoryImagePath) {
+                $categoryImagePath = $campaign->categories->first()?->image_path;
+            }
+            $resolvedImage = asset('images/campaignApply.png');
+            if (!empty($categoryImagePath)) {
+                $isExternal = str_starts_with($categoryImagePath, 'http://') || str_starts_with($categoryImagePath, 'https://');
+                $resolvedImage = $isExternal ? $categoryImagePath : asset($categoryImagePath);
+            }
+            return $resolvedImage;
+        };
+
+        // Helper function to transform campaigns data
+        $transformCampaigns = function ($campaigns, $userType, $currentUserId) use ($resolveImage) {
+            return $campaigns
+                ->map(fn($c) => [
+                    'id' => $c->id,
+                    'title' => $c->title,
+                    'status' => $c->status,
+                    'campaign_type' => $c->campaign_type,
+                    'is_active' => $c->is_active,
+                    'applications_count' => $c->applications_count ?? 0,
+                    'categories_count' => $c->categories_count ?? 0,
+                    'targeting' => $c->targeting ? [
+                        'influencer_count' => $c->targeting->influencer_count ?? 0,
+                    ] : null,
+                    'image' => $resolveImage($c),
+                    'canEdit' => auth()->check() && ($userType === 'brand' && $c->created_by === $currentUserId),
+                ])
+                ->values()
+                ->all();
+        };
+
+        $currentUserId = $user->id ?? null;
+
         if ($user->user_type === 'brand') {
             // Brand sees their own campaigns
             $campaigns = Campaign::where('created_by', $user->id)
                 ->where('is_active', true)
+                ->with(['categories', 'targeting'])
                 ->when($search, fn($q) => $q->where('title', 'like', "%{$search}%"))
                 ->when($status !== 'all', fn($q) => $q->where('status', $status))
                 ->when($type !== 'all', fn($q) => $q->where('campaign_type', $type))
                 ->orderByDesc('created_at')
                 ->paginate(12);
 
+            $campaignsData = $transformCampaigns($campaigns->getCollection(), 'brand', $currentUserId);
+
             return view('frontend.campaigns.designed-index', [
                 'campaigns'     => $campaigns,
+                'campaignsData' => $campaignsData,
                 'userType'      => 'brand',
                 'search'        => $search,
                 'status'        => $status,
@@ -80,14 +121,18 @@ class CampaignController extends Controller
                 $query->where('influencer_id', $user->influencer->id);
             })
                 ->where('is_active', true)
+                ->with(['categories', 'targeting'])
                 ->when($search, fn($q) => $q->where('title', 'like', "%{$search}%"))
                 ->when($status !== 'all', fn($q) => $q->where('status', $status))
                 ->when($type !== 'all', fn($q) => $q->where('campaign_type', $type))
                 ->orderByDesc('created_at')
                 ->paginate(12);
 
+            $campaignsData = $transformCampaigns($campaigns->getCollection(), 'influencer', $currentUserId);
+
             return view('frontend.campaigns.designed-index', [
                 'campaigns'     => $campaigns,
+                'campaignsData' => $campaignsData,
                 'userType'      => 'influencer',
                 'search'        => $search,
                 'status'        => $status,
@@ -111,13 +156,41 @@ class CampaignController extends Controller
             abort(403, 'Unauthorized');
         }
 
+        // Get form payload
+        $payload = $this->campaignService->getFormPayload();
+
+        // Prepare wizard data
+        $stepTwoFields = [
+            'title',
+            'description',
+            'instructions',
+            'status',
+            'currency',
+            'budget_min',
+            'budget_max',
+            'start_date',
+            'end_date',
+        ];
+
+        $requestedStep = (int) request('wizard_step', 1);
+        $errors = session('errors') ?? new \Illuminate\Support\ViewErrorBag();
+        $hasStepTwoErrors = collect($stepTwoFields)->contains(static fn(string $field): bool => $errors->has($field));
+        $initialStep = $hasStepTwoErrors ? max($requestedStep, 2) : max($requestedStep, 1);
+
         return view(
             'frontend.campaigns.designed-create',
             array_merge(
-                $this->campaignService->getFormPayload(),
+                $payload,
                 [
                     'campaign' => null,
-                    'isEditMode' => false
+                    'isEditMode' => false,
+                    'initialStep' => $initialStep,
+                    'selectedBrandId' => $user->brand?->id ?? 0,
+                    'selectedCategoryIds' => [],
+                    'selectedFollowerRangeIds' => [],
+                    'selectedCountryCodes' => [],
+                    'influencerCount' => '1',
+                    'isAdvancedOpen' => false,
                 ]
             )
         );
@@ -192,7 +265,34 @@ class CampaignController extends Controller
 
         $campaign->load(['applications', 'targetCountries', 'targeting', 'categories', 'brand', 'influencerAssignments.influencer.user']);
 
-        return view('frontend.campaigns.designed-show', compact('campaign'));
+        // Prepare invited influencers for display
+        $invitedInfluencers = $campaign->applications
+            ->where('status', 'invited')
+            ->values();
+
+        // Prepare application statistics
+        $applicationStats = [
+            'invited' => $campaign->applications->where('status', 'invited')->count(),
+            'applied' => $campaign->applications->where('status', 'applied')->count(),
+            'accepted' => $campaign->applications->where('status', 'accepted')->count(),
+            'rejected' => $campaign->applications->where('status', 'rejected')->count(),
+        ];
+
+        // Prepare brand name
+        $brandName = $campaign->brand?->brand_name ?? ($campaign->createdBy?->name ?? 'Unknown');
+
+        // Get influencer's application if they're viewing this campaign
+        $influencerApplication = $user->user_type === 'influencer' 
+            ? $campaign->applications->first() 
+            : null;
+
+        return view('frontend.campaigns.designed-show', compact(
+            'campaign',
+            'invitedInfluencers',
+            'applicationStats',
+            'brandName',
+            'influencerApplication'
+        ));
     }
 
     /**
@@ -222,14 +322,53 @@ class CampaignController extends Controller
             'targeting_notes' => $campaign->targeting?->targeting_notes,
         ];
 
+        // Get form payload
+        $payload = $this->campaignService->getFormPayload();
+
+        // Prepare wizard data
+        $stepTwoFields = [
+            'title',
+            'description',
+            'instructions',
+            'status',
+            'currency',
+            'budget_min',
+            'budget_max',
+            'start_date',
+            'end_date',
+        ];
+
+        $requestedStep = (int) request('wizard_step', 1);
+        $errors = session('errors') ?? new \Illuminate\Support\ViewErrorBag();
+        $hasStepTwoErrors = collect($stepTwoFields)->contains(static fn(string $field): bool => $errors->has($field));
+        $initialStep = $hasStepTwoErrors ? max($requestedStep, 2) : max($requestedStep, 1);
+
+        // Check if advanced targeting was used
+        $isAdvancedOpen = $campaign->targeting && (
+            $campaign->targeting->target_gender ||
+            $campaign->targeting->age_min ||
+            $campaign->targeting->age_max ||
+            $campaign->targeting->targeting_notes
+        );
+
         return view(
             'frontend.campaigns.designed-create',
             array_merge(
-                $this->campaignService->getFormPayload(),
+                $payload,
                 [
                     'campaign' => $campaign,
                     'campaignData' => $campaignData,
-                    'isEditMode' => true
+                    'isEditMode' => true,
+                    'initialStep' => $initialStep,
+                    'selectedBrandId' => $user->brand?->id ?? 0,
+                    'selectedCategoryIds' => array_values(array_unique(array_map('intval', $campaignData['categories']))),
+                    'selectedFollowerRangeIds' => array_values(array_unique(array_map('intval', $campaignData['follower_ranges']))),
+                    'selectedCountryCodes' => array_values(array_unique(array_map(
+                        static fn($code) => strtoupper((string) $code),
+                        $campaignData['target_countries']
+                    ))),
+                    'influencerCount' => (string) $campaignData['influencer_count'],
+                    'isAdvancedOpen' => (bool) $isAdvancedOpen,
                 ]
             )
         );

@@ -4,9 +4,7 @@
 
 @section('content')
 	<div x-data="campaignFilter()" class="mt-8 px-2">
-		<div class="mb-6">
-			@include('backend.pages.campaigns._alerts')
-		</div>
+		
 
 		<!-- Header with Create Campaign Button -->
 		<div class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -183,48 +181,12 @@
 		</template>
 	</div>
 
-	<!-- Data & Scripts -->
-	@php
-		$currentUserId = auth()->user()->id ?? null;
-		$campaignsData = $campaigns
-		    ->map(
-		        fn($c) => [
-		            'id' => $c->id,
-		            'title' => $c->title,
-		            'status' => $c->status,
-		            'campaign_type' => $c->campaign_type,
-		            'is_active' => $c->is_active,
-		            'applications_count' => $c->applications_count ?? 0,
-		            'categories_count' => $c->categories_count ?? 0,
-		            'targeting' => $c->targeting ? [
-		                'influencer_count' => $c->targeting->influencer_count ?? 0,
-		            ] : null,
-		            'image' => (function ($c) {
-		                $categoryImagePath = $c->categories->firstWhere('image_path', '!=', null)?->image_path;
-		                if (!$categoryImagePath) {
-		                    $categoryImagePath = $c->categories->first()?->image_path;
-		                }
-		                $resolvedImage = asset('images/campaignApply.png');
-		                if (!empty($categoryImagePath)) {
-		                    $isExternal =
-		                        str_starts_with($categoryImagePath, 'http://') || str_starts_with($categoryImagePath, 'https://');
-		                    $resolvedImage = $isExternal ? $categoryImagePath : asset($categoryImagePath);
-		                }
-		                return $resolvedImage;
-		            })($c),
-		            'canEdit' => auth()->check() && ($userType === 'brand' && $c->created_by === $currentUserId),
-		        ],
-		    )
-		    ->values()
-		    ->all();
-	@endphp
-
 	<script>
 		function campaignFilter() {
 			return {
-				search: '{{ request('q', '') }}',
-				status: '{{ request('status', $status ?? 'all') }}',
-				type: '{{ request('type', $type ?? 'all') }}',
+				search: '{{ $search ?? '' }}',
+				status: '{{ $status ?? 'all' }}',
+				type: '{{ $type ?? 'all' }}',
 				campaigns: @json($campaignsData),
 				filteredCampaigns: [],
 
