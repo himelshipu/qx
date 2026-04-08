@@ -268,7 +268,7 @@
 
 					<div>
 						<h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-4">Profile & Cover</h3>
-						<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+						<div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
 							<div class="flex flex-col items-center">
 								<div
 									class="relative w-40 h-40 rounded-full bg-gray-100 dark:bg-gray-800 border-2 border-dashed border-gray-200 dark:border-gray-700 overflow-hidden cursor-pointer hover:border-purple-400 transition"
@@ -314,6 +314,13 @@
 								</div>
 								<p class="mt-2 text-xs text-gray-500 dark:text-gray-400">Cover (3:1 ratio)</p>
 							</div>
+						</div>
+
+						<div class="flex justify-end pt-4 pb-4">
+							<button type="submit" name="image_type" value="profile-cover"
+								class="bg-[#1A1A1A] hover:bg-purple-400 px-8 py-3 rounded-xl text-sm font-medium text-white transition shadow-lg active:scale-95">
+								Save Profile & Cover
+							</button>
 						</div>
 					</div>
 
@@ -367,9 +374,9 @@
 					</div>
 
 					<div class="flex justify-end pt-4">
-						<button type="submit"
+						<button type="submit" name="image_type" value="portfolio"
 							class="bg-[#1A1A1A] hover:bg-purple-400 px-8 py-3 rounded-xl text-sm font-medium text-white transition shadow-lg active:scale-95">
-							Save Images
+							Save Portfolio Images
 						</button>
 					</div>
 				</form>
@@ -377,9 +384,86 @@
 		</div>
 	</div>
 
+	<!-- Confirmation Modal -->
+	<div id="confirmation-modal" class="fixed inset-0 z-[100] hidden items-center justify-center p-4">
+		<!-- Backdrop -->
+		<div id="modal-backdrop" class="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity"></div>
+
+		<!-- Modal Content -->
+		<div
+			class="relative w-auto max-w-md bg-white dark:bg-gray-900 rounded-2xl shadow-2xl overflow-hidden transform transition-all scale-95 opacity-0 duration-300"
+			id="modal-container">
+
+			<!-- Header -->
+			<div class="relative p-6 text-center border-b border-gray-100 dark:border-gray-800">
+				<h3 class="text-lg font-bold text-gray-900 dark:text-white">Confirm Delete</h3>
+				<button id="close-modal" class="absolute top-6 right-6 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+					<svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+					</svg>
+				</button>
+			</div>
+
+			<!-- Body -->
+			<div class="p-6">
+				<p class="text-gray-700 dark:text-gray-300 text-center mb-6">Are you sure you want to delete this portfolio image? This action cannot be undone.</p>
+				
+				<!-- Footer Actions -->
+				<div class="flex gap-3 justify-center">
+					<button id="cancel-btn" class="px-6 py-2.5 rounded-lg bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white font-medium hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">
+						Cancel
+					</button>
+					<button id="confirm-btn" class="px-6 py-2.5 rounded-lg bg-red-500 text-white font-medium hover:bg-red-600 transition-colors">
+						Delete
+					</button>
+				</div>
+			</div>
+		</div>
+	</div>
+
 	@push('scripts')
 		<script>
 			document.addEventListener('DOMContentLoaded', function() {
+				// ===== Modal Setup =====
+				const confirmationModal = document.getElementById('confirmation-modal');
+				const modalContainer = document.getElementById('modal-container');
+				const closeBtn = document.getElementById('close-modal');
+				const backdrop = document.getElementById('modal-backdrop');
+				const cancelBtn = document.getElementById('cancel-btn');
+				const confirmBtn = document.getElementById('confirm-btn');
+				let portfolioIdToDelete = null;
+
+				function openModal() {
+					confirmationModal.classList.remove('hidden');
+					confirmationModal.classList.add('flex');
+					setTimeout(() => {
+						modalContainer.classList.remove('scale-95', 'opacity-0');
+						modalContainer.classList.add('scale-100', 'opacity-100');
+					}, 10);
+				}
+
+				function closeModal() {
+					modalContainer.classList.remove('scale-100', 'opacity-100');
+					modalContainer.classList.add('scale-95', 'opacity-0');
+					setTimeout(() => {
+						confirmationModal.classList.add('hidden');
+						confirmationModal.classList.remove('flex');
+						portfolioIdToDelete = null;
+					}, 300);
+				}
+
+				closeBtn.addEventListener('click', closeModal);
+				backdrop.addEventListener('click', closeModal);
+				cancelBtn.addEventListener('click', closeModal);
+
+				// Close on escape key
+				document.addEventListener('keydown', (e) => {
+					if (e.key === 'Escape' && !confirmationModal.classList.contains('hidden')) {
+						closeModal();
+					}
+				});
+
+				// ===== Tab Navigation =====
 				const tabBtns = document.querySelectorAll('.tab-btn');
 				const tabContents = document.querySelectorAll('.tab-content');
 
@@ -505,19 +589,24 @@
 
 				document.querySelectorAll('.delete-portfolio-btn').forEach(btn => {
 					btn.addEventListener('click', function() {
-						const portfolioId = this.dataset.id;
-						if (confirm('Delete this portfolio image?')) {
-							const form = document.createElement('form');
-							form.method = 'POST';
-							form.action =
-								`{{ route('influencer.profile.edit', ['slug' => $slug]) }}`
-								.replace('/edit', `/portfolio/${portfolioId}/delete`);
-							form.innerHTML =
-								`<input type="hidden" name="_token" value="{{ csrf_token() }}">`;
-							document.body.appendChild(form);
-							form.submit();
-						}
+						portfolioIdToDelete = this.dataset.id;
+						openModal();
 					});
+				});
+
+				confirmBtn.addEventListener('click', function() {
+					if (portfolioIdToDelete) {
+						const form = document.createElement('form');
+						form.method = 'POST';
+						form.action =
+							`{{ route('influencer.profile.edit', ['slug' => $slug]) }}`
+							.replace('/edit', `/portfolio/${portfolioIdToDelete}/delete`);
+						form.innerHTML =
+							`<input type="hidden" name="_token" value="{{ csrf_token() }}">`;
+						document.body.appendChild(form);
+						form.submit();
+					}
+					closeModal();
 				});
 
 				['detailsForm', 'socialForm', 'imagesForm'].forEach(formId => {
