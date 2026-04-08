@@ -133,7 +133,7 @@
 									</span>
 								</td>
 								<td class="px-6 py-4 text-right">
-									<a href=\"{{ route('frontend.orders.show', $entry->order_id) }}\"
+								<a href="{{ route('frontend.orders.show', $entry->order_id) }}"
 										class="text-gray-400 hover:text-purple-400 transition-colors">
 										<x-icons.eye class="w-5 h-5" />
 									</a>

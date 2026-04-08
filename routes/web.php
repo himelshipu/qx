@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types=1);
+declare (strict_types = 1);
 
 use App\Http\Controllers\AccountController;
 use App\Http\Controllers\Backend\BrandController;
@@ -73,9 +73,12 @@ Route::middleware(['web'])->group(function () {
     // Authenticated conversation negotiation
     Route::get('/influencer/{influencer}/start-negotiation', [ConversationController::class, 'startNegotiation'])->name('conversations.start-negotiation');
 
+    // Package cart operations
+    Route::get('/package/{package}/add-to-cart', [CartController::class, 'startAddToCart'])->name('cart.start-add-to-cart');
+
     // Influencers pages
     Route::get('/influencers', [InfluencersController::class, 'index'])->name('influencers');
-    Route::get('/influencer/{platformSlug}', [InfluencersController::class, 'index'])->name('influencers.platform');
+    Route::get('/influencers/{platformSlug}', [InfluencersController::class, 'index'])->name('influencers.platform');
     Route::get('/category/{categorySlug}', [InfluencersController::class, 'byCategory'])->name('influencers.category');
     Route::get('/ugc', [InfluencersController::class, 'ugc'])->name('influencers.ugc');
 
@@ -101,6 +104,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/campaigns/{campaign}/edit', [FrontendCampaignController::class, 'edit'])->name('frontend.campaigns.edit');
     Route::put('/campaigns/{campaign}', [FrontendCampaignController::class, 'update'])->name('frontend.campaigns.update');
     Route::delete('/campaigns/{campaign}', [FrontendCampaignController::class, 'destroy'])->name('frontend.campaigns.destroy');
+    Route::post('/campaigns/{campaign}/applications/{application}/update-status', [FrontendCampaignController::class, 'updateApplicationStatus'])->name('frontend.campaigns.update-application-status');
+    Route::post('/campaigns/{campaign}/influencer-assignments/{assignment}/update-status', [FrontendCampaignController::class, 'updateInfluencerStatus'])->name('campaigns.update-influencer-status');
 
     // Frontend Packages (Influencer)
     Route::get('/packages', [FrontendPackageController::class, 'index'])->name('frontend.packages.index');
@@ -393,4 +398,4 @@ Route::prefix('dashboard')->name('dashboard.')->middleware(['auth', 'verified', 
 |--------------------------------------------------------------------------
  */
 
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';

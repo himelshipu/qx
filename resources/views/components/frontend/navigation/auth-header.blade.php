@@ -20,7 +20,7 @@
 	if ($currentUser) {
 	    $cart = \App\Models\Cart::where('user_id', $currentUser->id)->first();
 	    if ($cart) {
-	        	    $cart->load(['items.package.influencer.user']);
+	        $cart->load(['items.package.influencer.user']);
 	        foreach ($cart->items as $item) {
 	            $influencerUser = $item->package->influencer->user;
 	            $cartItemsData[] = [
@@ -158,6 +158,12 @@
 								<a href="{{ route('frontend.orders.index') }}"
 									class="px-7 py-3.5 text-[15px] font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
 									<i class="fas fa-receipt mr-2"></i>Orders
+								</a>
+
+								<!-- Packages (Influencer & Brand) -->
+								<a href="{{ route('frontend.packages.index') }}"
+									class="px-7 py-3.5 text-[15px] font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+									<i class="fas fa-box mr-2"></i>Packages
 								</a>
 
 								<!-- Campaigns -->

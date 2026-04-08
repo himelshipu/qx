@@ -1,6 +1,6 @@
 @extends('frontend.layouts.app')
 
-@section('title', 'Create Campaign')
+@section('title', isset($isEditMode) && $isEditMode ? 'Edit Campaign' : 'Create Campaign')
 
 @section('content')
 	@php
@@ -21,23 +21,23 @@
 		$initialStep = $hasStepTwoErrors ? max($requestedStep, 2) : max($requestedStep, 1);
 	@endphp
 
-	<x-backend.shell.breadcrumb pageTitle="Create Campaign" />
+	<x-backend.shell.breadcrumb :pageTitle="isset($isEditMode) && $isEditMode ? 'Edit Campaign' : 'Create Campaign'" />
 
 	<div class="max-w-6xl px-2 py-2 transition-colors duration-300"
 		x-data="campaignDesignedWizard({
 			step: @js($initialStep),
-			campaignType: @js(old('campaign_type', 'instagram')),
+			campaignType: @js(old('campaign_type', isset($campaign) ? $campaign->campaign_type : 'instagram')),
 			campaignTypeOptions: @js($campaignTypeOptions),
 			statusOptions: @js($statusOptions),
 			genderOptions: @js($genderOptions),
 			categoryOptions: @js($categoryOptions->values()),
 			followerRangeOptions: @js($followerRangeOptions->values()),
 			countryOptions: @js($countryOptions),
-			selectedCategoryIds: @js(array_values(array_unique(array_map('intval', (array) old('categories', []))))),
-			selectedFollowerRangeIds: @js(array_values(array_unique(array_map('intval', (array) old('follower_ranges', []))))),
-			selectedCountryCodes: @js(array_values(array_unique(array_map(static function ($code): string { return strtoupper((string) $code); }, (array) old('target_countries', []))))),
-			influencerCount: @js((string) old('influencer_count', '1')),
-			isAdvancedOpen: @js(old('target_gender') || old('age_min') || old('age_max') || old('targeting_notes')),
+			selectedCategoryIds: @js(array_values(array_unique(array_map('intval', (array) old('categories', isset($campaignData) ? $campaignData['categories'] : []))))),
+			selectedFollowerRangeIds: @js(array_values(array_unique(array_map('intval', (array) old('follower_ranges', isset($campaignData) ? $campaignData['follower_ranges'] : []))))),
+			selectedCountryCodes: @js(array_values(array_unique(array_map(static function ($code): string { return strtoupper((string) $code); }, (array) old('target_countries', isset($campaignData) ? $campaignData['target_countries'] : []))))),
+			influencerCount: @js((string) old('influencer_count', isset($campaignData) ? $campaignData['influencer_count'] : '1')),
+			isAdvancedOpen: @js(old('target_gender') || old('age_min') || old('age_max') || old('targeting_notes') || (isset($campaignData) && ($campaignData['target_gender'] || $campaignData['age_min'] || $campaignData['age_max'] || $campaignData['targeting_notes']))),
 		})">
 		<div class="mb-6">
 			@include('backend.pages.campaigns._alerts')
@@ -65,8 +65,11 @@
 			</div>
 		</div>
 
-		<form action="{{ route('frontend.campaigns.store') }}" method="POST" novalidate>
+		<form action="{{ isset($isEditMode) && $isEditMode ? route('frontend.campaigns.update', $campaign->id) : route('frontend.campaigns.store') }}" method="POST" novalidate>
 			@csrf
+			@if(isset($isEditMode) && $isEditMode)
+				@method('PUT')
+			@endif
 			<input type="hidden" name="ui_variant" value="designed">
 			<input type="hidden" name="wizard_step" x-model="step">
 			<input type="hidden" name="is_active" value="0">
@@ -243,7 +246,7 @@
 									<select name="target_gender"
 										class="dark:bg-dark-900 shadow-theme-xs focus:border-pink-50 focus:ring-gray-500/10 dark:focus:border-gray-800 h-12 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 focus:ring-1 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
 										@foreach ($genderOptions as $option)
-											<option value="{{ $option['value'] }}" {{ old('target_gender', 'any') === $option['value'] ? 'selected' : '' }}>{{ $option['label'] }}</option>
+											<option value="{{ $option['value'] }}" {{ old('target_gender', isset($campaignData) ? $campaignData['target_gender'] : 'any') === $option['value'] ? 'selected' : '' }}>{{ $option['label'] }}</option>
 										@endforeach
 									</select>
 									@error('target_gender')
@@ -254,7 +257,7 @@
 								<div class="grid grid-cols-1 gap-4 md:grid-cols-2">
 									<div>
 										<label class="mb-1.5 block text-base font-medium text-gray-800 dark:text-gray-400">Minimum age</label>
-										<input type="number" name="age_min" min="13" max="100" value="{{ old('age_min') }}"
+										<input type="number" name="age_min" min="13" max="100" value="{{ old('age_min', isset($campaignData) ? $campaignData['age_min'] : '') }}"
 											class="dark:bg-dark-900 shadow-theme-xs focus:border-pink-50 focus:ring-gray-500/10 dark:focus:border-gray-800 h-12 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 focus:ring-1 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
 										@error('age_min')
 											<p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
@@ -262,7 +265,7 @@
 									</div>
 									<div>
 										<label class="mb-1.5 block text-base font-medium text-gray-800 dark:text-gray-400">Maximum age</label>
-										<input type="number" name="age_max" min="13" max="100" value="{{ old('age_max') }}"
+										<input type="number" name="age_max" min="13" max="100" value="{{ old('age_max', isset($campaignData) ? $campaignData['age_max'] : '') }}"
 											class="dark:bg-dark-900 shadow-theme-xs focus:border-pink-50 focus:ring-gray-500/10 dark:focus:border-gray-800 h-12 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 focus:ring-1 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
 										@error('age_max')
 											<p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
@@ -273,7 +276,7 @@
 								<div>
 									<label class="mb-1.5 block text-base font-medium text-gray-800 dark:text-gray-400">Targeting notes</label>
 									<textarea name="targeting_notes" rows="4" placeholder="Optional targeting notes"
-										class="dark:bg-dark-900 shadow-theme-xs focus:border-pink-50 focus:ring-gray-500/10 dark:focus:border-gray-800 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 focus:ring-1 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">{{ old('targeting_notes') }}</textarea>
+										class="dark:bg-dark-900 shadow-theme-xs focus:border-pink-50 focus:ring-gray-500/10 dark:focus:border-gray-800 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 focus:ring-1 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">{{ old('targeting_notes', isset($campaignData) ? $campaignData['targeting_notes'] : '') }}</textarea>
 									@error('targeting_notes')
 										<p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
 									@enderror
@@ -327,7 +330,7 @@
 				<div class="space-y-6">
 					<div>
 						<label class="mb-1.5 block text-base font-medium text-gray-800 dark:text-gray-400">Campaign Title</label>
-						<input type="text" name="title" value="{{ old('title') }}" placeholder="Summer 2026 Influencer Push"
+						<input type="text" name="title" value="{{ old('title', isset($campaign) ? $campaign->title : '') }}" placeholder="Summer 2026 Influencer Push"
 							class="dark:bg-dark-900 shadow-theme-xs focus:border-pink-50 focus:ring-gray-500/10 dark:focus:border-gray-800 h-12 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 focus:ring-1 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
 						@error('title')
 							<p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
@@ -337,7 +340,7 @@
 					<div>
 						<label class="mb-1.5 block text-base font-medium text-gray-800 dark:text-gray-400">Campaign Description</label>
 						<textarea name="description" rows="4" placeholder="Describe your product and the value of this campaign..."
-							class="dark:bg-dark-900 shadow-theme-xs focus:border-pink-50 focus:ring-gray-500/10 dark:focus:border-gray-800 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 focus:ring-1 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">{{ old('description') }}</textarea>
+							class="dark:bg-dark-900 shadow-theme-xs focus:border-pink-50 focus:ring-gray-500/10 dark:focus:border-gray-800 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 focus:ring-1 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">{{ old('description', isset($campaign) ? $campaign->description : '') }}</textarea>
 						@error('description')
 							<p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
 						@enderror
@@ -346,7 +349,7 @@
 					<div>
 						<label class="mb-1.5 block text-base font-medium text-gray-800 dark:text-gray-400">Product Instructions</label>
 						<textarea name="instructions" rows="6" placeholder="Describe what you want influencers to do, key messages, and deliverables..."
-							class="dark:bg-dark-900 shadow-theme-xs focus:border-pink-50 focus:ring-gray-500/10 dark:focus:border-gray-800 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 focus:ring-1 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">{{ old('instructions') }}</textarea>
+							class="dark:bg-dark-900 shadow-theme-xs focus:border-pink-50 focus:ring-gray-500/10 dark:focus:border-gray-800 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 focus:ring-1 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">{{ old('instructions', isset($campaign) ? $campaign->instructions : '') }}</textarea>
 						@error('instructions')
 							<p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
 						@enderror
@@ -369,7 +372,7 @@
 							<select name="status"
 								class="dark:bg-dark-900 shadow-theme-xs focus:border-pink-50 focus:ring-gray-500/10 dark:focus:border-gray-800 h-12 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 focus:ring-1 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
 								@foreach ($statusOptions as $option)
-									<option value="{{ $option['value'] }}" {{ old('status', 'draft') === $option['value'] ? 'selected' : '' }}>{{ $option['label'] }}</option>
+									<option value="{{ $option['value'] }}" {{ old('status', isset($campaign) ? $campaign->status : 'draft') === $option['value'] ? 'selected' : '' }}>{{ $option['label'] }}</option>
 								@endforeach
 							</select>
 							@error('status')
@@ -379,7 +382,7 @@
 
 						<div>
 							<label class="mb-1.5 block text-base font-medium text-gray-800 dark:text-gray-400">Currency</label>
-							<input type="text" name="currency" maxlength="3" value="{{ old('currency', 'USD') }}"
+							<input type="text" name="currency" maxlength="3" value="{{ old('currency', isset($campaign) ? $campaign->currency : 'USD') }}"
 								class="dark:bg-dark-900 shadow-theme-xs focus:border-pink-50 focus:ring-gray-500/10 dark:focus:border-gray-800 h-12 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 uppercase text-sm text-gray-800 focus:ring-1 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
 							@error('currency')
 								<p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
@@ -389,7 +392,7 @@
 						<div class="rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 dark:border-gray-800 dark:bg-gray-900">
 							<label class="flex cursor-pointer items-center justify-between gap-3">
 								<span class="text-sm font-medium text-gray-700 dark:text-gray-300">Active Status</span>
-								<input type="checkbox" name="is_active" value="1" {{ old('is_active', true) ? 'checked' : '' }}
+								<input type="checkbox" name="is_active" value="1" {{ old('is_active', isset($campaign) ? $campaign->is_active : true) ? 'checked' : '' }}
 									class="h-4 w-4 rounded border-gray-300 text-gray-900 focus:ring-gray-500 dark:border-gray-600 dark:bg-gray-800">
 							</label>
 						</div>
@@ -398,7 +401,7 @@
 					<div class="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-4">
 						<div>
 							<label class="mb-1.5 block text-base font-medium text-gray-800 dark:text-gray-400">Minimum Budget</label>
-							<input type="number" name="budget_min" min="0" step="0.01" value="{{ old('budget_min') }}"
+							<input type="number" name="budget_min" min="0" step="0.01" value="{{ old('budget_min', isset($campaign) ? $campaign->budget_min : '') }}"
 								class="dark:bg-dark-900 shadow-theme-xs focus:border-pink-50 focus:ring-gray-500/10 dark:focus:border-gray-800 h-12 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 focus:ring-1 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
 							@error('budget_min')
 								<p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
@@ -407,7 +410,7 @@
 
 						<div>
 							<label class="mb-1.5 block text-base font-medium text-gray-800 dark:text-gray-400">Maximum Budget</label>
-							<input type="number" name="budget_max" min="0" step="0.01" value="{{ old('budget_max') }}"
+							<input type="number" name="budget_max" min="0" step="0.01" value="{{ old('budget_max', isset($campaign) ? $campaign->budget_max : '') }}"
 								class="dark:bg-dark-900 shadow-theme-xs focus:border-pink-50 focus:ring-gray-500/10 dark:focus:border-gray-800 h-12 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 focus:ring-1 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
 							@error('budget_max')
 								<p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
@@ -417,7 +420,7 @@
 						<div>
 							<label class="mb-1.5 block text-base font-medium text-gray-800 dark:text-gray-400">Start Date</label>
 							<div class="relative">
-								<input type="date" name="start_date" value="{{ old('start_date') }}"
+								<input type="date" name="start_date" value="{{ old('start_date', isset($campaign) ? $campaign->start_date?->format('Y-m-d') : '') }}"
 									class="dark:bg-dark-900 shadow-theme-xs focus:border-pink-50 focus:ring-gray-500/10 dark:focus:border-gray-800 h-12 w-full rounded-lg border border-gray-300 bg-transparent px-4 pl-10 py-2.5 text-sm text-gray-800 focus:ring-1 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
 								<span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
 									<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" fill="none" class="size-5">
@@ -433,7 +436,7 @@
 						<div>
 							<label class="mb-1.5 block text-base font-medium text-gray-800 dark:text-gray-400">End Date</label>
 							<div class="relative">
-								<input type="date" name="end_date" value="{{ old('end_date') }}"
+								<input type="date" name="end_date" value="{{ old('end_date', isset($campaign) ? $campaign->end_date?->format('Y-m-d') : '') }}"
 									class="dark:bg-dark-900 shadow-theme-xs focus:border-pink-50 focus:ring-gray-500/10 dark:focus:border-gray-800 h-12 w-full rounded-lg border border-gray-300 bg-transparent px-4 pl-10 py-2.5 text-sm text-gray-800 focus:ring-1 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
 								<span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
 									<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" fill="none" class="size-5">
@@ -449,7 +452,7 @@
 
 					<div class="flex flex-col gap-4 pt-10">
 						<button type="submit" class="w-full rounded-lg bg-[#222] py-4 text-xlg font-bold uppercase tracking-[0.2em] text-white shadow-sm transition hover:bg-purple-500 hover:opacity-90 active:scale-95 dark:bg-purple-400 dark:text-gray-800">
-							Publish Campaign
+							{{ isset($isEditMode) && $isEditMode ? 'Update Campaign' : 'Publish Campaign' }}
 						</button>
 						<button type="button" @click="step = 1" class="text-sm font-medium text-gray-500 transition hover:text-gray-800 dark:hover:text-gray-200">Back to Edit Targeting</button>
 					</div>

@@ -132,7 +132,7 @@
 						Share
 					</button>
 					@auth
-							@if (optional(Auth::user()->influencer)->id === optional($influencer)->id)
+						@if (optional(Auth::user()->influencer)->id === optional($influencer)->id)
 							<a href="{{ route('influencer.profile.edit', ['slug' => Auth::user()->slug]) }}"
 								class="flex items-center gap-2 px-5 py-2 border border-gray-200 dark:border-gray-800 rounded-lg text-sm font-bold text-[#222] hover:bg-purple-50 transition active:scale-95">
 								<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
@@ -593,7 +593,10 @@
 					cartUrl: @js(route('cart.index')),
 					conversationsUrl: @js(route('dashboard.conversations.index')),
 					influencerId: @js($influencer->id),
-								startNegotiationUrl: @js(route('conversations.start-negotiation', ['influencer' => $influencer->id])),
+					startNegotiationUrl: @js(route('conversations.start-negotiation', ['influencer' => $influencer->id])),
+					startAddToCartUrl(packageId) {
+						return @js(route('cart.start-add-to-cart', ['package' => ':id'])).replace(':id', packageId);
+					},
 					portfolioItems: @js(
     $influencer->portfolios
         ->map(
@@ -691,18 +694,8 @@
 							return;
 						}
 
-						// Prevent influencers from adding to cart
-						if (this.isAuthenticated && this.userType !== 'brand') {
-							window.confirmationModal.open({
-								title: 'Brand Account Required',
-								message: 'Only brand accounts can add to cart or negotiate packages.',
-								confirmText: 'OK',
-								variant: 'warning'
-							});
-							return;
-						}
-
-						await addToCart(this.selectedPackage.id);
+						// Redirect to the cart start handler (handles all auth cases)
+						window.location.href = this.startAddToCartUrl(this.selectedPackage.id);
 					},
 
 					negotiatePackage() {
@@ -722,6 +715,5 @@
 				};
 			}
 		</script>
-
 	@endpush
 @endsection

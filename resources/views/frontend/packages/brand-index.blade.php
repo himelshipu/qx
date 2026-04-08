@@ -1,19 +1,18 @@
-{{-- Frontend Packages Browse Index --}}
 @extends('frontend.layouts.app')
 
 @section('content')
-	<section class="py-10" x-data="packagesFilter()">
+	<section class="py-10" x-data="brandPackagesFilter()">
 		<div class="max-w-screen-2xl mx-auto px-4">
 			<!-- Header Section -->
 			<div class="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 mb-10">
 				<div>
-					<h1 class="text-3xl font-bold text-gray-900 dark:text-white">Available Packages</h1>
-					<p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Browse and purchase services from top influencers</p>
+					<h1 class="text-3xl font-bold text-gray-900 dark:text-white">My Purchased Packages</h1>
+					<p class="text-sm text-gray-600 dark:text-gray-400 mt-1">View all packages you've purchased from influencers</p>
 				</div>
 			</div>
 
 			<!-- Search & Filter Section -->
-			<div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-3 mb-8">
+			<div class="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-5 gap-3 mb-8">
 				<div>
 					<input type="text" x-model="search" placeholder="Search packages..." @keyup="filterPackages()"
 						class="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 text-sm focus:ring-2 focus:ring-purple-600 focus:border-transparent outline-none transition" />
@@ -36,6 +35,19 @@
 						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
 					</svg>
 				</div>
+				<div class="relative">
+					<select x-model="influencer" @change="filterPackages()"
+						class="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-purple-600 focus:border-transparent outline-none transition appearance-none cursor-pointer pr-10">
+						<option value="">All Influencers</option>
+						<template x-for="influencerName in getUniqueInfluencers()" :key="influencerName">
+							<option :value="influencerName" x-text="influencerName"></option>
+						</template>
+					</select>
+					<svg class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 dark:text-gray-400 pointer-events-none"
+						fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+					</svg>
+				</div>
 				<button @click="resetFilters()"
 					class="w-full px-4 py-2.5 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 font-medium text-sm rounded-lg transition-colors">
 					Reset
@@ -52,8 +64,8 @@
 						</svg>
 					</div>
 					<h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">No packages found</h3>
-					<p class="text-gray-600 dark:text-gray-400 mb-6">No packages match your search or platform filter. Try adjusting
-						your criteria.</p>
+					<p class="text-gray-600 dark:text-gray-400 mb-6">No packages match your search or filter criteria. Try adjusting
+						your filters.</p>
 					<button @click="resetFilters()"
 						class="inline-flex items-center gap-2 px-5 py-2.5 bg-purple-600 hover:bg-purple-700 text-white font-semibold text-sm rounded-lg transition-colors">
 						<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -74,15 +86,24 @@
 								d="M20 7l-8-4-8 4m16 0l-8 4m0 0l-8-4m8 4v10l8-4v-10M4 7v10l8 4" />
 						</svg>
 					</div>
-					<h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">No Packages Available</h3>
-					<p class="text-gray-600 dark:text-gray-400">Check back later for new package offerings from influencers.</p>
+					<h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">No Purchases Yet</h3>
+					<p class="text-gray-600 dark:text-gray-400 mb-6">You haven't purchased any packages yet. Start exploring influencers
+						and add packages to your cart.</p>
+					<a href="{{ route('influencers') }}"
+						class="inline-flex items-center gap-2 px-5 py-2.5 bg-purple-600 hover:bg-purple-700 text-white font-semibold text-sm rounded-lg transition-colors">
+						<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+								d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+						</svg>
+						Browse Influencers
+					</a>
 				</div>
 			</template>
 
 			<!-- Packages Grid -->
 			<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5" x-show="filteredPackages.length > 0">
 				<template x-for="pkg in filteredPackages" :key="pkg.id">
-					<a :href="`/packages/${pkg.id}`"
+					<div
 						class="group bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-md hover:border-purple-300 dark:hover:border-purple-600 transition-all duration-300">
 						<!-- Platform Badge -->
 						<div class="h-1" :style="{ backgroundColor: getPlatformColor(pkg.platform) }"></div>
@@ -103,36 +124,33 @@
 							<p class="text-xs text-gray-600 dark:text-gray-400 line-clamp-2 mb-4" x-text="pkg.description"></p>
 
 							<!-- Stats Grid -->
-							<div class="grid grid-cols-3 gap-2 bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3 mb-4">
+							<div class="grid grid-cols-2 gap-2 bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3 mb-4">
 								<div class="text-center">
 									<p class="text-xs text-gray-600 dark:text-gray-400">Price</p>
-									<p class="text-lg font-bold text-purple-600 dark:text-purple-400">
+									<p class="text-sm font-bold text-purple-600 dark:text-purple-400">
 										<span x-text="'$' + parseInt(pkg.base_price).toLocaleString()"></span>
 									</p>
 								</div>
-								<div class="text-center border-l border-r border-gray-200 dark:border-gray-600">
+								<div class="text-center border-l border-gray-200 dark:border-gray-600">
 									<p class="text-xs text-gray-600 dark:text-gray-400">Delivery</p>
-									<p class="text-lg font-bold text-gray-900 dark:text-white">
-										<span x-text="pkg.delivery_days + ' d'"></span>
+									<p class="text-sm font-bold text-gray-900 dark:text-white">
+										<span x-text="pkg.delivery_days + ' days'"></span>
 									</p>
-								</div>
-								<div class="text-center">
-									<p class="text-xs text-gray-600 dark:text-gray-400">Orders</p>
-									<p class="text-lg font-bold text-gray-900 dark:text-white" x-text="pkg.order_count"></p>
 								</div>
 							</div>
 
-							<!-- Action Button -->
-							<button @click="window.location.href=`/cart/start-add-to-cart/${pkg.id}`" @click.prevent
-								class="w-full px-3 py-2 text-xs font-semibold text-white bg-purple-600 dark:bg-purple-600 rounded-lg hover:bg-purple-700 dark:hover:bg-purple-700 transition-colors flex items-center justify-center gap-1.5">
-								<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<!-- View Button -->
+							<a :href="`/packages/${pkg.id}`"
+								class="w-full inline-flex items-center justify-center px-3 py-2 text-xs font-semibold text-white bg-purple-600 dark:bg-purple-600 rounded-lg hover:bg-purple-700 dark:hover:bg-purple-700 transition-colors">
+								<svg class="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
 									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-										d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+										d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
 								</svg>
-								Add to Cart
-							</button>
+								View Details
+							</a>
 						</div>
-					</a>
+					</div>
 				</template>
 			</div>
 		</div>
@@ -149,7 +167,6 @@
 			            'base_price' => $p->base_price,
 			            'currency' => $p->currency,
 			            'delivery_days' => $p->delivery_days,
-			            'order_count' => $p->orderItems ? $p->orderItems->count() : 0,
 			            'influencer_name' => $p->influencer?->user?->name ?? 'Unknown',
 			        ],
 			    )
@@ -158,10 +175,11 @@
 		@endphp
 
 		<script>
-			function packagesFilter() {
+			function brandPackagesFilter() {
 				return {
 					search: '',
 					platform: '',
+					influencer: '',
 					packages: @json($packagesData),
 					filteredPackages: [],
 
@@ -172,23 +190,29 @@
 					filterPackages() {
 						const search = this.search.toLowerCase();
 						const platform = this.platform;
+						const influencer = this.influencer;
 
 						this.filteredPackages = this.packages.filter(pkg => {
 							const matchesSearch = !search ||
 								pkg.name.toLowerCase().includes(search) ||
-								pkg.description.toLowerCase().includes(search) ||
-								pkg.influencer_name.toLowerCase().includes(search);
+								pkg.description.toLowerCase().includes(search);
 
 							const matchesPlatform = !platform || pkg.platform === platform;
+							const matchesInfluencer = !influencer || pkg.influencer_name === influencer;
 
-							return matchesSearch && matchesPlatform;
+							return matchesSearch && matchesPlatform && matchesInfluencer;
 						});
 					},
 
 					resetFilters() {
 						this.search = '';
 						this.platform = '';
+						this.influencer = '';
 						this.filterPackages();
+					},
+
+					getUniqueInfluencers() {
+						return [...new Set(this.packages.map(pkg => pkg.influencer_name))].sort();
 					},
 
 					getPlatformColor(platform) {

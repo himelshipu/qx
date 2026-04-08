@@ -35,7 +35,7 @@ class ConversationController extends Controller
         }
 
         return view('backend.pages.conversations.index', [
-            'conversations' => $conversations,
+            'conversations' => $conversations
         ]);
     }
 
@@ -46,7 +46,7 @@ class ConversationController extends Controller
     {
         $influencerProfileUrl = route('influencer.profile', ['slug' => $influencer->user->slug]);
 
-        if (! auth()->check()) {
+        if (!auth()->check()) {
             app(PendingPostAuthActionService::class)->rememberNegotiate($influencer->id, $influencerProfileUrl);
 
             return redirect()
@@ -59,7 +59,6 @@ class ConversationController extends Controller
         // Only brands can start negotiations
         if ($user->user_type !== 'brand') {
             return redirect($influencerProfileUrl)
-                ->with('warning', 'Only brand accounts can add to cart or negotiate packages.')
                 ->with('brand_action_required_modal', true)
                 ->with('brand_action_required_message', 'Only brand accounts can add to cart or negotiate packages.');
         }
@@ -69,23 +68,23 @@ class ConversationController extends Controller
             ->where('influencer_id', $influencer->id)
             ->first();
 
-        if (! $conversation) {
+        if (!$conversation) {
             // Create a new conversation
             $conversation = Conversation::create([
                 'brand_user_id' => $user->id,
-                'influencer_id' => $influencer->id,
+                'influencer_id' => $influencer->id
             ]);
         }
 
         $influencerName = $influencer->display_name ?: ($influencer->user?->name ?? 'there');
-        $messageText = sprintf('hello %s,i want to discuss with you for a custom package', $influencerName);
+        $messageText    = sprintf('hello %s,i want to discuss with you for a custom package', $influencerName);
 
         Message::create([
             'conversation_id' => $conversation->id,
-            'sender_user_id' => $user->id,
-            'sender_role' => $user->user_type,
-            'message' => $messageText,
-            'read_at' => null,
+            'sender_user_id'  => $user->id,
+            'sender_role'     => $user->user_type,
+            'message'         => $messageText,
+            'read_at'         => null
         ]);
 
         $conversation->touch();
@@ -116,10 +115,10 @@ class ConversationController extends Controller
         $messages = Message::forConversation($conversation->id);
 
         return view('backend.pages.conversations.show', [
-            'conversation' => $conversation,
-            'messages' => $messages,
+            'conversation'     => $conversation,
+            'messages'         => $messages,
             'isInfluencerView' => false, // Influencer never sees chats directly
-            'isModerator' => $user->user_type === 'moderator' || $user->user_type === 'admin',
+            'isModerator'      => $user->user_type === 'moderator' || $user->user_type === 'admin'
         ]);
     }
 
@@ -144,7 +143,7 @@ class ConversationController extends Controller
         // Admins can message any conversation
 
         $validated = $request->validate([
-            'message' => 'required|string|min:1|max:5000',
+            'message' => 'required|string|min:1|max:5000'
         ]);
 
         // If brand is messaging and no moderator assigned, notify admin
@@ -165,10 +164,10 @@ class ConversationController extends Controller
         // Create message
         Message::create([
             'conversation_id' => $conversation->id,
-            'sender_user_id' => $user->id,
-            'sender_role' => $user->user_type,
-            'message' => $validated['message'],
-            'read_at' => null,
+            'sender_user_id'  => $user->id,
+            'sender_role'     => $user->user_type,
+            'message'         => $validated['message'],
+            'read_at'         => null
         ]);
 
         return redirect()
@@ -188,13 +187,13 @@ class ConversationController extends Controller
             ->first();
 
         $conversation = Conversation::create([
-            'conversation_type' => 'order',
-            'influencer_id' => $influencerId,
-            'brand_user_id' => $brandUserId,
-            'handled_by_user_id' => $moderatorAssignment?->moderator_user_id,
-            'order_id' => $orderId,
+            'conversation_type'                 => 'order',
+            'influencer_id'                     => $influencerId,
+            'brand_user_id'                     => $brandUserId,
+            'handled_by_user_id'                => $moderatorAssignment?->moderator_user_id,
+            'order_id'                          => $orderId,
             'influencer_direct_message_enabled' => false,
-            'title' => 'Package Order Conversation',
+            'title'                             => 'Package Order Conversation'
         ]);
 
         // If no moderator yet, admin will see notification to assign one
@@ -216,11 +215,11 @@ class ConversationController extends Controller
         }
 
         $validated = $request->validate([
-            'moderator_user_id' => 'required|exists:users,id',
+            'moderator_user_id' => 'required|exists:users,id'
         ]);
 
         $conversation->update([
-            'handled_by_user_id' => $validated['moderator_user_id'],
+            'handled_by_user_id' => $validated['moderator_user_id']
         ]);
 
         return redirect()
@@ -240,23 +239,23 @@ class ConversationController extends Controller
         if ($user->user_type === 'brand') {
             // Brand sees influencer info, but messages come from moderator
             return [
-                'influencer' => $conversation->influencer,
-                'respondent_name' => $conversation->influencer->user->name,
-                'respondent_type' => 'influencer', // Brand thinks they're talking to influencer
+                'influencer'        => $conversation->influencer,
+                'respondent_name'   => $conversation->influencer->user->name,
+                'respondent_type'   => 'influencer', // Brand thinks they're talking to influencer
                 'actual_handler_id' => $conversation->handled_by_user_id,
-                'messages' => $conversation->messages,
+                'messages'          => $conversation->messages
             ];
         }
 
         if (in_array($user->user_type, ['moderator', 'admin'])) {
             // Moderator sees they are moderating, who is the influencer, and brand they're messaging
             return [
-                'influencer' => $conversation->influencer,
-                'brand_user' => $conversation->brandUser,
+                'influencer'      => $conversation->influencer,
+                'brand_user'      => $conversation->brandUser,
                 'respondent_name' => $conversation->brandUser->name,
                 'respondent_type' => 'brand',
-                'moderator_mode' => true,
-                'messages' => $conversation->messages,
+                'moderator_mode'  => true,
+                'messages'        => $conversation->messages
             ];
         }
 

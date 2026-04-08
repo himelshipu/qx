@@ -18,38 +18,46 @@ class PackageController extends Controller
     ) {}
 
     /**
-     * Display a listing of packages for the influencer.
+     * Display a listing of packages.
      * Influencers see their own packages.
-     * Public users can browse all public packages.
+     * Brands see only their purchased packages.
+     * Public users can browse all active packages.
      */
     public function index(Request $request): View
     {
-        $user     = auth()->user();
-        $search   = trim((string) $request->input('q', ''));
-        $platform = (string) $request->input('platform', 'all');
+        $user = auth()->user();
 
         if ($user->user_type === 'influencer') {
-            // Influencer sees only their own packages
+            // Influencer sees all their own packages (active and inactive for client-side filtering)
             $influencer = $user->influencer;
 
             $packages = Package::where('influencer_id', $influencer->id)
-                ->when($search, fn($q) => $q->where('name', 'like', "%{$search}%"))
-                ->when($platform !== 'all', fn($q) => $q->where('platform', $platform))
-                ->where('is_active', true)
                 ->orderByDesc('created_at')
-                ->paginate(12);
+                ->with('orderItems')
+                ->get();
 
-            return view('frontend.packages.influencer-index', compact('packages', 'search', 'platform'));
+            return view('frontend.packages.influencer-index', compact('packages'));
+        } elseif ($user->user_type === 'brand') {
+            // Brand sees only their purchased packages
+            $brandId = $user->brand?->id;
+
+            $packages = Package::whereHas('orderItems.order', function ($query) use ($brandId) {
+                $query->where('brand_id', $brandId);
+            })
+                ->distinct()
+                ->with('influencer.user', 'orderItems')
+                ->orderByDesc('created_at')
+                ->get();
+
+            return view('frontend.packages.brand-index', compact('packages'));
         } else {
-            // Non-influencers (guests, brands) see published packages
+            // Public users see published packages for browsing
             $packages = Package::where('is_active', true)
-                ->with('influencer.user')
-                ->when($search, fn($q) => $q->where('name', 'like', "%{$search}%"))
-                ->when($platform !== 'all', fn($q) => $q->where('platform', $platform))
+                ->with('influencer.user', 'orderItems')
                 ->orderByDesc('created_at')
                 ->paginate(12);
 
-            return view('frontend.packages.index', compact('packages', 'search', 'platform'));
+            return view('frontend.packages.index', compact('packages'));
         }
     }
 
@@ -96,7 +104,12 @@ class PackageController extends Controller
      */
     public function show(Package $package): View
     {
-        $package->load(['influencer.user', 'orderItems']);
+        $package->load([
+            'influencer.user',
+            'influencer.platformStats',
+            'orderItems.order.brand.user',
+            'orderItems.order.conversations'
+        ]);
 
         return view('frontend.packages.show', compact('package'));
     }
