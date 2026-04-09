@@ -73,8 +73,11 @@ class CampaignIndexQuery
 
         // Role-based filtering
         if ($this->user->user_type === 'brand') {
-            // Brands see only their own campaigns
-            $query->where('created_by', $this->user->id);
+            // Brands see campaigns they created OR campaigns assigned to them (including by admin)
+            $query->where(function (Builder $q) {
+                $q->where('created_by', $this->user->id)
+                    ->orWhere('brand_id', $this->user->brand?->id);
+            });
         } elseif ($this->user->user_type === 'influencer') {
             // Influencers see campaigns they've applied to
             $query->whereHas('applications', function (Builder $q) {

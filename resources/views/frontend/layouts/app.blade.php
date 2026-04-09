@@ -111,13 +111,14 @@
 						// Update global initial cart data
 						window.initialCartData = data.cart.items || [];
 
-						// Update cart items in the auth-header component if it exists
-						const cartHeaderEl = document.querySelector('[x-data*="cartModalData"]');
-						if (cartHeaderEl && cartHeaderEl.__x !== undefined && cartHeaderEl.__x.$data) {
-							// Force Alpine to update by triggering reactivity
-							cartHeaderEl.__x.$data.cartItems = [...data.cart.items];
-							cartHeaderEl.__x.$data.isCartOpen = true;
-						}
+						// Update cart sidebar component using Alpine's event system
+						// Dispatch custom event that the component listens for
+						window.dispatchEvent(new CustomEvent('cartUpdated', {
+							detail: {
+								items: data.cart.items || [],
+								shouldOpenCart: true
+							}
+						}));
 
 						if (window.toast && window.toast.success) {
 							window.toast.success('Package added to cart!');
@@ -149,6 +150,20 @@
 					cartItems: resolvedInitialItems,
 					isRemoving: false,
 					isAdding: false,
+
+					init() {
+						// Set up listener for real-time cart updates when component initializes
+						window.addEventListener('cartUpdated', (event) => {
+							const detail = event.detail || {};
+							if (Array.isArray(detail.items)) {
+								this.cartItems = [...detail.items];
+								window.initialCartData = detail.items;
+							}
+							if (detail.shouldOpenCart) {
+								this.isCartOpen = true;
+							}
+						});
+					},
 
 					get subtotal() {
 						return this.cartItems.reduce((acc, item) => acc + (item.price * item.quantity), 0);
@@ -252,6 +267,13 @@
 								// Update component data with spread operator to trigger reactivity
 								this.cartItems = data.cart.items ? [...data.cart.items] : [];
 								this.isCartOpen = true;
+								// Dispatch event for other components to listen
+								window.dispatchEvent(new CustomEvent('cartUpdated', {
+									detail: {
+										items: data.cart.items || [],
+										shouldOpenCart: true
+									}
+								}));
 								if (window.toast && window.toast.success) {
 									window.toast.success('Package added to cart!');
 								}
@@ -291,6 +313,13 @@
 							if (data.success) {
 								// Update component data with spread operator to trigger reactivity
 								this.cartItems = data.cart.items ? [...data.cart.items] : [];
+								// Dispatch event for other components to listen
+								window.dispatchEvent(new CustomEvent('cartUpdated', {
+									detail: {
+										items: data.cart.items || [],
+										shouldOpenCart: false
+									}
+								}));
 								if (window.toast && window.toast.success) {
 									window.toast.success('Item removed from cart');
 								}
@@ -312,8 +341,8 @@
 				if (window.autoOpenCartSidebar) {
 					window.setTimeout(() => {
 						const cartHeaderEl = document.querySelector('[x-data*="cartModalData"]');
-						if (cartHeaderEl && cartHeaderEl.__x?.$data) {
-							cartHeaderEl.__x.$data.isCartOpen = true;
+						if (cartHeaderEl && cartHeaderEl.__x?.scope) {
+							cartHeaderEl.__x.scope.isCartOpen = true;
 						}
 					}, 150);
 				}

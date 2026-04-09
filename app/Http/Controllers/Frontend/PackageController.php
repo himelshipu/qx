@@ -72,7 +72,10 @@ class PackageController extends Controller
             abort(403, 'Only influencers can create packages');
         }
 
-        return view('frontend.packages.create', $this->packageService->getFormPayload());
+        return view('frontend.packages.designed-create', [
+            'platformOptions' => $this->packageService->getPlatformOptions(),
+            'isEditMode' => false,
+        ]);
     }
 
     /**
@@ -126,10 +129,11 @@ class PackageController extends Controller
             abort(403, 'Unauthorized');
         }
 
-        return view('frontend.packages.edit', array_merge(
-            $this->packageService->getFormPayload(),
-            ['package' => $package]
-        ));
+        return view('frontend.packages.designed-create', [
+            'package'         => $package,
+            'platformOptions' => $this->packageService->getPlatformOptions(),
+            'isEditMode' => true,
+        ]);
     }
 
     /**

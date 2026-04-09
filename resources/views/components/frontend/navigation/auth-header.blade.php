@@ -40,7 +40,7 @@
 @endphp
 
 
-<div x-data='cartModalData(@json($cartItemsData))' class=" max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
+<div x-data='cartModalData(@json($cartItemsData))' x-init="init()" class=" max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
 
 	<div class="relative">
 		<!-- After login menu -->
@@ -93,9 +93,9 @@
 					</div>
 				</div>
 
-				<!-- Profile Dropdown Wrapper (Standalone Alpine Component) -->
-				<div x-data="{ profileOpen: false }" class="relative" @click.away="profileOpen = false">
-					<button @click="profileOpen = !profileOpen"
+				<!-- Profile Dropdown Wrapper -->
+				<div class="relative" @click.away="isProfileOpen = false">
+					<button @click="isProfileOpen = !isProfileOpen"
 						class="flex items-center gap-3 border border-gray-100 dark:border-gray-800 rounded-full p-1 pl-4 bg-white dark:bg-gray-900 hover:shadow-md transition-all duration-300 active:scale-95">
 
 						<!-- Hamburger Icon (Now toggles Profile, NOT Cart) -->
@@ -122,7 +122,7 @@
 					</button>
 
 					<!-- Profile Dropdown Content -->
-					<div x-show="profileOpen" x-cloak x-transition:enter="transition ease-out duration-200"
+					<div x-show="isProfileOpen" x-cloak x-transition:enter="transition ease-out duration-200"
 						x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
 						class="absolute right-0 top-full mt-3 w-56 bg-white dark:bg-gray-800 rounded-[20px] shadow-[0_10px_40px_rgba(0,0,0,0.1)] border border-gray-50 dark:border-gray-700 z-50 overflow-hidden">
 						<div class="py-2 flex flex-col">
@@ -149,8 +149,9 @@
 								<!-- Cart (Brand Only) -->
 								@if (Auth::user()->user_type === 'brand')
 									<a href="{{ route('cart.index') }}"
-										class="px-7 py-3.5 text[15px] font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
-										<i class="fas fa-shopping-cart mr-2"></i>Cart
+										class="px-7 py-3.5 text-[15px] font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors flex items-center justify-between">
+										<span><i class="fas fa-shopping-cart mr-2"></i>Cart</span>
+										<span x-show="totalItemCount > 0" x-cloak class="min-w-[20px] px-2 py-1 rounded-full bg-purple-600 text-white text-[11px] font-bold text-center" x-text="totalItemCount"></span>
 									</a>
 								@endif
 

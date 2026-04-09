@@ -10,18 +10,21 @@ class GetCampaignsAction
      * Load detailed campaign relationships for display.
      * Used by show() and edit() methods.
      *
-     * @param Campaign $campaign The campaign to load
+     * @param  Campaign $campaign The campaign to load
      * @return Campaign The campaign with loaded relationships
      */
     public function forDisplay(Campaign $campaign): Campaign
     {
         return $campaign->load([
-            'applications',
+            'applications.influencer.user',
+            'applications.influencer.platformStats',
             'targetCountries',
             'targeting',
             'categories',
+            'followerRanges',
             'brand',
-            'influencerAssignments.influencer.user',
+            'createdBy',
+            'influencerAssignments.influencer.user'
         ]);
     }
 
@@ -29,7 +32,7 @@ class GetCampaignsAction
      * Load editing relationships for the campaign form.
      * Used by edit() method.
      *
-     * @param Campaign $campaign The campaign to load
+     * @param  Campaign $campaign The campaign to load
      * @return Campaign The campaign with loaded relationships
      */
     public function forEditing(Campaign $campaign): Campaign
@@ -39,7 +42,7 @@ class GetCampaignsAction
             'targetCountries',
             'targeting',
             'categories',
-            'followerRanges',
+            'followerRanges'
         ]);
     }
 }

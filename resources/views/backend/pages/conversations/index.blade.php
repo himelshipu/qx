@@ -23,79 +23,96 @@
 			</div>
 		</div>
 
-		<div class="rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
+		<div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
 			<div class="overflow-x-auto">
 				<table class="min-w-full divide-y divide-gray-200 dark:divide-gray-800">
 					<thead class="bg-gray-50 dark:bg-gray-800/50">
 						<tr>
-							<th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-								@if (auth()->user()->user_type === 'brand')
-									Influencer
-								@else
-									Brand
-								@endif
+							<th scope="col"
+								class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
+								Conversation
 							</th>
-							<th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-								Type</th>
-							<th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-								Last Message</th>
-							<th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-								Updated</th>
-							<th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-								Actions</th>
+							<th scope="col"
+								class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
+								Participants
+							</th>
+							<th scope="col"
+								class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
+								Assigned Moderator
+							</th>
+							<th scope="col"
+								class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
+								Last Update
+							</th>
+							<th scope="col" class="relative px-6 py-3">
+								<span class="sr-only">Actions</span>
+							</th>
 						</tr>
 					</thead>
-					<tbody class="divide-y divide-gray-100 dark:divide-gray-800">
+					<tbody class="divide-y divide-gray-200 bg-white dark:divide-gray-800 dark:bg-gray-900">
 						@forelse ($conversations as $conversation)
-							<tr class="hover:bg-gray-50 dark:hover:bg-gray-800/50">
-								<td class="px-4 py-3 text-sm font-medium text-gray-900 dark:text-white">
-									@if (auth()->user()->user_type === 'brand')
-										{{ $conversation->influencer->display_name ?? $conversation->influencer->user->name }}
+							<tr>
+								<td class="px-6 py-4 whitespace-nowrap">
+									<div class="flex items-center">
+										<div class="ml-4">
+											<div class="text-sm font-medium text-gray-900 dark:text-white">
+												{{ $conversation->title ?? 'Conversation #' . $conversation->id }}
+											</div>
+											<div class="text-sm text-gray-500 dark:text-gray-400">
+												{{ ucfirst(str_replace('_', ' ', $conversation->conversation_type)) }}
+											</div>
+										</div>
+									</div>
+								</td>
+								<td class="px-6 py-4 whitespace-nowrap">
+									<div class="text-sm text-gray-900 dark:text-white">
+										Brand: {{ $conversation->brandUser->name ?? 'N/A' }}
+									</div>
+									<div class="text-sm text-gray-500 dark:text-gray-400">
+										Influencer: {{ $conversation->influencer->user->name ?? 'N/A' }}
+									</div>
+								</td>
+								<td class="px-6 py-4 whitespace-nowrap">
+									@if ($conversation->moderatorAssignment && $conversation->moderatorAssignment->moderator)
+										<span
+											class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300">
+											{{ $conversation->moderatorAssignment->moderator->name }}
+										</span>
 									@else
-										{{ $conversation->brandUser->name }}
+										<span
+											class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300">
+											Unassigned
+										</span>
 									@endif
 								</td>
-								<td class="px-4 py-3 text-sm text-gray-700 dark:text-gray-300">
-									<span
-										class="inline-flex rounded-full bg-blue-100 px-2 py-1 text-xs font-semibold text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
-										{{ ucfirst(str_replace('_', ' ', $conversation->conversation_type)) }}
-									</span>
+								<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+									{{ $conversation->updated_at->diffForHumans() }}
 								</td>
-								<td class="px-4 py-3 text-sm text-gray-700 dark:text-gray-300">
-									@if ($conversation->messages->count() > 0)
-										{{ Str::limit($conversation->messages->last()->message, 50) }}
-									@else
-										<span class="text-gray-400 dark:text-gray-500">No messages yet</span>
-									@endif
-								</td>
-								<td class="px-4 py-3 text-sm text-gray-700 dark:text-gray-300">
-									{{ $conversation->updated_at->format('M d, Y H:i') }}
-								</td>
-								<td class="px-4 py-3 text-sm">
+								<td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
 									<a href="{{ route('dashboard.conversations.show', $conversation) }}"
-										class="inline-flex items-center gap-1 rounded bg-blue-600 px-3 py-1 text-xs font-medium text-white transition hover:bg-blue-700">
-										<svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-											<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-												d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z">
-											</path>
-										</svg>
-										View
-									</a>
+										class="text-purple-600 hover:text-purple-900 dark:text-purple-400 dark:hover:text-purple-300">View</a>
 								</td>
 							</tr>
 						@empty
 							<tr>
-								<td colspan="5" class="px-4 py-8 text-center text-sm text-gray-500 dark:text-gray-400">
-									No conversations yet.
+								<td colspan="5" class="px-6 py-12 text-center">
+									<div class="text-center">
+										<svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+											aria-hidden="true">
+											<path vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+												d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+										</svg>
+										<h3 class="mt-2 text-sm font-medium text-gray-900 dark:text-white">No conversations</h3>
+										<p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Get started by creating a new conversation.</p>
+									</div>
 								</td>
 							</tr>
 						@endforelse
 					</tbody>
 				</table>
 			</div>
-
-			@if ($conversations->count() > 0)
-				<div class="border-t border-gray-200 px-4 py-3 dark:border-gray-800">
+			@if ($conversations->hasPages())
+				<div class="border-t border-gray-200 bg-white px-4 py-3 dark:border-gray-800 dark:bg-gray-900 sm:px-6">
 					{{ $conversations->links() }}
 				</div>
 			@endif

@@ -161,7 +161,7 @@ final class PackageService
      *
      * @return array<int, array{value:string,label:string}>
      */
-    private function getPlatformOptions(bool $includeAll = false): array
+    public function getPlatformOptions(bool $includeAll = false): array
     {
         $options = [];
 

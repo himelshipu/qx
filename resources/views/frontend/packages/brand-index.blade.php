@@ -12,7 +12,7 @@
 			</div>
 
 			<!-- Search & Filter Section -->
-			<div class="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-5 gap-3 mb-8">
+			<div class="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-4 gap-3 mb-8">
 				<div>
 					<input type="text" x-model="search" placeholder="Search packages..." @keyup="filterPackages()"
 						class="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 text-sm focus:ring-2 focus:ring-purple-600 focus:border-transparent outline-none transition" />
@@ -105,8 +105,6 @@
 				<template x-for="pkg in filteredPackages" :key="pkg.id">
 					<div
 						class="group bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-md hover:border-purple-300 dark:hover:border-purple-600 transition-all duration-300">
-						<!-- Platform Badge -->
-						<div class="h-1" :style="{ backgroundColor: getPlatformColor(pkg.platform) }"></div>
 
 						<!-- Card Content -->
 						<div class="p-5">

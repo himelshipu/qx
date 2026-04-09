@@ -57,7 +57,8 @@ class CampaignIndexViewModel
         return CampaignData::fromCollection(
             $this->campaigns,
             $this->user->user_type,
-            $this->user->id
+            $this->user->id,
+            $this->user->brand?->id
         );
     }
 

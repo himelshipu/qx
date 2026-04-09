@@ -694,8 +694,32 @@
 							return;
 						}
 
-						// Redirect to the cart start handler (handles all auth cases)
-						window.location.href = this.startAddToCartUrl(this.selectedPackage.id);
+						// Use global addToCart function for real-time cart updates
+						if (!this.isAuthenticated) {
+							// Redirect to login for unauthenticated users
+							window.location.href = this.loginUrl;
+							return;
+						}
+
+						if (this.userType !== 'brand') {
+							// Show error modal for non-brand users
+							if (window.confirmationModal) {
+								window.confirmationModal.open({
+									title: 'Brand Account Required',
+									message: 'Only brand accounts can add to cart or negotiate packages.',
+									confirmText: 'OK',
+									variant: 'warning'
+								});
+							}
+							return;
+						}
+
+						// Call global addToCart function for real-time sidebar open
+						const success = await addToCart(this.selectedPackage.id);
+						if (success) {
+							// Success - cart is now open with real-time data
+							// Toast notification is shown by global function
+						}
 					},
 
 					negotiatePackage() {

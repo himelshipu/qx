@@ -13,12 +13,15 @@
 			</div>
 
 			<!-- Search & Filter Section -->
-			<div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-3 mb-8">
-				<div>
+			<div class="w-full flex flex-col sm:flex-row gap-3 mb-8">
+				<!-- Search Input -->
+				<div class="flex-1 min-w-0">
 					<input type="text" x-model="search" placeholder="Search packages..." @keyup="filterPackages()"
 						class="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 text-sm focus:ring-2 focus:ring-purple-600 focus:border-transparent outline-none transition" />
 				</div>
-				<div class="relative">
+
+				<!-- Platform Filter -->
+				<div class="flex-1 min-w-0 relative">
 					<select x-model="platform" @change="filterPackages()"
 						class="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-purple-600 focus:border-transparent outline-none transition appearance-none cursor-pointer pr-10">
 						<option value="">All Platforms</option>
@@ -36,9 +39,17 @@
 						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
 					</svg>
 				</div>
+
+				<!-- Clear Filters Button -->
 				<button @click="resetFilters()"
-					class="w-full px-4 py-2.5 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 font-medium text-sm rounded-lg transition-colors">
-					Reset
+					class="flex-1 px-4 py-2.5 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 font-medium text-sm rounded-lg transition-colors whitespace-nowrap">
+					Clear All
+				</button>
+
+				<!-- Optional 4th Filter Button (for future use or advanced filters) -->
+				<button @click="toggleAdvancedFilters()"
+					class="flex-1 px-4 py-2.5 bg-purple-100 dark:bg-purple-900/30 hover:bg-purple-200 dark:hover:bg-purple-900/50 text-purple-700 dark:text-purple-300 font-medium text-sm rounded-lg transition-colors whitespace-nowrap border border-purple-300 dark:border-purple-700">
+					More Filters
 				</button>
 			</div>
 
@@ -84,8 +95,6 @@
 				<template x-for="pkg in filteredPackages" :key="pkg.id">
 					<a :href="`/packages/${pkg.id}`"
 						class="group bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-md hover:border-purple-300 dark:hover:border-purple-600 transition-all duration-300">
-						<!-- Platform Badge -->
-						<div class="h-1" :style="{ backgroundColor: getPlatformColor(pkg.platform) }"></div>
 
 						<!-- Card Content -->
 						<div class="p-5">
@@ -217,6 +226,11 @@
 							'other': 'Other'
 						};
 						return names[platform] || platform;
+					},
+
+					toggleAdvancedFilters() {
+						// Placeholder for advanced filters (e.g., price range, delivery time)
+						console.log('Advanced filters toggle');
 					}
 				}
 			}

@@ -19,7 +19,7 @@
 			</div>
 
 			<!-- Search & Filter Section -->
-			<div class="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-5 gap-3 mb-8">
+			<div class="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-4 gap-3 mb-8">
 				<div>
 					<input type="text" x-model="search" placeholder="Search packages..." @keyup="filterPackages()"
 						class="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 text-sm focus:ring-2 focus:ring-purple-600 focus:border-transparent outline-none transition" />
@@ -108,37 +108,38 @@
 			<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5" x-show="filteredPackages.length > 0">
 				<template x-for="pkg in filteredPackages" :key="pkg.id">
 					<div
-						class="group bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-md hover:border-purple-300 dark:hover:border-purple-600 transition-all duration-300"
-						:class="{ 'opacity-60': !pkg.is_active }">
-						<!-- Status Badge (Inactive Indicator) -->
-						<template x-if="!pkg.is_active">
-							<div class="absolute top-3 right-3 z-10">
-								<span
-									class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-300 dark:bg-gray-600 text-gray-800 dark:text-gray-100">
-									Inactive
-								</span>
-							</div>
-						</template>
-
-						<!-- Platform Badge -->
-						<div class="h-1" :style="{ backgroundColor: getPlatformColor(pkg.platform) }"></div>
+						class="group relative bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-lg hover:border-purple-300 dark:hover:border-purple-600 transition-all duration-300">
+						
+						<!-- Status Header Bar -->
+						<div class="h-1" :style="{ backgroundColor: pkg.is_active ? '#10B981' : '#EF4444' }"></div>
 
 						<!-- Card Content -->
 						<div class="p-5">
+							<!-- Header: Title & Status Badge -->
 							<div class="flex items-start justify-between gap-3 mb-3">
-								<div>
+								<div class="flex-1">
 									<h3 class="text-base font-bold text-gray-900 dark:text-white line-clamp-2">
 										<span x-text="pkg.name"></span>
 									</h3>
 								</div>
-								<span class="inline-flex items-center px-2 py-1 text-xs font-semibold text-white rounded whitespace-nowrap"
-									:style="{ backgroundColor: getPlatformColor(pkg.platform) }" x-text="getPlatformName(pkg.platform)">
-								</span>
+								<div class="flex items-center gap-2">
+									<!-- Status Badge -->
+									<span class="inline-flex items-center px-2.5 py-1 text-xs font-semibold rounded-full whitespace-nowrap"
+										:class="pkg.is_active ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300' : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300'"
+										x-text="pkg.is_active ? 'Active' : 'Inactive'">
+									</span>
+									<!-- Platform Badge -->
+									<span class="inline-flex items-center px-2 py-1 text-xs font-semibold text-white rounded whitespace-nowrap"
+										:style="{ backgroundColor: getPlatformColor(pkg.platform) }" x-text="getPlatformName(pkg.platform)">
+									</span>
+								</div>
 							</div>
+
+							<!-- Description -->
 							<p class="text-xs text-gray-600 dark:text-gray-400 line-clamp-2 mb-4" x-text="pkg.description"></p>
 
-							<!-- Stats Grid -->
-							<div class="grid grid-cols-3 gap-2 bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3 mb-4">
+							<!-- Stats Grid (Row 1: Sales, Revenue, Price) -->
+							<div class="grid grid-cols-3 gap-2 bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3 mb-3">
 								<div class="text-center">
 									<p class="text-xs text-gray-600 dark:text-gray-400">Sales</p>
 									<p class="text-lg font-bold text-gray-900 dark:text-white" x-text="pkg.order_count"></p>
@@ -154,6 +155,21 @@
 									<p class="text-lg font-bold text-purple-600 dark:text-purple-400">
 										<span x-text="'$' + parseInt(pkg.base_price).toLocaleString()"></span>
 									</p>
+								</div>
+							</div>
+
+							<!-- Details Grid (Row 2: Delivery & Revisions) -->
+							<div class="grid grid-cols-2 gap-2 bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3 mb-4">
+								<div class="text-center">
+									<p class="text-xs text-gray-600 dark:text-gray-400">Delivery</p>
+									<p class="text-sm font-bold text-gray-900 dark:text-white">
+										<span x-text="pkg.delivery_days || '—'"></span>
+										<span class="text-xs text-gray-500 dark:text-gray-400">days</span>
+									</p>
+								</div>
+								<div class="text-center border-l border-gray-200 dark:border-gray-600">
+									<p class="text-xs text-gray-600 dark:text-gray-400">Revisions</p>
+									<p class="text-sm font-bold text-gray-900 dark:text-white" x-text="pkg.revisions_included || '0'"></p>
 								</div>
 							</div>
 
@@ -195,6 +211,8 @@
 			            'platform' => $p->platform,
 			            'base_price' => $p->base_price,
 			            'currency' => $p->currency,
+			            'delivery_days' => $p->delivery_days,
+			            'revisions_included' => $p->revisions_included,
 			            'order_count' => $p->orderItems ? $p->orderItems->count() : 0,
 			            'is_active' => (bool) $p->is_active,
 			        ],

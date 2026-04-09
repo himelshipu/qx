@@ -25,7 +25,7 @@ class ConversationController extends Controller
             $conversations = Conversation::forBrand($user->id)->paginate(15);
         } elseif ($user->user_type === 'admin') {
             // Admins see ALL conversations to manage and assign moderators
-            $conversations = Conversation::forAdmin()->paginate(15);
+            $conversations = Conversation::with(['brandUser', 'influencer.user', 'moderatorAssignment.moderator'])->latest()->paginate(15);
         } elseif ($user->user_type === 'moderator') {
             // Moderators see conversations assigned to them
             $conversations = Conversation::forModerator($user->id)->paginate(15);

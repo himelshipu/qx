@@ -191,8 +191,20 @@
                     @forelse ($messages as $message)
                         @php
                             $isOwn = $message->sender_user_id === auth()->id();
-                            $senderName = $message->sender?->name ?? 'Unknown';
-                            $senderAvatar = filled($message->sender?->profile_image_path ?? null) ? image_url($message->sender->profile_image_path) : null;
+                            
+                            // For brand viewing: show moderator/admin messages as coming from influencer
+                            $displayFromInfluencer = !$isOwn && in_array($message->sender_role, ['moderator', 'admin']);
+                            
+                            if ($displayFromInfluencer) {
+                                // Show as if it's from the influencer
+                                $displayName = $conversation->influencer->display_name ?? $conversation->influencer->user->name ?? 'Influencer';
+                                $displayAvatar = filled($conversation->influencer->user?->profile_image_path ?? null) ? image_url($conversation->influencer->user->profile_image_path) : null;
+                            } else {
+                                // Show actual sender
+                                $displayName = $message->sender?->name ?? 'Unknown';
+                                $displayAvatar = filled($message->sender?->profile_image_path ?? null) ? image_url($message->sender->profile_image_path) : null;
+                            }
+                            
                             $time = $message->created_at->format('g:i A');
                         @endphp
 
@@ -200,10 +212,10 @@
                             <div class="flex max-w-[85%] md:max-w-[75%] items-end gap-2 {{ $isOwn ? 'flex-row-reverse' : '' }}">
                                 @if (!$isOwn)
                                     <div class="h-8 w-8 shrink-0 rounded-full overflow-hidden bg-gradient-to-br from-indigo-100 to-purple-100 dark:from-indigo-900/30 dark:to-purple-900/30 flex items-center justify-center text-xs font-semibold text-indigo-700">
-                                        @if ($senderAvatar)
-                                            <img src="{{ $senderAvatar }}" alt="{{ $senderName }}" class="h-full w-full object-cover">
+                                        @if ($displayAvatar)
+                                            <img src="{{ $displayAvatar }}" alt="{{ $displayName }}" class="h-full w-full object-cover">
                                         @else
-                                            <span>{{ $getInitials($senderName) }}</span>
+                                            <span>{{ $getInitials($displayName) }}</span>
                                         @endif
                                     </div>
                                 @endif
@@ -218,7 +230,7 @@
                                         {{ $isOwn ? 'justify-end text-gray-400' : 'justify-start text-gray-400' }}">
                                         <span>{{ $time }}</span>
                                         <span>•</span>
-                                        <span class="{{ $isOwn ? 'text-indigo-400' : 'text-gray-500' }}">{{ $isOwn ? 'You' : $senderName }}</span>
+                                        <span class="{{ $isOwn ? 'text-indigo-400' : 'text-gray-500' }}">{{ $isOwn ? 'You' : $displayName }}</span>
                                         @if ($isOwn)
                                             <svg class="w-3 h-3 text-indigo-400" fill="currentColor" viewBox="0 0 20 20">
                                                 <path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" fill-rule="evenodd"></path>

@@ -4,101 +4,237 @@
 @section('title', 'My Orders')
 
 @section('content')
-<div class="px-4 py-8 mx-auto max-w-7xl sm:px-6 lg:px-8">
-    <div class="mb-8">
-        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">My Orders</h1>
-        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Track and manage all your influencer orders in one place</p>
-    </div>
+<section class="py-10" x-data="ordersFilter()">
+    <div class="max-w-screen-2xl mx-auto px-4">
+        <!-- Header -->
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-900 dark:text-white">My Orders</h1>
+            <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">Track and manage all your influencer package purchases</p>
+        </div>
 
-    @if ($orders->isEmpty())
-        <div class="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 shadow-sm overflow-hidden">
-            <div class="flex flex-col items-center justify-center py-16 px-4 text-center">
-                <div class="w-20 h-20 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center mb-4">
-                    <svg class="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+        <!-- Filters Section -->
+        @php
+            $ordersCount = $orders->count();
+        @endphp
+        @if ($ordersCount > 0)
+            <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-3 gap-3 mb-8">
+                <div>
+                    <input type="text" x-model="search" placeholder="Search by order number..." @keyup="filterOrders()"
+                        class="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 text-sm focus:ring-2 focus:ring-purple-600 focus:border-transparent outline-none transition" />
+                </div>
+                <div class="relative">
+                    <select x-model="status" @change="filterOrders()"
+                        class="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-purple-600 focus:border-transparent outline-none transition appearance-none cursor-pointer pr-10">
+                        <option value="">All Status</option>
+                        <option value="pending">Pending</option>
+                        <option value="accepted">Accepted</option>
+                        <option value="processing">Processing</option>
+                        <option value="completed">Completed</option>
+                        <option value="cancelled">Cancelled</option>
+                    </select>
+                    <svg class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 dark:text-gray-400 pointer-events-none"
+                        fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
                     </svg>
                 </div>
-                <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-1">No orders yet</h3>
-                <p class="text-gray-500 dark:text-gray-400 mb-6">Start collaborating with influencers by purchasing their packages</p>
-                <a href="{{ route('frontend.packages.index') }}" class="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-all">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                    </svg>
-                    Browse Influencers
-                </a>
-            </div>
-        </div>
-    @else
-        <div class="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 shadow-sm overflow-hidden">
-            <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-800">
-                    <thead class="bg-gray-50/50 dark:bg-gray-900/50">
-                        <tr>
-                            <th scope="col" class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Order #</th>
-                            <th scope="col" class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Influencer</th>
-                            <th scope="col" class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Total</th>
-                            <th scope="col" class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Status</th>
-                            <th scope="col" class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Date</th>
-                            <th scope="col" class="px-6 py-4 text-right text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Action</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-gray-200 dark:divide-gray-800 bg-white dark:bg-gray-900">
-                        @foreach ($orders as $order)
-                            @php
-                                $influencerNames = $order->items->map(fn($item) => $item->influencer->user->name ?? 'N/A')->implode(', ');
-                                $statusColor = match($order->status) {
-                                    'completed' => 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400',
-                                    'processing' => 'bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-400',
-                                    'pending' => 'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400',
-                                    'cancelled' => 'bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-400',
-                                    default => 'bg-gray-100 text-gray-700 dark:bg-gray-500/20 dark:text-gray-400',
-                                };
-                            @endphp
-                            <tr class="hover:bg-gray-50/50 dark:hover:bg-gray-800/50 transition-colors duration-150">
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <span class="text-sm font-medium text-gray-900 dark:text-white">{{ $order->order_number }}</span>
-                                </td>
-                                <td class="px-6 py-4">
-                                    <div class="flex items-center gap-2">
-                                        <div class="h-8 w-8 rounded-full bg-gradient-to-br from-indigo-100 to-purple-100 dark:from-indigo-900/30 dark:to-purple-900/30 flex items-center justify-center text-xs font-semibold text-indigo-700 dark:text-indigo-300">
-                                            {{ strtoupper(substr($influencerNames, 0, 2)) }}
-                                        </div>
-                                        <span class="text-sm text-gray-700 dark:text-gray-300 line-clamp-1">{{ $influencerNames }}</span>
-                                    </div>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <span class="text-sm font-semibold text-gray-900 dark:text-white">${{ number_format($order->total_amount, 2) }}</span>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <span class="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium {{ $statusColor }}">
-                                        {{ ucfirst($order->status) }}
-                                    </span>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                                    {{ $order->created_at->format('M d, Y') }}
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-right">
-                                    <a href="{{ route('frontend.orders.show', $order) }}" class="inline-flex items-center gap-1.5 text-sm font-medium text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 transition-colors">
-                                        View Details
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                                        </svg>
-                                    </a>
-                                </td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        @if ($orders->hasPages())
-            <div class="mt-6">
-                {{ $orders->links() }}
+                <button @click="resetFilters()"
+                    class="w-full px-4 py-2.5 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 font-medium text-sm rounded-lg transition-colors">
+                    Reset
+                </button>
             </div>
         @endif
-    @endif
-</div>
+
+        
+        <!-- Empty State (no orders at all) -->
+        <template x-if="orders.length === 0">
+            <div class="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 shadow-sm overflow-hidden">
+                <div class="flex flex-col items-center justify-center py-16 px-4 text-center">
+                    <div class="w-20 h-20 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center mb-4">
+                        <svg class="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                        </svg>
+                    </div>
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">No orders yet</h3>
+                    <p class="text-gray-600 dark:text-gray-400 mb-6 max-w-sm">You haven't purchased any influencer packages yet. Browse available packages to get started.</p>
+                    <a href="{{ route('frontend.packages.index') }}" class="inline-flex items-center gap-2 rounded-xl bg-purple-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 transition-all">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                        </svg>
+                        Browse Packages
+                    </a>
+                </div>
+            </div>
+        </template>
+
+        <!-- Empty State (filtered none) -->
+        <template x-if="filteredOrders.length === 0 && orders.length > 0">
+            <div class="text-center py-16">
+                <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-800 mb-4">
+                    <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                </div>
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">No orders found</h3>
+                <p class="text-gray-600 dark:text-gray-400 mb-6">No orders match your search or status filter. Try adjusting your criteria.</p>
+                <button @click="resetFilters()"
+                    class="inline-flex items-center gap-2 px-5 py-2.5 bg-purple-600 hover:bg-purple-700 text-white font-semibold text-sm rounded-lg transition-colors">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                    Reset Filters
+                </button>
+            </div>
+        </template>
+        <!-- Orders Grid -->
+        <div class="space-y-4" x-show="filteredOrders.length > 0">
+            <template x-for="order in filteredOrders" :key="order.id">
+                <div class="rounded-xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-gray-900 hover:shadow-md transition-shadow duration-300">
+                    <div class="flex flex-col gap-4">
+                        <!-- Header: Order # + Status + Button (all on same row, vertically centered) -->
+                        <div class="flex items-center justify-between gap-3">
+                            <div class="flex-1 min-w-0">
+                                <h3 class="text-lg font-bold text-gray-900 dark:text-white">Order <span x-text="order.order_number"></span></h3>
+                                <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                                    Placed on <span x-text="order.created_at"></span>
+                                </p>
+                            </div>
+                            <div class="flex items-center gap-3 flex-shrink-0">
+                                <span class="inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold whitespace-nowrap" 
+                                    :class="getStatusColor(order.status)"
+                                    x-text="capitalizeStatus(order.status)">
+                                </span>
+                                <a :href="`/orders/${order.id}`" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-purple-600 text-white text-sm font-medium hover:bg-purple-700 transition-colors whitespace-nowrap">
+                                    View Details
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                                    </svg>
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- Order Details Grid -->
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
+                            <div>
+                                <p class="text-xs text-gray-600 dark:text-gray-400 uppercase font-medium">Influencers</p>
+                                <p class="text-sm font-bold text-gray-900 dark:text-white mt-1 line-clamp-1" :title="order.influencers" x-text="order.influencers"></p>
+                            </div>
+                            <div>
+                                <p class="text-xs text-gray-600 dark:text-gray-400 uppercase font-medium">Packages</p>
+                                <p class="text-sm font-bold text-gray-900 dark:text-white mt-1" x-text="order.package_count + ' item' + (order.package_count > 1 ? 's' : '')"></p>
+                            </div>
+                            <div>
+                                <p class="text-xs text-gray-600 dark:text-gray-400 uppercase font-medium">Total Cost</p>
+                                <p class="text-sm font-bold text-purple-600 dark:text-purple-400 mt-1" x-text="'$' + parseFloat(order.total_amount).toFixed(2)"></p>
+                            </div>
+                            <div>
+                                <p class="text-xs text-gray-600 dark:text-gray-400 uppercase font-medium">Order Status</p>
+                                <p class="text-sm font-bold mt-1" :class="getStatusTextColor(order.status)" x-text="getStatusText(order.status)"></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </template>
+        </div>
+
+        
+        <!-- Pagination -->
+        <div x-show="filteredOrders.length > 0" class="mt-8">
+            <!-- Note: Pagination is handled client-side, showing all filtered results -->
+            <p class="text-sm text-gray-600 dark:text-gray-400">
+                Showing <span x-text="filteredOrders.length"></span> of <span x-text="orders.length"></span> orders
+            </p>
+        </div>
+    </div>
+</section>
+
+<!-- Alpine.js Script -->
+@php
+    $ordersData = $orders
+        ->map(
+            fn($order) => [
+                'id' => $order->id,
+                'order_number' => $order->order_number,
+                'created_at' => $order->created_at->format('M d, Y'),
+                'status' => $order->status,
+                'influencers' => $order->items->map(fn($item) => $item->influencer->user->name ?? 'N/A')->unique()->implode(', '),
+                'package_count' => $order->items->count(),
+                'total_amount' => $order->total_amount,
+            ],
+        )
+        ->values()
+        ->all();
+@endphp
+
+<script>
+    function ordersFilter() {
+        return {
+            search: '',
+            status: '',
+            orders: @json($ordersData),
+            filteredOrders: [],
+
+            init() {
+                this.filterOrders();
+            },
+
+            filterOrders() {
+                const search = this.search.toLowerCase();
+                const status = this.status;
+
+                this.filteredOrders = this.orders.filter(order => {
+                    const matchesSearch = !search || order.order_number.toLowerCase().includes(search);
+                    const matchesStatus = !status || order.status === status;
+
+                    return matchesSearch && matchesStatus;
+                });
+            },
+
+            resetFilters() {
+                this.search = '';
+                this.status = '';
+                this.filterOrders();
+            },
+
+            getStatusColor(status) {
+                const colors = {
+                    'pending': 'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300',
+                    'accepted': 'bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-300',
+                    'processing': 'bg-purple-100 text-purple-700 dark:bg-purple-500/20 dark:text-purple-300',
+                    'completed': 'bg-green-100 text-green-700 dark:bg-green-500/20 dark:text-green-300',
+                    'cancelled': 'bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-300',
+                };
+                return colors[status] || 'bg-gray-100 text-gray-700 dark:bg-gray-500/20';
+            },
+
+            getStatusTextColor(status) {
+                const colors = {
+                    'pending': 'text-amber-600 dark:text-amber-400',
+                    'accepted': 'text-blue-600 dark:text-blue-400',
+                    'processing': 'text-purple-600 dark:text-purple-400',
+                    'completed': 'text-green-600 dark:text-green-400',
+                    'cancelled': 'text-red-600 dark:text-red-400',
+                };
+                return colors[status] || 'text-gray-700 dark:text-gray-300';
+            },
+
+            getStatusText(status) {
+                const texts = {
+                    'pending': 'Awaiting',
+                    'accepted': 'In Progress',
+                    'processing': 'In Progress',
+                    'completed': 'Done',
+                    'cancelled': 'Cancelled',
+                };
+                return texts[status] || status.charAt(0).toUpperCase() + status.slice(1);
+            },
+
+            capitalizeStatus(status) {
+                return status.charAt(0).toUpperCase() + status.slice(1);
+            }
+        }
+    }
+</script>
 
 <style>
     .line-clamp-1 {

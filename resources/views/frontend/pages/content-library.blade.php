@@ -15,6 +15,7 @@
 			        : '';
 		@endphp
 
+
 		<form method="GET" action="{{ route('frontend.content-library') }}" class="flex flex-wrap items-center gap-4 mb-10"
 			id="filters-form">
 			<div class="relative">
@@ -132,7 +133,7 @@
 										{{ ucfirst(str_replace('_', ' ', $entry->order?->status ?? 'pending')) }}
 									</span>
 								</td>
-								<td class="px-6 py-4 text-right">
+								<td class="px-6 py-4 text-center">
 								<a href="{{ route('frontend.orders.show', $entry->order_id) }}"
 										class="text-gray-400 hover:text-purple-400 transition-colors">
 										<x-icons.eye class="w-5 h-5" />
