@@ -18,12 +18,16 @@ class OrderController extends Controller
     {
         $search = trim((string) $request->string('q', ''));
         $status = (string) $request->string('status', 'all');
+        $type = (string) $request->string('type', 'all');
 
         $orders = Order::query()
             ->with([
-                'buyer:id,name,email',
+                'buyer:id,name,email,user_type',
                 'brand:id,brand_name',
                 'campaign:id,title',
+            ])
+            ->withCount([
+                'items as package_items_count' => fn ($query) => $query->whereNotNull('package_id'),
             ])
             ->when($search !== '', function ($query) use ($search) {
                 $query->where(function ($subQuery) use ($search) {
@@ -39,10 +43,19 @@ class OrderController extends Controller
                         })
                         ->orWhereHas('campaign', function ($campaignQuery) use ($search) {
                             $campaignQuery->where('title', 'like', '%'.$search.'%');
+                        })
+                        ->orWhereHas('items', function ($itemQuery) use ($search) {
+                            $itemQuery->where('title', 'like', '%'.$search.'%');
                         });
                 });
             })
             ->when($status !== 'all', fn ($query) => $query->where('status', $status))
+            ->when($type === 'campaign', fn ($query) => $query->whereNotNull('campaign_id'))
+            ->when($type === 'package', function ($query) {
+                $query
+                    ->whereNull('campaign_id')
+                    ->whereHas('items', fn ($itemQuery) => $itemQuery->whereNotNull('package_id'));
+            })
             ->orderByDesc('created_at')
             ->paginate(15)
             ->withQueryString();
@@ -54,11 +67,18 @@ class OrderController extends Controller
             'revenue' => (float) Order::where('status', 'completed')->sum('total_amount'),
         ];
 
+        if ($request->ajax()) {
+            return view('backend.pages.orders._results', [
+                'orders' => $orders,
+            ]);
+        }
+
         return view('backend.pages.orders.index', [
             'orders' => $orders,
             'stats' => $stats,
             'search' => $search,
             'status' => $status,
+            'type' => $type,
         ]);
     }
 

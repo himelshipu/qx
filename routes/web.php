@@ -128,6 +128,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Frontend Orders
     Route::get('/orders', [App\Http\Controllers\Frontend\OrderController::class, 'index'])->name('frontend.orders.index');
     Route::get('/orders/{order}', [App\Http\Controllers\Frontend\OrderController::class, 'show'])->name('frontend.orders.show');
+    Route::post('/orders/{order}/reviews', [App\Http\Controllers\Frontend\OrderController::class, 'storeReview'])->name('frontend.orders.reviews.store');
 
     // Frontend Conversations
     Route::get('/messages', [App\Http\Controllers\Frontend\ConversationController::class, 'index'])->name('frontend.conversations.index');
@@ -225,6 +226,8 @@ Route::prefix('dashboard')->name('dashboard.')->middleware(['auth', 'verified', 
     Route::get('/campaigns/details/{campaign}', [CampaignController::class, 'view'])->name('campaigns.view');
     Route::get('/campaigns/{campaign}/edit', [CampaignController::class, 'edit'])->name('campaigns.edit');
     Route::put('/campaigns/{campaign}', [CampaignController::class, 'update'])->name('campaigns.update');
+    Route::post('/campaigns/{campaign}/update-status', [CampaignController::class, 'updateStatus'])->name('campaigns.update-status');
+    Route::post('/campaigns/{campaign}/applications/{application}/update-status', [FrontendCampaignController::class, 'updateApplicationStatus'])->name('campaigns.update-application-status');
     Route::delete('/campaigns/{campaign}', [CampaignController::class, 'destroy'])->name('campaigns.destroy');
     Route::get('/campaigns/assign', [CampaignController::class, 'assign'])->name('campaigns.assign');
     Route::post('/campaigns/assign', [CampaignController::class, 'assignStore'])->name('campaigns.assign.store');

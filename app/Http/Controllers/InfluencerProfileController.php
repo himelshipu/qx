@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Influencer;
 use App\Models\InfluencerPortfolio;
 use App\Models\Package;
+use App\Models\Review;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -33,17 +34,55 @@ class InfluencerProfileController extends Controller
             ->with([
                 'user',
                 'categories:id,name',
-                'portfolios'    => fn($query)    => $query->where('is_active', true)->orderBy('sort_order'),
                 'platformStats' => fn($query) => $query
                     ->where('is_active', true)
                     ->orderByDesc('follower_count')
             ])
-            ->withAvg('reviews', 'rating')
-            ->withCount('reviews')
             ->whereHas('user', function ($query) use ($slug): void {
                 $query->where('slug', $slug)->where('user_type', 'influencer');
             })
             ->firstOrFail();
+
+        $portfolioBaseQuery = InfluencerPortfolio::query()
+            ->where('influencer_id', $influencer->id)
+            ->where('is_active', true)
+            ->orderBy('sort_order')
+            ->orderByDesc('id');
+
+        $portfolioTotalCount = (clone $portfolioBaseQuery)->count();
+
+        $portfolioPreview = (clone $portfolioBaseQuery)
+            ->where('media_type', 'image')
+            ->limit(3)
+            ->get(['id', 'file_path']);
+
+        $portfolioPage = (clone $portfolioBaseQuery)
+            ->simplePaginate(24, ['id', 'media_type', 'file_path', 'title', 'description', 'created_at'], 'portfolio_page')
+            ->withQueryString();
+
+        $reviewsBaseQuery = Review::query()
+            ->where('influencer_id', $influencer->id)
+            ->where('is_public', true);
+
+        $reviewSummary = (clone $reviewsBaseQuery)
+            ->selectRaw('COUNT(*) as total_reviews, AVG(rating) as avg_rating')
+            ->first();
+
+        $reviewDistribution = (clone $reviewsBaseQuery)
+            ->selectRaw('rating, COUNT(*) as total')
+            ->groupBy('rating')
+            ->pluck('total', 'rating');
+
+        $reviewsPage = (clone $reviewsBaseQuery)
+            ->with([
+                'brand:id,brand_name,user_id',
+                'brand.user:id,slug',
+                'orderItem:id,title,package_id',
+                'orderItem.package:id,name',
+            ])
+            ->orderByDesc('created_at')
+            ->simplePaginate(8, ['id', 'order_item_id', 'brand_id', 'rating', 'title', 'comment', 'created_at'], 'reviews_page')
+            ->withQueryString();
 
         $packages = Package::query()
             ->where('influencer_id', $influencer->id)
@@ -60,9 +99,16 @@ class InfluencerProfileController extends Controller
             ]);
 
         return view('frontend.pages.influencer-profile', [
-            'influencer' => $influencer,
-            'packages'   => $packages,
-            'title'      => $influencer->user->name . ' — Influencer'
+            'influencer'           => $influencer,
+            'packages'             => $packages,
+            'portfolioPreview'     => $portfolioPreview,
+            'portfolioPage'        => $portfolioPage,
+            'portfolioTotalCount'  => $portfolioTotalCount,
+            'reviewsPage'          => $reviewsPage,
+            'reviewsTotalCount'    => (int) ($reviewSummary?->total_reviews ?? 0),
+            'reviewsAverageRating' => $reviewSummary?->avg_rating !== null ? round((float) $reviewSummary->avg_rating, 1) : null,
+            'reviewDistribution'   => $reviewDistribution,
+            'title'                => $influencer->user->name . ' — Influencer'
         ]);
     }
 
@@ -97,7 +143,7 @@ class InfluencerProfileController extends Controller
         $influencer = $this->getDashboardInfluencerBySlug($slug);
 
         if (!$influencer) {
-            return redirect()->route('influencer.profile.edit', ['slug' => auth()->user()->slug])->with('error', 'Influencer profile not found');
+            return redirect()->route('influencer.profile.edit', ['slug' => Auth::user()->slug])->with('error', 'Influencer profile not found');
         }
 
         $activeTab = $request->string('active_tab')->toString() ?: 'details';

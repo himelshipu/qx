@@ -110,11 +110,6 @@ class MenuHelper
                         'route' => 'campaigns.standard.create'
                     ],
                     [
-                        'icon'  => 'user-add',
-                        'name'  => 'Assign Influencers',
-                        'route' => 'campaigns.assign'
-                    ],
-                    [
                         'icon'  => 'content-library',
                         'name'  => 'Content Library',
                         'route' => 'content-library'

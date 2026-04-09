@@ -158,6 +158,30 @@
 
 				<!-- Sidebar - Info Cards -->
 				<div class="space-y-4">
+					<!-- Already Assigned Influencers Card -->
+					<div class="rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800" x-show="selectedCampaignId" x-cloak>
+						<h4 class="text-sm font-semibold text-gray-900 dark:text-white mb-3">Already Assigned Influencers</h4>
+						<div x-show="assignedInfluencers.length > 0" x-cloak class="space-y-2">
+							<p class="text-2xl font-bold text-blue-600 dark:text-blue-400" x-text="assignedInfluencers.length"></p>
+							<div class="mt-3 space-y-2 max-h-48 overflow-y-auto">
+								<template x-for="influencer in assignedInfluencers" :key="influencer.id">
+									<div class="p-2 rounded bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600">
+									<div class="flex items-start justify-between gap-2">
+										<div class="flex-1">
+											<p class="text-xs font-medium text-gray-900 dark:text-white" x-text="influencer.display_name"></p>
+											<p class="text-xs text-gray-600 dark:text-gray-400" x-text="influencer.email"></p>
+										</div>
+										<span :class="influencer.status === 'approved' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : influencer.status === 'declined' ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'" class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium whitespace-nowrap" x-text="influencer.status?.charAt(0).toUpperCase() + influencer.status?.slice(1)"></span>
+									</div>
+									</div>
+								</template>
+							</div>
+						</div>
+						<div x-show="assignedInfluencers.length === 0" x-cloak>
+							<p class="text-sm text-gray-600 dark:text-gray-400">No influencers assigned yet</p>
+						</div>
+					</div>
+
 					<div class="rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800">
 						<h4 class="text-sm font-semibold text-gray-900 dark:text-white mb-3">Active Influencers</h4>
 						<p class="text-2xl font-bold text-indigo-600 dark:text-indigo-400">{{ $activeInfluencersCount }}</p>
@@ -248,18 +272,11 @@
 					description: '',
 					assignedCount: 0
 				},
+				assignedInfluencers: [],
+				assignedInfluencerIds: [],
 				selectedInfluencerIds: [],
-				filteredInfluencers: @js(
-    $influencers->map(
-        fn($c) => [
-            'id' => $c->id,
-            'display_name' => $c->display_name,
-            'email' => $c->user?->email,
-            'phone' => $c->user?->phone,
-        ],
-    ),
-),
-				allInfluencers: @js(
+                filteredInfluencers: [],
+                allInfluencers: @js(
     $influencers->map(
         fn($c) => [
             'id' => $c->id,
@@ -297,6 +314,9 @@
 							description: '',
 							assignedCount: 0
 						};
+						this.filteredInfluencers = [];
+						this.assignedInfluencers = [];
+						this.assignedInfluencerIds = [];
 					}
 				},
 				updateAssignedCount() {
@@ -304,18 +324,36 @@
 					fetch(`/dashboard/campaigns/${this.selectedCampaignId}/assigned-influencers`)
 						.then(r => r.json())
 						.then(data => {
+							this.assignedInfluencers = data || [];
+							this.assignedInfluencerIds = (data || []).map(influencer => influencer.id);
 							this.campaignDetails.assignedCount = data.length || 0;
+							// Update available influencers after fetching assigned ones
+							this.updateAvailableInfluencers();
 						})
 						.catch(() => {
+							this.assignedInfluencers = [];
+							this.assignedInfluencerIds = [];
 							this.campaignDetails.assignedCount = 0;
+							this.updateAvailableInfluencers();
 						});
+				},
+				updateAvailableInfluencers() {
+					// Filter out already assigned influencers from the available list
+					this.filteredInfluencers = this.allInfluencers.filter(influencer => 
+						!this.assignedInfluencerIds.includes(influencer.id)
+					);
 				},
 				filterInfluencers(event) {
 					const searchTerm = event.target.value.toLowerCase();
-					this.filteredInfluencers = this.allInfluencers.filter(influencer =>
-						influencer.display_name.toLowerCase().includes(searchTerm) ||
-						influencer.email.toLowerCase().includes(searchTerm)
-					);
+					this.filteredInfluencers = this.allInfluencers.filter(influencer => {
+						// Exclude already assigned influencers
+						if (this.assignedInfluencerIds.includes(influencer.id)) {
+							return false;
+						}
+						// Match search term
+						return influencer.display_name.toLowerCase().includes(searchTerm) ||
+							influencer.email.toLowerCase().includes(searchTerm);
+					});
 				},
 				toggleInfluencer(influencer) {
 					const index = this.selectedInfluencerIds.indexOf(influencer.id);

@@ -22,8 +22,7 @@
 		}
 
 		// Get first 3 portfolio images for grid display
-		$portfolioItems = $influencer->portfolios->where('media_type', 'image')->take(3);
-		$gridImages = $portfolioItems->pluck('file_path')->map(fn($path) => \App\Helpers\ImageHelper::url($path))->values();
+		$gridImages = $portfolioPreview->pluck('file_path')->map(fn($path) => \App\Helpers\ImageHelper::url($path))->values();
 
 		// Fill with defaults if not enough images
 		while ($gridImages->count() < 3) {
@@ -110,6 +109,9 @@
 		    ->values();
 
 		$initialPackageKey = $packageCards->first()['key'] ?? null;
+		$reviewsTotal = $reviewsTotalCount;
+		$avgRating = $reviewsAverageRating;
+		$ratingLabel = $avgRating !== null ? number_format($avgRating, 1) : '0.0';
 	@endphp
 
 	<section class="min-h-screen" x-data="influencerProfileData()">
@@ -194,7 +196,7 @@
 
 				<!-- Container: Flex on mobile (for scroll), Grid on desktop -->
 				<div @scroll.debounce.100ms="handleScroll($event)"
-					class="flex lg:grid lg:grid-cols-12 overflow-x-auto lg:overflow-x-visible snap-x snap-mandatory no-scrollbar h-[450px] lg:h-[600px] gap-0 lg:gap-4">
+					class="flex lg:grid lg:grid-cols-12 overflow-x-auto lg:overflow-x-visible snap-x snap-mandatory no-scrollbar h-112.5 lg:h-150 gap-0 lg:gap-4">
 
 					@foreach ($gridImages as $index => $image)
 						<!-- Removed 'hidden' class. min-w-full handles the mobile layout -->
@@ -208,7 +210,7 @@
 				</div>
 
 				<!-- Show All Photos Button (Desktop Only) -->
-				@if ($influencer->portfolios->count() > 3)
+				@if ($portfolioTotalCount > 3)
 					<div class="hidden lg:block absolute bottom-6 right-6 z-10">
 						<a href="#portfolio-gallery"
 							class="flex items-center gap-2 bg-white/90 backdrop-blur-md px-5 py-2.5 rounded-2xl text-sm font-bold text-gray-900 border border-gray-100 shadow-xl hover:bg-white transition active:scale-95">
@@ -249,10 +251,18 @@
 						<img src="{{ $profileImageUrl }}" class="w-24 h-24 rounded-full border-2 border-gray-50 shadow-md object-cover"
 							alt="{{ $displayName }}">
 						<div>
-							<h1 class="text-2xl font-bold text-gray-800 dark:text-gray-300 tracking-tight leading-none mb-2">
-								{{ $displayName }}
-							</h1>
-							<p class="text-sm text-gray-400 font-medium mb-4">{{ $locationText }}</p>
+							<div class="mb-1 flex flex-wrap items-center gap-2">
+								<h1 class="text-2xl font-bold text-gray-800 dark:text-gray-300 tracking-tight leading-none">
+									{{ $displayName }}
+								</h1>
+								<span class="inline-flex items-center gap-1 text-base font-semibold text-gray-800 dark:text-gray-200">
+									<x-icons.star class="h-4 w-4 text-amber-400" />
+									{{ $ratingLabel }}
+									<span class="text-gray-400">·</span>
+									<a href="#reviews-holder" class="underline decoration-gray-400 underline-offset-2 hover:text-gray-900 dark:hover:text-white">{{ number_format($reviewsTotal) }} Reviews</a>
+								</span>
+							</div>
+							<p class="text-sm text-gray-500 font-medium mb-4">{{ $locationText }}</p>
 							<div class="flex gap-3">
 								@foreach ($platformBadges as $platformBadge)
 									<span
@@ -269,6 +279,40 @@
 										{{ $platformBadge['followers'] }} Followers
 									</span>
 								@endforeach
+							</div>
+						</div>
+					</div>
+
+					<!-- Reviews Summary -->
+					<div class="rounded-3xl border border-amber-100 bg-linear-to-br from-amber-50 via-white to-orange-50 p-6 shadow-sm dark:border-gray-800 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800">
+						<div class="flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
+							<div>
+								<p class="text-xs font-semibold uppercase tracking-widest text-amber-700 dark:text-amber-300">Ratings & Reviews</p>
+								<div class="mt-2 flex items-center gap-3">
+									<div class="flex items-center gap-1">
+										@for ($star = 1; $star <= 5; $star++)
+											<x-icons.star class="h-6 w-6 {{ $avgRating !== null && $star <= floor($avgRating) ? 'text-amber-400' : 'text-gray-300 dark:text-gray-600' }}" />
+										@endfor
+									</div>
+									<p class="text-2xl font-extrabold text-gray-900 dark:text-white">{{ $avgRating !== null ? number_format($avgRating, 1) : 'N/A' }}</p>
+								</div>
+								<p class="mt-1 text-sm text-gray-600 dark:text-gray-400">Based on {{ number_format($reviewsTotal) }} public reviews</p>
+							</div>
+
+							<div class="w-full max-w-md space-y-2">
+								@for ($star = 5; $star >= 1; $star--)
+									@php
+										$starCount = (int) ($reviewDistribution[$star] ?? 0);
+										$starPercent = $reviewsTotal > 0 ? round(($starCount / $reviewsTotal) * 100) : 0;
+									@endphp
+									<div class="flex items-center gap-3">
+										<span class="w-8 text-sm font-semibold text-gray-700 dark:text-gray-300">{{ $star }}★</span>
+										<div class="h-2.5 flex-1 overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
+											<div class="h-full rounded-full bg-amber-400" style="width: {{ $starPercent }}%"></div>
+										</div>
+										<span class="w-12 text-right text-xs font-semibold text-gray-600 dark:text-gray-400">{{ $starCount }}</span>
+									</div>
+								@endfor
 							</div>
 						</div>
 					</div>
@@ -379,17 +423,17 @@
 				<!-- RIGHT COLUMN: PRICING CARD (Synced) -->
 				<div class="w-auto lg:w-2/5">
 					<div
-						class="sticky top-24 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-[2.5rem] p-10 shadow-2xl shadow-purple-900/5">
-						<div class="flex items-center justify-between mb-4">
-							<span class="text-4xl font-bold text-gray-800 dark:text-gray-300 tracking-tighter" x-text="price"></span>
+						class="sticky top-24 rounded-2xl border border-gray-300 bg-white p-4 shadow-md dark:border-gray-700 dark:bg-gray-900">
+						<div class="mb-4">
+							<span class="block text-4xl font-bold text-gray-900 dark:text-white" x-text="price"></span>
 						</div>
 
 						<!-- CUSTOM DYNAMIC DROPDOWN -->
-						<div class="relative mb-6">
+						<div class="relative mb-4">
 							<button @click="openDropdown = !openDropdown"
-								class="w-full flex items-center justify-between px-5 py-4 border-2 border-purple-100 dark:border-gray-700 rounded-2xl text-base font-bold text-gray-800 dark:text-gray-300 bg-white dark:bg-transparent transition-all hover:border-purple-200">
+								class="w-full flex items-center justify-between rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm font-semibold text-gray-900 transition hover:border-gray-400 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100">
 								<div class="flex items-center gap-4">
-									<span class="text-gray-800 dark:text-purple-400">
+									<span class="text-gray-700 dark:text-gray-200">
 										<template x-if="selectedPackage && selectedPackage.icon === 'instagram'">
 											<x-icons.instagram class="w-5 h-5" />
 										</template>
@@ -411,7 +455,7 @@
 								</svg>
 							</button>
 							<div x-show="openDropdown" x-cloak @click.away="openDropdown = false"
-								class="absolute top-full left-0 w-full mt-2 bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-2xl shadow-2xl z-50 overflow-y-auto max-h-96">
+								class="absolute top-full left-0 z-50 mt-2 max-h-96 w-full overflow-y-auto rounded-xl border border-gray-200 bg-white shadow-xl dark:border-gray-700 dark:bg-gray-800">
 								<template x-for="p in packages" :key="p.key">
 									<div @click="selectPackage(p.key)" class="px-6 py-4 cursor-pointer text-sm font-medium transition-colors"
 										:class="selectedPackageKey === p.key ? 'bg-gray-100 text-gray-800' :
@@ -424,26 +468,30 @@
 
 						<!-- Show only Brand Users -->
 						<div class="mb-4">
-							<h3 class="text-lg font-bold text-gray-800 dark:text-gray-300 mb-2">Package Details</h3>
-							<p class="text-sm text-gray-600 dark:text-gray-400 max-w-md" x-text="selectedPackageDescription"></p>
+							<p class="text-[28px] leading-none text-gray-400 dark:text-gray-500">...</p>
+							<p class="text-base text-gray-500 dark:text-gray-400" x-text="selectedPackageDescription"></p>
 						</div>
 
-						<!-- Show only Brand Users -->
-						<div class="flex gap-3 w-full">
-							<form @submit.prevent="handleAddToCart()" method="POST" class="flex-1">
+						<div class="w-full">
+							<form @submit.prevent="handleAddToCart()" method="POST">
 								<button type="submit"
-									class="bg-[#1A1A1A] hover:bg-purple-400 flex w-full items-center justify-center rounded-xl px-4 py-4 text-sm font-bold text-white transition active:scale-[0.98]">
+									class="flex w-full items-center justify-center rounded-lg bg-linear-to-r from-rose-400 to-fuchsia-500 px-4 py-3 text-lg font-bold text-white transition hover:from-rose-500 hover:to-fuchsia-600 active:scale-[0.98]">
 									Add to Cart
 								</button>
 							</form>
 
-							<div class="flex items-center px-3 text-gray-500 dark:text-gray-400 font-semibold">
-								or
+							<div class="my-4 flex items-center gap-3 text-gray-400 dark:text-gray-600">
+								<div class="h-px flex-1 bg-gray-300 dark:bg-gray-700"></div>
+								<span class="text-sm font-semibold">or</span>
+								<div class="h-px flex-1 bg-gray-300 dark:bg-gray-700"></div>
 							</div>
 
-							<button @click="negotiatePackage()" type="button"
-								class="flex-1 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 flex items-center justify-center rounded-xl px-4 py-4 text-sm font-bold text-gray-800 dark:text-white transition active:scale-[0.98]">
+							<button @click="negotiatePackage()" type="button" class="w-full text-center text-lg font-semibold text-gray-800 underline underline-offset-2 transition hover:text-gray-900 dark:text-gray-100 dark:hover:text-white">
 								Negotiate a Package
+							</button>
+
+							<button type="button" class="mt-5 w-full text-center text-sm font-medium text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300">
+								How does it work?
 							</button>
 						</div>
 					</div>
@@ -452,16 +500,16 @@
 		</main>
 
 		<!-- PORTFOLIO SECTION (now inside the main Alpine component) -->
-		@if ($influencer->portfolios->count() > 0)
+		@if ($portfolioTotalCount > 0)
 			<section id="portfolio-gallery" class="py-20 px-4 sm:px-6 lg:px-8 max-w-screen-2xl mx-auto scroll-mt-24">
 				<div class="mb-12">
 					<h2 class="text-3xl font-bold text-gray-900 dark:text-white mb-2">Portfolio</h2>
-					<p class="text-gray-600 dark:text-gray-400">Check out the latest work exhibited by {{ $displayName }}</p>
+					<p class="text-gray-600 dark:text-gray-400">Showing {{ $portfolioPage->count() }} of {{ number_format($portfolioTotalCount) }} media items</p>
 				</div>
 
 				<!-- Portfolio Grid -->
 				<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-					@foreach ($influencer->portfolios as $item)
+					@foreach ($portfolioPage as $item)
 						<button @click="openGallery({{ $item->id }})" type="button"
 							class="portfolio-item group relative rounded-2xl overflow-hidden border border-gray-100 dark:border-gray-800 hover:shadow-xl transition-all duration-300 cursor-pointer w-full text-left bg-transparent p-0">
 							@if ($item->media_type === 'image')
@@ -486,12 +534,16 @@
 							</div>
 							<!-- Title Badge -->
 							@if ($item->title)
-								<div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-4">
+								<div class="absolute bottom-0 left-0 right-0 bg-linear-to-t from-black/60 to-transparent p-4">
 									<p class="text-white font-semibold text-sm">{{ Str::limit($item->title, 40) }}</p>
 								</div>
 							@endif
 						</button>
 					@endforeach
+				</div>
+
+				<div class="mt-8">
+					{{ $portfolioPage->appends(request()->except('portfolio_page'))->links() }}
 				</div>
 
 				<!-- Lightbox Modal Overlay -->
@@ -569,13 +621,93 @@
 
 							<!-- Touch swipe hint (mobile) -->
 							<div class="absolute bottom-4 left-4 text-gray-400 text-xs md:hidden">
-								Swipe to navigate
+								Swipe to navigate (current page)
 							</div>
 						</div>
 					</template>
 				</div>
 			</section>
 		@endif
+
+		<!-- REVIEWS SECTION -->
+		<section id="reviews-holder" class="py-16 px-4 sm:px-6 lg:px-8 max-w-screen-2xl mx-auto scroll-mt-24">
+			<div class="mb-8">
+				<h2 class="text-4xl font-bold text-gray-900 dark:text-white">{{ number_format($reviewsTotal) }} Reviews <span class="text-gray-400">·</span> <span class="inline-flex items-center gap-1"><x-icons.star class="h-7 w-7 text-amber-400" />{{ $ratingLabel }}</span></h2>
+				<div class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
+					<div class="flex items-center gap-3">
+						<svg class="h-8 w-8 text-gray-800 dark:text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M8 10h.01M12 10h.01M16 10h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+						</svg>
+						<div>
+							<p class="text-2xl font-bold text-gray-900 dark:text-white">{{ $ratingLabel }}</p>
+							<p class="text-lg font-semibold text-gray-700 dark:text-gray-300">Communication</p>
+						</div>
+					</div>
+					<div class="flex items-center gap-3">
+						<svg class="h-8 w-8 text-gray-800 dark:text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+						</svg>
+						<div>
+							<p class="text-2xl font-bold text-gray-900 dark:text-white">{{ $ratingLabel }}</p>
+							<p class="text-lg font-semibold text-gray-700 dark:text-gray-300">Timeliness</p>
+						</div>
+					</div>
+					<div class="flex items-center gap-3">
+						<svg class="h-8 w-8 text-gray-800 dark:text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 12l2 2 4-4m5 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+						</svg>
+						<div>
+							<p class="text-2xl font-bold text-gray-900 dark:text-white">{{ $ratingLabel }}</p>
+							<p class="text-lg font-semibold text-gray-700 dark:text-gray-300">Satisfaction</p>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			@if ($reviewsPage->count() > 0)
+				<div class="space-y-10">
+					@foreach ($reviewsPage as $review)
+						@php
+							$reviewTitle = $review->orderItem?->package?->name ?: $review->orderItem?->title;
+						@endphp
+						<div class="flex items-start gap-4">
+							<div class="flex h-14 w-14 items-center justify-center rounded-full bg-sky-100 text-2xl font-bold text-gray-700 dark:bg-gray-700 dark:text-gray-100">
+								{{ \Illuminate\Support\Str::substr($review->brand?->brand_name ?? 'B', 0, 1) }}
+							</div>
+							<div class="min-w-0 flex-1">
+								<p class="text-2xl font-semibold text-gray-900 dark:text-white">{{ $review->brand?->brand_name ?? 'Brand' }}</p>
+								@if ($reviewTitle)
+									<p class="text-lg text-gray-500 dark:text-gray-400">{{ $reviewTitle }}</p>
+								@endif
+								<p class="mt-2 text-lg font-semibold text-gray-800 dark:text-gray-200">
+									@for ($i = 1; $i <= 5; $i++)
+										<span>{{ $i <= $review->rating ? '★' : '☆' }}</span>
+									@endfor
+									<span class="text-gray-400">·</span> {{ optional($review->created_at)->format('F Y') }}
+								</p>
+								@if ($review->comment)
+									<p class="mt-3 text-xl leading-relaxed text-gray-800 dark:text-gray-200">{{ $review->comment }}</p>
+								@else
+									<p class="mt-3 text-xl leading-relaxed text-gray-700 dark:text-gray-300">{{ $review->brand?->brand_name ?? 'Brand' }} left a {{ number_format($review->rating, 1) }} star review.</p>
+								@endif
+							</div>
+						</div>
+					@endforeach
+				</div>
+
+				@if ($reviewsPage->hasMorePages())
+					<div class="mt-12">
+						<a href="{{ $reviewsPage->nextPageUrl() }}" class="inline-flex items-center rounded-xl border border-gray-900 px-6 py-3 text-lg font-semibold text-gray-900 transition hover:bg-gray-50 dark:border-gray-300 dark:text-gray-100 dark:hover:bg-gray-800">
+							Show all reviews
+						</a>
+					</div>
+				@endif
+			@else
+				<div class="rounded-2xl border border-dashed border-gray-300 bg-gray-50 px-6 py-10 text-center text-sm text-gray-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-400">
+					No reviews available yet.
+				</div>
+			@endif
+		</section>
 	</section>
 
 	@push('scripts')
@@ -598,7 +730,8 @@
 						return @js(route('cart.start-add-to-cart', ['package' => ':id'])).replace(':id', packageId);
 					},
 					portfolioItems: @js(
-    $influencer->portfolios
+	$portfolioPage
+		->getCollection()
         ->map(
             fn($p) => [
                 'id' => $p->id,

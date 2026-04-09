@@ -5,6 +5,17 @@
 @section('content')
 	<div class="min-h-screen  py-12 px-4 sm:px-6 lg:px-8">
 		<div class="max-w-6xl mx-auto">
+			@if (session('success'))
+				<div class="mb-6 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">
+					{{ session('success') }}
+				</div>
+			@endif
+			@if (session('error'))
+				<div class="mb-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
+					{{ session('error') }}
+				</div>
+			@endif
+
 			<!-- Header Section -->
 			<div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900 mb-8">
 				<div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -50,9 +61,16 @@
 											<h3 class="font-semibold text-gray-900 dark:text-white">{{ $item->title }}</h3>
 											<p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
 												Influencer:
-												<span class="font-medium">
-													{{ $item->influencer?->display_name ?: $item->influencer?->user?->name ?? 'N/A' }}
-												</span>
+												@if ($item->influencer?->user?->slug)
+													<a href="{{ route('influencer.profile', ['slug' => $item->influencer->user->slug]) }}"
+														class="font-semibold text-indigo-700 hover:text-indigo-600 dark:text-indigo-300 dark:hover:text-indigo-200 underline-offset-2 hover:underline">
+														{{ $item->influencer?->display_name ?: $item->influencer?->user?->name ?? 'N/A' }}
+													</a>
+												@else
+													<span class="font-medium">
+														{{ $item->influencer?->display_name ?: $item->influencer?->user?->name ?? 'N/A' }}
+													</span>
+												@endif
 											</p>
 
 											@if ($item->description)
@@ -111,6 +129,123 @@
 							@empty
 								<div class="p-6 text-center text-gray-500 dark:text-gray-400">
 									No order items found.
+								</div>
+							@endforelse
+						</div>
+					</div>
+
+					<!-- Influencer Ratings & Reviews -->
+					<div class="rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
+						<div class="border-b border-gray-200 bg-linear-to-r from-amber-50 to-orange-50 px-6 py-4 dark:border-gray-800 dark:bg-gray-800/50">
+							<h2 class="text-lg font-semibold text-gray-900 dark:text-white">Influencer Ratings & Reviews</h2>
+							<p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
+								Brands can leave a rating only after the order is completed.
+							</p>
+						</div>
+						<div class="p-6 space-y-6">
+							@forelse ($orderInfluencers as $entry)
+								@php
+									$influencer = $entry['influencer'];
+									$avgRating = $entry['avg_rating'];
+									$reviewsCount = $entry['reviews_count'];
+									$hasOrderReview = $entry['has_order_review'];
+									$recentReviews = $entry['recent_reviews'];
+									$influencerName = $influencer?->display_name ?: $influencer?->user?->name ?: 'Influencer';
+								@endphp
+								<div class="rounded-xl border border-gray-200 p-5 dark:border-gray-700">
+									<div class="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+										<div class="space-y-2">
+											@if ($influencer?->user?->slug)
+												<a href="{{ route('influencer.profile', ['slug' => $influencer->user->slug]) }}"
+													class="text-base font-semibold text-gray-900 hover:text-indigo-600 dark:text-white dark:hover:text-indigo-300 transition">
+													{{ $influencerName }}
+												</a>
+											@else
+												<p class="text-base font-semibold text-gray-900 dark:text-white">{{ $influencerName }}</p>
+											@endif
+
+											<div class="flex items-center gap-2">
+												<div class="flex items-center gap-0.5">
+													@for ($star = 1; $star <= 5; $star++)
+														<x-icons.star class="w-4 h-4 {{ $avgRating !== null && $star <= floor($avgRating) ? 'text-amber-400' : 'text-gray-300 dark:text-gray-600' }}" />
+													@endfor
+												</div>
+												<span class="text-sm font-semibold text-gray-700 dark:text-gray-300">
+													{{ $avgRating !== null ? number_format($avgRating, 1) : 'N/A' }}
+												</span>
+												<span class="text-sm text-gray-500 dark:text-gray-400">({{ $reviewsCount }} reviews)</span>
+											</div>
+
+											@if ($recentReviews->isNotEmpty())
+												<div class="space-y-2 pt-2">
+													@foreach ($recentReviews as $recentReview)
+														<div class="rounded-lg bg-gray-50 px-3 py-2 dark:bg-gray-800/60">
+															<div class="flex items-center justify-between gap-3">
+																<p class="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+																	{{ $recentReview->brand?->brand_name ?: 'Brand' }}
+																</p>
+																<div class="flex items-center gap-0.5">
+																	@for ($i = 1; $i <= 5; $i++)
+																		<x-icons.star class="w-3.5 h-3.5 {{ $i <= $recentReview->rating ? 'text-amber-400' : 'text-gray-300 dark:text-gray-600' }}" />
+																	@endfor
+																</div>
+															</div>
+															@if ($recentReview->comment)
+																<p class="mt-1 text-sm text-gray-700 dark:text-gray-300">{{ \Illuminate\Support\Str::limit($recentReview->comment, 130) }}</p>
+															@endif
+														</div>
+													@endforeach
+												</div>
+											@endif
+										</div>
+
+										<div class="w-full md:w-80">
+											@if (auth()->user()->user_type === 'brand')
+												@if ($hasOrderReview)
+													<div class="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">
+														Review already submitted for this order.
+													</div>
+												@elseif ($canLeaveReview)
+													<form method="POST" action="{{ route('frontend.orders.reviews.store', $order) }}" class="space-y-3 rounded-lg border border-gray-200 p-4 dark:border-gray-700">
+														@csrf
+														<input type="hidden" name="influencer_id" value="{{ $influencer->id }}">
+
+														<div>
+															<label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-gray-600 dark:text-gray-400">Rating</label>
+															<select name="rating" required class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100">
+																<option value="">Select stars</option>
+																@for ($rating = 5; $rating >= 1; $rating--)
+																	<option value="{{ $rating }}">{{ $rating }} star{{ $rating > 1 ? 's' : '' }}</option>
+																@endfor
+															</select>
+														</div>
+
+														<div>
+															<label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-gray-600 dark:text-gray-400">Title (Optional)</label>
+															<input type="text" name="title" maxlength="120" class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100" placeholder="Great collaboration">
+														</div>
+
+														<div>
+															<label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-gray-600 dark:text-gray-400">Comment (Optional)</label>
+															<textarea name="comment" rows="3" maxlength="1200" class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100" placeholder="Share your experience with this influencer"></textarea>
+														</div>
+
+														<button type="submit" class="w-full rounded-lg bg-gray-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-gray-800 dark:bg-indigo-600 dark:hover:bg-indigo-500">
+															Submit Review
+														</button>
+													</form>
+												@else
+													<div class="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-700">
+														Review becomes available once this order is completed.
+													</div>
+												@endif
+											@endif
+										</div>
+									</div>
+								</div>
+							@empty
+								<div class="rounded-xl border border-dashed border-gray-300 px-4 py-6 text-center text-sm text-gray-500 dark:border-gray-700 dark:text-gray-400">
+									No influencers found for this order.
 								</div>
 							@endforelse
 						</div>

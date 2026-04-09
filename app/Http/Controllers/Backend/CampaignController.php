@@ -106,6 +106,7 @@ class CampaignController extends Controller
                     'id' => $application->influencer->id,
                     'display_name' => $application->influencer->display_name,
                     'email' => $application->influencer->user?->email,
+                    'status' => $application->status,
                 ];
             });
 
@@ -222,6 +223,37 @@ class CampaignController extends Controller
                 ->back()
                 ->with('error', 'Something went wrong. Please try again.')
                 ->withInput();
+        }
+    }
+
+    /**
+     * Update the campaign status.
+     */
+    public function updateStatus(Request $request, Campaign $campaign): RedirectResponse
+    {
+        try {
+            $validated = $request->validate([
+                'status' => 'required|in:published,paused,closed,archived',
+            ]);
+
+            $campaign->update(['status' => $validated['status']]);
+
+            return redirect()
+                ->back()
+                ->with('success', 'Campaign status updated to '.ucfirst($validated['status']).'.');
+
+        } catch (ValidationException $e) {
+            return redirect()
+                ->back()
+                ->withErrors($e->errors())
+                ->with('error', 'Invalid status provided.');
+
+        } catch (\Exception $e) {
+            report($e);
+
+            return redirect()
+                ->back()
+                ->with('error', 'Something went wrong. Please try again.');
         }
     }
 
