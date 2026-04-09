@@ -416,12 +416,34 @@
 							<h3 class="font-semibold text-gray-900 dark:text-white">Order Summary</h3>
 						</div>
 						<div class="p-6 space-y-3">
+							@php
+								$itemsSubtotal = (float) ($order->subtotal ?? $order->items->sum('line_total'));
+								$serviceFee = (float) ($order->service_fee ?? 0);
+								$taxAmount = (float) ($order->tax_amount ?? 0);
+								$totalAmount = (float) ($order->total_amount ?? ($itemsSubtotal + $serviceFee + $taxAmount));
+							@endphp
 							<div class="flex justify-between text-sm">
 								<span class="text-gray-600 dark:text-gray-400">Subtotal</span>
 								<span class="font-medium text-gray-900 dark:text-white">
-									${{ number_format($order->items->sum('line_total'), 2) }}
+									${{ number_format($itemsSubtotal, 2) }}
 								</span>
 							</div>
+							@if ($serviceFee > 0)
+								<div class="flex justify-between text-sm">
+									<span class="text-gray-600 dark:text-gray-400">Service Fee (20%)</span>
+									<span class="font-medium text-gray-900 dark:text-white">
+										${{ number_format($serviceFee, 2) }}
+									</span>
+								</div>
+							@endif
+							@if ($taxAmount > 0)
+								<div class="flex justify-between text-sm">
+									<span class="text-gray-600 dark:text-gray-400">Tax</span>
+									<span class="font-medium text-gray-900 dark:text-white">
+										${{ number_format($taxAmount, 2) }}
+									</span>
+								</div>
+							@endif
 							<div class="flex justify-between text-sm">
 								<span class="text-gray-600 dark:text-gray-400">Total Items</span>
 								<span class="font-medium text-gray-900 dark:text-white">{{ $order->items->count() }}</span>
@@ -434,8 +456,8 @@
 							</div>
 							<div class="border-t border-gray-200 dark:border-gray-700 pt-3 flex justify-between">
 								<span class="font-semibold text-gray-900 dark:text-white">Total Amount</span>
-								<span class="text-lg font-bold text-gray-900 dark:text-white">
-									${{ number_format($order->items->sum('line_total'), 2) }}
+								<span class="text-lg font-bold text-indigo-600 dark:text-indigo-400">
+									${{ number_format($totalAmount, 2) }}
 								</span>
 							</div>
 						</div>

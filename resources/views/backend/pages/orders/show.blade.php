@@ -17,14 +17,14 @@
 		];
 
 		$itemStatusMap = [
-			'pending' => 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300',
-			'accepted' => 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
-			'in_progress' => 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300',
-			'delivered' => 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300',
-			'approved' => 'bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-300',
-			'completed' => 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
-			'rejected' => 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300',
-			'cancelled' => 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300',
+			'pending' => ['class' => 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300', 'label' => 'Pending - waiting to start'],
+			'accepted' => ['class' => 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300', 'label' => 'Accepted - influencer approved'],
+			'in_progress' => ['class' => 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300', 'label' => 'In Progress - work ongoing'],
+			'delivered' => ['class' => 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300', 'label' => 'Delivered - submitted for review'],
+			'approved' => ['class' => 'bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-300', 'label' => 'Approved - ready for payment'],
+			'completed' => ['class' => 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300', 'label' => 'Completed - work finished'],
+			'rejected' => ['class' => 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300', 'label' => 'Rejected - not accepted'],
+			'cancelled' => ['class' => 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300', 'label' => 'Cancelled'],
 		];
 
 		$currentOrderStatus = $orderStatusMap[$order->status] ?? ['label' => ucfirst(str_replace('_', ' ', $order->status)), 'class' => 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300'];
@@ -52,10 +52,21 @@
 		$paidProgress = $itemsCount > 0 ? (int) round(($paidItemsCount / $itemsCount) * 100) : 0;
 		$influencerCount = $order->items->pluck('influencer_id')->filter()->unique()->count();
 
-		$subtotal = (float) ($order->subtotal ?? $order->items->sum('line_total'));
+		$itemsSubtotal = (float) $order->items->sum(static fn ($item) => (float) $item->line_total);
+		$subtotal = (float) ($order->subtotal ?? 0);
+		if ($subtotal <= 0 && $itemsSubtotal > 0) {
+			$subtotal = $itemsSubtotal;
+		}
+
 		$serviceFee = (float) ($order->service_fee ?? 0);
 		$taxAmount = (float) ($order->tax_amount ?? 0);
-		$totalAmount = (float) ($order->total_amount ?? ($subtotal + $serviceFee + $taxAmount));
+		$totalAmount = (float) ($order->total_amount ?? 0);
+		if ($totalAmount <= 0) {
+			$totalAmount = $subtotal + $serviceFee + $taxAmount;
+		}
+		if ($serviceFee <= 0 && $totalAmount > $subtotal && $subtotal > 0) {
+			$serviceFee = max($totalAmount - $subtotal - $taxAmount, 0);
+		}
 		$totalPaidAmount = (float) $order->payments->where('status', 'paid')->sum('amount');
 	@endphp
 
@@ -119,7 +130,7 @@
 					<div class="divide-y divide-gray-200 dark:divide-gray-800">
 						@forelse ($order->items as $item)
 							@php
-								$itemStatusClass = $itemStatusMap[$item->status] ?? 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300';
+									$itemStatusInfo = $itemStatusMap[$item->status] ?? ['class' => 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300', 'label' => ucfirst(str_replace('_', ' ', $item->status))];
 								$paymentClass = $item->paid_at
 									? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300'
 									: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300';
@@ -129,7 +140,7 @@
 									<div class="min-w-0 flex-1">
 										<div class="flex flex-wrap items-center gap-2">
 											<h3 class="text-sm font-semibold text-gray-900 dark:text-white">{{ $item->title }}</h3>
-											<span class="inline-flex rounded-full px-2.5 py-1 text-xs font-semibold {{ $itemStatusClass }}">{{ ucfirst(str_replace('_', ' ', $item->status)) }}</span>
+												<span class="inline-flex rounded-full px-2.5 py-1 text-xs font-semibold {{ $itemStatusInfo['class'] }}">{{ $itemStatusInfo['label'] }}</span>
 											<span class="inline-flex rounded-full px-2.5 py-1 text-xs font-semibold {{ $paymentClass }}">{{ $item->paid_at ? 'Paid' : 'Payment Pending' }}</span>
 										</div>
 										<div class="mt-2 grid grid-cols-1 gap-2 text-sm text-gray-600 dark:text-gray-300 sm:grid-cols-2">
@@ -157,14 +168,14 @@
 										<label for="item_status_{{ $item->id }}" class="sr-only">Item status</label>
 										<select id="item_status_{{ $item->id }}" name="status"
 											class="h-10 flex-1 rounded-lg border border-gray-300 bg-white px-3 text-sm font-medium text-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-white">
-											<option value="pending" @selected($item->status === 'pending')>Pending</option>
-											<option value="accepted" @selected($item->status === 'accepted')>Accepted</option>
-											<option value="in_progress" @selected($item->status === 'in_progress')>In Progress</option>
-											<option value="delivered" @selected($item->status === 'delivered')>Delivered</option>
-											<option value="approved" @selected($item->status === 'approved')>Approved</option>
-											<option value="rejected" @selected($item->status === 'rejected')>Rejected</option>
-											<option value="cancelled" @selected($item->status === 'cancelled')>Cancelled</option>
-											<option value="completed" @selected($item->status === 'completed')>Completed</option>
+													<option value="pending" @selected($item->status === 'pending')>Pending - waiting to start</option>
+													<option value="accepted" @selected($item->status === 'accepted')>Accepted - influencer approved</option>
+													<option value="in_progress" @selected($item->status === 'in_progress')>In Progress - work ongoing</option>
+													<option value="delivered" @selected($item->status === 'delivered')>Delivered - submitted for review</option>
+													<option value="approved" @selected($item->status === 'approved')>Approved - ready for payment</option>
+													<option value="rejected" @selected($item->status === 'rejected')>Rejected - not accepted</option>
+													<option value="cancelled" @selected($item->status === 'cancelled')>Cancelled</option>
+													<option value="completed" @selected($item->status === 'completed')>Completed - work finished</option>
 										</select>
 										<button type="submit" class="inline-flex h-10 items-center gap-1 rounded-lg bg-blue-600 px-4 text-sm font-semibold text-white transition hover:bg-blue-700">
 											<x-icons.check class="h-4 w-4" />Update Status
@@ -191,6 +202,176 @@
 					</div>
 				</div>
 
+				@if ($orderType === 'Campaign')
+					@php
+						$subOrders = $order->subOrders;
+						$completedCount = $subOrders->where('status', 'completed')->count();
+						$totalCount = $subOrders->count();
+						$completionPercent = $totalCount > 0 ? (int) round(($completedCount / $totalCount) * 100) : 0;
+						$paidCount = $subOrders->whereNotNull('paid_at')->count();
+					@endphp
+					<div class="rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
+						<!-- Header -->
+						<div class="border-b border-gray-200 bg-linear-to-r from-blue-50 to-indigo-50 px-5 py-4 dark:border-gray-800 dark:from-blue-900/20 dark:to-indigo-900/20">
+							<div class="flex items-center justify-between gap-4">
+								<div>
+									<h2 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+										<svg class="w-5 h-5 text-blue-600 dark:text-blue-400" fill="currentColor" viewBox="0 0 20 20">
+											<path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v-1h8v1zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z"/>
+										</svg>
+										Influencers (Campaign Order)
+									</h2>
+									<p class="text-xs text-gray-600 dark:text-gray-400 mt-1">Track work and payment status for each influencer</p>
+								</div>
+								<div class="flex items-center gap-2">
+									<div class="text-center">
+										<div class="text-2xl font-bold text-blue-600 dark:text-blue-400">{{ $completedCount }}/{{ $totalCount }}</div>
+										<div class="text-xs text-gray-600 dark:text-gray-400">Completed</div>
+									</div>
+									<div class="w-1 h-12 bg-gray-200 dark:bg-gray-700"></div>
+									<div class="text-center">
+										<div class="text-2xl font-bold text-green-600 dark:text-green-400">{{ $paidCount }}/{{ $totalCount }}</div>
+										<div class="text-xs text-gray-600 dark:text-gray-400">Paid</div>
+									</div>
+								</div>
+							</div>
+							<!-- Progress Bar -->
+								<div class="mt-4 flex items-center gap-2">
+								<div class="flex-1 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+										<div class="h-full bg-linear-to-r from-blue-500 to-indigo-600 rounded-full transition-all" style="width: {{ $completionPercent }}%"></div>
+								</div>
+								<span class="text-xs font-semibold text-gray-700 dark:text-gray-300 w-12 text-right">{{ $completionPercent }}%</span>
+							</div>
+						</div>
+
+						<!-- Influencers Grid -->
+						<div class="p-5">
+							@if ($subOrders->isEmpty())
+								<div class="text-center py-8 text-gray-500 dark:text-gray-400">
+									<p class="text-sm">No influencers yet. Approve influencers from the campaign to create sub-orders.</p>
+								</div>
+							@else
+								<div class="grid grid-cols-1 gap-4 lg:grid-cols-2 xl:grid-cols-3">
+									@foreach ($subOrders as $subOrder)
+										@php
+											$subOrderStatusMap = [
+												'pending' => ['color' => 'yellow', 'icon' => 'clock', 'label' => 'Pending'],
+												'accepted' => ['color' => 'cyan', 'icon' => 'check', 'label' => 'Accepted - influencer approved'],
+												'on_review' => ['color' => 'indigo', 'icon' => 'document', 'label' => 'On Review'],
+												'in_progress' => ['color' => 'blue', 'icon' => 'lightning', 'label' => 'In Progress'],
+												'completed' => ['color' => 'emerald', 'icon' => 'check-circle', 'label' => 'Completed - work finished'],
+												'cancelled' => ['color' => 'red', 'icon' => 'x', 'label' => 'Cancelled'],
+											];
+											$statusInfo = $subOrderStatusMap[$subOrder->status] ?? ['color' => 'gray', 'icon' => 'question', 'label' => ucfirst(str_replace('_', ' ', $subOrder->status))];
+											$statusClass = match($statusInfo['color']) {
+												'yellow' => 'bg-yellow-50 border-yellow-200 dark:bg-yellow-900/10 dark:border-yellow-900/30',
+												'cyan' => 'bg-cyan-50 border-cyan-200 dark:bg-cyan-900/10 dark:border-cyan-900/30',
+												'indigo' => 'bg-indigo-50 border-indigo-200 dark:bg-indigo-900/10 dark:border-indigo-900/30',
+												'blue' => 'bg-blue-50 border-blue-200 dark:bg-blue-900/10 dark:border-blue-900/30',
+												'emerald' => 'bg-emerald-50 border-emerald-200 dark:bg-emerald-900/10 dark:border-emerald-900/30',
+												'red' => 'bg-red-50 border-red-200 dark:bg-red-900/10 dark:border-red-900/30',
+												default => 'bg-gray-50 border-gray-200 dark:bg-gray-900/10 dark:border-gray-900/30',
+											};
+											$textClass = match($statusInfo['color']) {
+												'yellow' => 'text-yellow-700 dark:text-yellow-300',
+												'cyan' => 'text-cyan-700 dark:text-cyan-300',
+												'indigo' => 'text-indigo-700 dark:text-indigo-300',
+												'blue' => 'text-blue-700 dark:text-blue-300',
+												'emerald' => 'text-emerald-700 dark:text-emerald-300',
+												'red' => 'text-red-700 dark:text-red-300',
+												default => 'text-gray-700 dark:text-gray-300',
+											};
+										@endphp
+										<div class="rounded-lg border {{ $statusClass }} p-4 transition hover:shadow-md">
+											<!-- Influencer Header -->
+											<div class="flex items-start justify-between gap-2 mb-4">
+												<div class="min-w-0 flex-1">
+													<h3 class="font-semibold text-gray-900 dark:text-white text-sm truncate">
+														{{ $subOrder->influencer?->display_name ?: $subOrder->influencer?->user?->name ?? 'Influencer' }}
+													</h3>
+													<p class="text-xs text-gray-600 dark:text-gray-400 truncate">
+														{{ $subOrder->influencer?->user?->email ?? '' }}
+													</p>
+												</div>
+											</div>
+
+											<!-- Status Badges -->
+											<div class="flex flex-wrap gap-2 mb-4">
+												<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold {{ $textClass }} bg-white/50 dark:bg-gray-900/30">
+													@if ($statusInfo['color'] === 'emerald')
+														<svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+													@elseif ($statusInfo['color'] === 'red')
+														<svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
+													@else
+														<svg class="w-3.5 h-3.5 animate-pulse" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v3.586L7.707 9.293a1 1 0 00-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 10.586V7z" clip-rule="evenodd"/></svg>
+													@endif
+													{{ $statusInfo['label'] }}
+												</span>
+												<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold {{ $subOrder->paid_at ? 'text-green-700 dark:text-green-300 bg-green-100/50 dark:bg-green-900/30' : 'text-amber-700 dark:text-amber-300 bg-amber-100/50 dark:bg-amber-900/30' }}">
+													<svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z"/></svg>
+													{{ $subOrder->paid_at ? 'Paid' : 'Pending' }}
+												</span>
+											</div>
+
+											<!-- Amount -->
+											<div class="mb-4 p-3 rounded-lg bg-white/70 dark:bg-gray-900/40">
+												<p class="text-xs text-gray-600 dark:text-gray-400 uppercase tracking-wider">Amount</p>
+												<p class="text-lg font-bold text-gray-900 dark:text-white">{{ strtoupper($order->currency) }} {{ number_format((float) $subOrder->amount, 2) }}</p>
+											</div>
+
+											<!-- Timeline -->
+											<div class="space-y-2 mb-4 text-xs">
+												<div class="flex justify-between">
+													<span class="text-gray-600 dark:text-gray-400">Accepted:</span>
+													<span class="font-medium text-gray-900 dark:text-white">{{ $subOrder->accepted_at?->format('M d, Y') ?? '—' }}</span>
+												</div>
+												<div class="flex justify-between">
+													<span class="text-gray-600 dark:text-gray-400">Completed:</span>
+													<span class="font-medium text-gray-900 dark:text-white">{{ $subOrder->completed_at?->format('M d, Y') ?? '—' }}</span>
+												</div>
+												<div class="flex justify-between">
+													<span class="text-gray-600 dark:text-gray-400">Paid:</span>
+													<span class="font-medium text-gray-900 dark:text-white">{{ $subOrder->paid_at?->format('M d, Y') ?? '—' }}</span>
+												</div>
+											</div>
+
+											<!-- Actions -->
+											<div class="space-y-2 pt-4 border-t border-gray-200 dark:border-gray-700">
+												<form method="POST" action="{{ route('dashboard.sub-orders.update-status', $subOrder) }}" class="block">
+													@csrf
+													@method('PUT')
+													<label for="status_{{ $subOrder->id }}" class="block text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider mb-1">Work Status</label>
+													<select id="status_{{ $subOrder->id }}" name="status" onchange="this.form.submit()" class="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-900 dark:text-white font-medium cursor-pointer hover:border-gray-400 dark:hover:border-gray-500 transition">
+														<option value="pending" {{ $subOrder->status === 'pending' ? 'selected' : '' }}>Pending - waiting to start</option>
+														<option value="accepted" {{ $subOrder->status === 'accepted' ? 'selected' : '' }}>Accepted - influencer approved</option>
+														<option value="in_progress" {{ $subOrder->status === 'in_progress' ? 'selected' : '' }}>In Progress - work ongoing</option>
+														<option value="on_review" {{ $subOrder->status === 'on_review' ? 'selected' : '' }}>On Review - awaiting approval</option>
+														<option value="completed" {{ $subOrder->status === 'completed' ? 'selected' : '' }}>Completed - work finished</option>
+														<option value="cancelled" {{ $subOrder->status === 'cancelled' ? 'selected' : '' }}>Cancelled</option>
+													</select>
+												</form>
+
+												@if (!$subOrder->paid_at)
+													<form method="POST" action="{{ route('dashboard.sub-orders.mark-paid', $subOrder) }}" class="block">
+														@csrf
+														<button type="submit" class="w-full inline-flex items-center justify-center gap-2 px-3 py-2 bg-green-600 hover:bg-green-700 text-white text-xs font-semibold rounded-lg transition">
+															<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+															Mark Paid
+														</button>
+													</form>
+												@else
+													<div class="w-full px-3 py-2 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 text-xs font-semibold rounded-lg text-center">
+														✓ Paid {{ $subOrder->paid_at->format('M d') }}
+													</div>
+												@endif
+											</div>
+										</div>
+									@endforeach
+								</div>
+							@endif
+						</div>
+					</div>
+				@endif
 				<div class="rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
 					<div class="border-b border-gray-200 bg-gray-50 px-5 py-4 dark:border-gray-800 dark:bg-gray-800/50">
 						<h3 class="text-base font-semibold text-gray-900 dark:text-white">Payment History</h3>

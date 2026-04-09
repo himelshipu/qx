@@ -112,6 +112,11 @@
 		$reviewsTotal = $reviewsTotalCount;
 		$avgRating = $reviewsAverageRating;
 		$ratingLabel = $avgRating !== null ? number_format($avgRating, 1) : '0.0';
+
+		// Get earned badges
+		$earnedBadges = $influencer->badges->keyBy('code');
+		$hasTopInfluencer = $earnedBadges->has('top_influencer');
+		$hasResponsesFast = $earnedBadges->has('responds_fast');
 	@endphp
 
 	<section class="min-h-screen" x-data="influencerProfileData()">
@@ -166,6 +171,9 @@
 					function fallbackCopyTextToClipboard(text) {
 						const textArea = document.createElement("textarea");
 						textArea.value = text;
+						textArea.style.position = "fixed";
+						textArea.style.top = "-9999px";
+						textArea.style.left = "-9999px";
 						document.body.appendChild(textArea);
 						textArea.focus();
 						textArea.select();
@@ -284,74 +292,66 @@
 					</div>
 
 					<!-- Reviews Summary -->
-					<div class="rounded-3xl border border-amber-100 bg-linear-to-br from-amber-50 via-white to-orange-50 p-6 shadow-sm dark:border-gray-800 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800">
-						<div class="flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
+					<div class="rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/50 p-6 shadow-sm">
+						<div class="flex items-start justify-between gap-6">
 							<div>
-								<p class="text-xs font-semibold uppercase tracking-widest text-amber-700 dark:text-amber-300">Ratings & Reviews</p>
-								<div class="mt-2 flex items-center gap-3">
+								<p class="text-sm font-bold uppercase tracking-wider text-gray-600 dark:text-gray-400 mb-3">{{ number_format($reviewsTotal) }} Reviews</p>
+								<div class="flex items-center gap-3">
 									<div class="flex items-center gap-1">
 										@for ($star = 1; $star <= 5; $star++)
-											<x-icons.star class="h-6 w-6 {{ $avgRating !== null && $star <= floor($avgRating) ? 'text-amber-400' : 'text-gray-300 dark:text-gray-600' }}" />
+											<x-icons.star class="h-5 w-5 {{ $avgRating !== null && $star <= floor($avgRating) ? 'text-amber-400' : 'text-gray-300 dark:text-gray-600' }}" />
 										@endfor
 									</div>
-									<p class="text-2xl font-extrabold text-gray-900 dark:text-white">{{ $avgRating !== null ? number_format($avgRating, 1) : 'N/A' }}</p>
+									<p class="text-3xl font-extrabold text-gray-900 dark:text-white">{{ $ratingLabel }}</p>
 								</div>
-								<p class="mt-1 text-sm text-gray-600 dark:text-gray-400">Based on {{ number_format($reviewsTotal) }} public reviews</p>
+								<p class="mt-2 text-xs text-gray-600 dark:text-gray-400">Average rating from {{ number_format($reviewsTotal) }} reviews</p>
 							</div>
 
-							<div class="w-full max-w-md space-y-2">
-								@for ($star = 5; $star >= 1; $star--)
-									@php
-										$starCount = (int) ($reviewDistribution[$star] ?? 0);
-										$starPercent = $reviewsTotal > 0 ? round(($starCount / $reviewsTotal) * 100) : 0;
-									@endphp
-									<div class="flex items-center gap-3">
-										<span class="w-8 text-sm font-semibold text-gray-700 dark:text-gray-300">{{ $star }}★</span>
-										<div class="h-2.5 flex-1 overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
-											<div class="h-full rounded-full bg-amber-400" style="width: {{ $starPercent }}%"></div>
-										</div>
-										<span class="w-12 text-right text-xs font-semibold text-gray-600 dark:text-gray-400">{{ $starCount }}</span>
-									</div>
-								@endfor
-							</div>
+							
 						</div>
 					</div>
 
 					<!-- BADGES SYSTEM -->
-					<div class="space-y-10">
-						<div class="flex items-start gap-6 group">
-							<div class="w-12 h-12 shrink-0 text-gray-300 transition-colors group-hover:text-purple-300">
-								<svg class="w-full h-full" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
-									<path
-										d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
+					<div class="space-y-3">
+						<!-- Top Influencer Badge -->
+						<div class="flex items-start gap-4 group">
+							<div class="w-10 h-10 shrink-0 rounded-lg flex items-center justify-center transition-colors"
+								:class="@js($hasTopInfluencer) ? 'bg-amber-100 text-amber-600' : 'bg-gray-100 text-gray-400'">
+								<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+									<path d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
 								</svg>
 							</div>
-							<div>
-								<div class="flex items-center gap-3 mb-2">
-									<h3 class="text-lg font-bold text-gray-800 dark:text-gray-300">Top Influencer</h3>
-									<span
-										class="px-2.5 py-1 bg-red-50 text-red-600 rounded-lg text-[10px] font-semibold uppercase tracking-widest border border-red-100">Not
-										Earned</span>
+							<div class="flex-1">
+								<div class="flex items-center gap-2 mb-1">
+									<h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100">Top Influencer</h3>
+									@if ($hasTopInfluencer)
+										<span class="px-2 py-0.5 bg-amber-100 text-amber-700 rounded-full text-[9px] font-bold uppercase tracking-widest">Earned</span>
+									@else
+										<span class="px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full text-[9px] font-bold uppercase tracking-widest">Not Earned</span>
+									@endif
 								</div>
-								<p class="text-sm font-normal text-gray-800 dark:text-gray-300 max-w-md">To earn this badge, you must complete
-									multiple orders and have a high rating from brands.</p>
+								<p class="text-xs text-gray-600 dark:text-gray-400">Complete multiple orders with high brand ratings</p>
 							</div>
 						</div>
-						<div class="flex items-start gap-6 group">
-							<div class="w-12 h-12 shrink-0 text-gray-300 transition-colors group-hover:text-purple-300">
-								<svg class="w-full h-full" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+
+						<!-- Responds Fast Badge -->
+						<div class="flex items-start gap-4 group">
+							<div class="w-10 h-10 shrink-0 rounded-lg flex items-center justify-center transition-colors"
+								:class="@js($hasResponsesFast) ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-400'">
+								<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
 									<path d="M13 10V3L4 14h7v7l9-11h-7z" />
 								</svg>
 							</div>
-							<div>
-								<div class="flex items-center gap-3 mb-2">
-									<h3 class="text-lg font-bold text-gray-800 dark:text-gray-300">Responds Fast</h3>
-									<span
-										class="px-2.5 py-1 bg-red-50 text-red-600 rounded-lg text-[10px] font-semibold uppercase tracking-widest border border-red-100">Not
-										Earned</span>
+							<div class="flex-1">
+								<div class="flex items-center gap-2 mb-1">
+									<h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100">Responds Fast</h3>
+									@if ($hasResponsesFast)
+										<span class="px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full text-[9px] font-bold uppercase tracking-widest">Earned</span>
+									@else
+										<span class="px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full text-[9px] font-bold uppercase tracking-widest">Not Earned</span>
+									@endif
 								</div>
-								<p class="text-sm font-normal text-gray-800 dark:text-gray-300 max-w-md">To earn this badge, you must respond to
-									requests within 12 hours.</p>
+								<p class="text-xs text-gray-600 dark:text-gray-400">Consistently respond to requests within 12 hours</p>
 							</div>
 						</div>
 					</div>
@@ -456,6 +456,7 @@
 							</button>
 							<div x-show="openDropdown" x-cloak @click.away="openDropdown = false"
 								class="absolute top-full left-0 z-50 mt-2 max-h-96 w-full overflow-y-auto rounded-xl border border-gray-200 bg-white shadow-xl dark:border-gray-700 dark:bg-gray-800">
+								
 								<template x-for="p in packages" :key="p.key">
 									<div @click="selectPackage(p.key)" class="px-6 py-4 cursor-pointer text-sm font-medium transition-colors"
 										:class="selectedPackageKey === p.key ? 'bg-gray-100 text-gray-800' :
@@ -468,14 +469,13 @@
 
 						<!-- Show only Brand Users -->
 						<div class="mb-4">
-							<p class="text-[28px] leading-none text-gray-400 dark:text-gray-500">...</p>
 							<p class="text-base text-gray-500 dark:text-gray-400" x-text="selectedPackageDescription"></p>
 						</div>
 
 						<div class="w-full">
 							<form @submit.prevent="handleAddToCart()" method="POST">
 								<button type="submit"
-									class="flex w-full items-center justify-center rounded-lg bg-linear-to-r from-rose-400 to-fuchsia-500 px-4 py-3 text-lg font-bold text-white transition hover:from-rose-500 hover:to-fuchsia-600 active:scale-[0.98]">
+									class="flex w-full items-center justify-center rounded-xl bg-gradient-to-r from-rose-400 to-fuchsia-500 px-6 py-3.5 text-base font-bold text-white transition hover:from-rose-500 hover:to-fuchsia-600 active:scale-[0.98] shadow-lg hover:shadow-xl">
 									Add to Cart
 								</button>
 							</form>
@@ -486,13 +486,11 @@
 								<div class="h-px flex-1 bg-gray-300 dark:bg-gray-700"></div>
 							</div>
 
-							<button @click="negotiatePackage()" type="button" class="w-full text-center text-lg font-semibold text-gray-800 underline underline-offset-2 transition hover:text-gray-900 dark:text-gray-100 dark:hover:text-white">
+							<button @click="negotiatePackage()" type="button" class="w-full text-center text-base font-bold text-gray-800 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white transition">
 								Negotiate a Package
 							</button>
 
-							<button type="button" class="mt-5 w-full text-center text-sm font-medium text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300">
-								How does it work?
-							</button>
+							
 						</div>
 					</div>
 				</div>
@@ -501,7 +499,7 @@
 
 		<!-- PORTFOLIO SECTION (now inside the main Alpine component) -->
 		@if ($portfolioTotalCount > 0)
-			<section id="portfolio-gallery" class="py-20 px-4 sm:px-6 lg:px-8 max-w-screen-2xl mx-auto scroll-mt-24">
+			<section id="portfolio-gallery" class="py-4 px-4 sm:px-6 lg:px-8 max-w-screen-2xl mx-auto scroll-mt-24">
 				<div class="mb-12">
 					<h2 class="text-3xl font-bold text-gray-900 dark:text-white mb-2">Portfolio</h2>
 					<p class="text-gray-600 dark:text-gray-400">Showing {{ $portfolioPage->count() }} of {{ number_format($portfolioTotalCount) }} media items</p>
@@ -630,74 +628,95 @@
 		@endif
 
 		<!-- REVIEWS SECTION -->
-		<section id="reviews-holder" class="py-16 px-4 sm:px-6 lg:px-8 max-w-screen-2xl mx-auto scroll-mt-24">
-			<div class="mb-8">
-				<h2 class="text-4xl font-bold text-gray-900 dark:text-white">{{ number_format($reviewsTotal) }} Reviews <span class="text-gray-400">·</span> <span class="inline-flex items-center gap-1"><x-icons.star class="h-7 w-7 text-amber-400" />{{ $ratingLabel }}</span></h2>
-				<div class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
-					<div class="flex items-center gap-3">
-						<svg class="h-8 w-8 text-gray-800 dark:text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+		<section id="reviews-holder" class="py-2 px-4 sm:px-6 lg:px-8 max-w-screen-2xl mx-auto scroll-mt-24">
+			<div class="mb-12">
+				<div class="flex items-center justify-between mb-6">
+					<div>
+						<h2 class="text-3xl font-bold text-gray-900 dark:text-white">{{ number_format($reviewsTotal) }} Reviews</h2>
+						<div class="flex items-center gap-2 mt-2">
+							<div class="flex items-center gap-1">
+								@for ($star = 1; $star <= 5; $star++)
+									<x-icons.star class="h-5 w-5 {{ $avgRating !== null && $star <= floor($avgRating) ? 'text-amber-400' : 'text-gray-300 dark:text-gray-600' }}" />
+								@endfor
+							</div>
+							<span class="text-2xl font-bold text-amber-400">{{ $ratingLabel }}</span>
+						</div>
+					</div>
+				</div>
+
+				<!-- Rating Categories -->
+				<div class="grid grid-cols-3 gap-4 mb-8">
+					<div class="flex items-start gap-3">
+						<svg class="h-6 w-6 text-gray-800 dark:text-gray-200 shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M8 10h.01M12 10h.01M16 10h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
 						</svg>
 						<div>
 							<p class="text-2xl font-bold text-gray-900 dark:text-white">{{ $ratingLabel }}</p>
-							<p class="text-lg font-semibold text-gray-700 dark:text-gray-300">Communication</p>
+							<p class="text-sm text-gray-600 dark:text-gray-400">Communication</p>
 						</div>
 					</div>
-					<div class="flex items-center gap-3">
-						<svg class="h-8 w-8 text-gray-800 dark:text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+					<div class="flex items-start gap-3">
+						<svg class="h-6 w-6 text-gray-800 dark:text-gray-200 shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
 						</svg>
 						<div>
 							<p class="text-2xl font-bold text-gray-900 dark:text-white">{{ $ratingLabel }}</p>
-							<p class="text-lg font-semibold text-gray-700 dark:text-gray-300">Timeliness</p>
+							<p class="text-sm text-gray-600 dark:text-gray-400">Timeliness</p>
 						</div>
 					</div>
-					<div class="flex items-center gap-3">
-						<svg class="h-8 w-8 text-gray-800 dark:text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+					<div class="flex items-start gap-3">
+						<svg class="h-6 w-6 text-gray-800 dark:text-gray-200 shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 12l2 2 4-4m5 2a9 9 0 11-18 0 9 9 0 0118 0z" />
 						</svg>
 						<div>
 							<p class="text-2xl font-bold text-gray-900 dark:text-white">{{ $ratingLabel }}</p>
-							<p class="text-lg font-semibold text-gray-700 dark:text-gray-300">Satisfaction</p>
+							<p class="text-sm text-gray-600 dark:text-gray-400">Satisfaction</p>
 						</div>
 					</div>
 				</div>
 			</div>
 
 			@if ($reviewsPage->count() > 0)
-				<div class="space-y-10">
+				<div class="border-t border-gray-200 dark:border-gray-800 pt-8 space-y-6">
 					@foreach ($reviewsPage as $review)
 						@php
 							$reviewTitle = $review->orderItem?->package?->name ?: $review->orderItem?->title;
 						@endphp
-						<div class="flex items-start gap-4">
-							<div class="flex h-14 w-14 items-center justify-center rounded-full bg-sky-100 text-2xl font-bold text-gray-700 dark:bg-gray-700 dark:text-gray-100">
-								{{ \Illuminate\Support\Str::substr($review->brand?->brand_name ?? 'B', 0, 1) }}
+						<div class="pb-6 border-b border-gray-100 dark:border-gray-800 last:border-b-0">
+							<!-- Review Header -->
+							<div class="flex items-center justify-between mb-3">
+								<div class="flex items-center gap-3">
+									<div class="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-purple-100 to-pink-100 text-sm font-bold text-gray-700 dark:from-purple-900 dark:to-pink-900 dark:text-gray-100">
+										{{ \Illuminate\Support\Str::substr($review->brand?->brand_name ?? 'B', 0, 1) }}
+									</div>
+									<div>
+										<p class="font-semibold text-gray-900 dark:text-white text-sm">{{ $review->brand?->brand_name ?? 'Brand' }}</p>
+										@if ($reviewTitle)
+											<p class="text-xs text-gray-500 dark:text-gray-400">{{ $reviewTitle }}</p>
+										@endif
+									</div>
+								</div>
+								<div class="text-right">
+									<div class="flex items-center gap-1 mb-1 justify-end">
+										@for ($i = 1; $i <= 5; $i++)
+											<span class="text-lg">{{ $i <= $review->rating ? '★' : '☆' }}</span>
+										@endfor
+									</div>
+									<p class="text-xs text-gray-500 dark:text-gray-400">{{ optional($review->created_at)->format('M Y') }}</p>
+								</div>
 							</div>
-							<div class="min-w-0 flex-1">
-								<p class="text-2xl font-semibold text-gray-900 dark:text-white">{{ $review->brand?->brand_name ?? 'Brand' }}</p>
-								@if ($reviewTitle)
-									<p class="text-lg text-gray-500 dark:text-gray-400">{{ $reviewTitle }}</p>
-								@endif
-								<p class="mt-2 text-lg font-semibold text-gray-800 dark:text-gray-200">
-									@for ($i = 1; $i <= 5; $i++)
-										<span>{{ $i <= $review->rating ? '★' : '☆' }}</span>
-									@endfor
-									<span class="text-gray-400">·</span> {{ optional($review->created_at)->format('F Y') }}
-								</p>
-								@if ($review->comment)
-									<p class="mt-3 text-xl leading-relaxed text-gray-800 dark:text-gray-200">{{ $review->comment }}</p>
-								@else
-									<p class="mt-3 text-xl leading-relaxed text-gray-700 dark:text-gray-300">{{ $review->brand?->brand_name ?? 'Brand' }} left a {{ number_format($review->rating, 1) }} star review.</p>
-								@endif
-							</div>
+
+							<!-- Review Comment -->
+							@if ($review->comment)
+								<p class="text-sm text-gray-800 dark:text-gray-200 leading-relaxed">{{ $review->comment }}</p>
+							@endif
 						</div>
 					@endforeach
 				</div>
 
 				@if ($reviewsPage->hasMorePages())
-					<div class="mt-12">
-						<a href="{{ $reviewsPage->nextPageUrl() }}" class="inline-flex items-center rounded-xl border border-gray-900 px-6 py-3 text-lg font-semibold text-gray-900 transition hover:bg-gray-50 dark:border-gray-300 dark:text-gray-100 dark:hover:bg-gray-800">
+					<div class="mt-8">
+						<a href="{{ $reviewsPage->nextPageUrl() }}" class="inline-flex items-center rounded-xl border border-gray-300 dark:border-gray-700 px-6 py-3 text-sm font-semibold text-gray-900 dark:text-gray-100 transition hover:bg-gray-50 dark:hover:bg-gray-800">
 							Show all reviews
 						</a>
 					</div>

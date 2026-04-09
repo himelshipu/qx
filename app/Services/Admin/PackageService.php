@@ -296,16 +296,21 @@ final class PackageService
                 ->exists();
 
             if (!$existingOrder) {
+                // Calculate 20% service fee
+                $subtotal = $package->base_price;
+                $serviceFee = $subtotal * 0.20;
+                $totalAmount = $subtotal + $serviceFee;
+
                 // Create order
                 $order = \App\Models\Order::create([
                     'order_number'  => 'ORD-' . strtoupper(uniqid()),
                     'buyer_user_id' => Auth::id(),
                     'brand_id'      => $brandId,
                     'status'        => 'pending',
-                    'subtotal'      => $package->base_price,
-                    'service_fee'   => 0,
+                    'subtotal'      => $subtotal,
+                    'service_fee'   => $serviceFee,
                     'tax_amount'    => 0,
-                    'total_amount'  => $package->base_price,
+                    'total_amount'  => $totalAmount,
                     'currency'      => $package->currency,
                     'placed_at'     => now()
                 ]);

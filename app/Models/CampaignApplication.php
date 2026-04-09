@@ -15,6 +15,7 @@ class CampaignApplication extends Model
         'campaign_id',
         'influencer_id',
         'status',
+        'work_status',
         'pitch_message',
         'proposed_rate',
         'agreed_rate',

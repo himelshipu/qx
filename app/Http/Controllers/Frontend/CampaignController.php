@@ -9,12 +9,14 @@ use App\Actions\Frontend\Campaign\UpdateCampaignAction;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Backend\Campaign\StoreCampaignRequest;
 use App\Models\Campaign;
+use App\Models\CampaignApplication;
 use App\Queries\Frontend\Campaign\CampaignIndexQuery;
 use App\Services\Admin\CampaignService;
 use App\ViewModels\Frontend\Campaign\CampaignIndexViewModel;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
 
 class CampaignController extends Controller
@@ -85,6 +87,49 @@ class CampaignController extends Controller
 
         $campaign = $this->getCampaignsAction->forDisplay($campaign);
 
+        $latestSubOrdersByInfluencer = $campaign->orders()
+            ->with('subOrders')
+            ->get()
+            ->flatMap(static fn($order) => $order->subOrders)
+            ->sortByDesc(static fn($subOrder) => $subOrder->updated_at ?? $subOrder->created_at)
+            ->unique('influencer_id')
+            ->keyBy('influencer_id');
+
+        $progressConfig = [
+            'pending' => ['label' => 'Order Pending', 'percent' => 15],
+            'accepted' => ['label' => 'Accepted', 'percent' => 35],
+            'in_progress' => ['label' => 'In Progress', 'percent' => 60],
+            'on_review' => ['label' => 'On Review', 'percent' => 80],
+            'completed' => ['label' => 'Completed', 'percent' => 100],
+            'cancelled' => ['label' => 'Cancelled', 'percent' => 0],
+        ];
+
+        $workProgress = $campaign->applications
+            ->where('status', 'approved')
+            ->values()
+            ->map(static function ($application) use ($latestSubOrdersByInfluencer, $progressConfig) {
+                $subOrder = $latestSubOrdersByInfluencer->get($application->influencer_id);
+                $statusKey = $subOrder?->status;
+
+                if (!$statusKey || !isset($progressConfig[$statusKey])) {
+                    $statusKey = 'not_started';
+                    $status = ['label' => 'Not Started', 'percent' => 10];
+                } else {
+                    $status = $progressConfig[$statusKey];
+                }
+
+                return [
+                    'application_id' => $application->id,
+                    'influencer_name' => $application->influencer->user->name ?? 'Unknown Influencer',
+                    'influencer_handle' => $application->influencer->display_name ?? null,
+                    'status_key' => $statusKey,
+                    'status_label' => $status['label'],
+                    'progress_percent' => $status['percent'],
+                    'updated_at' => $subOrder?->updated_at,
+                    'decided_at' => $application->decided_at,
+                ];
+            });
+
         return view('frontend.campaigns.designed-show', [
             'campaign'              => $campaign,
             'invitedInfluencers'    => $campaign->applications->where('status', 'invited')->values(),
@@ -94,6 +139,7 @@ class CampaignController extends Controller
                 'approved' => $campaign->applications->where('status', 'approved')->count(),
                 'rejected' => $campaign->applications->where('status', 'rejected')->count()
             ],
+            'workProgress'          => $workProgress,
             'brandName'             => $campaign->brand?->brand_name ?? $campaign->createdBy?->name ?? 'Unknown',
             'influencerApplication' => $user->user_type === 'influencer' ? $campaign->applications->first() : null
         ]);
@@ -159,7 +205,23 @@ class CampaignController extends Controller
         Gate::authorize('update', $campaign);
         $validated = $request->validate(['status' => 'required|in:approved,rejected,cancelled']);
 
-        $assignment         = $campaign->influencerAssignments()->findOrFail($assignmentId);
+        $assignment = $campaign->influencerAssignments()->findOrFail($assignmentId);
+
+        if ($assignment->status === 'approved' && $validated['status'] === 'rejected') {
+            return redirect()->route('frontend.campaigns.show', $campaign)
+                ->with('warning', 'Approved influencer cannot be declined.');
+        }
+
+        if ($assignment->status === 'rejected' && $validated['status'] === 'approved') {
+            return redirect()->route('frontend.campaigns.show', $campaign)
+                ->with('warning', 'Declined influencer cannot be approved again.');
+        }
+
+        if ($assignment->status === $validated['status']) {
+            return redirect()->route('frontend.campaigns.show', $campaign)
+                ->with('info', 'No changes were made. This assignment already has that status.');
+        }
+
         $assignment->status = $validated['status'];
 
         if ($validated['status'] === 'approved') {
@@ -193,7 +255,28 @@ class CampaignController extends Controller
             ->firstOrFail();
 
         if ($application->status === 'completed') {
-            abort(422, 'Cannot modify completed applications.');
+            return redirect()->route('frontend.campaigns.show', $campaign)
+                ->with('error', 'Cannot modify completed applications. This influencer has already completed their work on this campaign.');
+        }
+
+        if ($campaign->status === 'closed') {
+            return redirect()->route('frontend.campaigns.show', $campaign)
+                ->with('error', 'Cannot modify applications for closed campaigns. The campaign is no longer active.');
+        }
+
+        if ($application->status === 'approved' && $validated['status'] === 'rejected') {
+            return redirect()->route('frontend.campaigns.show', $campaign)
+                ->with('warning', 'Approved influencer cannot be declined.');
+        }
+
+        if ($application->status === 'rejected' && $validated['status'] === 'approved') {
+            return redirect()->route('frontend.campaigns.show', $campaign)
+                ->with('warning', 'Declined influencer cannot be approved again.');
+        }
+
+        if ($application->status === $validated['status']) {
+            return redirect()->route('frontend.campaigns.show', $campaign)
+                ->with('info', 'No changes were made. This invitation already has that status.');
         }
 
         \Log::info('Update request', ['app_id' => $application->id, 'old_status' => $application->status, 'new_status' => $validated['status']]);
@@ -221,6 +304,54 @@ class CampaignController extends Controller
             ->with('success', "Invitation {$status} successfully.");
     }
 
+    public function updateStatus(Campaign $campaign, Request $request)
+    {
+        Gate::authorize('update', $campaign);
+        
+        $validated = $request->validate([
+            'status' => 'required|in:draft,published,paused,closed,archived'
+        ]);
+
+        $newStatus = $validated['status'];
+
+        // Prevent certain transitions
+        if ($campaign->status === 'closed' && $newStatus !== 'archived') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Closed campaigns can only be archived.'
+            ], 422);
+        }
+
+        try {
+            $campaign->update([
+                'status'       => $newStatus,
+                'published_at' => $newStatus === 'published' ? now() : $campaign->published_at
+            ]);
+
+            $statusLabel = match ($newStatus) {
+                'draft'     => 'Draft',
+                'published' => 'Published',
+                'paused'    => 'Paused',
+                'closed'    => 'Closed',
+                'archived'  => 'Archived',
+                default     => 'Unknown'
+            };
+
+            return response()->json([
+                'success' => true,
+                'message' => "Campaign status updated to {$statusLabel}",
+                'status'  => $newStatus,
+                'status_label' => $statusLabel
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Campaign status update failed', ['error' => $e->getMessage()]);
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to update campaign status'
+            ], 500);
+        }
+    }
+
     private function getWizardStep(): int
     {
         $stepTwoFields = ['title', 'description', 'instructions', 'status', 'currency', 'budget_min', 'budget_max', 'start_date', 'end_date'];
@@ -241,17 +372,95 @@ class CampaignController extends Controller
         );
     }
 
+    /**
+     * Apply for a campaign
+     */
+    public function apply(Campaign $campaign): RedirectResponse
+    {
+        $user = auth()->user();
+
+        if ($user->user_type !== 'influencer') {
+            return redirect()->back()->with('error', 'Only influencers can apply to campaigns');
+        }
+
+        $influencer = $user->influencer;
+
+        // Check if already applied
+        $existingApplication = $campaign->applications()
+            ->where('influencer_id', $influencer->id)
+            ->first();
+
+        if ($existingApplication) {
+            return redirect()->back()->with('warning', 'You have already applied to this campaign');
+        }
+
+        // Create application
+        $campaign->applications()->create([
+            'influencer_id' => $influencer->id,
+            'status' => 'applied',
+            'applied_at' => now(),
+        ]);
+
+        return redirect()->route('frontend.campaigns.show', $campaign)
+            ->with('success', 'Application submitted! The brand will review it and get back to you soon.');
+    }
+
+    /**
+     * Withdraw application from campaign
+     */
+    public function withdrawApplication(CampaignApplication $application): RedirectResponse
+    {
+        $user = auth()->user();
+
+        if ($user->user_type !== 'influencer' || $application->influencer_id !== $user->influencer->id) {
+            abort(403, 'Not authorized');
+        }
+
+        // Only allow withdrawal if not approved or completed
+        if (in_array($application->status, ['approved', 'completed'])) {
+            return redirect()->back()->with('error', 'Cannot withdraw from an approved or completed application');
+        }
+
+        $campaign = $application->campaign;
+        $application->delete();
+
+        return redirect()->route('frontend.campaigns.index')
+            ->with('success', 'Application withdrawn successfully');
+    }
+
+    /**
+     * Update work status by influencer for their approved application
+     */
+    public function updateInfluencerWorkStatus(CampaignApplication $application, Request $request): RedirectResponse
+    {
+        $user = auth()->user();
+
+        // Authorize: only influencer can update their own work status
+        if ($user->user_type !== 'influencer' || $application->influencer_id !== $user->influencer->id) {
+            abort(403, 'Not authorized to update this application');
+        }
+
+        // Only approved applicants can update work status
+        if ($application->status !== 'approved') {
+            return redirect()->back()->with('error', 'Only approved applications can have their work status updated');
+        }
+
+        $validated = $request->validate([
+            'work_status' => 'required|in:pending,accepted,in_progress,on_review,completed',
+        ]);
+
+        $application->update([
+            'work_status' => $validated['work_status'],
+        ]);
+
+        return redirect()->back()->with('success', 'Work status updated successfully: ' . ucfirst(str_replace('_', ' ', $validated['work_status'])));
+    }
+
     private function authorizeCampaignView($user, Campaign $campaign): void
     {
         if ($user->user_type === 'brand' && $campaign->brand_id !== $user->brand?->id) {
             abort(403);
-        } elseif ($user->user_type === 'influencer') {
-            $applied = $campaign->applications()
-                ->where('influencer_id', $user->influencer->id)
-                ->exists();
-            if (!$applied) {
-                abort(403, 'Must apply to campaign first');
-            }
         }
+        // Influencers can view all campaigns
     }
 }

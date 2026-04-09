@@ -36,7 +36,10 @@ class InfluencerProfileController extends Controller
                 'categories:id,name',
                 'platformStats' => fn($query) => $query
                     ->where('is_active', true)
-                    ->orderByDesc('follower_count')
+                    ->orderByDesc('follower_count'),
+                'badges' => fn($query) => $query
+                    ->wherePivot('is_active', true)
+                    ->select('badge_definitions.id', 'badge_definitions.code', 'badge_definitions.name', 'badge_definitions.description')
             ])
             ->whereHas('user', function ($query) use ($slug): void {
                 $query->where('slug', $slug)->where('user_type', 'influencer');

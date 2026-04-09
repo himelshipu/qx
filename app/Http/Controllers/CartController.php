@@ -384,12 +384,20 @@ class CartController extends Controller
                 foreach ($influencerCartItems as $cartItem) {
                     $package = $cartItem->package;
 
+                    // Calculate pricing with 20% service fee
+                    $subtotal = $cartItem->unit_price * $cartItem->quantity;
+                    $serviceFee = $subtotal * 0.20;
+                    $totalAmount = $subtotal + $serviceFee;
+
                     // Create order
                     $order = Order::create([
                         'order_number'  => 'ORD-' . uniqid(),
                         'buyer_user_id' => $user->id,
                         'brand_id'      => $user->brand?->id,
-                        'total_amount'  => $cartItem->unit_price * $cartItem->quantity,
+                        'subtotal'      => $subtotal,
+                        'service_fee'   => $serviceFee,
+                        'tax_amount'    => 0,
+                        'total_amount'  => $totalAmount,
                         'currency'      => 'USD',
                         'status'        => 'pending',
                         'placed_at'     => now()

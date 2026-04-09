@@ -229,7 +229,7 @@
         overflow: hidden;
     }
 </style>
-@endsection
+
     <!-- Header -->
     <div class="mb-8">
         <h1 class="text-3xl font-bold text-gray-900 dark:text-white">My Work Orders</h1>

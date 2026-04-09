@@ -96,6 +96,9 @@ class OrderController extends Controller
             'items.influencer.user:id,name',
             'items.package:id,name,base_price,currency',
             'payments:id,order_id,status,amount,currency,payment_provider,paid_at,created_at',
+            'subOrders:id,order_id,influencer_id,status,amount,currency,accepted_at,completed_at,paid_at',
+            'subOrders.influencer:id,user_id,display_name',
+            'subOrders.influencer.user:id,name,slug',
         ]);
 
         return view('backend.pages.orders.show', [
@@ -161,19 +164,24 @@ class OrderController extends Controller
         }
 
         // Calculate totals
-        $totalAmount = $approvedInfluencers->sum(function ($influencer) {
+        $subtotal = $approvedInfluencers->sum(function ($influencer) {
             return $influencer->pivot->agreed_rate ?? 0;
         });
+
+        // Calculate 20% service fee
+        $serviceFee = $subtotal * 0.20;
+        $totalAmount = $subtotal + $serviceFee;
+        $buyerUserId = $request->user()->id;
 
         // Create master order
         $order = Order::create([
             'order_number' => 'ORD-'.time(),
-            'buyer_user_id' => auth()->id(),
+            'buyer_user_id' => $buyerUserId,
             'brand_id' => $brand->id,
             'campaign_id' => $campaign->id,
             'status' => 'pending',
-            'subtotal' => $totalAmount,
-            'service_fee' => 0,
+            'subtotal' => $subtotal,
+            'service_fee' => $serviceFee,
             'tax_amount' => 0,
             'total_amount' => $totalAmount,
             'currency' => 'USD',
@@ -217,6 +225,9 @@ class OrderController extends Controller
         } elseif ($validated['status'] === 'cancelled') {
             $subOrder->update(['cancelled_at' => now()]);
         }
+
+        // Auto-complete order when all sub-orders are completed
+        $this->checkAndCompleteOrder($subOrder->order);
 
         return redirect()
             ->back()
@@ -267,5 +278,33 @@ class OrderController extends Controller
         return redirect()
             ->back()
             ->with('success', 'Order item marked as paid');
+    }
+
+    /**
+     * Helper: Check if all sub-orders are completed and auto-complete the order
+     */
+    private function checkAndCompleteOrder(Order $order): void
+    {
+        // Only check campaign orders with sub-orders
+        if (!$order->campaign_id) {
+            return;
+        }
+
+        $subOrders = $order->subOrders()->get();
+        if ($subOrders->isEmpty()) {
+            return;
+        }
+
+        // Check if all sub-orders are completed (not cancelled)
+        $completedCount = $subOrders->where('status', 'completed')->count();
+        $notCancelledCount = $subOrders->filter(fn ($so) => $so->status !== 'cancelled')->count();
+
+        // If all non-cancelled sub-orders are completed, auto-complete the order
+        if ($completedCount === $notCancelledCount && $notCancelledCount > 0) {
+            $order->update([
+                'status' => 'completed',
+                'completed_at' => now(),
+            ]);
+        }
     }
 }

@@ -16,52 +16,104 @@
 			<div class="rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-800 shadow-sm p-5 mb-6">
 
 				<!-- Row 1 -->
-				<div class="flex items-center justify-between gap-4">
+				<div class="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
 
-					<!-- Title + Status -->
-					<div class="flex items-center gap-3 flex-wrap">
-						<h1 class="text-xl sm:text-2xl font-semibold text-gray-900 dark:text-white">
+					<!-- Left: Title + Status Selector -->
+					<div class="flex-1 min-w-0">
+						<h1 class="text-xl sm:text-2xl font-semibold text-gray-900 dark:text-white mb-3">
 							{{ $campaign->title }}
 						</h1>
 
-						@if ($campaign->status === 'published')
-							<span
-								class="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded-full  text-emerald-700  dark:text-emerald-300">
-								● Active
-							</span>
-						@elseif ($campaign->status === 'paused')
-							<span
-								class="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded-full  text-amber-700 dark:text-amber-300">
-								● Paused
-							</span>
-						@elseif ($campaign->status === 'closed')
-							<span
-								class="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded-full  text-red-700 dark:text-red-300">
-								● Closed
-							</span>
+						<!-- Status Selector for Brand Owners -->
+						@if (auth()->user()->user_type === 'brand' && $campaign->brand_id === auth()->user()->brand?->id)
+							<div class="inline-block" x-data="campaignStatusForm()">
+								<div class="flex items-center gap-3 flex-wrap">
+									<label class="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide">Status:</label>
+									<div class="flex items-center gap-2">
+										<select @change="updateStatus"
+											:disabled="isLoading"
+											class="px-3 py-2 text-sm font-medium rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+											x-model="selectedStatus">
+											<option value="draft">Draft</option>
+											<option value="published">Published</option>
+											<option value="paused">Paused</option>
+											<option value="closed">Closed</option>
+											<option value="archived">Archived</option>
+										</select>
+										<span class="inline-flex items-center opacity-0 transition-opacity" :class="{ 'opacity-100': isLoading }" x-show="isLoading">
+											<svg class="w-4 h-4 text-gray-600 dark:text-gray-400 animate-spin" fill="none" viewBox="0 0 24 24">
+												<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+												<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+											</svg>
+										</span>
+										<span class="text-xs font-medium px-2 py-1 rounded transition-all opacity-0" :class="feedbackClass" x-show="showFeedback">
+											<span x-text="feedbackText"></span>
+										</span>
+									</div>
+								</div>
+								<p class="text-xs text-gray-500 dark:text-gray-400 mt-2">
+									Change the campaign status to manage its visibility and activity.
+								</p>
+							</div>
 						@else
-							<span
-								class="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded-full  text-gray-700 dark:text-gray-300">
-								● Draft
-							</span>
+							<!-- Status Badge for Non-Owners -->
+							<div class="inline-block">
+								@if ($campaign->status === 'published')
+									<span class="inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300">
+										<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+											<path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+										</svg>
+										Active (Published)
+									</span>
+								@elseif ($campaign->status === 'paused')
+									<span class="inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium rounded-full bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300">
+										<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+											<path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16M9.383 5a1 1 0 011.234 1.471L7.669 10l2.948 3.529A1 1 0 119.617 15l-4-4.771a1 1 0 010-1.458l4-4.771z" clip-rule="evenodd"/>
+										</svg>
+										Paused
+									</span>
+								@elseif ($campaign->status === 'closed')
+									<span class="inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium rounded-full bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300">
+										<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+											<path fill-rule="evenodd" d="M13.477 14.89A6 6 0 015.11 2.526a6 6 0 008.367 8.368l5.657 5.657a1 1 0 01-1.414 1.414l-5.657-5.657z" clip-rule="evenodd"/>
+										</svg>
+										Closed
+									</span>
+								@elseif ($campaign->status === 'archived')
+									<span class="inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium rounded-full bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-300">
+										<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+											<path d="M4 3a2 2 0 100 4h12a2 2 0 100-4H4z"/>
+											<path fill-rule="evenodd" d="M3 8h14v7a2 2 0 01-2 2H5a2 2 0 01-2-2V8z" clip-rule="evenodd"/>
+										</svg>
+										Archived
+									</span>
+								@else
+									<span class="inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium rounded-full bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
+										<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+											<path fill-rule="evenodd" d="M17.778 8.222c-4.296-4.296-11.26-4.296-15.556 0A1 1 0 01.808 6.808c5.076-5.077 13.308-5.077 18.384 0a1 1 0 01-1.414 1.414zM14.95 11.05a7 7 0 00-9.9 0 1 1 0 01-1.414-1.414 9 9 0 0112.728 0 1 1 0 01-1.414 1.414zM12.12 13.88a3 3 0 00-4.242 0 1 1 0 01-1.415-1.415 5 5 0 017.072 0 1 1 0 01-1.415 1.415zM9 16a1 1 0 011-1h.01a1 1 0 110 2H10a1 1 0 01-1-1z" clip-rule="evenodd"/>
+										</svg>
+										Draft
+									</span>
+								@endif
+							</div>
 						@endif
 					</div>
 
-					<!-- Actions -->
+					<!-- Right: Actions -->
 					@if (auth()->user()->user_type === 'brand' && $campaign->brand_id === auth()->user()->brand?->id)
-						<div class="flex items-center gap-2">
+						<div class="flex items-center gap-2 flex-shrink-0">
 							<a href="{{ route('frontend.campaigns.edit', $campaign) }}"
-								class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-gray-300 bg-white hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 transition">
+								class="inline-flex items-center gap-1.5 px-3 py-2 text-xs sm:text-sm font-medium rounded-lg border border-gray-300 bg-white hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 transition">
 								<x-icons.edit class="w-4 h-4" />
-								Edit
+								<span class="hidden sm:inline">Edit</span>
 							</a>
 
 							<form action="{{ route('frontend.campaigns.destroy', $campaign) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this campaign? This action cannot be undone.');">
 								@csrf @method('DELETE')
 								<button type="submit"
-									class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-red-300 bg-red-50 text-red-600 hover:bg-red-100 dark:border-red-800 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/30 transition">
+									class="inline-flex items-center gap-1.5 px-3 py-2 text-xs sm:text-sm font-medium rounded-lg border border-red-300 bg-red-50 text-red-600 hover:bg-red-100 dark:border-red-800 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/30 transition">
 									<x-icons.trash class="w-4 h-4" />
-									Delete
+									<span class="hidden sm:inline">Delete</span>
 								</button>
 							</form>
 						</div>
@@ -69,7 +121,7 @@
 				</div>
 
 				<!-- Row 2 -->
-				<div class="grid grid-cols-3 items-center mt-4 text-sm">
+				<div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4 text-sm">
 
 					<!-- Campaign Type -->
 					<div class="text-left">
@@ -262,11 +314,83 @@
 				</details>
 			</div>
 
-			<!-- Influencer Applications Section (Full Width) -->
-			<div
-				class="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-800 shadow-sm overflow-hidden">
-				<!-- Header with Search & Filter -->
-				<div class="px-5 py-4 border-b border-gray-200 dark:border-gray-800">
+			<!-- Influencer Work Progress -->
+			@if (($workProgress ?? collect())->count() > 0)
+				<div class="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-800 shadow-sm overflow-hidden mb-6">
+					<div class="px-5 py-4 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between gap-3">
+						<div>
+							<h2 class="text-lg font-bold text-gray-900 dark:text-white">Influencer Work Progress</h2>
+							<p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Tracks delivery stage for approved influencers in this campaign.</p>
+						</div>
+						<span class="inline-flex rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-semibold text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300">
+							{{ $workProgress->count() }} Active
+						</span>
+					</div>
+
+					<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 p-5">
+						@foreach ($workProgress as $progressItem)
+							@php
+								$progressBarClass = match ($progressItem['status_key']) {
+									'completed' => 'bg-emerald-500',
+									'on_review' => 'bg-indigo-500',
+									'in_progress' => 'bg-blue-500',
+									'accepted' => 'bg-cyan-500',
+									'pending' => 'bg-amber-500',
+									'cancelled' => 'bg-red-500',
+									default => 'bg-gray-400',
+								};
+
+								$badgeClass = match ($progressItem['status_key']) {
+									'completed' => 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300',
+									'on_review' => 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300',
+									'in_progress' => 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
+									'accepted' => 'bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-300',
+									'pending' => 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300',
+									'cancelled' => 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300',
+									default => 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300',
+								};
+							@endphp
+
+							<div class="rounded-xl border border-gray-200 dark:border-gray-700 p-4 bg-gray-50/70 dark:bg-gray-900/30">
+								<div class="flex items-start justify-between gap-3">
+									<div class="min-w-0">
+										<p class="font-semibold text-gray-900 dark:text-white truncate">{{ $progressItem['influencer_name'] }}</p>
+										@if ($progressItem['influencer_handle'])
+											<p class="text-xs text-gray-500 dark:text-gray-400 truncate">{{ $progressItem['influencer_handle'] }}</p>
+										@endif
+									</div>
+									<span class="inline-flex rounded-full px-2.5 py-1 text-xs font-semibold {{ $badgeClass }}">
+										{{ $progressItem['status_label'] }}
+									</span>
+								</div>
+
+								<div class="mt-4">
+									<div class="flex items-center justify-between text-xs text-gray-600 dark:text-gray-400 mb-1.5">
+										<span>Progress</span>
+										<span class="font-semibold">{{ $progressItem['progress_percent'] }}%</span>
+									</div>
+									<div class="w-full h-2 rounded-full bg-gray-200 dark:bg-gray-700 overflow-hidden">
+										<div class="h-2 rounded-full {{ $progressBarClass }}" style="width: {{ $progressItem['progress_percent'] }}%"></div>
+									</div>
+								</div>
+
+								<p class="text-xs text-gray-500 dark:text-gray-400 mt-3">
+									Last update:
+									{{ $progressItem['updated_at']?->format('M d, Y h:i A') ?? $progressItem['decided_at']?->format('M d, Y h:i A') ?? 'Pending order kickoff' }}
+								</p>
+							</div>
+						@endforeach
+					</div>
+				</div>
+			@endif
+
+			<!-- Applications Section: ONLY FOR BRAND OWNERS -->
+			@if (auth()->user()->user_type === 'brand' && $campaign->brand_id === auth()->user()->brand?->id)
+				<!-- Influencer Applications Section (Full Width) -->
+				<div
+					class="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-800 shadow-sm overflow-hidden">
+					<!-- Header with Search & Filter -->
+					<div class="px-5 py-4 border-b border-gray-200 dark:border-gray-800">
 					<div class="flex items-center justify-between mb-4 gap-3 flex-wrap">
 						<h2 class="text-lg font-bold text-gray-900 dark:text-white">Influencer Applications</h2>
 						<span
@@ -335,8 +459,7 @@
 								<th class="px-4 py-3 text-left font-semibold text-gray-700 dark:text-gray-300 hidden lg:table-cell">Engagement
 								</th>
 								<th class="px-4 py-3 text-left font-semibold text-gray-700 dark:text-gray-300">Applied</th>
-								<th class="px-4 py-3 text-left font-semibold text-gray-700 dark:text-gray-300">Status</th>
-								<th class="px-4 py-3 text-left font-semibold text-gray-700 dark:text-gray-300 hidden sm:table-cell">Decided</th>
+								<th class="px-4 py-3 text-left font-semibold text-gray-700 dark:text-gray-300">Status</th>										<th class="px-4 py-3 text-left font-semibold text-gray-700 dark:text-gray-300 hidden md:table-cell">Work Status</th>								<th class="px-4 py-3 text-left font-semibold text-gray-700 dark:text-gray-300 hidden sm:table-cell">Decided</th>
 								<th class="px-4 py-3 text-left font-semibold text-gray-700 dark:text-gray-300">Actions</th>
 							</tr>
 						</thead>
@@ -377,7 +500,7 @@
 										{{ $application->applied_at?->format('M d, Y') ?? '—' }}
 									</td>
 									<td class="px-4 py-3">
-									@if ($application->status === 'approved')
+										@if ($application->status === 'approved')
 											<span
 												class="inline-flex rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-semibold text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300">Approved</span>
 										@elseif ($application->status === 'rejected')
@@ -391,6 +514,35 @@
 												class="inline-flex rounded-full bg-blue-100 px-2.5 py-1 text-xs font-semibold text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">Invited</span>
 										@endif
 									</td>
+									@php
+										$workStatus = null;
+										foreach($workProgress as $progress) {
+											if($progress['application_id'] === $application->id) {
+												$workStatus = $progress['status_label'];
+												break;
+											}
+										}
+									@endphp
+									<td class="px-4 py-3 text-xs text-gray-600 dark:text-gray-400 hidden md:table-cell">
+										@if($application->status === 'approved' && $workStatus)
+											<span class="inline-flex rounded-full px-2 py-1 text-xs font-semibold
+												@if($workStatus === 'Completed')
+													bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300
+												@elseif($workStatus === 'On Review')
+													bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300
+												@elseif($workStatus === 'In Progress')
+													bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300
+												@elseif($workStatus === 'Accepted')
+													bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-300
+												@else
+													bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300
+												@endif">
+												{{ $workStatus }}
+											</span>
+										@else
+											—
+										@endif
+									</td>
 									<td class="px-4 py-3 hidden sm:table-cell text-xs text-gray-600 dark:text-gray-400 whitespace-nowrap">
 										@if ($application->decided_at)
 											<span class="font-medium">{{ $application->decided_at->format('M d') }}</span>
@@ -400,25 +552,70 @@
 									</td>
 									<td class="px-4 py-3">
 										<div class="flex items-center gap-1.5 js-action-buttons">
-													@if ($application->status === 'approved')
+											@if ($campaign->status === 'closed')
+												<!-- Campaign is closed - disable all actions -->
 												<button disabled
-													class="px-2 py-1 text-xs rounded bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300 cursor-default opacity-60">
+													class="px-2 py-1 text-xs rounded bg-gray-100 text-gray-400 dark:bg-gray-700 dark:text-gray-500 cursor-not-allowed opacity-50"
+													title="Campaign is closed - cannot approve or decline"
+													onclick="window.toast?.info('This campaign is closed. No further actions can be taken.')">
 													<x-icons.check class="w-3 h-3" />
 												</button>
-											@elseif ($application->status === 'rejected')
 												<button disabled
-													class="px-2 py-1 text-xs rounded bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300 cursor-default opacity-60">
+													class="px-2 py-1 text-xs rounded bg-gray-100 text-gray-400 dark:bg-gray-700 dark:text-gray-500 cursor-not-allowed opacity-50"
+													title="Campaign is closed - cannot approve or decline"
+													onclick="window.toast?.info('This campaign is closed. No further actions can be taken.')">
+													<x-icons.x class="w-3 h-3" />
+												</button>
+											@elseif ($application->status === 'approved')
+												<!-- Already approved -->
+												<button disabled
+													class="px-2 py-1 text-xs rounded bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300 cursor-not-allowed opacity-60"
+													title="This influencer is already approved">
+													<x-icons.check class="w-3 h-3" />
+												</button>
+												<button disabled
+													class="px-2 py-1 text-xs rounded bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300 cursor-not-allowed opacity-50"
+													title="Cannot decline an approved influencer"
+													onclick="window.toast?.error('Cannot decline an approved influencer. They have already been approved for this campaign.')">
+													<x-icons.x class="w-3 h-3" />
+												</button>
+											@elseif ($application->status === 'rejected')
+												<!-- Already declined -->
+												<button disabled
+													class="px-2 py-1 text-xs rounded bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300 cursor-not-allowed opacity-50"
+													title="Cannot approve a declined influencer"
+													onclick="window.toast?.error('Cannot approve a declined influencer. Their application has already been rejected.')">
+													<x-icons.check class="w-3 h-3" />
+												</button>
+												<button disabled
+													class="px-2 py-1 text-xs rounded bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300 cursor-not-allowed opacity-60"
+													title="This influencer is already declined">
+													<x-icons.x class="w-3 h-3" />
+												</button>
+											@elseif ($application->status === 'completed')
+												<!-- Work completed - disable all actions -->
+												<button disabled
+													class="px-2 py-1 text-xs rounded bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300 cursor-not-allowed opacity-50"
+													title="Work is completed - cannot modify"
+													onclick="window.toast?.info('This application is completed. The influencer has finished their work on this campaign.')">
+													<x-icons.check class="w-3 h-3" />
+												</button>
+												<button disabled
+													class="px-2 py-1 text-xs rounded bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300 cursor-not-allowed opacity-50"
+													title="Work is completed - cannot modify"
+													onclick="window.toast?.info('This application is completed. The influencer has finished their work on this campaign.')">
 													<x-icons.x class="w-3 h-3" />
 												</button>
 											@else
+												<!-- Pending / Applied / Invited - Actions enabled -->
 												<form
 													action="{{ route('frontend.campaigns.update-application-status', [$campaign->id, $application->id]) }}"
 													method="POST" class="inline js-approve-form">
 													@csrf
 													<input type="hidden" name="status" value="approved">
 													<button type="submit"
-														class="px-2 py-1 text-xs rounded bg-emerald-100 text-emerald-700 hover:bg-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-300 dark:hover:bg-emerald-900/50 transition"
-														title="Approve">
+														class="px-2 py-1 text-xs rounded bg-emerald-100 text-emerald-700 hover:bg-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-300 dark:hover:bg-emerald-900/50 transition cursor-pointer"
+														title="Approve this influencer">
 														<x-icons.check class="w-3 h-3" />
 													</button>
 												</form>
@@ -428,8 +625,8 @@
 													@csrf
 													<input type="hidden" name="status" value="rejected">
 													<button type="submit"
-														class="px-2 py-1 text-xs rounded bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-300 dark:hover:bg-red-900/50 transition"
-														title="Reject">
+														class="px-2 py-1 text-xs rounded bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-300 dark:hover:bg-red-900/50 transition cursor-pointer"
+														title="Decline this influencer">
 														<x-icons.x class="w-3 h-3" />
 													</button>
 												</form>
@@ -448,8 +645,145 @@
 					</table>
 				</div>
 			</div>
-		</div>
-	</div>
+		@else
+			<!-- INFLUENCER VIEW: Show their application status and relevant actions -->
+			<div class="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-800 shadow-sm overflow-hidden">
+				<div class="px-5 py-4 border-b border-gray-200 dark:border-gray-800">
+					<h2 class="text-lg font-bold text-gray-900 dark:text-white">Your Application</h2>
+					<p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Manage your participation in this campaign</p>
+				</div>
+
+				<div class="px-5 py-6">
+					@if ($influencerApplication)
+						<!-- Influencer has applied -->
+						<div class="space-y-4">
+							<!-- Application Status Card -->
+							<div class="rounded-lg bg-gray-50 dark:bg-gray-700/50 p-4 border border-gray-200 dark:border-gray-700">
+								<div class="flex items-center justify-between gap-4">
+									<div>
+										<p class="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide">Status</p>
+										@php
+											$statusColors = [
+												'invited' => 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
+												'applied' => 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300',
+												'approved' => 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300',
+												'rejected' => 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300',
+												'completed' => 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300',
+											];
+											$badgeClass = $statusColors[$influencerApplication->status] ?? 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300';
+											$statusLabel = match($influencerApplication->status) {
+												'invited' => 'Invited',
+												'applied' => 'Applied',
+												'approved' => 'Approved',
+												'rejected' => 'Not Selected',
+												'completed' => 'Work Completed',
+												 default => 'Unknown',
+											};
+										@endphp
+										<span class="inline-flex items-center rounded-full px-3 py-1 text-sm font-semibold mt-1 {{ $badgeClass }}">
+											{{ $statusLabel }}
+										</span>
+									</div>
+									<div class="text-right">
+										<p class="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide">Applied On</p>
+										<p class="text-sm font-medium text-gray-900 dark:text-white mt-1">
+											{{ $influencerApplication->applied_at?->format('M d, Y') ?? 'Pending' }}
+										</p>
+									</div>
+								</div>
+							</div>
+
+							@if ($influencerApplication->status === 'approved')
+								<!-- Show work status if approved -->
+								<div class="rounded-lg bg-emerald-50 dark:bg-emerald-900/20 p-4 border border-emerald-200 dark:border-emerald-900/50">
+									<p class="text-sm font-semibold text-emerald-900 dark:text-emerald-100 mb-3">✓ You're approved for this campaign!</p>
+									<p class="text-sm text-emerald-800 dark:text-emerald-200">
+										You can now see your work progress and deliverables above. Let the brand know if you have any questions about the requirements.
+									</p>
+								</div>
+							@elseif ($influencerApplication->status === 'rejected')
+								<!-- Show rejection message -->
+								<div class="rounded-lg bg-red-50 dark:bg-red-900/20 p-4 border border-red-200 dark:border-red-900/50">
+									<p class="text-sm font-semibold text-red-900 dark:text-red-100 mb-3">Not Selected</p>
+									<p class="text-sm text-red-800 dark:text-red-200">
+										Unfortunately, you were not selected for this campaign. Other influencers have been chosen, but check for other campaigns that might be a good fit!
+									</p>
+								</div>
+							@elseif ($influencerApplication->status === 'applied')
+								<!-- Show pending decision message -->
+								<div class="rounded-lg bg-blue-50 dark:bg-blue-900/20 p-4 border border-blue-200 dark:border-blue-900/50">
+									<p class="text-sm font-semibold text-blue-900 dark:text-blue-100 mb-3">Waiting for Review</p>
+									<p class="text-sm text-blue-800 dark:text-blue-200">
+										The brand is reviewing your application. You'll be notified once they make a decision.
+									</p>
+								</div>
+							@elseif ($influencerApplication->status === 'completed')
+								<!-- Show completion message -->
+								<div class="rounded-lg bg-emerald-50 dark:bg-emerald-900/20 p-4 border border-emerald-200 dark:border-emerald-900/50">
+									<p class="text-sm font-semibold text-emerald-900 dark:text-emerald-100 mb-3">✓ Work Completed</p>
+									<p class="text-sm text-emerald-800 dark:text-emerald-200">
+										Great work! You've successfully completed this campaign. Thank you for your collaboration!
+									</p>
+								</div>
+							@endif
+
+							<!-- Work Status Update Section (for approved applications) -->
+							@if ($influencerApplication->status === 'approved')
+								<div class="rounded-lg bg-blue-50 dark:bg-blue-900/20 p-4 border border-blue-200 dark:border-blue-900/50 mt-4">
+									<p class="text-xs font-semibold text-blue-600 dark:text-blue-300 uppercase tracking-wide mb-3">Update Work Status</p>
+									<form method="POST" action="{{ route('frontend.campaigns.update-work-status', $influencerApplication) }}" class="space-y-3">
+										@csrf
+										<div>
+											<label class="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide block mb-2">Current Status</label>
+											<select name="work_status" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg bg-white dark:bg-gray-800 dark:border-gray-600 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+												<option value="pending" {{ $influencerApplication->work_status === 'pending' ? 'selected' : '' }}>Order Pending</option>
+												<option value="accepted" {{ $influencerApplication->work_status === 'accepted' ? 'selected' : '' }}>Accepted</option>
+												<option value="in_progress" {{ $influencerApplication->work_status === 'in_progress' ? 'selected' : '' }}>In Progress</option>
+												<option value="on_review" {{ $influencerApplication->work_status === 'on_review' ? 'selected' : '' }}>On Review</option>
+												<option value="completed" {{ $influencerApplication->work_status === 'completed' ? 'selected' : '' }}>Completed</option>
+											</select>
+										</div>
+										<button type="submit" class="w-full px-4 py-2 text-sm font-semibold rounded-lg bg-blue-600 text-white hover:bg-blue-700 dark:hover:bg-blue-600 transition">
+											Update Status
+										</button>
+									</form>
+								</div>
+							@endif
+
+							<!-- Action Buttons -->
+							<div class="mt-4">
+								@if ($influencerApplication->status !== 'rejected' && $influencerApplication->status !== 'completed')
+									<form method="POST" action="{{ route('frontend.campaigns.withdraw-application', $influencerApplication) }}">
+										@csrf
+										<button type="submit" onclick="return confirm('Are you sure you want to withdraw your application?')"
+											class="w-full px-4 py-2 text-sm font-semibold rounded-lg border border-red-300 text-red-700 bg-red-50 hover:bg-red-100 dark:border-red-800 dark:bg-red-900/20 dark:text-red-300 dark:hover:bg-red-900/30 transition">
+											Withdraw Application
+										</button>
+									</form>
+								@endif
+							</div>
+						</div>
+					@else
+						<!-- Influencer hasn't applied yet -->
+						<div class="space-y-4">
+							<div class="rounded-lg bg-blue-50 dark:bg-blue-900/20 p-4 border border-blue-200 dark:border-blue-900/50">
+								<p class="text-sm font-semibold text-blue-900 dark:text-blue-100 mb-2">Interested in this campaign?</p>
+								<p class="text-sm text-blue-800 dark:text-blue-200 mb-4">
+									Apply to show your interest and let the brand know why you'd be great for this project!
+								</p>
+								<form method="POST" action="{{ route('frontend.campaigns.apply', $campaign) }}" class="flex flex-col sm:flex-row gap-2">
+									@csrf
+									<input type="email" name="email" placeholder="Your email" value="{{ auth()->user()->email }}" disabled class="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg bg-gray-50 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-300" />
+									<button type="submit" class="px-4 py-2 text-sm font-semibold rounded-lg bg-blue-600 text-white hover:bg-blue-700 dark:hover:bg-blue-600 transition whitespace-nowrap">
+										Apply Now
+									</button>
+								</form>
+							</div>
+						</div>
+					@endif
+				</div>
+			</div>
+		@endif
 
 	<script>
 		document.addEventListener('DOMContentLoaded', function() {
@@ -522,21 +856,37 @@
 			batchApproveBtn?.addEventListener('click', function() {
 				const checkedCheckboxes = Array.from(document.querySelectorAll('.js-row-checkbox:checked'));
 				if (checkedCheckboxes.length === 0) return;
+				let submitted = 0;
 				checkedCheckboxes.forEach(checkbox => {
 					const row = checkbox.closest('tr');
 					const approveForm = row?.querySelector('.js-approve-form');
-					if (approveForm) approveForm.submit();
+					if (approveForm) {
+						submitted++;
+						approveForm.submit();
+					}
 				});
+
+				if (submitted === 0) {
+					window.toast?.warning('Declined influencers cannot be approved again.');
+				}
 			});
 
 			batchRejectBtn?.addEventListener('click', function() {
 				const checkedCheckboxes = Array.from(document.querySelectorAll('.js-row-checkbox:checked'));
 				if (checkedCheckboxes.length === 0) return;
+				let submitted = 0;
 				checkedCheckboxes.forEach(checkbox => {
 					const row = checkbox.closest('tr');
 					const rejectForm = row?.querySelector('.js-reject-form');
-					if (rejectForm) rejectForm.submit();
+					if (rejectForm) {
+						submitted++;
+						rejectForm.submit();
+					}
 				});
+
+				if (submitted === 0) {
+					window.toast?.warning('Approved influencers cannot be declined.');
+				}
 			});
 
 			batchCancelBtn?.addEventListener('click', function() {
@@ -545,5 +895,73 @@
 				updateBatchUI();
 			});
 		});
+
+		// Campaign Status Update Handler
+		function campaignStatusForm() {
+			return {
+				selectedStatus: '{{ $campaign->status }}',
+				isLoading: false,
+				showFeedback: false,
+				feedbackText: '',
+				feedbackClass: '',
+				
+				async updateStatus() {
+					const newStatus = this.selectedStatus;
+					if (newStatus === '{{ $campaign->status }}') {
+						return;
+					}
+
+					this.isLoading = true;
+					this.showFeedback = false;
+
+					try {
+						const response = await fetch('{{ route("frontend.campaigns.update-status", $campaign) }}', {
+							method: 'PATCH',
+							headers: {
+								'Content-Type': 'application/json',
+								'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+								'Accept': 'application/json'
+							},
+							body: JSON.stringify({
+								status: newStatus
+							})
+						});
+
+						const data = await response.json();
+
+						if (data.success) {
+							this.feedbackClass = 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300';
+							this.feedbackText = data.message;
+							this.showFeedback = true;
+
+							// Show success feedback for 3 seconds
+							setTimeout(() => {
+								this.showFeedback = false;
+							}, 3000);
+
+							// Scroll to top to show the success
+							window.scrollTo({ top: 0, behavior: 'smooth' });
+						} else {
+							this.feedbackClass = 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300';
+							this.feedbackText = data.message || 'Failed to update status';
+							this.showFeedback = true;
+
+							// Revert on error
+							this.selectedStatus = '{{ $campaign->status }}';
+						}
+					} catch (error) {
+						console.error('Error updating campaign status:', error);
+						this.feedbackClass = 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300';
+						this.feedbackText = 'An error occurred. Please try again.';
+						this.showFeedback = true;
+
+						// Revert on error
+						this.selectedStatus = '{{ $campaign->status }}';
+					} finally {
+						this.isLoading = false;
+					}
+				}
+			}
+		}
 	</script>
 @endsection
