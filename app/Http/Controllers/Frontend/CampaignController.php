@@ -10,6 +10,8 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Backend\Campaign\StoreCampaignRequest;
 use App\Models\Campaign;
 use App\Models\CampaignApplication;
+use App\Models\CampaignInfluencer;
+use App\Models\SubOrder;
 use App\Queries\Frontend\Campaign\CampaignIndexQuery;
 use App\Services\Admin\CampaignService;
 use App\ViewModels\Frontend\Campaign\CampaignIndexViewModel;
@@ -95,6 +97,11 @@ class CampaignController extends Controller
             ->unique('influencer_id')
             ->keyBy('influencer_id');
 
+            $assignmentByInfluencer = CampaignInfluencer::query()
+                ->where('campaign_id', $campaign->id)
+                ->get()
+                ->keyBy('influencer_id');
+
         $progressConfig = [
             'pending' => ['label' => 'Order Pending', 'percent' => 15],
             'accepted' => ['label' => 'Accepted', 'percent' => 35],
@@ -105,21 +112,24 @@ class CampaignController extends Controller
         ];
 
         $workProgress = $campaign->applications
-            ->where('status', 'approved')
+            ->whereIn('status', ['approved', 'completed'])
             ->values()
-            ->map(static function ($application) use ($latestSubOrdersByInfluencer, $progressConfig) {
+                ->map(function ($application) use ($latestSubOrdersByInfluencer, $progressConfig, $assignmentByInfluencer, $campaign) {
                 $subOrder = $latestSubOrdersByInfluencer->get($application->influencer_id);
-                $statusKey = $subOrder?->status;
+                    $assignment = $assignmentByInfluencer->get($application->influencer_id);
 
-                if (!$statusKey || !isset($progressConfig[$statusKey])) {
-                    $statusKey = 'not_started';
-                    $status = ['label' => 'Not Started', 'percent' => 10];
-                } else {
-                    $status = $progressConfig[$statusKey];
-                }
+                // Sub-order is the canonical work record for campaign fulfillment.
+                $statusKey = (string) ($subOrder?->status ?? 'pending');
+
+                $status = $progressConfig[$statusKey] ?? $progressConfig['pending'];
+
+                    $agreedAmount = $assignment?->agreed_amount
+                        ?? $application->agreed_rate
+                        ?? $application->proposed_rate;
 
                 return [
                     'application_id' => $application->id,
+                        'influencer_id' => $application->influencer_id,
                     'influencer_name' => $application->influencer->user->name ?? 'Unknown Influencer',
                     'influencer_handle' => $application->influencer->display_name ?? null,
                     'status_key' => $statusKey,
@@ -127,8 +137,18 @@ class CampaignController extends Controller
                     'progress_percent' => $status['percent'],
                     'updated_at' => $subOrder?->updated_at,
                     'decided_at' => $application->decided_at,
+                        'agreed_amount' => $agreedAmount,
+                        'currency' => strtoupper((string) ($subOrder?->currency ?? $campaign->currency ?? 'USD')),
                 ];
             });
+
+        $influencerApplication = null;
+        if ($user->user_type === 'influencer') {
+            $influencerId = $user->influencer?->id;
+            if ($influencerId) {
+                $influencerApplication = $campaign->applications->firstWhere('influencer_id', $influencerId);
+            }
+        }
 
         return view('frontend.campaigns.designed-show', [
             'campaign'              => $campaign,
@@ -140,8 +160,10 @@ class CampaignController extends Controller
                 'rejected' => $campaign->applications->where('status', 'rejected')->count()
             ],
             'workProgress'          => $workProgress,
+            'progressByApplication' => $workProgress->keyBy('application_id'),
+                'assignmentByInfluencer' => $assignmentByInfluencer,
             'brandName'             => $campaign->brand?->brand_name ?? $campaign->createdBy?->name ?? 'Unknown',
-            'influencerApplication' => $user->user_type === 'influencer' ? $campaign->applications->first() : null
+            'influencerApplication' => $influencerApplication,
         ]);
     }
 
@@ -384,14 +406,30 @@ class CampaignController extends Controller
         }
 
         $influencer = $user->influencer;
+        if (! $influencer) {
+            return redirect()->back()->with('error', 'Influencer profile not found for this account.');
+        }
 
-        // Check if already applied
+        // Check current + soft-deleted record to avoid unique key conflicts on re-apply.
         $existingApplication = $campaign->applications()
+            ->withTrashed()
             ->where('influencer_id', $influencer->id)
             ->first();
 
-        if ($existingApplication) {
+        if ($existingApplication && ! $existingApplication->trashed()) {
             return redirect()->back()->with('warning', 'You have already applied to this campaign');
+        }
+
+        if ($existingApplication && $existingApplication->trashed()) {
+            $existingApplication->restore();
+            $existingApplication->update([
+                'status' => 'applied',
+                'applied_at' => now(),
+                'decided_at' => null,
+            ]);
+
+            return redirect()->route('frontend.campaigns.show', $campaign)
+                ->with('success', 'Application re-submitted successfully.');
         }
 
         // Create application
@@ -411,8 +449,9 @@ class CampaignController extends Controller
     public function withdrawApplication(CampaignApplication $application): RedirectResponse
     {
         $user = auth()->user();
+        $influencerId = $user->influencer?->id;
 
-        if ($user->user_type !== 'influencer' || $application->influencer_id !== $user->influencer->id) {
+        if ($user->user_type !== 'influencer' || ! $influencerId || (int) $application->influencer_id !== (int) $influencerId) {
             abort(403, 'Not authorized');
         }
 
@@ -424,7 +463,7 @@ class CampaignController extends Controller
         $campaign = $application->campaign;
         $application->delete();
 
-        return redirect()->route('frontend.campaigns.index')
+        return redirect()->route('frontend.campaigns.show', $campaign)
             ->with('success', 'Application withdrawn successfully');
     }
 
@@ -434,9 +473,10 @@ class CampaignController extends Controller
     public function updateInfluencerWorkStatus(CampaignApplication $application, Request $request): RedirectResponse
     {
         $user = auth()->user();
+        $influencerId = $user->influencer?->id;
 
         // Authorize: only influencer can update their own work status
-        if ($user->user_type !== 'influencer' || $application->influencer_id !== $user->influencer->id) {
+        if ($user->user_type !== 'influencer' || ! $influencerId || (int) $application->influencer_id !== (int) $influencerId) {
             abort(403, 'Not authorized to update this application');
         }
 
@@ -449,11 +489,86 @@ class CampaignController extends Controller
             'work_status' => 'required|in:pending,accepted,in_progress,on_review,completed',
         ]);
 
-        $application->update([
-            'work_status' => $validated['work_status'],
-        ]);
+        $subOrder = $this->resolveCampaignSubOrder($application);
+
+        $updates = ['work_status' => $validated['work_status']];
+        if ($validated['work_status'] === 'completed') {
+            $updates['status'] = 'completed';
+            $updates['decided_at'] = now();
+        }
+
+        $application->update($updates);
+
+        if ($subOrder) {
+            $subOrderUpdates = ['status' => $validated['work_status']];
+            if ($validated['work_status'] === 'accepted' && $subOrder->accepted_at === null) {
+                $subOrderUpdates['accepted_at'] = now();
+            }
+            if ($validated['work_status'] === 'completed') {
+                $subOrderUpdates['completed_at'] = now();
+            }
+            $subOrder->update($subOrderUpdates);
+        }
 
         return redirect()->back()->with('success', 'Work status updated successfully: ' . ucfirst(str_replace('_', ' ', $validated['work_status'])));
+    }
+
+    /**
+     * Brand updates approved influencer work status.
+     */
+    public function updateBrandWorkStatus(Campaign $campaign, CampaignApplication $application, Request $request): RedirectResponse
+    {
+        $user = auth()->user();
+
+        if ($user->user_type !== 'brand' || (int) $campaign->brand_id !== (int) ($user->brand?->id ?? 0)) {
+            abort(403, 'Not authorized');
+        }
+
+        if ((int) $application->campaign_id !== (int) $campaign->id) {
+            abort(404);
+        }
+
+        if (! in_array((string) $application->status, ['approved', 'completed'], true)) {
+            return redirect()->back()->with('error', 'Work status can only be updated for approved influencers.');
+        }
+
+        $validated = $request->validate([
+            'work_status' => 'required|in:pending,accepted,in_progress,on_review,completed',
+        ]);
+
+        $subOrder = $this->resolveCampaignSubOrder($application);
+
+        $updates = ['work_status' => $validated['work_status']];
+        if ($validated['work_status'] === 'completed') {
+            $updates['status'] = 'completed';
+            $updates['decided_at'] = $application->decided_at ?? now();
+        }
+
+        $application->update($updates);
+
+        if ($subOrder) {
+            $subOrderUpdates = ['status' => $validated['work_status']];
+            if ($validated['work_status'] === 'accepted' && $subOrder->accepted_at === null) {
+                $subOrderUpdates['accepted_at'] = now();
+            }
+            if ($validated['work_status'] === 'completed') {
+                $subOrderUpdates['completed_at'] = now();
+            }
+            $subOrder->update($subOrderUpdates);
+        }
+
+        return redirect()->back()->with('success', 'Work status updated to ' . ucfirst(str_replace('_', ' ', $validated['work_status'])) . '.');
+    }
+
+    private function resolveCampaignSubOrder(CampaignApplication $application): ?SubOrder
+    {
+        return SubOrder::query()
+            ->where('influencer_id', $application->influencer_id)
+            ->whereHas('order', function ($query) use ($application) {
+                $query->where('campaign_id', $application->campaign_id);
+            })
+            ->orderByDesc('id')
+            ->first();
     }
 
     private function authorizeCampaignView($user, Campaign $campaign): void

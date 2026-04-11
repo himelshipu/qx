@@ -107,6 +107,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::delete('/campaigns/{campaign}', [FrontendCampaignController::class, 'destroy'])->name('frontend.campaigns.destroy');
     Route::patch('/campaigns/{campaign}/status', [FrontendCampaignController::class, 'updateStatus'])->name('frontend.campaigns.update-status');
     Route::post('/campaigns/{campaign}/applications/{application}/update-status', [FrontendCampaignController::class, 'updateApplicationStatus'])->name('frontend.campaigns.update-application-status');
+    Route::post('/campaigns/{campaign}/applications/{application}/brand-update-work-status', [FrontendCampaignController::class, 'updateBrandWorkStatus'])->name('frontend.campaigns.brand-update-work-status');
     Route::post('/campaigns/applications/{application}/withdraw', [FrontendCampaignController::class, 'withdrawApplication'])->name('frontend.campaigns.withdraw-application');
     Route::post('/campaigns/applications/{application}/update-work-status', [FrontendCampaignController::class, 'updateInfluencerWorkStatus'])->name('frontend.campaigns.update-work-status');
     Route::post('/campaigns/{campaign}/influencer-assignments/{assignment}/update-status', [FrontendCampaignController::class, 'updateInfluencerStatus'])->name('campaigns.update-influencer-status');
