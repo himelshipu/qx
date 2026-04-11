@@ -140,6 +140,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Frontend Conversations
     Route::get('/messages', [App\Http\Controllers\Frontend\ConversationController::class, 'index'])->name('frontend.conversations.index');
+    Route::get('/messages/open/{influencer}/{order?}', [App\Http\Controllers\Frontend\ConversationController::class, 'openOrderConversation'])->name('frontend.conversations.open-order');
     Route::get('/messages/{conversation:public_id}', [App\Http\Controllers\Frontend\ConversationController::class, 'show'])->name('frontend.conversations.show');
     Route::post('/messages/{conversation:public_id}/send', [App\Http\Controllers\Frontend\ConversationController::class, 'storeMessage'])->name('frontend.conversations.storeMessage');
 

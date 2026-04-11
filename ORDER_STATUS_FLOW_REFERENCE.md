@@ -291,3 +291,94 @@ The following suggestions are prioritized based on the updated business rules.
 
 12. Add policy-guarded state machine service
 - Centralize legal transitions per role instead of scattered controller checks.
+
+## 10. Campaign Budget Confirmation (Required Before Order)
+
+Current campaign schema has `budget_min` and `budget_max` and influencer assignments can have `agreed_amount`.
+
+Observed gap:
+
+- Campaign can have a budget range, but there is no strict budget confirmation gate before creating campaign orders.
+
+Recommended budget management policy:
+
+1. Introduce budget lock state before order creation
+- Add a campaign financial stage such as `budget_unconfirmed` -> `budget_confirmed` -> `order_ready`.
+- Only allow `createFromCampaign` when budget is confirmed.
+
+2. Define confirmation rules
+- Rule A: every approved influencer assignment must have `agreed_amount > 0`.
+- Rule B: total of approved influencer `agreed_amount` must be within campaign budget constraints.
+- Rule C: if total exceeds `budget_max`, order creation must be blocked.
+- Rule D: if `budget_min` and `budget_max` are empty, require explicit budget confirmation note by brand/admin before order creation.
+
+3. Store financial snapshots at order creation
+- Persist a budget snapshot in order metadata:
+	- campaign budget min/max
+	- final committed total
+	- number of approved influencers
+	- confirmation actor and timestamp
+
+4. Freeze budget-relevant values after confirmation
+- Once campaign is `order_ready`, block edits to:
+	- `budget_min`, `budget_max`, `currency`
+	- influencer `agreed_amount`
+- Changes after lock should require explicit admin unlock and audit reason.
+
+5. Handle budget mismatch cases
+- If approved influencer totals are below `budget_min`, allow warning but require explicit confirmation.
+- If above `budget_max`, hard block unless admin exception approval with reason.
+
+Implementation note for current system:
+
+- `createFromCampaign` already checks that each approved influencer has `agreed_amount > 0`.
+- Add budget-range validation and budget lock checks in the same action before transaction start.
+
+## 11. Problems Found in Current Package/Campaign Flow
+
+The following issues were observed in the existing system behavior.
+
+### 11.1 Package Flow Problems
+
+1. Status loop vulnerability
+- Backward transitions can still occur across UI/admin paths without strict transition guard (example: in_progress -> accepted).
+
+2. Mixed source of truth for order status display
+- Some screens compute status from items while others read raw stored order status, causing temporary mismatch labels.
+
+3. Timeline role leakage
+- Financial milestones (payout) can appear in places where business asked to hide them from brand view.
+
+4. Parent completion gate drift risk
+- Parent completion should always depend on child task approval, not only delivered state; needs one centralized rule.
+
+5. Review model directional conflict
+- Single unique `order_item_id` in `reviews` can conflict with strict two-way review requirements on the same task.
+
+### 11.2 Campaign Flow Problems
+
+1. Budget confirmation not enforced as a workflow gate
+- Budget range exists in schema but not fully enforced before campaign order creation.
+
+2. Campaign work ownership is not fully explicit
+- Current order module gives admin strong control, but influencer/brand campaign status responsibilities are not fully formalized.
+
+3. Campaign transition rules are not state-machine guarded
+- Similar loop/rollback risks exist without centralized transition validation.
+
+4. Campaign payout visibility policy is not fully segmented by role
+- Needs explicit role-based visibility (admin full, influencer own, brand no influencer payout settlement details).
+
+5. Campaign review parity is incomplete
+- Two-way immutable public review policy should be consistently applied to campaign deliverables with clear context references.
+
+### 11.3 Cross-Cutting Problems
+
+1. Scattered validation logic
+- Status and review constraints are enforced in multiple controllers; this increases inconsistency risk.
+
+2. Missing mandatory override audit trail
+- Admin exceptional rollback or force-change paths need mandatory reason capture and history logging.
+
+3. Inconsistent public-facing explanation text
+- User-facing labels and backend status values can diverge, causing confusion in brand/influencer views.

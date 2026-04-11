@@ -108,12 +108,22 @@
 
 						<!-- Card Content -->
 						<div class="p-5">
+							<div class="mb-3 flex items-center gap-3">
+								<div class="h-10 w-10 overflow-hidden rounded-full bg-gray-100 dark:bg-gray-700">
+									<img :src="pkg.influencer_avatar" :alt="pkg.influencer_name" class="h-full w-full object-cover">
+								</div>
+								<div class="min-w-0">
+									<p class="truncate text-sm font-semibold text-gray-900 dark:text-white" x-text="pkg.influencer_name"></p>
+									<p class="truncate text-xs text-gray-500 dark:text-gray-400" x-text="pkg.influencer_title || 'Creator'"></p>
+								</div>
+							</div>
+
 							<div class="flex items-start justify-between gap-3 mb-3">
 								<div class="flex-1">
 									<h3 class="text-base font-bold text-gray-900 dark:text-white line-clamp-2">
 										<span x-text="pkg.name"></span>
 									</h3>
-									<p class="text-xs text-gray-600 dark:text-gray-400 mt-1" x-text="'by ' + pkg.influencer_name"></p>
+									<p class="mt-1 text-xs text-gray-600 dark:text-gray-400" x-text="'Purchased ' + pkg.order_count + ' time(s)'"></p>
 								</div>
 								<span class="inline-flex items-center px-2 py-1 text-xs font-semibold text-white rounded whitespace-nowrap"
 									:style="{ backgroundColor: getPlatformColor(pkg.platform) }" x-text="getPlatformName(pkg.platform)">
@@ -121,19 +131,35 @@
 							</div>
 							<p class="text-xs text-gray-600 dark:text-gray-400 line-clamp-2 mb-4" x-text="pkg.description"></p>
 
+							<div class="mb-4 flex flex-wrap gap-2 text-[11px]">
+								<span class="inline-flex items-center rounded-full bg-gray-100 px-2 py-1 text-gray-700 dark:bg-gray-700 dark:text-gray-200">
+									Delivery: <span class="ml-1 font-semibold" x-text="(pkg.delivery_days ?? 'N/A') + (pkg.delivery_days ? ' days' : '')"></span>
+								</span>
+								<span class="inline-flex items-center rounded-full bg-gray-100 px-2 py-1 text-gray-700 dark:bg-gray-700 dark:text-gray-200">
+									Revisions: <span class="ml-1 font-semibold" x-text="pkg.revisions_included ?? 0"></span>
+								</span>
+								<span class="inline-flex items-center rounded-full bg-indigo-100 px-2 py-1 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300">
+									Last order: <span class="ml-1 font-semibold" x-text="pkg.last_order_at"></span>
+								</span>
+							</div>
+
 							<!-- Stats Grid -->
-							<div class="grid grid-cols-2 gap-2 bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3 mb-4">
+							<div class="grid grid-cols-3 gap-2 bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3 mb-4">
 								<div class="text-center">
-									<p class="text-xs text-gray-600 dark:text-gray-400">Price</p>
+									<p class="text-xs text-gray-600 dark:text-gray-400">Unit Price</p>
 									<p class="text-sm font-bold text-purple-600 dark:text-purple-400">
-										<span x-text="'$' + parseInt(pkg.base_price).toLocaleString()"></span>
+										<span x-text="formatMoney(pkg.base_price, pkg.currency)"></span>
 									</p>
 								</div>
-								<div class="text-center border-l border-gray-200 dark:border-gray-600">
-									<p class="text-xs text-gray-600 dark:text-gray-400">Delivery</p>
+								<div class="text-center border-l border-r border-gray-200 dark:border-gray-600">
+									<p class="text-xs text-gray-600 dark:text-gray-400">Total Spent</p>
 									<p class="text-sm font-bold text-gray-900 dark:text-white">
-										<span x-text="pkg.delivery_days + ' days'"></span>
+										<span x-text="formatMoney(pkg.total_spent, pkg.currency)"></span>
 									</p>
+								</div>
+								<div class="text-center">
+									<p class="text-xs text-gray-600 dark:text-gray-400">Orders</p>
+									<p class="text-sm font-bold text-gray-900 dark:text-white" x-text="pkg.order_count"></p>
 								</div>
 							</div>
 
@@ -157,16 +183,27 @@
 		@php
 			$packagesData = $packages
 			    ->map(
-			        fn($p) => [
-			            'id' => $p->id,
-			            'name' => $p->name,
-			            'description' => $p->description,
-			            'platform' => $p->platform,
-			            'base_price' => $p->base_price,
-			            'currency' => $p->currency,
-			            'delivery_days' => $p->delivery_days,
-			            'influencer_name' => $p->influencer?->user?->name ?? 'Unknown',
-			        ],
+			        function ($p) {
+			            $orders = $p->orderItems ?? collect();
+			            $lastOrderAt = $orders->max('created_at');
+
+			            return [
+			                'id' => $p->id,
+			                'name' => $p->name,
+			                'description' => $p->description,
+			                'platform' => $p->platform,
+			                'base_price' => (float) $p->base_price,
+			                'currency' => strtoupper((string) ($p->currency ?: 'USD')),
+			                'delivery_days' => $p->delivery_days,
+			                'revisions_included' => $p->revisions_included,
+			                'order_count' => $orders->count(),
+			                'total_spent' => (float) $orders->sum('line_total'),
+			                'last_order_at' => $lastOrderAt ? \Illuminate\Support\Carbon::parse($lastOrderAt)->format('M d, Y') : 'N/A',
+			                'influencer_name' => $p->influencer?->display_name ?? $p->influencer?->user?->name ?? 'Unknown',
+			                'influencer_title' => $p->influencer?->title_name,
+			                'influencer_avatar' => image_url($p->influencer?->user?->profile_image_path ?? ($p->influencer?->profile_image_path ?? '/default.webp')),
+			            ];
+			        },
 			    )
 			    ->values()
 			    ->all();
@@ -211,6 +248,12 @@
 
 					getUniqueInfluencers() {
 						return [...new Set(this.packages.map(pkg => pkg.influencer_name))].sort();
+					},
+
+					formatMoney(amount, currency = 'USD') {
+						const code = (currency || 'USD').toUpperCase();
+						const numeric = Number(amount || 0);
+						return `${code} ${numeric.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 					},
 
 					getPlatformColor(platform) {

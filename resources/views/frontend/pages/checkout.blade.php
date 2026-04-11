@@ -23,10 +23,15 @@
                         @php
                             $influencer = $item->package->influencer;
                             $influencerName = $influencer->display_name ?? $influencer->user->name;
+                            $avatarPath = $influencer->user->profile_image_path ?? ($influencer->profile_image_path ?? '/default.webp');
+                            $avatarUrl = image_url($avatarPath);
                         @endphp
                         <div class="p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                             <div class="flex items-start gap-4">
-                                <div class="h-12 w-12 rounded-full bg-gradient-to-br from-indigo-100 to-purple-100 dark:from-indigo-900/30 dark:to-purple-900/30 flex items-center justify-center text-sm font-semibold text-indigo-700 dark:text-indigo-300 flex-shrink-0">
+                                <img src="{{ $avatarUrl }}" alt="{{ $influencerName }}"
+                                    class="h-12 w-12 rounded-full object-cover flex-shrink-0"
+                                    onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                <div style="display:none" class="h-12 w-12 rounded-full bg-gradient-to-br from-indigo-100 to-purple-100 dark:from-indigo-900/30 dark:to-purple-900/30 items-center justify-center text-sm font-semibold text-indigo-700 dark:text-indigo-300 flex-shrink-0">
                                     {{ strtoupper(substr($influencerName, 0, 2)) }}
                                 </div>
                                 <div>

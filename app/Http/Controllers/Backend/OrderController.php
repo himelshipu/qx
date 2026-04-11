@@ -7,10 +7,12 @@ use App\Models\Brand;
 use App\Models\Campaign;
 use App\Models\Order;
 use App\Models\OrderItem;
+use App\Models\OrderStatusHistory;
 use App\Models\SubOrder;
 use App\Support\PlatformPricing;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
@@ -143,7 +145,9 @@ class OrderController extends Controller
     public function updateStatus(Request $request, Order $order): RedirectResponse
     {
         $validated = $request->validate([
-            'status' => 'required|in:pending,accepted,in-progress,in_progress,delivered,completed,cancelled',
+            'status' => 'required|in:pending,accepted,in-progress,in_progress,delivered,approved,completed,cancelled',
+            'force_transition' => 'nullable|boolean',
+            'transition_note' => 'nullable|string|max:1000',
         ]);
 
         $status = $validated['status'];
@@ -152,6 +156,25 @@ class OrderController extends Controller
         if ($status === 'in-progress') {
             $status = 'in_progress';
         }
+
+        // Backward-compatibility: order-level "approved" maps to "delivered".
+        // The orders table enum does not include "approved".
+        if ($status === 'approved') {
+            $status = 'delivered';
+        }
+
+        $forceTransition = (bool) ($validated['force_transition'] ?? false);
+        $transitionNote = $validated['transition_note'] ?? null;
+
+        if (! $forceTransition && ! $this->canTransitionOrderStatus((string) $order->status, $status)) {
+            return redirect()->back()->with('error', 'Invalid order status transition.');
+        }
+
+        if ($forceTransition && ! $transitionNote) {
+            return redirect()->back()->with('error', 'Transition note is required for force transition.');
+        }
+
+        $oldStatus = (string) $order->status;
 
         $order->update([
             'status' => $status,
@@ -164,6 +187,18 @@ class OrderController extends Controller
             $order->update(['completed_at' => now()]);
         } elseif ($status === 'cancelled') {
             $order->update(['cancelled_at' => now()]);
+        }
+
+        if ($oldStatus !== $status) {
+            OrderStatusHistory::create([
+                'order_id' => $order->id,
+                'old_status' => $oldStatus,
+                'new_status' => $status,
+                'changed_by_user_id' => $request->user()->id,
+                'note' => $forceTransition
+                    ? ('FORCE: '.$transitionNote)
+                    : ($transitionNote ?: 'Admin updated order status'),
+            ]);
         }
 
         return redirect()
@@ -216,6 +251,24 @@ class OrderController extends Controller
             fn ($assignment) => (float) $assignment->agreed_amount
         );
 
+        if ($campaign->budget_min === null && $campaign->budget_max === null) {
+            return redirect()
+                ->back()
+                ->with('error', 'Confirm campaign budget range before creating campaign order.');
+        }
+
+        if ($campaign->budget_max !== null && $subtotal > (float) $campaign->budget_max) {
+            return redirect()
+                ->back()
+                ->with('error', 'Approved influencer total exceeds campaign maximum budget.');
+        }
+
+        if ($campaign->budget_min !== null && $subtotal < (float) $campaign->budget_min) {
+            return redirect()
+                ->back()
+                ->with('error', 'Approved influencer total is below campaign minimum budget. Confirm budget before creating order.');
+        }
+
         $pricing = PlatformPricing::calculateFromNet($subtotal);
         $buyerUserId = $request->user()->id;
 
@@ -260,17 +313,31 @@ class OrderController extends Controller
     {
         $validated = $request->validate([
             'status' => 'required|in:pending,accepted,in_progress,on_review,completed,cancelled',
+            'force_transition' => 'nullable|boolean',
+            'transition_note' => 'nullable|string|max:1000',
         ]);
+
+        $newStatus = (string) $validated['status'];
+        $forceTransition = (bool) ($validated['force_transition'] ?? false);
+        $transitionNote = $validated['transition_note'] ?? null;
+
+        if (! $forceTransition && ! $this->canTransitionSubOrderStatus((string) $subOrder->status, $newStatus)) {
+            return redirect()->back()->with('error', 'Invalid campaign work status transition.');
+        }
+
+        if ($forceTransition && ! $transitionNote) {
+            return redirect()->back()->with('error', 'Transition note is required for force transition.');
+        }
 
         $subOrder->update([
-            'status' => $validated['status'],
+            'status' => $newStatus,
         ]);
 
-        if ($validated['status'] === 'accepted') {
+        if ($newStatus === 'accepted') {
             $subOrder->update(['accepted_at' => now()]);
-        } elseif ($validated['status'] === 'completed') {
+        } elseif ($newStatus === 'completed') {
             $subOrder->update(['completed_at' => now()]);
-        } elseif ($validated['status'] === 'cancelled') {
+        } elseif ($newStatus === 'cancelled') {
             $subOrder->update(['cancelled_at' => now()]);
         }
 
@@ -314,9 +381,21 @@ class OrderController extends Controller
     {
         $validated = $request->validate([
             'status' => 'required|in:pending,accepted,in_progress,delivered,approved,rejected,cancelled,completed',
+            'force_transition' => 'nullable|boolean',
+            'transition_note' => 'nullable|string|max:1000',
         ]);
 
         $newStatus = (string) $validated['status'];
+        $forceTransition = (bool) ($validated['force_transition'] ?? false);
+        $transitionNote = $validated['transition_note'] ?? null;
+
+        if (! $forceTransition && ! $this->canTransitionPackageItemStatus((string) $orderItem->status, $newStatus)) {
+            return redirect()->back()->with('error', 'Invalid item status transition.');
+        }
+
+        if ($forceTransition && ! $transitionNote) {
+            return redirect()->back()->with('error', 'Transition note is required for force transition.');
+        }
 
         $updates = [
             'status' => $newStatus,
@@ -420,37 +499,110 @@ class OrderController extends Controller
         }
 
         if ($statuses->every(fn ($status) => $status === 'pending')) {
-            $order->update([
+            $this->applyOrderStatus($order, 'pending', [
                 'status' => 'pending',
                 'accepted_at' => null,
                 'completed_at' => null,
-            ]);
+            ], 'Admin sync from item statuses');
 
             return;
         }
 
         if ($statuses->every(fn ($status) => $status === 'accepted')) {
-            $order->update([
+            $this->applyOrderStatus($order, 'accepted', [
                 'status' => 'accepted',
                 'accepted_at' => $order->accepted_at ?? now(),
                 'completed_at' => null,
-            ]);
+            ], 'Admin sync from item statuses');
 
             return;
         }
 
         if ($statuses->every(fn ($status) => in_array($status, ['delivered', 'approved', 'completed'], true))) {
-            $order->update([
+            $this->applyOrderStatus($order, 'delivered', [
                 'status' => 'delivered',
                 'completed_at' => null,
-            ]);
+            ], 'Admin sync from item statuses');
 
             return;
         }
 
-        $order->update([
+        $this->applyOrderStatus($order, 'in_progress', [
             'status' => 'in_progress',
             'completed_at' => null,
-        ]);
+        ], 'Admin sync from item statuses');
+    }
+
+    private function canTransitionPackageItemStatus(string $from, string $to): bool
+    {
+        if ($from === $to) {
+            return true;
+        }
+
+        $allowed = [
+            'pending' => ['accepted', 'cancelled'],
+            'accepted' => ['in_progress', 'cancelled'],
+            'in_progress' => ['delivered', 'cancelled'],
+            'delivered' => ['approved', 'rejected'],
+            'rejected' => ['delivered', 'cancelled'],
+            'approved' => ['completed'],
+            'completed' => [],
+            'cancelled' => [],
+        ];
+
+        return in_array($to, $allowed[$from] ?? [], true);
+    }
+
+    private function canTransitionSubOrderStatus(string $from, string $to): bool
+    {
+        if ($from === $to) {
+            return true;
+        }
+
+        $allowed = [
+            'pending' => ['accepted', 'cancelled'],
+            'accepted' => ['in_progress', 'cancelled'],
+            'in_progress' => ['on_review', 'cancelled'],
+            'on_review' => ['completed', 'cancelled'],
+            'completed' => [],
+            'cancelled' => [],
+        ];
+
+        return in_array($to, $allowed[$from] ?? [], true);
+    }
+
+    private function canTransitionOrderStatus(string $from, string $to): bool
+    {
+        if ($from === $to) {
+            return true;
+        }
+
+        $allowed = [
+            'pending' => ['accepted', 'cancelled'],
+            'accepted' => ['in_progress', 'cancelled'],
+            'in_progress' => ['delivered', 'cancelled'],
+            'delivered' => ['completed', 'cancelled'],
+            'approved' => ['completed', 'cancelled'],
+            'completed' => [],
+            'cancelled' => [],
+        ];
+
+        return in_array($to, $allowed[$from] ?? [], true);
+    }
+
+    private function applyOrderStatus(Order $order, string $newStatus, array $payload, string $note): void
+    {
+        $oldStatus = (string) $order->status;
+        $order->update($payload);
+
+        if ($oldStatus !== $newStatus) {
+            OrderStatusHistory::create([
+                'order_id' => $order->id,
+                'old_status' => $oldStatus,
+                'new_status' => $newStatus,
+                'changed_by_user_id' => Auth::id(),
+                'note' => $note,
+            ]);
+        }
     }
 }

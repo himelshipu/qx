@@ -32,6 +32,8 @@
                                     @php
                                         $influencer = $item->package->influencer;
                                         $influencerName = $influencer->display_name ?? $influencer->user->name;
+                                        $avatarPath = $influencer->user->profile_image_path ?? ($influencer->profile_image_path ?? '/default.webp');
+                                        $avatarUrl = image_url($avatarPath);
                                         $itemTotal = $item->unit_price * $item->quantity;
                                     @endphp
                                     <tr class="hover:bg-gray-50/50 dark:hover:bg-gray-800/50 transition-colors duration-150">
@@ -40,7 +42,10 @@
                                         </td>
                                         <td class="px-6 py-4">
                                             <div class="flex items-center gap-2">
-                                                <div class="h-8 w-8 rounded-full bg-gradient-to-br from-indigo-100 to-purple-100 dark:from-indigo-900/30 dark:to-purple-900/30 flex items-center justify-center text-xs font-semibold text-indigo-700 dark:text-indigo-300">
+                                                <img src="{{ $avatarUrl }}" alt="{{ $influencerName }}"
+                                                    class="h-8 w-8 rounded-full object-cover"
+                                                    onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                                <div style="display:none" class="h-8 w-8 rounded-full bg-gradient-to-br from-indigo-100 to-purple-100 dark:from-indigo-900/30 dark:to-purple-900/30 flex items-center justify-center text-xs font-semibold text-indigo-700 dark:text-indigo-300">
                                                     {{ strtoupper(substr($influencerName, 0, 2)) }}
                                                 </div>
                                                 <span class="text-sm text-gray-700 dark:text-gray-300">{{ $influencerName }}</span>

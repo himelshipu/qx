@@ -87,6 +87,20 @@ class OrderItem extends Model
         return $this->hasOne(Review::class);
     }
 
+    public function brandToInfluencerReview(): HasOne
+    {
+        return $this->hasOne(Review::class)
+            ->where('reviewer_type', 'brand')
+            ->where('reviewee_type', 'influencer');
+    }
+
+    public function influencerToBrandReview(): HasOne
+    {
+        return $this->hasOne(Review::class)
+            ->where('reviewer_type', 'influencer')
+            ->where('reviewee_type', 'brand');
+    }
+
     public function deliverables(): HasMany
     {
         return $this->hasMany(OrderDeliverable::class);

@@ -426,6 +426,9 @@ class CartController extends Controller
                     foreach ($influencerCartItems as $cartItem) {
                         $package = $cartItem->package;
                         $dueDate = null;
+                        $currency = strtoupper($cartItem->currency ?? $package->currency ?? 'USD');
+                        $unitPrice = (float) $cartItem->unit_price;
+                        $lineTotal = $unitPrice * (int) $cartItem->quantity;
 
                         if ($childOrder->placed_at && $package->delivery_days !== null) {
                             $dueDate = Carbon::parse($childOrder->placed_at)->addDays((int) $package->delivery_days)->toDateString();
@@ -444,7 +447,15 @@ class CartController extends Controller
                         ]);
 
                         $latestOrderId  = $childOrder->id;
-                        $packageLines[] = sprintf('%dx %s', (int) $cartItem->quantity, $package->name);
+                        $packageLines[] = sprintf(
+                            '%dx %s (%s %s each, total %s %s)',
+                            (int) $cartItem->quantity,
+                            $package->name,
+                            $currency,
+                            number_format($unitPrice, 2),
+                            $currency,
+                            number_format($lineTotal, 2)
+                        );
                     }
 
                     $influencerSampleItem = $influencerCartItems->first();
@@ -521,6 +532,10 @@ class CartController extends Controller
 
         $items = $cart->items->map(function ($item) {
             $influencerUser = $item->package->influencer->user;
+            $avatarPath = $influencerUser->profile_image_path
+                ?? $item->package->influencer->profile_image_path
+                ?? '/default.webp';
+            $avatarUrl = image_url($avatarPath);
 
             return [
                 'id'            => $item->id,
@@ -528,7 +543,8 @@ class CartController extends Controller
                 'package'       => $item->package->name,
                 'price'         => (int) $item->unit_price,
                 'quantity'      => $item->quantity,
-                'image'         => image_url($item->package->influencer->profile_image_path ?? '/default.webp'),
+                'image'         => $avatarUrl,
+                'avatar_url'    => $avatarUrl,
                 'influencer_id' => $item->influencer_id,
                 'country'       => $influencerUser->country ?? null
             ];

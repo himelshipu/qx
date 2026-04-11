@@ -33,7 +33,22 @@
             return $item->influencer?->user;
         };
 
-        $currentTitle = $conversation->influencer->display_name ?? $conversation->influencer->user->name;
+        $getInfluencerName = static function (?\App\Models\Influencer $influencer): string {
+            return $influencer?->display_name
+                ?? $influencer?->user?->name
+                ?? 'Influencer';
+        };
+
+        $getInfluencerAvatar = static function (?\App\Models\Influencer $influencer): ?string {
+            $avatarPath = $influencer?->user?->profile_image_path
+                ?? $influencer?->profile_image_path
+                ?? null;
+
+            return filled($avatarPath) ? image_url($avatarPath) : null;
+        };
+
+        $currentTitle = $getInfluencerName($conversation->influencer);
+        $currentAvatar = $getInfluencerAvatar($conversation->influencer);
         
         // Helper to get status color
         $getOrderStatusColor = function ($status) {
@@ -68,9 +83,8 @@
                 <div class="flex-1 overflow-y-auto p-3 space-y-1.5">
                     @forelse ($sidebarConversations as $item)
                         @php
-                            $party = $getPartyForSidebar($item);
-                            $partyName = $party?->name ?? 'Unknown User';
-                            $partyAvatar = filled($party?->profile_image_path ?? null) ? image_url($party->profile_image_path) : null;
+                            $partyName = $getInfluencerName($item->influencer);
+                            $partyAvatar = $getInfluencerAvatar($item->influencer);
                             $latestMessage = $item->messages->first();
                             $isActive = $item->id === $conversation->id;
                         @endphp
@@ -121,7 +135,11 @@
                     <div class="flex items-center justify-between">
                         <div class="flex items-center gap-3 min-w-0">
                             <div class="h-10 w-10 rounded-full overflow-hidden bg-gradient-to-br from-indigo-100 to-purple-100 dark:from-indigo-900/30 dark:to-purple-900/30 flex items-center justify-center flex-shrink-0">
-                                <span class="text-sm font-semibold text-indigo-700 dark:text-indigo-300">{{ $getInitials($currentTitle) }}</span>
+                                @if ($currentAvatar)
+                                    <img src="{{ $currentAvatar }}" alt="{{ $currentTitle }}" class="h-full w-full object-cover">
+                                @else
+                                    <span class="text-sm font-semibold text-indigo-700 dark:text-indigo-300">{{ $getInitials($currentTitle) }}</span>
+                                @endif
                             </div>
                             <div class="min-w-0">
                                 <h3 class="text-base font-semibold text-gray-900 dark:text-white truncate">{{ $currentTitle }}</h3>
@@ -197,8 +215,8 @@
                             
                             if ($displayFromInfluencer) {
                                 // Show as if it's from the influencer
-                                $displayName = $conversation->influencer->display_name ?? $conversation->influencer->user->name ?? 'Influencer';
-                                $displayAvatar = filled($conversation->influencer->user?->profile_image_path ?? null) ? image_url($conversation->influencer->user->profile_image_path) : null;
+                                $displayName = $getInfluencerName($conversation->influencer);
+                                $displayAvatar = $getInfluencerAvatar($conversation->influencer);
                             } else {
                                 // Show actual sender
                                 $displayName = $message->sender?->name ?? 'Unknown';

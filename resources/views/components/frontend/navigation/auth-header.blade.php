@@ -23,13 +23,15 @@
 	        $cart->load(['items.package.influencer.user']);
 	        foreach ($cart->items as $item) {
 	            $influencerUser = $item->package->influencer->user;
+	            $avatarPath = $influencerUser->profile_image_path ?? ($item->package->influencer->profile_image_path ?? '/default.webp');
 	            $cartItemsData[] = [
 	                'id' => $item->id,
 	                'name' => $influencerUser->name,
 	                'package' => $item->package->name,
 	                'price' => (int) $item->unit_price,
 	                'quantity' => $item->quantity,
-	                'image' => image_url($item->package->influencer->profile_image_path ?? '/default.webp'),
+	                'image' => image_url($avatarPath),
+	                'avatar_url' => image_url($avatarPath),
 	                'influencer_id' => $item->influencer_id,
 	                'country' => $influencerUser->country ?? null,
 	            ];

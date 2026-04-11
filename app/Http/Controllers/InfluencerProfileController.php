@@ -65,6 +65,7 @@ class InfluencerProfileController extends Controller
 
         $reviewsBaseQuery = Review::query()
             ->where('influencer_id', $influencer->id)
+            ->where('reviewee_type', 'influencer')
             ->where('is_public', true);
 
         $reviewSummary = (clone $reviewsBaseQuery)

@@ -14,6 +14,8 @@ class Review extends Model
         'order_item_id',
         'brand_id',
         'influencer_id',
+        'reviewer_type',
+        'reviewee_type',
         'rating',
         'title',
         'comment',
@@ -25,6 +27,8 @@ class Review extends Model
         return [
             'rating' => 'integer',
             'is_public' => 'boolean',
+            'reviewer_type' => 'string',
+            'reviewee_type' => 'string',
         ];
     }
 

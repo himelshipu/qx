@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Influencer;
 use App\Models\Order;
 use App\Models\OrderItem;
+use App\Models\OrderStatusHistory;
 use App\Models\Review;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -78,12 +79,14 @@ class OrderController extends Controller
             'items:id,order_id,influencer_id,package_id,title,description,quantity,unit_price,line_total,status,due_date,paid_at,accepted_at,delivered_at,created_at,updated_at',
             'items.influencer:id,user_id,display_name',
             'items.influencer.user:id,name,slug',
-            'items.review:id,order_item_id,influencer_id,rating,title,comment,created_at',
+            'items.brandToInfluencerReview:id,order_item_id,influencer_id,brand_id,reviewer_type,reviewee_type,rating,title,comment,created_at',
+            'items.influencerToBrandReview:id,order_item_id,influencer_id,brand_id,reviewer_type,reviewee_type,rating,title,comment,created_at',
             'childOrders:id,parent_order_id,buyer_user_id,brand_id,status,accepted_for_influencer_id,subtotal,service_fee,tax_amount,total_amount,currency,placed_at,created_at',
             'childOrders.items:id,order_id,influencer_id,package_id,title,description,quantity,unit_price,line_total,status,due_date,paid_at,accepted_at,delivered_at,created_at,updated_at',
             'childOrders.items.influencer:id,user_id,display_name',
             'childOrders.items.influencer.user:id,name,slug',
-            'childOrders.items.review:id,order_item_id,influencer_id,rating,title,comment,created_at',
+            'childOrders.items.brandToInfluencerReview:id,order_item_id,influencer_id,brand_id,reviewer_type,reviewee_type,rating,title,comment,created_at',
+            'childOrders.items.influencerToBrandReview:id,order_item_id,influencer_id,brand_id,reviewer_type,reviewee_type,rating,title,comment,created_at',
             'parentOrder:id,order_number,parent_order_id,buyer_user_id,brand_id,status,accepted_for_influencer_id,subtotal,service_fee,tax_amount,total_amount,currency,placed_at,created_at',
             'parentOrder.buyer:id,name,email',
             'acceptedForInfluencer:id,user_id,display_name',
@@ -130,12 +133,6 @@ class OrderController extends Controller
             'state' => $order->completed_at ? 'done' : 'pending',
         ]);
 
-        $timeline->push([
-            'label' => 'Payout marked',
-            'value' => $order->items->contains(fn ($item) => $item->paid_at !== null) ? 'Recorded' : 'Pending',
-            'state' => $order->items->contains(fn ($item) => $item->paid_at !== null) ? 'done' : 'pending',
-        ]);
-
         $orderContext = [
             'is_parent' => $order->parent_order_id === null,
             'parent_order' => $order->parentOrder,
@@ -162,6 +159,7 @@ class OrderController extends Controller
         $ratingSummary = Review::query()
             ->selectRaw('influencer_id, AVG(rating) as avg_rating, COUNT(*) as reviews_count')
             ->whereIn('influencer_id', $influencerIds)
+            ->where('reviewee_type', 'influencer')
             ->where('is_public', true)
             ->groupBy('influencer_id')
             ->get()
@@ -170,6 +168,7 @@ class OrderController extends Controller
         $recentPublicReviews = Review::query()
             ->with(['brand:id,brand_name'])
             ->whereIn('influencer_id', $influencerIds)
+            ->where('reviewee_type', 'influencer')
             ->where('is_public', true)
             ->orderByDesc('created_at')
             ->get()
@@ -184,7 +183,7 @@ class OrderController extends Controller
 
                 return [
                     'influencer' => $influencer,
-                    'has_order_review' => $items->contains(fn ($item) => $item->review !== null),
+                    'has_order_review' => $items->contains(fn ($item) => $item->influencerToBrandReview !== null),
                     'avg_rating' => $summary && $summary->avg_rating !== null ? round((float) $summary->avg_rating, 1) : null,
                     'reviews_count' => (int) ($summary->reviews_count ?? 0),
                     'recent_reviews' => $recentPublicReviews->get($influencerId, collect()),
@@ -197,7 +196,7 @@ class OrderController extends Controller
         if ($user->user_type === 'influencer' && $user->influencer) {
             $hasSubmittedReview = $order->items
                 ->where('influencer_id', $user->influencer->id)
-                ->contains(fn ($item) => $item->review !== null);
+                ->contains(fn ($item) => $item->influencerToBrandReview !== null);
         }
 
         $canLeaveReview = $user->user_type === 'influencer' && $this->isReviewUnlocked($order) && ! $hasSubmittedReview;
@@ -228,7 +227,7 @@ class OrderController extends Controller
 
         $orderItems = $order->items()
             ->where('influencer_id', $user->influencer->id)
-            ->with('review:id,order_item_id')
+            ->with('influencerToBrandReview:id,order_item_id')
             ->orderBy('id')
             ->get();
 
@@ -236,7 +235,7 @@ class OrderController extends Controller
             return back()->with('error', 'No items were assigned to your influencer account for this order.');
         }
 
-        if ($orderItems->contains(fn ($item) => $item->review !== null)) {
+        if ($orderItems->contains(fn ($item) => $item->influencerToBrandReview !== null)) {
             return back()->with('error', 'You have already reviewed this brand for this order.');
         }
 
@@ -246,6 +245,8 @@ class OrderController extends Controller
             'order_item_id' => $reviewableItem->id,
             'brand_id' => (int) $order->brand_id,
             'influencer_id' => (int) $user->influencer->id,
+            'reviewer_type' => 'influencer',
+            'reviewee_type' => 'brand',
             'rating' => (int) $validated['rating'],
             'title' => $validated['title'] ?? null,
             'comment' => $validated['comment'] ?? null,
@@ -280,10 +281,10 @@ class OrderController extends Controller
             return back()->with('error', 'All child items must be approved before completing the order.');
         }
 
-        $order->update([
+        $this->applyOrderStatus($order, 'completed', [
             'status' => 'completed',
             'completed_at' => now(),
-        ]);
+        ], 'Brand completed parent order after all tasks approved');
 
         return back()->with('success', 'Order completed successfully.');
     }
@@ -314,6 +315,10 @@ class OrderController extends Controller
         ]);
 
         $newStatus = (string) $validated['status'];
+
+        if (! $this->canTransitionPackageItemStatus($item->status, $newStatus)) {
+            return back()->with('error', 'Invalid task status transition.');
+        }
 
         $updates = ['status' => $newStatus];
         if ($newStatus === 'accepted' && $item->accepted_at === null) {
@@ -360,6 +365,10 @@ class OrderController extends Controller
 
         $decision = (string) $validated['status'];
 
+        if (! $this->canTransitionPackageItemStatus($item->status, $decision)) {
+            return back()->with('error', 'Invalid review decision transition.');
+        }
+
         $updates = [
             'status' => $decision,
             'approved_at' => $decision === 'approved' ? now() : null,
@@ -374,7 +383,11 @@ class OrderController extends Controller
 
         $this->syncOrderStatusFromItems($order);
 
-        return back()->with('success', 'Item review updated successfully.');
+        $successMessage = $decision === 'approved'
+            ? 'Task approved successfully. You can now submit a review.'
+            : 'Task rejected. The influencer has been notified and can resubmit their work.';
+
+        return back()->with('success', $successMessage);
     }
 
     /**
@@ -401,7 +414,7 @@ class OrderController extends Controller
             return back()->with('error', 'Only approved tasks can be reviewed.');
         }
 
-        if ($item->review()->exists()) {
+        if ($item->brandToInfluencerReview()->exists()) {
             return back()->with('error', 'This task already has a review.');
         }
 
@@ -415,6 +428,8 @@ class OrderController extends Controller
             'order_item_id' => (int) $item->id,
             'brand_id' => (int) $order->brand_id,
             'influencer_id' => (int) $item->influencer_id,
+            'reviewer_type' => 'brand',
+            'reviewee_type' => 'influencer',
             'rating' => (int) $validated['rating'],
             'title' => $validated['title'] ?? null,
             'comment' => $validated['comment'] ?? null,
@@ -467,47 +482,83 @@ class OrderController extends Controller
         }
 
         if ($statuses->every(fn ($status) => $status === 'pending')) {
-            $order->update([
+            $this->applyOrderStatus($order, 'pending', [
                 'status' => 'pending',
                 'accepted_at' => null,
                 'completed_at' => null,
-            ]);
+            ], 'Synced from task statuses');
 
             return;
         }
 
         if ($statuses->every(fn ($status) => $status === 'accepted')) {
-            $order->update([
+            $this->applyOrderStatus($order, 'accepted', [
                 'status' => 'accepted',
                 'accepted_at' => $order->accepted_at ?? now(),
                 'completed_at' => null,
-            ]);
+            ], 'Synced from task statuses');
 
             return;
         }
 
         if ($statuses->every(fn ($status) => in_array($status, ['approved', 'completed'], true))) {
-            $order->update([
-                'status' => 'approved',
+            $this->applyOrderStatus($order, 'delivered', [
+                'status' => 'delivered',
                 'completed_at' => null,
-            ]);
+            ], 'Synced from task statuses');
 
             return;
         }
 
         if ($statuses->every(fn ($status) => in_array($status, ['delivered', 'approved', 'completed'], true))) {
-            $order->update([
+            $this->applyOrderStatus($order, 'delivered', [
                 'status' => 'delivered',
                 'completed_at' => null,
-            ]);
+            ], 'Synced from task statuses');
 
             return;
         }
 
-        $order->update([
+        $this->applyOrderStatus($order, 'in_progress', [
             'status' => 'in_progress',
             'completed_at' => null,
-        ]);
+        ], 'Synced from task statuses');
+    }
+
+    private function canTransitionPackageItemStatus(string $from, string $to): bool
+    {
+        if ($from === $to) {
+            return true;
+        }
+
+        $allowed = [
+            'pending' => ['accepted', 'cancelled'],
+            'accepted' => ['in_progress', 'cancelled'],
+            'in_progress' => ['delivered', 'cancelled'],
+            'delivered' => ['approved', 'rejected'],
+            'rejected' => ['delivered', 'cancelled'],
+            'approved' => ['completed'],
+            'completed' => [],
+            'cancelled' => [],
+        ];
+
+        return in_array($to, $allowed[$from] ?? [], true);
+    }
+
+    private function applyOrderStatus(Order $order, string $newStatus, array $payload, string $note): void
+    {
+        $oldStatus = (string) $order->status;
+        $order->update($payload);
+
+        if ($oldStatus !== $newStatus) {
+            OrderStatusHistory::create([
+                'order_id' => $order->id,
+                'old_status' => $oldStatus,
+                'new_status' => $newStatus,
+                'changed_by_user_id' => Auth::id(),
+                'note' => $note,
+            ]);
+        }
     }
 
     private function resolveItemsForStatusSync(Order $order)

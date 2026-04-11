@@ -198,12 +198,13 @@
 								</div>
 
 								<div class="mt-4 grid grid-cols-1 gap-3 border-t border-gray-200 pt-4 dark:border-gray-700 xl:grid-cols-2">
-									<form action="{{ route('dashboard.order-items.update-status', $item) }}" method="POST" class="flex items-center gap-2">
+									<form action="{{ route('dashboard.order-items.update-status', $item) }}" method="POST" class="space-y-2">
 										@csrf
 										@method('PUT')
-										<label for="item_status_{{ $item->id }}" class="sr-only">Item status</label>
-										<select id="item_status_{{ $item->id }}" name="status"
-											class="h-10 flex-1 rounded-lg border border-gray-300 bg-white px-3 text-sm font-medium text-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-white">
+										<div class="flex items-center gap-2">
+											<label for="item_status_{{ $item->id }}" class="sr-only">Item status</label>
+											<select id="item_status_{{ $item->id }}" name="status"
+												class="h-10 flex-1 rounded-lg border border-gray-300 bg-white px-3 text-sm font-medium text-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-white">
 													<option value="pending" @selected($item->status === 'pending')>Pending</option>
 													<option value="accepted" @selected($item->status === 'accepted')>{{ $itemAcceptedLabel }}</option>
 													<option value="in_progress" @selected($item->status === 'in_progress')>Work In Progress</option>
@@ -211,10 +212,18 @@
 													<option value="approved" @selected($item->status === 'approved')>Approved for Payout</option>
 													<option value="rejected" @selected($item->status === 'rejected')>Rejected</option>
 													<option value="cancelled" @selected($item->status === 'cancelled')>Cancelled</option>
-										</select>
-										<button type="submit" class="inline-flex h-10 items-center gap-1 rounded-lg bg-blue-600 px-4 text-sm font-semibold text-white transition hover:bg-blue-700" title="Save item-level workflow stage">
-											<x-icons.check class="h-4 w-4" />Save Item Stage
-										</button>
+											</select>
+											<button type="submit" class="inline-flex h-10 items-center gap-1 rounded-lg bg-blue-600 px-4 text-sm font-semibold text-white transition hover:bg-blue-700" title="Save item-level workflow stage">
+												<x-icons.check class="h-4 w-4" />Save Item Stage
+											</button>
+										</div>
+										<div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+											<label class="inline-flex items-center gap-2 text-xs text-gray-600 dark:text-gray-300">
+												<input type="checkbox" name="force_transition" value="1" class="rounded border-gray-300 text-amber-600 focus:ring-amber-500">
+												Force transition
+											</label>
+											<input type="text" name="transition_note" maxlength="1000" placeholder="Reason (required if force)" class="rounded-lg border border-gray-300 bg-white px-3 py-2 text-xs text-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-white">
+										</div>
 									</form>
 
 									@if (!$item->paid_at)
@@ -461,11 +470,11 @@
 
 											<!-- Actions -->
 											<div class="space-y-2 pt-4 border-t border-gray-200 dark:border-gray-700">
-												<form method="POST" action="{{ route('dashboard.sub-orders.update-status', $subOrder) }}" class="block">
+												<form method="POST" action="{{ route('dashboard.sub-orders.update-status', $subOrder) }}" class="space-y-2">
 													@csrf
 													@method('PUT')
 													<label for="status_{{ $subOrder->id }}" class="block text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider mb-1">Work Status</label>
-													<select id="status_{{ $subOrder->id }}" name="status" onchange="this.form.submit()" class="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-900 dark:text-white font-medium cursor-pointer hover:border-gray-400 dark:hover:border-gray-500 transition">
+													<select id="status_{{ $subOrder->id }}" name="status" class="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-900 dark:text-white font-medium cursor-pointer hover:border-gray-400 dark:hover:border-gray-500 transition">
 														<option value="pending" {{ $subOrder->status === 'pending' ? 'selected' : '' }}>Pending - waiting to start</option>
 														<option value="accepted" {{ $subOrder->status === 'accepted' ? 'selected' : '' }}>Accepted - influencer approved</option>
 														<option value="in_progress" {{ $subOrder->status === 'in_progress' ? 'selected' : '' }}>In Progress - work ongoing</option>
@@ -473,6 +482,16 @@
 														<option value="completed" {{ $subOrder->status === 'completed' ? 'selected' : '' }}>Completed - work finished</option>
 														<option value="cancelled" {{ $subOrder->status === 'cancelled' ? 'selected' : '' }}>Cancelled</option>
 													</select>
+													<div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+														<label class="inline-flex items-center gap-2 text-xs text-gray-600 dark:text-gray-300">
+															<input type="checkbox" name="force_transition" value="1" class="rounded border-gray-300 text-amber-600 focus:ring-amber-500">
+															Force transition
+														</label>
+														<input type="text" name="transition_note" maxlength="1000" placeholder="Reason (required if force)" class="rounded-lg border border-gray-300 bg-white px-3 py-2 text-xs text-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-white">
+													</div>
+													<button type="submit" class="w-full inline-flex items-center justify-center gap-2 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg transition">
+														Save Work Status
+													</button>
 												</form>
 
 												@if (!$subOrder->paid_at)
@@ -566,9 +585,17 @@
 								<option value="pending" @selected($order->status === 'pending')>Pending</option>
 								<option value="accepted" @selected($order->status === 'accepted')>Accepted</option>
 								<option value="in_progress" @selected(in_array($order->status, ['in_progress', 'in-progress']))>In Progress</option>
+								<option value="delivered" @selected($order->status === 'delivered')>Delivered</option>
 								<option value="completed" @selected($order->status === 'completed')>Completed</option>
 								<option value="cancelled" @selected($order->status === 'cancelled')>Cancelled</option>
 							</select>
+							<div class="grid grid-cols-1 gap-2">
+								<label class="inline-flex items-center gap-2 text-xs text-gray-600 dark:text-gray-300">
+									<input type="checkbox" name="force_transition" value="1" class="rounded border-gray-300 text-amber-600 focus:ring-amber-500">
+									Force transition (admin override)
+								</label>
+								<input type="text" name="transition_note" maxlength="1000" placeholder="Reason (required if force)" class="rounded-lg border border-gray-300 bg-white px-3 py-2 text-xs text-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-white">
+							</div>
 							<button type="submit" class="inline-flex h-10 w-full items-center justify-center gap-1 rounded-lg bg-blue-600 px-4 text-sm font-semibold text-white transition hover:bg-blue-700" title="Save overall order stage">
 								<x-icons.check class="h-4 w-4" />Save Order Stage
 							</button>

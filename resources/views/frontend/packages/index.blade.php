@@ -116,19 +116,28 @@
 								<div class="text-center">
 									<p class="text-xs text-gray-600 dark:text-gray-400">Price</p>
 									<p class="text-lg font-bold text-purple-600 dark:text-purple-400">
-										<span x-text="'$' + parseInt(pkg.base_price).toLocaleString()"></span>
+										<span x-text="formatMoney(pkg.base_price, pkg.currency)"></span>
 									</p>
 								</div>
 								<div class="text-center border-l border-r border-gray-200 dark:border-gray-600">
 									<p class="text-xs text-gray-600 dark:text-gray-400">Delivery</p>
 									<p class="text-lg font-bold text-gray-900 dark:text-white">
-										<span x-text="pkg.delivery_days + ' d'"></span>
+										<span x-text="(pkg.delivery_days ?? 'N/A') + (pkg.delivery_days ? ' d' : '')"></span>
 									</p>
 								</div>
 								<div class="text-center">
 									<p class="text-xs text-gray-600 dark:text-gray-400">Orders</p>
 									<p class="text-lg font-bold text-gray-900 dark:text-white" x-text="pkg.order_count"></p>
 								</div>
+							</div>
+
+							<div class="mb-4 flex flex-wrap gap-2 text-[11px]">
+								<span class="inline-flex items-center rounded-full bg-gray-100 px-2 py-1 text-gray-700 dark:bg-gray-700 dark:text-gray-200">
+									Revisions: <span class="ml-1 font-semibold" x-text="pkg.revisions_included ?? 0"></span>
+								</span>
+								<span class="inline-flex items-center rounded-full bg-gray-100 px-2 py-1 text-gray-700 dark:bg-gray-700 dark:text-gray-200">
+									Creator: <span class="ml-1 font-semibold" x-text="pkg.influencer_name"></span>
+								</span>
 							</div>
 
 							<!-- Action Button -->
@@ -155,11 +164,12 @@
 			            'name' => $p->name,
 			            'description' => $p->description,
 			            'platform' => $p->platform,
-			            'base_price' => $p->base_price,
-			            'currency' => $p->currency,
+			            'base_price' => (float) $p->base_price,
+			            'currency' => strtoupper((string) ($p->currency ?: 'USD')),
 			            'delivery_days' => $p->delivery_days,
+			            'revisions_included' => $p->revisions_included,
 			            'order_count' => $p->orderItems ? $p->orderItems->count() : 0,
-			            'influencer_name' => $p->influencer?->user?->name ?? 'Unknown',
+			            'influencer_name' => $p->influencer?->display_name ?? $p->influencer?->user?->name ?? 'Unknown',
 			        ],
 			    )
 			    ->values()
@@ -231,6 +241,12 @@
 					toggleAdvancedFilters() {
 						// Placeholder for advanced filters (e.g., price range, delivery time)
 						console.log('Advanced filters toggle');
+					},
+
+					formatMoney(amount, currency = 'USD') {
+						const code = (currency || 'USD').toUpperCase();
+						const numeric = Number(amount || 0);
+						return `${code} ${numeric.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 					}
 				}
 			}

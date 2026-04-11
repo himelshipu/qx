@@ -221,7 +221,7 @@
 														['label' => 'Completed', 'value' => $childOrder->completed_at?->format('M d g:iA') ?? 'Pending', 'done' => $computedChildStatus === 'completed'],
 										];
 									@endphp
-									<details class="group rounded-xl border border-gray-200 bg-gray-50/70 dark:border-gray-800 dark:bg-gray-900/40">
+									<details data-child-order-details="{{ $childOrder->id }}" class="group rounded-xl border border-gray-200 bg-gray-50/70 dark:border-gray-800 dark:bg-gray-900/40">
 										<summary class="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-4 sm:px-5">
 											<div class="min-w-0">
 												<div class="flex flex-wrap items-center gap-2">
@@ -251,7 +251,7 @@
 														Open messages
 													</a>
 												@elseif ($childInfluencer)
-													<a href="{{ route('conversations.start-negotiation', $childInfluencer) }}" class="inline-flex items-center gap-2 rounded-lg bg-gray-900 px-3 py-1.5 text-xs font-semibold text-white hover:bg-black dark:bg-indigo-600 dark:hover:bg-indigo-500">
+													<a href="{{ route('frontend.conversations.open-order', ['influencer' => $childInfluencer, 'order' => $childOrder]) }}" class="inline-flex items-center gap-2 rounded-lg bg-gray-900 px-3 py-1.5 text-xs font-semibold text-white hover:bg-black dark:bg-indigo-600 dark:hover:bg-indigo-500">
 														<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-4l-4 4v-4z"></path></svg>
 														Start messages
 													</a>
@@ -300,7 +300,7 @@
 																</div>
 															@endforeach
 														</div>
-														@if (in_array($item->status, ['delivered', 'rejected'], true))
+														@if ($item->status === 'delivered')
 															<div class="mt-3 grid grid-cols-2 gap-2">
 																<form method="POST" action="{{ route('frontend.orders.items.update-decision', ['order' => $order, 'item' => $item]) }}">
 																	@csrf
@@ -315,16 +315,21 @@
 																	<button type="submit" class="w-full rounded-lg bg-rose-600 px-3 py-2 text-xs font-semibold text-white hover:bg-rose-500">Reject Work</button>
 																</form>
 															</div>
+														@elseif ($item->status === 'rejected')
+															<div class="mt-3 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2">
+																<p class="text-xs font-semibold text-rose-700">✓ Work Rejected</p>
+																<p class="mt-1 text-xs text-rose-600">Awaiting influencer resubmission</p>
+															</div>
 														@elseif ($item->status === 'approved' || $item->status === 'completed')
-															@if ($item->review)
+															@if ($item->brandToInfluencerReview)
 																<div class="mt-3 rounded-lg border border-teal-200 bg-teal-50 px-3 py-3 text-xs text-teal-800">
 																	<p class="font-semibold">Task review submitted</p>
-																	<p class="mt-1">Rating: {{ $item->review->rating }}/5</p>
-																	@if ($item->review->title)
-																		<p class="mt-1 font-medium">{{ $item->review->title }}</p>
+																	<p class="mt-1">Rating: {{ $item->brandToInfluencerReview->rating }}/5</p>
+																	@if ($item->brandToInfluencerReview->title)
+																		<p class="mt-1 font-medium">{{ $item->brandToInfluencerReview->title }}</p>
 																	@endif
-																	@if ($item->review->comment)
-																		<p class="mt-1">{{ $item->review->comment }}</p>
+																	@if ($item->brandToInfluencerReview->comment)
+																		<p class="mt-1">{{ $item->brandToInfluencerReview->comment }}</p>
 																	@endif
 																</div>
 															@else
@@ -344,8 +349,6 @@
 																	<button type="submit" class="w-full rounded-lg bg-indigo-600 px-3 py-2 text-xs font-semibold text-white hover:bg-indigo-500">Submit Task Review</button>
 																</form>
 															@endif
-														@elseif ($item->status === 'rejected')
-															<p class="mt-3 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-700">Reviewed: Rejected</p>
 														@endif
 													</div>
 												@endforeach
@@ -423,6 +426,7 @@
 													['label' => 'Accepted', 'value' => $item->accepted_at?->format('M d g:iA') ?? 'Waiting', 'done' => (bool) $item->accepted_at || in_array($item->status, ['accepted', 'in_progress', 'in-progress', 'delivered', 'approved'], true)],
 													['label' => 'Delivered', 'value' => $item->delivered_at?->format('M d g:iA') ?? 'Waiting', 'done' => in_array($item->status, ['delivered', 'approved'], true) || (bool) $item->delivered_at],
 										];
+										$isInfluencerStatusLocked = in_array($item->status, ['approved', 'completed', 'cancelled'], true);
 									@endphp
 									<div class="rounded-xl border border-gray-200 p-4 dark:border-gray-800">
 										<div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
@@ -458,18 +462,25 @@
 													@endforeach
 												</div>
 											</div>
-											<form method="POST" action="{{ route('frontend.orders.items.update-status', ['order' => $order, 'item' => $item]) }}" class="w-full lg:w-56">
-												@csrf
-												@method('PUT')
-												<label class="mb-1 block text-xs font-semibold text-gray-600 dark:text-gray-300">Update task status</label>
-												<select name="status" class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-800 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100" required>
-													<option value="pending" @selected($item->status === 'pending')>Pending</option>
-													<option value="accepted" @selected($item->status === 'accepted')>Accepted</option>
-													<option value="in_progress" @selected(in_array($item->status, ['in_progress', 'in-progress'], true))>In Progress</option>
-													<option value="delivered" @selected($item->status === 'delivered')>Delivered (Awaiting approval)</option>
-												</select>
-												<button type="submit" class="mt-2 inline-flex w-full items-center justify-center rounded-lg bg-indigo-600 px-3 py-2 text-sm font-semibold text-white hover:bg-indigo-500">Save status</button>
-											</form>
+											@if ($isInfluencerStatusLocked)
+												<div class="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-3 text-xs text-gray-600 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 lg:w-56">
+													<p class="font-semibold">Task status locked</p>
+													<p class="mt-1">Brand already {{ $item->status === 'approved' ? 'approved' : 'finalized' }} this task.</p>
+												</div>
+											@else
+												<form method="POST" action="{{ route('frontend.orders.items.update-status', ['order' => $order, 'item' => $item]) }}" class="w-full lg:w-56">
+													@csrf
+													@method('PUT')
+													<label class="mb-1 block text-xs font-semibold text-gray-600 dark:text-gray-300">Update task status</label>
+													<select name="status" class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-800 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100" required>
+														<option value="pending" @selected($item->status === 'pending')>Pending</option>
+														<option value="accepted" @selected($item->status === 'accepted')>Accepted</option>
+														<option value="in_progress" @selected(in_array($item->status, ['in_progress', 'in-progress'], true))>In Progress</option>
+														<option value="delivered" @selected(in_array($item->status, ['delivered', 'rejected'], true))>Delivered (Awaiting approval)</option>
+													</select>
+													<button type="submit" class="mt-2 inline-flex w-full items-center justify-center rounded-lg bg-indigo-600 px-3 py-2 text-sm font-semibold text-white hover:bg-indigo-500">Save status</button>
+												</form>
+											@endif
 										</div>
 									</div>
 								@empty
@@ -543,3 +554,54 @@
 		</div>
 	</div>
 @endsection
+
+@push('scripts')
+	@if ($isBrand && $isParentOrder)
+		<script>
+			(function () {
+				const detailsNodes = Array.from(document.querySelectorAll('details[data-child-order-details]'));
+				if (detailsNodes.length === 0) {
+					return;
+				}
+
+				const storageKey = 'order:' + @json((string) $order->id) + ':open-child-cards';
+
+				const readOpenIds = () => {
+					try {
+						const parsed = JSON.parse(window.localStorage.getItem(storageKey) || '[]');
+						return Array.isArray(parsed) ? new Set(parsed.map(String)) : new Set();
+					} catch (error) {
+						return new Set();
+					}
+				};
+
+				const writeOpenIds = (openIds) => {
+					window.localStorage.setItem(storageKey, JSON.stringify(Array.from(openIds)));
+				};
+
+				const openIds = readOpenIds();
+
+				detailsNodes.forEach((detailsEl) => {
+					const childId = String(detailsEl.dataset.childOrderDetails || '');
+					if (!childId) {
+						return;
+					}
+
+					if (openIds.has(childId)) {
+						detailsEl.open = true;
+					}
+
+					detailsEl.addEventListener('toggle', () => {
+						if (detailsEl.open) {
+							openIds.add(childId);
+						} else {
+							openIds.delete(childId);
+						}
+
+						writeOpenIds(openIds);
+					});
+				});
+			})();
+		</script>
+	@endif
+@endpush

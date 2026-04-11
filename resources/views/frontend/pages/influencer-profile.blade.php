@@ -291,25 +291,7 @@
 						</div>
 					</div>
 
-					<!-- Reviews Summary -->
-					<div class="rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/50 p-6 shadow-sm">
-						<div class="flex items-start justify-between gap-6">
-							<div>
-								<p class="text-sm font-bold uppercase tracking-wider text-gray-600 dark:text-gray-400 mb-3">{{ number_format($reviewsTotal) }} Reviews</p>
-								<div class="flex items-center gap-3">
-									<div class="flex items-center gap-1">
-										@for ($star = 1; $star <= 5; $star++)
-											<x-icons.star class="h-5 w-5 {{ $avgRating !== null && $star <= floor($avgRating) ? 'text-amber-400' : 'text-gray-300 dark:text-gray-600' }}" />
-										@endfor
-									</div>
-									<p class="text-3xl font-extrabold text-gray-900 dark:text-white">{{ $ratingLabel }}</p>
-								</div>
-								<p class="mt-2 text-xs text-gray-600 dark:text-gray-400">Average rating from {{ number_format($reviewsTotal) }} reviews</p>
-							</div>
-
-							
-						</div>
-					</div>
+					
 
 					<!-- BADGES SYSTEM -->
 					<div class="space-y-3">
