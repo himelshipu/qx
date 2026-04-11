@@ -99,7 +99,7 @@
                                     Placed on <span x-text="order.created_at"></span>
                                 </p>
                             </div>
-                            <div class="flex items-center gap-3 flex-shrink-0">
+                            <div class="flex items-center gap-3 shrink-0">
                                 <span class="inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold whitespace-nowrap" 
                                     :class="getStatusColor(order.status)"
                                     x-text="capitalizeStatus(order.status)">
@@ -151,17 +151,23 @@
 <!-- Alpine.js Script -->
 @php
     $ordersData = $orders
-        ->map(
-            fn($order) => [
+        ->map(function ($order) {
+            $items = $order->items;
+
+            if ($items->isEmpty() && $order->relationLoaded('childOrders')) {
+                $items = $order->childOrders->flatMap(fn ($childOrder) => $childOrder->items);
+            }
+
+            return [
                 'id' => $order->id,
                 'order_number' => $order->order_number,
                 'created_at' => $order->created_at->format('M d, Y'),
                 'status' => $order->status,
-                'influencers' => $order->items->map(fn($item) => $item->influencer->user->name ?? 'N/A')->unique()->implode(', '),
-                'package_count' => $order->items->count(),
+                'influencers' => $items->map(fn ($item) => $item->influencer->user->name ?? 'N/A')->unique()->implode(', '),
+                'package_count' => $items->count(),
                 'total_amount' => $order->total_amount,
-            ],
-        )
+            ];
+        })
         ->values()
         ->all();
 @endphp

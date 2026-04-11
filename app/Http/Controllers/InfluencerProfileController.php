@@ -80,7 +80,8 @@ class InfluencerProfileController extends Controller
             ->with([
                 'brand:id,brand_name,user_id',
                 'brand.user:id,slug',
-                'orderItem:id,title,package_id',
+                'orderItem:id,order_id,title,package_id',
+                'orderItem.order:id,order_number',
                 'orderItem.package:id,name',
             ])
             ->orderByDesc('created_at')

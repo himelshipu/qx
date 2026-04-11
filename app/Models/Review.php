@@ -28,6 +28,17 @@ class Review extends Model
         ];
     }
 
+    protected static function booted(): void
+    {
+        static::updating(function (): void {
+            throw new \LogicException('Reviews are immutable once submitted.');
+        });
+
+        static::deleting(function (): void {
+            throw new \LogicException('Reviews cannot be deleted once submitted.');
+        });
+    }
+
     public function orderItem(): BelongsTo
     {
         return $this->belongsTo(OrderItem::class);

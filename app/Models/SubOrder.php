@@ -22,6 +22,11 @@ class SubOrder extends Model
         'completed_at',
         'cancelled_at',
         'paid_at',
+        'payout_amount',
+        'payout_reference',
+        'payout_note',
+        'payout_marked_by_user_id',
+        'payout_marked_at',
     ];
 
     protected function casts(): array
@@ -32,6 +37,8 @@ class SubOrder extends Model
             'completed_at' => 'datetime',
             'cancelled_at' => 'datetime',
             'paid_at' => 'datetime',
+            'payout_amount' => 'decimal:2',
+            'payout_marked_at' => 'datetime',
         ];
     }
 
@@ -57,5 +64,10 @@ class SubOrder extends Model
     public function influencer(): BelongsTo
     {
         return $this->belongsTo(Influencer::class);
+    }
+
+    public function payoutMarkedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'payout_marked_by_user_id');
     }
 }

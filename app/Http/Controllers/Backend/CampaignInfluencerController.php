@@ -84,11 +84,16 @@ class CampaignInfluencerController extends Controller
     /**
      * Approve an influencer assignment
      */
-    public function approve(CampaignInfluencer $campaignInfluencer): RedirectResponse
+    public function approve(Request $request, CampaignInfluencer $campaignInfluencer): RedirectResponse
     {
+        $validated = $request->validate([
+            'agreed_amount' => 'required|numeric|min:0.01',
+        ]);
+
         $campaignInfluencer->update([
             'status'      => 'approved',
-            'approved_by' => auth()->id(),
+            'agreed_amount' => round((float) $validated['agreed_amount'], 2),
+            'approved_by' => $request->user()?->id,
             'approved_at' => now()
         ]);
 
@@ -109,7 +114,7 @@ class CampaignInfluencerController extends Controller
         $campaignInfluencer->update([
             'status'           => 'rejected',
             'rejection_reason' => $validated['rejection_reason'] ?? null,
-            'approved_by'      => auth()->id(),
+            'approved_by'      => $request->user()?->id,
             'approved_at'      => now()
         ]);
 

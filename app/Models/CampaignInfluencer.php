@@ -15,6 +15,7 @@ class CampaignInfluencer extends Model
         'campaign_id',
         'influencer_id',
         'status',
+        'agreed_amount',
         'approved_by',
         'approved_at',
         'cancelled_at',
@@ -24,6 +25,7 @@ class CampaignInfluencer extends Model
     protected function casts(): array
     {
         return [
+            'agreed_amount' => 'decimal:2',
             'approved_at' => 'datetime',
             'cancelled_at' => 'datetime',
         ];

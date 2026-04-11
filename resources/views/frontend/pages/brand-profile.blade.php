@@ -1,18 +1,24 @@
 @extends('frontend.layouts.app')
 
 @section('content')
+	@php
+		$isOwner = auth()->check() && optional(auth()->user()->brand)->id === optional($brand)->id;
+		$reviewsTotal = $reviews?->count() ?? 0;
+		$avgRating = $reviewsTotal > 0 ? (float) $reviews->avg('rating') : null;
+		$ratingLabel = $avgRating !== null ? number_format($avgRating, 1) : '0.0';
+	@endphp
 
 	<div class="min-h-screen bg-white dark:bg-gray-950 flex flex-col gap-4 px-4 sm:px-6 lg:px-8 py-20">
 
-
-		<div class="bg-[#1A1A1A] text-white p-8">
+		@if ($isOwner)
+		<div class="bg-[#1A1A1A] text-white p-8 rounded-3xl shadow-xl">
 			<div class="flex flex-col md:flex-row items-center justify-between gap-6">
 
 				<div class="max-w-2xl">
-					<h1 class="text-2xl font-bold mb-2">Complete Your Profile</h1>
+					<h1 class="text-2xl font-bold mb-2">Brand Profile</h1>
 					<p class="text-gray-400 text-sm leading-relaxed">
-						Your profile is the first thing influencers view to learn about your brand.
-						Having a complete, detailed profile helps influencers decide if you're a fit to collaborate with.
+						This is the public brand page influencers see before working with you.
+						Keep it clear, current, and easy to trust.
 					</p>
 				</div>
 
@@ -27,6 +33,7 @@
 				@endauth
 			</div>
 		</div>
+		@endif
 
 		<div class="px-4 flex flex-col gap-6">
 
@@ -51,9 +58,9 @@
 				<div class="relative mb-20">
 					@if ($brand->user->cover_image_path)
 						<img src="{{ \App\Helpers\ImageHelper::url($brand->user->cover_image_path) }}" alt="Cover"
-							class="w-full h-80 md:h-[320px] rounded-3xl object-cover">
+							class="w-full h-80 md:h-80 rounded-3xl object-cover">
 					@else
-						<div class="w-full h-80 md:h-[320px] bg-gray-200 rounded-3xl"></div>
+						<div class="w-full h-80 md:h-80 bg-gray-200 rounded-3xl"></div>
 					@endif
 
 					<!-- Avatar -->
@@ -63,7 +70,7 @@
 								class="w-32 h-32 rounded-full border-[6px] border-white shadow-md object-cover">
 						@else
 							<div
-								class="w-32 h-32 rounded-full bg-gradient-to-br from-blue-400 to-purple-500
+								class="w-32 h-32 rounded-full bg-linear-to-br from-blue-400 to-purple-500
                                     border-[6px] border-white shadow-md
                                     flex items-center justify-center
                                     text-4xl font-bold text-white">
@@ -174,7 +181,7 @@
 							<a href="{{ route('frontend.campaigns.show', ['campaign' => $campaign->id]) }}"
 								class="group relative overflow-hidden rounded-2xl bg-gray-200 aspect-video flex items-center justify-center hover:shadow-xl transition duration-300 cursor-pointer">
 								<!-- Campaign background or image -->
-								<div class="absolute inset-0 bg-gradient-to-br from-gray-300 to-gray-400"></div>
+								<div class="absolute inset-0 bg-linear-to-br from-gray-300 to-gray-400"></div>
 
 								<!-- Campaign info overlay -->
 								<div
@@ -214,11 +221,65 @@
 			<!-- ================= REVIEWS SECTION ================= -->
 			<section class="border-t py-4 border-gray-100">
 
-				<h3 class="text-xl font-medium text-[#222] dark:text-white mb-4">Reviews</h3>
+				<div class="mb-8">
+					<div class="flex items-center justify-between mb-4">
+						<h3 class="text-2xl font-bold text-gray-900 dark:text-white">{{ number_format($reviewsTotal) }} Reviews</h3>
+						<div class="text-right">
+							<div class="flex items-center gap-1 justify-end">
+								@for ($star = 1; $star <= 5; $star++)
+									<span class="text-base {{ $avgRating !== null && $star <= floor($avgRating) ? 'text-amber-400' : 'text-gray-300 dark:text-gray-600' }}">★</span>
+								@endfor
+							</div>
+							<p class="text-sm font-semibold text-gray-700 dark:text-gray-300">{{ $ratingLabel }}/5</p>
+						</div>
+					</div>
+				</div>
 
-				<p class="text-sm text-gray-500 italic">
-					You have no reviews yet.
-				</p>
+				@if ($reviews && $reviews->count() > 0)
+					<div class="border-t border-gray-200 dark:border-gray-800 pt-6 space-y-6">
+						@foreach ($reviews as $review)
+							@php
+								$reviewTitle = $review->orderItem?->package?->name ?: $review->orderItem?->title;
+								$reviewerName = $review->influencer?->display_name ?: $review->influencer?->user?->name ?: 'Influencer';
+								$orderNumber = $review->orderItem?->order?->order_number;
+							@endphp
+							<div class="pb-6 border-b border-gray-100 dark:border-gray-800 last:border-b-0">
+								<div class="flex items-center justify-between mb-3">
+									<div class="flex items-center gap-3">
+										<div class="flex h-10 w-10 items-center justify-center rounded-full bg-linear-to-br from-teal-100 to-cyan-100 text-sm font-bold text-gray-700 dark:from-teal-900 dark:to-cyan-900 dark:text-gray-100">
+											{{ strtoupper(substr($reviewerName, 0, 1)) }}
+										</div>
+										<div>
+											<p class="font-semibold text-gray-900 dark:text-white text-sm">From {{ $reviewerName }}</p>
+											@if ($reviewTitle)
+												<p class="text-xs text-gray-500 dark:text-gray-400">Task: {{ $reviewTitle }}</p>
+											@endif
+											@if ($orderNumber)
+												<p class="text-xs text-gray-500 dark:text-gray-400">Order: {{ $orderNumber }}</p>
+											@endif
+										</div>
+									</div>
+									<div class="text-right">
+										<div class="flex items-center gap-1 mb-1 justify-end">
+											@for ($i = 1; $i <= 5; $i++)
+												<span class="text-base {{ $i <= $review->rating ? 'text-amber-400' : 'text-gray-300 dark:text-gray-600' }}">★</span>
+											@endfor
+										</div>
+										<p class="text-xs text-gray-500 dark:text-gray-400">{{ optional($review->created_at)->format('M Y') }}</p>
+									</div>
+								</div>
+
+								@if ($review->comment)
+									<p class="text-sm text-gray-800 dark:text-gray-200 leading-relaxed">{{ $review->comment }}</p>
+								@endif
+							</div>
+						@endforeach
+					</div>
+				@else
+					<div class="rounded-2xl border border-dashed border-gray-300 bg-gray-50 px-6 py-10 text-center text-sm text-gray-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-400">
+						No reviews available yet.
+					</div>
+				@endif
 
 			</section>
 

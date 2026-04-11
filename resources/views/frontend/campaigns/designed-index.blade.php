@@ -6,10 +6,8 @@
 	<div x-data="campaignFilter()" class="mt-8 px-2">
 	
 		<!-- Header with Create Campaign Button -->
-		<div class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-			<div>
-				<h1 class="text-2xl font-bold text-gray-900 dark:text-white">Campaigns</h1>
-			</div>
+		<div class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
+			
 			@if ($userType === 'brand')
 				<a href="{{ route('frontend.campaigns.create') }}"
 					class="inline-flex items-center gap-2 rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800 dark:bg-gray-700 dark:hover:bg-gray-600">
@@ -74,7 +72,7 @@
 				<span>Showing <span x-text="filteredCampaigns.length"></span> of {{ $campaigns->total() }}</span>
 			</div>
 			<div class="text-xs uppercase tracking-[0.22em] text-gray-400 dark:text-gray-500">
-				<span>Showing <span x-text="filteredCampaigns.length"></span> of {{ $campaigns->total() }}</span>
+				<span>My Campaigns</span>
 			</div>
 		</div>
 

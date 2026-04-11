@@ -269,7 +269,12 @@ class BrandProfileController extends Controller
             ->with([
                 'user:id,name,slug,address_line,city,country,postal_code,phone,bio,profile_image_path,cover_image_path,is_active',
                 'socialLinks:id,brand_id,instagram_url,tiktok_url,facebook_url,x_url,youtube_url,linkedin_url',
-                'campaigns' => fn($query) => $query->where('is_active', true)->where('status', '!=', 'draft')->orderBy('published_at', 'desc')
+                'campaigns' => fn($query) => $query->where('is_active', true)->where('status', '!=', 'draft')->orderBy('published_at', 'desc'),
+                'reviews' => fn($query) => $query->where('is_public', true)->latest()->limit(6),
+                'reviews.influencer.user:id,name,slug',
+                'reviews.orderItem:id,order_id,title,package_id',
+                'reviews.orderItem.order:id,order_number',
+                'reviews.orderItem.package:id,name',
             ])
             ->whereHas('user', fn($query) => $query->where('slug', $slug))
             ->firstOrFail();
@@ -282,6 +287,7 @@ class BrandProfileController extends Controller
         return view('frontend.pages.brand-profile', [
             'brand'     => $brand,
             'campaigns' => $brand->campaigns,
+            'reviews'   => $brand->reviews,
             'title'     => $brand->brand_name ?? $brand->user->name
         ]);
     }

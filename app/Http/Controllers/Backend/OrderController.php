@@ -8,8 +8,10 @@ use App\Models\Campaign;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\SubOrder;
+use App\Support\PlatformPricing;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 class OrderController extends Controller
@@ -21,13 +23,17 @@ class OrderController extends Controller
         $type = (string) $request->string('type', 'all');
 
         $orders = Order::query()
+            ->whereNull('parent_order_id')
             ->with([
                 'buyer:id,name,email,user_type',
                 'brand:id,brand_name',
                 'campaign:id,title',
+                'childOrders:id,parent_order_id,campaign_id,status,total_amount,currency',
             ])
             ->withCount([
                 'items as package_items_count' => fn ($query) => $query->whereNotNull('package_id'),
+                'childOrders as child_orders_count',
+                'childOrders as child_package_orders_count' => fn ($query) => $query->whereNull('campaign_id'),
             ])
             ->when($search !== '', function ($query) use ($search) {
                 $query->where(function ($subQuery) use ($search) {
@@ -46,6 +52,9 @@ class OrderController extends Controller
                         })
                         ->orWhereHas('items', function ($itemQuery) use ($search) {
                             $itemQuery->where('title', 'like', '%'.$search.'%');
+                        })
+                        ->orWhereHas('childOrders.items', function ($itemQuery) use ($search) {
+                            $itemQuery->where('title', 'like', '%'.$search.'%');
                         });
                 });
             })
@@ -54,17 +63,21 @@ class OrderController extends Controller
             ->when($type === 'package', function ($query) {
                 $query
                     ->whereNull('campaign_id')
-                    ->whereHas('items', fn ($itemQuery) => $itemQuery->whereNotNull('package_id'));
+                    ->where(function ($packageQuery) {
+                        $packageQuery
+                            ->whereHas('items', fn ($itemQuery) => $itemQuery->whereNotNull('package_id'))
+                            ->orWhereHas('childOrders.items', fn ($itemQuery) => $itemQuery->whereNotNull('package_id'));
+                    });
             })
             ->orderByDesc('created_at')
             ->paginate(15)
             ->withQueryString();
 
         $stats = [
-            'total' => Order::count(),
-            'pending' => Order::where('status', 'pending')->count(),
-            'completed' => Order::where('status', 'completed')->count(),
-            'revenue' => (float) Order::where('status', 'completed')->sum('total_amount'),
+            'total' => Order::whereNull('parent_order_id')->count(),
+            'pending' => Order::whereNull('parent_order_id')->where('status', 'pending')->count(),
+            'completed' => Order::whereNull('parent_order_id')->where('status', 'completed')->count(),
+            'revenue' => (float) Order::whereNull('parent_order_id')->where('status', 'completed')->sum('total_amount'),
         ];
 
         if ($request->ajax()) {
@@ -91,15 +104,33 @@ class OrderController extends Controller
             'acceptedBy:id,name,email',
             'acceptedForInfluencer:id,user_id,display_name',
             'acceptedForInfluencer.user:id,name',
-            'items:id,order_id,influencer_id,package_id,title,quantity,unit_price,line_total,status,due_date,paid_at',
+            'items:id,order_id,influencer_id,package_id,title,quantity,unit_price,line_total,status,due_date,paid_at,payout_amount,payout_reference,payout_note,payout_marked_by_user_id,payout_marked_at',
             'items.influencer:id,user_id,display_name',
             'items.influencer.user:id,name',
+            'items.payoutMarkedBy:id,name,email',
             'items.package:id,name,base_price,currency',
             'payments:id,order_id,status,amount,currency,payment_provider,paid_at,created_at',
-            'subOrders:id,order_id,influencer_id,status,amount,currency,accepted_at,completed_at,paid_at',
+            'subOrders:id,order_id,campaign_influencer_id,influencer_id,status,amount,currency,accepted_at,completed_at,paid_at,payout_amount,payout_reference,payout_note,payout_marked_by_user_id,payout_marked_at',
             'subOrders.influencer:id,user_id,display_name',
             'subOrders.influencer.user:id,name,slug',
+            'subOrders.payoutMarkedBy:id,name,email',
+            'childOrders:id,parent_order_id,buyer_user_id,brand_id,campaign_id,status,accepted_for_influencer_id,subtotal,service_fee,tax_amount,total_amount,currency,placed_at,created_at',
+            'childOrders.acceptedForInfluencer:id,user_id,display_name',
+            'childOrders.acceptedForInfluencer.user:id,name,slug',
+            'childOrders.items:id,order_id,influencer_id,package_id,title,quantity,unit_price,line_total,status,due_date,paid_at,payout_amount,payout_reference,payout_note,payout_marked_by_user_id,payout_marked_at',
+            'childOrders.items.influencer:id,user_id,display_name',
+            'childOrders.items.influencer.user:id,name',
+            'childOrders.items.package:id,name,base_price,currency',
+            'childOrders.items.payoutMarkedBy:id,name,email',
         ]);
+
+        if ($order->items->isEmpty() && $order->childOrders->isNotEmpty()) {
+            $flattenedItems = $order->childOrders
+                ->flatMap(fn ($childOrder) => $childOrder->items)
+                ->values();
+
+            $order->setRelation('items', $flattenedItems);
+        }
 
         return view('backend.pages.orders.show', [
             'order' => $order,
@@ -112,7 +143,7 @@ class OrderController extends Controller
     public function updateStatus(Request $request, Order $order): RedirectResponse
     {
         $validated = $request->validate([
-            'status' => 'required|in:pending,accepted,in-progress,in_progress,completed,cancelled',
+            'status' => 'required|in:pending,accepted,in-progress,in_progress,delivered,completed,cancelled',
         ]);
 
         $status = $validated['status'];
@@ -154,8 +185,10 @@ class OrderController extends Controller
         $campaign = Campaign::findOrFail($validated['campaign_id']);
         $brand = Brand::findOrFail($validated['brand_id']);
 
-        // Get approved influencers for this campaign
-        $approvedInfluencers = $campaign->approvedInfluencers()->get();
+        // Get approved influencer assignments for this campaign.
+        $approvedInfluencers = $campaign->approvedInfluencers()
+            ->with('influencer.user:id,name')
+            ->get();
 
         if ($approvedInfluencers->isEmpty()) {
             return redirect()
@@ -163,42 +196,57 @@ class OrderController extends Controller
                 ->with('error', 'No approved influencers for this campaign');
         }
 
-        // Calculate totals
-        $subtotal = $approvedInfluencers->sum(function ($influencer) {
-            return $influencer->pivot->agreed_rate ?? 0;
-        });
+        $invalidAssignments = $approvedInfluencers->filter(
+            fn ($assignment) => (float) ($assignment->agreed_amount ?? 0) <= 0
+        );
 
-        // Calculate 20% service fee
-        $serviceFee = $subtotal * 0.20;
-        $totalAmount = $subtotal + $serviceFee;
+        if ($invalidAssignments->isNotEmpty()) {
+            $names = $invalidAssignments
+                ->map(fn ($assignment) => $assignment->influencer?->display_name ?: $assignment->influencer?->user?->name ?: ('#'.$assignment->influencer_id))
+                ->take(3)
+                ->implode(', ');
+
+            return redirect()
+                ->back()
+                ->with('error', 'Set agreed amount before creating order. Missing amount for: '.$names);
+        }
+
+        // Calculate totals.
+        $subtotal = (float) $approvedInfluencers->sum(
+            fn ($assignment) => (float) $assignment->agreed_amount
+        );
+
+        $pricing = PlatformPricing::calculateFromNet($subtotal);
         $buyerUserId = $request->user()->id;
 
-        // Create master order
-        $order = Order::create([
-            'order_number' => 'ORD-'.time(),
-            'buyer_user_id' => $buyerUserId,
-            'brand_id' => $brand->id,
-            'campaign_id' => $campaign->id,
-            'status' => 'pending',
-            'subtotal' => $subtotal,
-            'service_fee' => $serviceFee,
-            'tax_amount' => 0,
-            'total_amount' => $totalAmount,
-            'currency' => 'USD',
-            'placed_at' => now(),
-        ]);
-
-        // Create sub-orders for each approved influencer
-        foreach ($approvedInfluencers as $influencer) {
-            SubOrder::create([
-                'order_id' => $order->id,
-                'campaign_influencer_id' => $influencer->id,
-                'accepted_for_influencer_id' => $influencer->id,
+        $order = DB::transaction(function () use ($buyerUserId, $brand, $campaign, $pricing, $approvedInfluencers) {
+            $order = Order::create([
+                'order_number' => 'ORD-'.time(),
+                'buyer_user_id' => $buyerUserId,
+                'brand_id' => $brand->id,
+                'campaign_id' => $campaign->id,
                 'status' => 'pending',
-                'amount' => $influencer->pivot->agreed_rate ?? 0,
-                'currency' => 'USD',
+                'subtotal' => $pricing['net_subtotal'],
+                'service_fee' => $pricing['platform_charge'],
+                'tax_amount' => 0,
+                'total_amount' => $pricing['gross_total'],
+                'currency' => $campaign->currency ?: 'USD',
+                'placed_at' => now(),
             ]);
-        }
+
+            foreach ($approvedInfluencers as $assignment) {
+                SubOrder::create([
+                    'order_id' => $order->id,
+                    'campaign_influencer_id' => $assignment->id,
+                    'influencer_id' => $assignment->influencer_id,
+                    'status' => 'pending',
+                    'amount' => (float) $assignment->agreed_amount,
+                    'currency' => $order->currency,
+                ]);
+            }
+
+            return $order;
+        });
 
         return redirect()
             ->route('dashboard.orders.show', $order)
@@ -239,8 +287,19 @@ class OrderController extends Controller
      */
     public function markSubOrderPaid(Request $request, SubOrder $subOrder): RedirectResponse
     {
+        $validated = $request->validate([
+            'amount' => 'required|numeric|min:0.01',
+            'payout_reference' => 'nullable|string|max:120',
+            'payout_note' => 'nullable|string|max:1000',
+        ]);
+
         $subOrder->update([
             'paid_at' => now(),
+            'payout_amount' => round((float) $validated['amount'], 2),
+            'payout_reference' => $validated['payout_reference'] ?? null,
+            'payout_note' => $validated['payout_note'] ?? null,
+            'payout_marked_by_user_id' => $request->user()->id,
+            'payout_marked_at' => now(),
         ]);
 
         return redirect()
@@ -257,9 +316,39 @@ class OrderController extends Controller
             'status' => 'required|in:pending,accepted,in_progress,delivered,approved,rejected,cancelled,completed',
         ]);
 
-        $orderItem->update([
-            'status' => $validated['status'],
-        ]);
+        $newStatus = (string) $validated['status'];
+
+        $updates = [
+            'status' => $newStatus,
+        ];
+
+        if ($newStatus === 'accepted' && $orderItem->accepted_at === null) {
+            $updates['accepted_at'] = now();
+        }
+
+        if ($newStatus === 'delivered') {
+            $updates['delivered_at'] = now();
+        }
+
+        if ($newStatus === 'approved') {
+            $updates['approved_at'] = now();
+        }
+
+        if (in_array($newStatus, ['pending', 'accepted', 'in_progress', 'rejected', 'cancelled'], true)) {
+            if ($newStatus !== 'accepted') {
+                $updates['accepted_at'] = null;
+            }
+            if ($newStatus !== 'delivered') {
+                $updates['delivered_at'] = null;
+            }
+            if ($newStatus !== 'approved') {
+                $updates['approved_at'] = null;
+            }
+        }
+
+        $orderItem->update($updates);
+
+        $this->syncOrderStatusFromItems($orderItem->order);
 
         return redirect()
             ->back()
@@ -269,10 +358,21 @@ class OrderController extends Controller
     /**
      * Mark order item as paid
      */
-    public function markOrderItemPaid(OrderItem $orderItem): RedirectResponse
+    public function markOrderItemPaid(Request $request, OrderItem $orderItem): RedirectResponse
     {
+        $validated = $request->validate([
+            'amount' => 'required|numeric|min:0.01',
+            'payout_reference' => 'nullable|string|max:120',
+            'payout_note' => 'nullable|string|max:1000',
+        ]);
+
         $orderItem->update([
             'paid_at' => now(),
+            'payout_amount' => round((float) $validated['amount'], 2),
+            'payout_reference' => $validated['payout_reference'] ?? null,
+            'payout_note' => $validated['payout_note'] ?? null,
+            'payout_marked_by_user_id' => $request->user()->id,
+            'payout_marked_at' => now(),
         ]);
 
         return redirect()
@@ -306,5 +406,51 @@ class OrderController extends Controller
                 'completed_at' => now(),
             ]);
         }
+    }
+
+    private function syncOrderStatusFromItems(?Order $order): void
+    {
+        if (! $order) {
+            return;
+        }
+
+        $statuses = $order->items()->pluck('status');
+        if ($statuses->isEmpty()) {
+            return;
+        }
+
+        if ($statuses->every(fn ($status) => $status === 'pending')) {
+            $order->update([
+                'status' => 'pending',
+                'accepted_at' => null,
+                'completed_at' => null,
+            ]);
+
+            return;
+        }
+
+        if ($statuses->every(fn ($status) => $status === 'accepted')) {
+            $order->update([
+                'status' => 'accepted',
+                'accepted_at' => $order->accepted_at ?? now(),
+                'completed_at' => null,
+            ]);
+
+            return;
+        }
+
+        if ($statuses->every(fn ($status) => in_array($status, ['delivered', 'approved', 'completed'], true))) {
+            $order->update([
+                'status' => 'delivered',
+                'completed_at' => null,
+            ]);
+
+            return;
+        }
+
+        $order->update([
+            'status' => 'in_progress',
+            'completed_at' => null,
+        ]);
     }
 }

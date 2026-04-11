@@ -71,10 +71,19 @@
                 <div class="p-6">
                     <h3 class="text-base font-semibold text-gray-900 dark:text-white mb-4">Order Summary</h3>
 
+                    @php
+                        $subtotal = (float) $cart->total_price;
+                        $pricing = \App\Support\PlatformPricing::calculateFromNet($subtotal);
+                    @endphp
+
                     <div class="space-y-3 pb-4 border-b border-gray-200 dark:border-gray-800">
                         <div class="flex justify-between text-sm">
                             <span class="text-gray-600 dark:text-gray-400">Subtotal</span>
-                            <span class="font-medium text-gray-900 dark:text-white">${{ number_format($cart->total_price, 2) }}</span>
+                            <span class="font-medium text-gray-900 dark:text-white">${{ number_format($pricing['net_subtotal'], 2) }}</span>
+                        </div>
+                        <div class="flex justify-between text-sm">
+                            <span class="text-gray-600 dark:text-gray-400">Platform Charge (20%)</span>
+                            <span class="font-medium text-gray-900 dark:text-white">${{ number_format($pricing['platform_charge'], 2) }}</span>
                         </div>
                         <div class="flex justify-between text-sm">
                             <span class="text-gray-600 dark:text-gray-400">Items</span>
@@ -88,7 +97,7 @@
 
                     <div class="flex justify-between items-center mt-4 pb-6">
                         <span class="text-base font-semibold text-gray-900 dark:text-white">Total</span>
-                        <span class="text-xl font-bold text-gray-900 dark:text-white">${{ number_format($cart->total_price, 2) }}</span>
+                        <span class="text-xl font-bold text-gray-900 dark:text-white">${{ number_format($pricing['gross_total'], 2) }}</span>
                     </div>
 
                     <form action="{{ route('cart.complete-checkout') }}" method="POST">

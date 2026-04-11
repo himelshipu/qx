@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\OrderMessage;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -16,6 +17,7 @@ class Order extends Model
         'buyer_user_id',
         'brand_id',
         'campaign_id',
+        'parent_order_id',
         'status',
         'accepted_by_user_id',
         'accepted_for_influencer_id',
@@ -57,6 +59,16 @@ class Order extends Model
     public function campaign(): BelongsTo
     {
         return $this->belongsTo(Campaign::class);
+    }
+
+    public function parentOrder(): BelongsTo
+    {
+        return $this->belongsTo(Order::class, 'parent_order_id');
+    }
+
+    public function childOrders(): HasMany
+    {
+        return $this->hasMany(Order::class, 'parent_order_id');
     }
 
     public function acceptedBy(): BelongsTo
@@ -108,5 +120,10 @@ class Order extends Model
     public function isMasterOrder(): bool
     {
         return $this->subOrders()->count() > 0;
+    }
+
+    public function isParentOrder(): bool
+    {
+        return $this->parent_order_id === null;
     }
 }

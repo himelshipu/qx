@@ -29,6 +29,11 @@ class OrderItem extends Model
         'delivered_at',
         'approved_at',
         'paid_at',
+        'payout_amount',
+        'payout_reference',
+        'payout_note',
+        'payout_marked_by_user_id',
+        'payout_marked_at',
     ];
 
     protected function casts(): array
@@ -42,6 +47,8 @@ class OrderItem extends Model
             'delivered_at' => 'datetime',
             'approved_at' => 'datetime',
             'paid_at' => 'datetime',
+            'payout_amount' => 'decimal:2',
+            'payout_marked_at' => 'datetime',
         ];
     }
 
@@ -68,6 +75,11 @@ class OrderItem extends Model
     public function acceptedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'accepted_by_user_id');
+    }
+
+    public function payoutMarkedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'payout_marked_by_user_id');
     }
 
     public function review(): HasOne

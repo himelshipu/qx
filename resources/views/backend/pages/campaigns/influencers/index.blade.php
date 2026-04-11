@@ -47,6 +47,8 @@
 							<th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
 								Status</th>
 							<th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+								Agreed Amount</th>
+							<th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
 								Assigned Date</th>
 							<th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
 								Actions</th>
@@ -85,13 +87,29 @@
 									@endif
 								</td>
 								<td class="px-4 py-3 text-sm text-gray-700 dark:text-gray-300">
+									@if ($influencer->agreed_amount)
+										{{ strtoupper($campaign->currency ?? 'USD') }} {{ number_format((float) $influencer->agreed_amount, 2) }}
+									@else
+										—
+									@endif
+								</td>
+								<td class="px-4 py-3 text-sm text-gray-700 dark:text-gray-300">
 									{{ $influencer->created_at->format('M d, Y') }}
 								</td>
 								<td class="px-4 py-3 text-sm">
 									<div class="flex gap-2">
 										@if ($influencer->status === 'assigned')
-											<form action="{{ route('campaign-influencers.approve', $influencer) }}" method="POST" class="inline">
+												<form action="{{ route('campaign-influencers.approve', $influencer) }}" method="POST" class="inline-flex items-center gap-2">
 												@csrf
+													<input
+														type="number"
+														name="agreed_amount"
+														min="0.01"
+														step="0.01"
+														placeholder="Amount"
+														required
+														class="w-24 rounded border border-gray-300 px-2 py-1 text-xs text-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+													>
 												<button type="submit"
 													class="rounded bg-green-600 px-3 py-1 text-xs font-medium text-white transition hover:bg-green-700">
 													Approve
@@ -119,7 +137,7 @@
 							</tr>
 						@empty
 							<tr>
-								<td colspan="5" class="px-4 py-8 text-center text-sm text-gray-500 dark:text-gray-400">
+								<td colspan="6" class="px-4 py-8 text-center text-sm text-gray-500 dark:text-gray-400">
 									No influencers assigned yet. <a href="{{ route('dashboard.campaigns.influencers.create', $campaign) }}"
 										class="text-blue-600 hover:underline">Assign influencers</a>
 								</td>

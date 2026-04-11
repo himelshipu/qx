@@ -3,512 +3,543 @@
 @section('title', "Order {$order->order_number}")
 
 @section('content')
-	<div class="min-h-screen  py-12 px-4 sm:px-6 lg:px-8">
-		<div class="max-w-6xl mx-auto">
-			@if (session('success'))
-				<div class="mb-6 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">
-					{{ session('success') }}
-				</div>
-			@endif
-			@if (session('error'))
-				<div class="mb-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
-					{{ session('error') }}
-				</div>
-			@endif
+	@php
+		$statusStyles = [
+			'pending' => ['badge' => 'bg-amber-100 text-amber-700', 'dot' => 'bg-amber-500'],
+			'accepted' => ['badge' => 'bg-sky-100 text-sky-700', 'dot' => 'bg-sky-500'],
+			'in-progress' => ['badge' => 'bg-violet-100 text-violet-700', 'dot' => 'bg-violet-500'],
+			'in_progress' => ['badge' => 'bg-violet-100 text-violet-700', 'dot' => 'bg-violet-500'],
+			'delivered' => ['badge' => 'bg-emerald-100 text-emerald-700', 'dot' => 'bg-emerald-500'],
+			'approved' => ['badge' => 'bg-teal-100 text-teal-700', 'dot' => 'bg-teal-500'],
+			'completed' => ['badge' => 'bg-emerald-100 text-emerald-700', 'dot' => 'bg-emerald-500'],
+			'cancelled' => ['badge' => 'bg-rose-100 text-rose-700', 'dot' => 'bg-rose-500'],
+		];
 
-			<!-- Header Section -->
-			<div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900 mb-8">
-				<div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-					<div>
+		$role = auth()->user()->user_type;
+		$isBrand = $role === 'brand';
+		$isInfluencer = $role === 'influencer';
+		$isParentOrder = $orderContext['is_parent'];
+		$brandSlug = $order->buyer?->slug;
+		$brandLabel = $order->brand?->brand_name ?: $order->buyer?->name ?: 'Brand';
+		$brandInitial = strtoupper(mb_substr((string) $brandLabel, 0, 1));
+
+		$displayItems = $order->items;
+		if ($displayItems->isEmpty() && $order->childOrders->isNotEmpty()) {
+			$displayItems = $order->childOrders->flatMap(fn ($child) => $child->items)->values();
+		}
+
+		$displayOrderStatus = $order->status;
+		$displayStatuses = $displayItems->pluck('status');
+		if ($displayStatuses->isNotEmpty()) {
+			if ($displayStatuses->every(fn ($status) => $status === 'pending')) {
+				$displayOrderStatus = 'pending';
+			} elseif ($displayStatuses->every(fn ($status) => $status === 'accepted')) {
+				$displayOrderStatus = 'accepted';
+			} elseif ($displayStatuses->every(fn ($status) => in_array($status, ['approved', 'completed'], true))) {
+				$displayOrderStatus = 'approved';
+			} elseif ($displayStatuses->every(fn ($status) => in_array($status, ['delivered', 'approved', 'completed'], true))) {
+				$displayOrderStatus = 'delivered';
+			} else {
+				$displayOrderStatus = 'in_progress';
+			}
+		}
+
+		$currentStatus = $statusStyles[$displayOrderStatus] ?? ['badge' => 'bg-gray-100 text-gray-700', 'dot' => 'bg-gray-400'];
+		$orderIsCompleted = ($order->status === 'completed') || ($order->completed_at !== null);
+		$brandCanComplete = $isBrand && $isParentOrder && $displayItems->isNotEmpty() && $displayItems->every(fn ($item) => in_array($item->status, ['approved', 'completed'], true));
+
+		$brandInfo = $order->buyer ? [
+			'name' => $brandLabel,
+			'slug' => $brandSlug,
+			'email' => $order->buyer->email,
+		] : null;
+	@endphp
+
+	<div class="min-h-screen py-8 px-4 sm:px-6 lg:px-8">
+		<div class="mx-auto max-w-full space-y-6">
+			<div class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900 sm:p-6">
+				<div class="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+					<div class="space-y-2">
+						<div class="flex flex-wrap items-center gap-2">
+							<span class="inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold {{ $currentStatus['badge'] }}">
+								<span class="h-2 w-2 rounded-full {{ $currentStatus['dot'] }}"></span>
+								{{ ucfirst(str_replace(['-', '_'], ' ', $displayOrderStatus)) }}
+							</span>
+							<span class="inline-flex items-center rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold text-gray-700 dark:bg-gray-800 dark:text-gray-300">
+								{{ $isParentOrder ? 'Parent Order' : 'Child Order' }}
+							</span>
+						</div>
 						<h1 class="text-2xl font-bold text-gray-900 dark:text-white">Order {{ $order->order_number }}</h1>
-						<p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
-							Placed on {{ optional($order->placed_at ?? $order->created_at)->format('M d, Y \a\t h:i A') }}
-						</p>
+						<p class="text-sm text-gray-600 dark:text-gray-400">Placed {{ optional($order->placed_at ?? $order->created_at)->format('M d, Y \a\t h:i A') }}</p>
+						@if ($isInfluencer && $order->parentOrder)
+							<p class="text-sm text-gray-600 dark:text-gray-400">Parent checkout: <span class="font-semibold text-gray-900 dark:text-white">{{ $order->parentOrder->order_number }}</span></p>
+						@endif
 					</div>
-					<div class="flex items-center gap-3">
-						@php
-							$statusColors = [
-								'pending' => 'yellow',
-								'accepted' => 'blue',
-								'in-progress' => 'purple',
-								'in_progress' => 'purple',
-								'completed' => 'green',
-								'cancelled' => 'red',
-								'delivered' => 'green',
-							];
-							$color = $statusColors[$order->status] ?? 'gray';
-						@endphp
-						<span class="inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold bg-{{ $color }}-100 dark:bg-{{ $color }}-900/20 text-{{ $color }}-800 dark:text-{{ $color }}-100">
-							{{ ucfirst(str_replace('-', ' ', str_replace('_', ' ', $order->status))) }}
-						</span>
+
+					<div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
+						<div class="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 dark:border-emerald-900/40 dark:bg-emerald-900/20">
+							<div class="flex items-start justify-between gap-3">
+								<div>
+									<p class="text-xs uppercase tracking-wider text-emerald-700 dark:text-emerald-300">Items</p>
+									<p class="mt-1 text-lg font-semibold text-emerald-900 dark:text-emerald-50">{{ $displayItems->count() }}</p>
+								</div>
+								<svg class="h-5 w-5 text-emerald-500 dark:text-emerald-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5h6M4 19h16M6 9h12M7 13h10"></path>
+								</svg>
+							</div>
+						</div>
+						<div class="rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 dark:border-gray-800 dark:bg-gray-800/70">
+							<div class="flex items-start justify-between gap-3">
+								<div>
+									<p class="text-xs uppercase tracking-wider text-gray-500 dark:text-gray-400">Influencers</p>
+									<p class="mt-1 text-lg font-semibold text-gray-900 dark:text-white">{{ $displayItems->pluck('influencer_id')->filter()->unique()->count() }}</p>
+								</div>
+								<svg class="h-5 w-5 text-gray-500 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-1a4 4 0 00-4-4h-1m-4-3a4 4 0 100-8 4 4 0 000 8zm-6 8v-1a4 4 0 014-4h4a4 4 0 014 4v1"></path>
+								</svg>
+							</div>
+						</div>
+						<div class="rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-3 dark:border-indigo-900/40 dark:bg-indigo-900/20">
+							<div class="flex items-start justify-between gap-3">
+								<div>
+									<p class="text-xs uppercase tracking-wider text-indigo-700 dark:text-indigo-300">Subtotal</p>
+									<p class="mt-1 text-lg font-semibold text-indigo-900 dark:text-indigo-50">${{ number_format((float) $order->subtotal, 2) }}</p>
+								</div>
+								<svg class="h-5 w-5 text-indigo-500 dark:text-indigo-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.105 0-2 .672-2 1.5S10.895 11 12 11s2 .672 2 1.5S13.105 14 12 14m0-6V6m0 12v-2m8-4a8 8 0 11-16 0 8 8 0 0116 0z"></path>
+								</svg>
+							</div>
+						</div>
+						@if ($isBrand)
+							<div class="rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 dark:border-gray-800 dark:bg-gray-800/70">
+								<div class="flex items-start justify-between gap-3">
+									<div>
+										<p class="text-xs uppercase tracking-wider text-gray-500 dark:text-gray-400">Total</p>
+										<p class="mt-1 text-lg font-semibold text-gray-900 dark:text-white">${{ number_format((float) $order->total_amount, 2) }}</p>
+									</div>
+									<svg class="h-5 w-5 text-gray-500 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3v18h18M7 15l4-4 3 3 5-6"></path>
+									</svg>
+								</div>
+							</div>
+						@endif
 					</div>
 				</div>
 			</div>
 
-			<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-				<!-- Main Content -->
-				<div class="lg:col-span-2 space-y-6">
-					<!-- Order Items -->
-					<div class="rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
-						<div class="border-b border-gray-200 bg-gray-50 px-6 py-4 dark:border-gray-800 dark:bg-gray-800/50">
-							<h2 class="text-lg font-semibold text-gray-900 dark:text-white">Order Items</h2>
-						</div>
-						<div class="divide-y divide-gray-200 dark:divide-gray-800">
-							@forelse ($order->items as $item)
-								<div class="p-6">
-									<div class="flex items-start justify-between">
-										<div class="flex-1">
-											<h3 class="font-semibold text-gray-900 dark:text-white">{{ $item->title }}</h3>
-											<p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
-												Influencer:
-												@if ($item->influencer?->user?->slug)
-													<a href="{{ route('influencer.profile', ['slug' => $item->influencer->user->slug]) }}"
-														class="font-semibold text-indigo-700 hover:text-indigo-600 dark:text-indigo-300 dark:hover:text-indigo-200 underline-offset-2 hover:underline">
-														{{ $item->influencer?->display_name ?: $item->influencer?->user?->name ?? 'N/A' }}
-													</a>
-												@else
-													<span class="font-medium">
-														{{ $item->influencer?->display_name ?: $item->influencer?->user?->name ?? 'N/A' }}
-													</span>
-												@endif
-											</p>
+			@if ($isBrand)
+				<div class="grid grid-cols-1 gap-6 xl:grid-cols-3">
+					<div class="space-y-6 xl:col-span-2">
+						<div class="rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
+							<div class="border-b border-gray-200 px-5 py-4 dark:border-gray-800 sm:px-6">
+								<div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+									<div>
+										<h2 class="text-lg font-semibold text-gray-900 dark:text-white">Main Order Summary</h2>
+										<p class="mt-1 text-sm text-gray-600 dark:text-gray-400">One checkout grouped by influencer child orders.</p>
+									</div>
+									<div class="rounded-xl bg-indigo-50 px-4 py-2 text-sm font-semibold text-indigo-700">{{ $order->childOrders->count() }} child {{ $order->childOrders->count() === 1 ? 'order' : 'orders' }}</div>
+								</div>
+							</div>
+							<div class="p-5 sm:p-6">
+								<div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
+									<div class="rounded-xl border border-gray-200 p-4 dark:border-gray-800">
+										<p class="text-xs uppercase tracking-wider text-gray-500 dark:text-gray-400">Platform Charge</p>
+										<p class="mt-2 text-lg font-semibold text-gray-900 dark:text-white">${{ number_format((float) $order->service_fee, 2) }}</p>
+									</div>
+									<div class="rounded-xl border border-gray-200 p-4 dark:border-gray-800">
+										<p class="text-xs uppercase tracking-wider text-gray-500 dark:text-gray-400">Brand Total</p>
+										<p class="mt-2 text-lg font-semibold text-gray-900 dark:text-white">${{ number_format((float) $order->total_amount, 2) }}</p>
+									</div>
+									<div class="rounded-xl border border-gray-200 p-4 dark:border-gray-800">
+										<p class="text-xs uppercase tracking-wider text-gray-500 dark:text-gray-400">Completion Rule</p>
+										<p class="mt-2 text-sm font-semibold text-gray-900 dark:text-white">Complete after all child items are delivered and approved.</p>
+									</div>
+								</div>
 
-											@if ($item->description)
-												<p class="text-sm text-gray-600 dark:text-gray-400 mt-2 line-clamp-2">
-													{{ $item->description }}
-												</p>
-											@endif
-
-											<!-- Item Details Grid -->
-											<div class="grid grid-cols-2 sm:grid-cols-3 gap-4 mt-4">
-												<div>
-													<p class="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider">Quantity</p>
-													<p class="text-sm font-semibold text-gray-900 dark:text-white mt-1">{{ $item->quantity }}</p>
-												</div>
-												@if ($item->due_date)
-													<div>
-														<p class="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider">Due Date</p>
-														<p class="text-sm font-semibold text-gray-900 dark:text-white mt-1">
-															{{ $item->due_date->format('M d, Y') }}
-														</p>
+								<div class="mt-5 rounded-xl border border-gray-200 bg-gray-50 p-4 dark:border-gray-800 dark:bg-gray-900/60">
+									<div class="mb-3 flex items-center justify-between gap-3">
+										<h3 class="text-sm font-semibold text-gray-900 dark:text-white">Compact Timeline</h3>
+										<p class="text-xs text-gray-500 dark:text-gray-400">Child orders resolve before closing the parent checkout.</p>
+									</div>
+									<div class="flex items-stretch gap-2 overflow-x-auto pb-1">
+										@foreach ($timeline as $step)
+											@php $done = $step['state'] === 'done'; @endphp
+											<div class="flex items-center gap-2 shrink-0">
+												<div class="rounded-xl border px-3 py-2 {{ $done ? 'border-emerald-200 bg-emerald-50' : 'border-gray-200 bg-white' }}">
+													<div class="flex items-center gap-2 text-xs font-semibold {{ $done ? 'text-emerald-700' : 'text-gray-500' }}">
+														<span class="h-2 w-2 rounded-full {{ $done ? 'bg-emerald-500' : 'bg-gray-400' }}"></span>
+														{{ $step['label'] }}
 													</div>
+													<p class="mt-1 text-[11px] text-gray-500 dark:text-gray-400">{{ $step['value'] }}</p>
+												</div>
+												@if (! $loop->last)
+													<svg class="h-4 w-4 shrink-0 self-center text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7M5 12h14"></path></svg>
 												@endif
-												<div>
-													<p class="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</p>
+											</div>
+										@endforeach
+									</div>
+								</div>
+							</div>
+						</div>
+
+						<div class="rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
+							<div class="border-b border-gray-200 px-5 py-4 dark:border-gray-800 sm:px-6">
+								<h2 class="text-lg font-semibold text-gray-900 dark:text-white">Child Orders</h2>
+								<p class="mt-1 text-sm text-gray-600 dark:text-gray-400">Expand a child order to see its packages, profile links and messages.</p>
+							</div>
+							<div class="space-y-3 p-4 sm:p-6">
+								@forelse ($order->childOrders as $childOrder)
+									@php
+										$childInfluencer = $childOrder->acceptedForInfluencer;
+										$childItems = $childOrder->items;
+										$childItemStatuses = $childItems->pluck('status');
+										$computedChildStatus = $childOrder->status;
+										if ($childItemStatuses->isNotEmpty()) {
+											if ($childItemStatuses->every(fn ($status) => $status === 'pending')) {
+												$computedChildStatus = 'pending';
+											} elseif ($childItemStatuses->every(fn ($status) => $status === 'accepted')) {
+												$computedChildStatus = 'accepted';
+											} elseif ($childItemStatuses->every(fn ($status) => in_array($status, ['approved', 'completed'], true))) {
+												$computedChildStatus = 'approved';
+											} elseif ($childItemStatuses->every(fn ($status) => in_array($status, ['delivered', 'approved', 'completed'], true))) {
+												$computedChildStatus = 'delivered';
+											} else {
+												$computedChildStatus = 'in_progress';
+											}
+										}
+										$childStatus = $statusStyles[$computedChildStatus] ?? ['badge' => 'bg-gray-100 text-gray-700', 'dot' => 'bg-gray-400'];
+										$conversation = $orderContext['conversation_by_influencer']->get($childInfluencer?->id);
+										$influencerName = $childInfluencer?->display_name ?: $childInfluencer?->user?->name ?: 'Influencer';
+										$latestDeliveredAt = $childItems->pluck('delivered_at')->filter()->sortDesc()->first();
+										$latestApprovedAt = $childItems->pluck('approved_at')->filter()->sortDesc()->first();
+										$hasRejectedItem = $childItemStatuses->contains('rejected');
+										$timelineSteps = [
+													['label' => 'Placed', 'value' => $childOrder->placed_at?->format('M d g:iA') ?? '—', 'done' => true],
+														['label' => 'Accepted', 'value' => $childOrder->accepted_at?->format('M d g:iA') ?? 'Waiting', 'done' => (bool) $childOrder->accepted_at || in_array($computedChildStatus, ['accepted', 'in_progress', 'delivered', 'completed'], true)],
+														['label' => 'Delivered', 'value' => $latestDeliveredAt?->format('M d g:iA') ?? 'Waiting', 'done' => in_array($computedChildStatus, ['delivered', 'completed'], true)],
+														['label' => 'Reviewed', 'value' => $hasRejectedItem ? 'Rejected' : ($latestApprovedAt?->format('M d g:iA') ?? 'Waiting'), 'done' => $hasRejectedItem || in_array($computedChildStatus, ['approved', 'completed'], true)],
+														['label' => 'Completed', 'value' => $childOrder->completed_at?->format('M d g:iA') ?? 'Pending', 'done' => $computedChildStatus === 'completed'],
+										];
+									@endphp
+									<details class="group rounded-xl border border-gray-200 bg-gray-50/70 dark:border-gray-800 dark:bg-gray-900/40">
+										<summary class="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-4 sm:px-5">
+											<div class="min-w-0">
+												<div class="flex flex-wrap items-center gap-2">
+													<span class="truncate text-sm font-semibold text-gray-900 dark:text-white">{{ $influencerName }}</span>
+													<span class="inline-flex items-center gap-2 rounded-full px-2.5 py-0.5 text-xs font-semibold {{ $childStatus['badge'] }}">
+														<span class="h-2 w-2 rounded-full {{ $childStatus['dot'] }}"></span>
+														{{ ucfirst(str_replace('_', ' ', $computedChildStatus)) }}
+													</span>
+												</div>
+												<p class="mt-1 text-xs text-gray-500 dark:text-gray-400">{{ $childOrder->order_number }} • {{ $childItems->count() }} item{{ $childItems->count() !== 1 ? 's' : '' }} • ${{ number_format((float) $childOrder->total_amount, 2) }}</p>
+											</div>
+											<svg class="h-5 w-5 text-gray-500 transition-transform duration-200 group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+												<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+											</svg>
+										</summary>
+										<div class="border-t border-gray-200 px-4 py-4 dark:border-gray-800 sm:px-5">
+											<div class="flex flex-wrap gap-2">
+												@if ($childInfluencer?->user?->slug)
+													<a href="{{ route('influencer.profile', ['slug' => $childInfluencer->user->slug]) }}" class="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700">
+														<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A8 8 0 1118.88 6.196M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+														View influencer profile
+													</a>
+												@endif
+												@if ($conversation)
+													<a href="{{ route('frontend.conversations.show', $conversation->public_id) }}" class="inline-flex items-center gap-2 rounded-lg bg-gray-900 px-3 py-1.5 text-xs font-semibold text-white hover:bg-black dark:bg-indigo-600 dark:hover:bg-indigo-500">
+														<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-4l-4 4v-4z"></path></svg>
+														Open messages
+													</a>
+												@elseif ($childInfluencer)
+													<a href="{{ route('conversations.start-negotiation', $childInfluencer) }}" class="inline-flex items-center gap-2 rounded-lg bg-gray-900 px-3 py-1.5 text-xs font-semibold text-white hover:bg-black dark:bg-indigo-600 dark:hover:bg-indigo-500">
+														<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-4l-4 4v-4z"></path></svg>
+														Start messages
+													</a>
+												@endif
+											</div>
+
+											<div class="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+												@foreach ($childItems as $item)
 													@php
-														$itemStatusColors = [
-															'pending' => 'yellow',
-															'accepted' => 'blue',
-															'in-progress' => 'purple',
-															'in_progress' => 'purple',
-															'delivered' => 'green',
-															'completed' => 'green',
-															'cancelled' => 'red',
+														$itemStatus = $statusStyles[$item->status] ?? ['badge' => 'bg-gray-100 text-gray-700', 'dot' => 'bg-gray-400'];
+														$itemDueDate = $item->due_date;
+														if (! $itemDueDate && $item->package?->delivery_days !== null && $childOrder->placed_at) {
+															$itemDueDate = $childOrder->placed_at->copy()->addDays((int) $item->package->delivery_days);
+														}
+														$itemTimeline = [
+															['label' => 'Placed', 'value' => $item->created_at?->format('M d g:iA') ?? '—', 'done' => true],
+															['label' => 'Accepted', 'value' => $item->accepted_at?->format('M d g:iA') ?? 'Waiting', 'done' => (bool) $item->accepted_at || in_array($item->status, ['accepted', 'in_progress', 'in-progress', 'delivered', 'approved'], true)],
+															['label' => 'Delivered', 'value' => $item->delivered_at?->format('M d g:iA') ?? 'Waiting', 'done' => in_array($item->status, ['delivered', 'approved'], true) || (bool) $item->delivered_at],
 														];
-														$itemColor = $itemStatusColors[$item->status] ?? 'gray';
 													@endphp
-													<span class="inline-flex items-center px-2 py-1 rounded text-xs font-semibold bg-{{ $itemColor }}-100 dark:bg-{{ $itemColor }}-900/20 text-{{ $itemColor }}-800 dark:text-{{ $itemColor }}-100 mt-1">
+													<div class="rounded-lg border border-gray-200 bg-white p-3 dark:border-gray-800 dark:bg-gray-900">
+														<div class="flex items-start justify-between gap-3">
+															<div class="min-w-0">
+																<p class="truncate text-sm font-semibold text-gray-900 dark:text-white">{{ $item->title }}</p>
+																<p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">{{ $item->package?->name ?? 'Package' }}</p>
+															</div>
+															<span class="inline-flex items-center gap-2 rounded-full px-2 py-0.5 text-[11px] font-semibold {{ $itemStatus['badge'] }}">
+																<span class="h-1.5 w-1.5 rounded-full {{ $itemStatus['dot'] }}"></span>
+																{{ ucfirst(str_replace('_', ' ', $item->status)) }}
+															</span>
+														</div>
+														<p class="mt-2 text-xs text-gray-500 dark:text-gray-400">Qty {{ $item->quantity }} • Due {{ $itemDueDate ? $itemDueDate->format('M d, Y') : 'Not set' }} • ${{ number_format((float) $item->line_total, 2) }}</p>
+														<div class="mt-3 flex items-stretch gap-2 overflow-x-auto pb-1">
+															@foreach ($itemTimeline as $timelineStep)
+																<div class="flex items-center gap-2 shrink-0">
+																	<div class="rounded-lg border px-2.5 py-2 {{ $timelineStep['done'] ? 'border-emerald-200 bg-emerald-50' : 'border-gray-200 bg-white' }}">
+																		<div class="flex items-center gap-1 text-[11px] font-semibold {{ $timelineStep['done'] ? 'text-emerald-700' : 'text-gray-500' }}">
+																			<span class="h-1.5 w-1.5 rounded-full {{ $timelineStep['done'] ? 'bg-emerald-500' : 'bg-gray-400' }}"></span>
+																			{{ $timelineStep['label'] }}
+																		</div>
+																		<p class="mt-1 text-[10px] text-gray-500 dark:text-gray-400">{{ $timelineStep['value'] }}</p>
+																	</div>
+																	@if (! $loop->last)
+																		<svg class="h-4 w-4 shrink-0 self-center text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7M5 12h14"></path></svg>
+																	@endif
+																</div>
+															@endforeach
+														</div>
+														@if (in_array($item->status, ['delivered', 'rejected'], true))
+															<div class="mt-3 grid grid-cols-2 gap-2">
+																<form method="POST" action="{{ route('frontend.orders.items.update-decision', ['order' => $order, 'item' => $item]) }}">
+																	@csrf
+																	@method('PUT')
+																	<input type="hidden" name="status" value="approved">
+																	<button type="submit" class="w-full rounded-lg bg-emerald-600 px-3 py-2 text-xs font-semibold text-white hover:bg-emerald-500">Approve Work</button>
+																</form>
+																<form method="POST" action="{{ route('frontend.orders.items.update-decision', ['order' => $order, 'item' => $item]) }}">
+																	@csrf
+																	@method('PUT')
+																	<input type="hidden" name="status" value="rejected">
+																	<button type="submit" class="w-full rounded-lg bg-rose-600 px-3 py-2 text-xs font-semibold text-white hover:bg-rose-500">Reject Work</button>
+																</form>
+															</div>
+														@elseif ($item->status === 'approved' || $item->status === 'completed')
+															@if ($item->review)
+																<div class="mt-3 rounded-lg border border-teal-200 bg-teal-50 px-3 py-3 text-xs text-teal-800">
+																	<p class="font-semibold">Task review submitted</p>
+																	<p class="mt-1">Rating: {{ $item->review->rating }}/5</p>
+																	@if ($item->review->title)
+																		<p class="mt-1 font-medium">{{ $item->review->title }}</p>
+																	@endif
+																	@if ($item->review->comment)
+																		<p class="mt-1">{{ $item->review->comment }}</p>
+																	@endif
+																</div>
+															@else
+																<form method="POST" action="{{ route('frontend.orders.items.reviews.store', ['order' => $order, 'item' => $item]) }}" class="mt-3 space-y-2 rounded-lg border border-gray-200 bg-gray-50 p-3 dark:border-gray-700 dark:bg-gray-800/50">
+																	@csrf
+																	<p class="text-xs font-semibold text-gray-700 dark:text-gray-200">Review this influencer task</p>
+																	<div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+																		<select name="rating" class="rounded-lg border border-gray-300 bg-white px-2 py-2 text-xs text-gray-900 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100" required>
+																			<option value="">Rating</option>
+																			@for ($r = 5; $r >= 1; $r--)
+																				<option value="{{ $r }}">{{ $r }} star{{ $r === 1 ? '' : 's' }}</option>
+																			@endfor
+																		</select>
+																		<input type="text" name="title" maxlength="120" placeholder="Title (optional)" class="rounded-lg border border-gray-300 bg-white px-2 py-2 text-xs text-gray-900 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100">
+																	</div>
+																	<textarea name="comment" rows="2" maxlength="1200" placeholder="Comment (optional)" class="w-full rounded-lg border border-gray-300 bg-white px-2 py-2 text-xs text-gray-900 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100"></textarea>
+																	<button type="submit" class="w-full rounded-lg bg-indigo-600 px-3 py-2 text-xs font-semibold text-white hover:bg-indigo-500">Submit Task Review</button>
+																</form>
+															@endif
+														@elseif ($item->status === 'rejected')
+															<p class="mt-3 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-700">Reviewed: Rejected</p>
+														@endif
+													</div>
+												@endforeach
+											</div>
+										</div>
+									</details>
+								@empty
+									<div class="rounded-xl border border-dashed border-gray-300 px-4 py-8 text-center text-sm text-gray-500 dark:border-gray-700 dark:text-gray-400">No child orders found for this checkout.</div>
+								@endforelse
+							</div>
+						</div>
+					</div>
+
+					<div class="space-y-6 xl:col-span-1">
+						@if ($brandInfo)
+							<div class="rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
+								<div class="border-b border-gray-200 px-6 py-4 dark:border-gray-800">
+									<h3 class="font-semibold text-gray-900 dark:text-white">Brand Info</h3>
+								</div>
+								<div class="p-6 space-y-3 text-sm text-gray-600 dark:text-gray-400">
+									<div class="flex items-center gap-4">
+										<div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-100 text-sm font-bold text-indigo-700">{{ $brandInitial }}</div>
+										<div class="min-w-0">
+											<p class="truncate text-sm font-semibold text-gray-900 dark:text-white">{{ $brandInfo['name'] }}</p>
+											<p class="truncate text-xs text-gray-500 dark:text-gray-400">{{ $brandInfo['email'] }}</p>
+										</div>
+									</div>
+									@if ($brandSlug && ! $isBrand)
+										<a href="{{ route('brand.profile', ['slug' => $brandSlug]) }}" class="inline-flex items-center gap-2 rounded-lg bg-gray-900 px-3 py-2 text-xs font-semibold text-white hover:bg-black dark:bg-indigo-600 dark:hover:bg-indigo-500">
+											<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A8 8 0 1118.88 6.196M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+											View brand profile
+										</a>
+									@endif
+									<p>Close the parent order only after every child item is approved.</p>
+									@if ($orderIsCompleted)
+										<p class="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-xs font-semibold text-emerald-700">Order already completed.</p>
+									@elseif ($brandCanComplete)
+										<form method="POST" action="{{ route('frontend.orders.complete', $order) }}">
+											@csrf
+											@method('PUT')
+											<button type="submit" class="w-full rounded-lg bg-emerald-600 px-4 py-2 text-center font-semibold text-white hover:bg-emerald-500">Complete Order</button>
+										</form>
+									@else
+										<p class="rounded-lg border border-dashed border-gray-300 px-4 py-3 text-xs text-gray-500 dark:border-gray-700 dark:text-gray-400">Completion becomes available after all child items are approved.</p>
+									@endif
+									<a href="{{ route('frontend.orders.index') }}" class="block rounded-lg bg-gray-100 px-4 py-2 text-center font-semibold text-gray-900 hover:bg-gray-200 dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700">Back to Orders</a>
+								</div>
+						</div>
+						@endif
+					</div>
+				</div>
+			@endif
+
+			@if ($isInfluencer)
+				@php
+					$influencerItems = $order->items->where('influencer_id', auth()->user()->influencer?->id)->values();
+				@endphp
+				<div class="grid grid-cols-1 gap-6 xl:grid-cols-3">
+					<div class="space-y-6 xl:col-span-2">
+						<div class="rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
+							<div class="border-b border-gray-200 px-5 py-4 dark:border-gray-800 sm:px-6">
+								<h2 class="text-lg font-semibold text-gray-900 dark:text-white">Your Work Items</h2>
+								<p class="mt-1 text-sm text-gray-600 dark:text-gray-400">Update each task as you progress. Completed stays with the brand or admin.</p>
+							</div>
+							<div class="space-y-4 p-4 sm:p-6">
+								@forelse ($influencerItems as $item)
+									@php
+										$itemStatus = $statusStyles[$item->status] ?? ['badge' => 'bg-gray-100 text-gray-700', 'dot' => 'bg-gray-400'];
+										$itemDueDate = $item->due_date;
+										if (! $itemDueDate && $item->package?->delivery_days !== null && $order->placed_at) {
+											$itemDueDate = $order->placed_at->copy()->addDays((int) $item->package->delivery_days);
+										}
+										$itemTimeline = [
+													['label' => 'Placed', 'value' => $item->created_at?->format('M d g:iA') ?? '—', 'done' => true],
+													['label' => 'Accepted', 'value' => $item->accepted_at?->format('M d g:iA') ?? 'Waiting', 'done' => (bool) $item->accepted_at || in_array($item->status, ['accepted', 'in_progress', 'in-progress', 'delivered', 'approved'], true)],
+													['label' => 'Delivered', 'value' => $item->delivered_at?->format('M d g:iA') ?? 'Waiting', 'done' => in_array($item->status, ['delivered', 'approved'], true) || (bool) $item->delivered_at],
+										];
+									@endphp
+									<div class="rounded-xl border border-gray-200 p-4 dark:border-gray-800">
+										<div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+											<div class="min-w-0">
+												<div class="flex flex-wrap items-center gap-2">
+													<h3 class="truncate text-sm font-semibold text-gray-900 dark:text-white">{{ $item->title }}</h3>
+													<span class="inline-flex items-center gap-2 rounded-full px-2.5 py-0.5 text-xs font-semibold {{ $itemStatus['badge'] }}">
+														<span class="h-2 w-2 rounded-full {{ $itemStatus['dot'] }}"></span>
 														{{ ucfirst(str_replace('_', ' ', $item->status)) }}
 													</span>
 												</div>
-											</div>
-										</div>
-
-										<div class="text-right ml-6 min-w-fit">
-											<p class="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider">Unit Price</p>
-											<p class="text-lg font-semibold text-gray-900 dark:text-white mt-1">
-												${{ number_format($item->unit_price, 2) }}
-											</p>
-											<p class="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider mt-2">Line Total</p>
-											<p class="text-xl font-bold text-gray-900 dark:text-white mt-1">
-												${{ number_format($item->line_total, 2) }}
-											</p>
-										</div>
-									</div>
-								</div>
-							@empty
-								<div class="p-6 text-center text-gray-500 dark:text-gray-400">
-									No order items found.
-								</div>
-							@endforelse
-						</div>
-					</div>
-
-					<!-- Influencer Ratings & Reviews -->
-					<div class="rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
-						<div class="border-b border-gray-200 bg-linear-to-r from-amber-50 to-orange-50 px-6 py-4 dark:border-gray-800 dark:bg-gray-800/50">
-							<h2 class="text-lg font-semibold text-gray-900 dark:text-white">Influencer Ratings & Reviews</h2>
-							<p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
-								Brands can leave a rating only after the order is completed.
-							</p>
-						</div>
-						<div class="p-6 space-y-6">
-							@forelse ($orderInfluencers as $entry)
-								@php
-									$influencer = $entry['influencer'];
-									$avgRating = $entry['avg_rating'];
-									$reviewsCount = $entry['reviews_count'];
-									$hasOrderReview = $entry['has_order_review'];
-									$recentReviews = $entry['recent_reviews'];
-									$influencerName = $influencer?->display_name ?: $influencer?->user?->name ?: 'Influencer';
-								@endphp
-								<div class="rounded-xl border border-gray-200 p-5 dark:border-gray-700">
-									<div class="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-										<div class="space-y-2">
-											@if ($influencer?->user?->slug)
-												<a href="{{ route('influencer.profile', ['slug' => $influencer->user->slug]) }}"
-													class="text-base font-semibold text-gray-900 hover:text-indigo-600 dark:text-white dark:hover:text-indigo-300 transition">
-													{{ $influencerName }}
-												</a>
-											@else
-												<p class="text-base font-semibold text-gray-900 dark:text-white">{{ $influencerName }}</p>
-											@endif
-
-											<div class="flex items-center gap-2">
-												<div class="flex items-center gap-0.5">
-													@for ($star = 1; $star <= 5; $star++)
-														<x-icons.star class="w-4 h-4 {{ $avgRating !== null && $star <= floor($avgRating) ? 'text-amber-400' : 'text-gray-300 dark:text-gray-600' }}" />
-													@endfor
+												<p class="mt-1 text-sm text-gray-600 dark:text-gray-400">Package: <span class="font-medium text-gray-900 dark:text-white">{{ $item->package?->name ?? 'N/A' }}</span></p>
+												<div class="mt-2 grid grid-cols-2 gap-3 text-xs text-gray-500 dark:text-gray-400 sm:grid-cols-4">
+													<p>Qty: <span class="font-semibold text-gray-700 dark:text-gray-300">{{ $item->quantity }}</span></p>
+													<p>Subtotal: <span class="font-semibold text-gray-700 dark:text-gray-300">${{ number_format((float) $item->line_total, 2) }}</span></p>
+													<p>Due: <span class="font-semibold text-gray-700 dark:text-gray-300">{{ $itemDueDate ? $itemDueDate->format('M d, Y') : 'Not set' }}</span></p>
+													<p>Order: <span class="font-semibold text-gray-700 dark:text-gray-300">{{ $order->order_number }}</span></p>
 												</div>
-												<span class="text-sm font-semibold text-gray-700 dark:text-gray-300">
-													{{ $avgRating !== null ? number_format($avgRating, 1) : 'N/A' }}
-												</span>
-												<span class="text-sm text-gray-500 dark:text-gray-400">({{ $reviewsCount }} reviews)</span>
-											</div>
-
-											@if ($recentReviews->isNotEmpty())
-												<div class="space-y-2 pt-2">
-													@foreach ($recentReviews as $recentReview)
-														<div class="rounded-lg bg-gray-50 px-3 py-2 dark:bg-gray-800/60">
-															<div class="flex items-center justify-between gap-3">
-																<p class="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
-																	{{ $recentReview->brand?->brand_name ?: 'Brand' }}
-																</p>
-																<div class="flex items-center gap-0.5">
-																	@for ($i = 1; $i <= 5; $i++)
-																		<x-icons.star class="w-3.5 h-3.5 {{ $i <= $recentReview->rating ? 'text-amber-400' : 'text-gray-300 dark:text-gray-600' }}" />
-																	@endfor
+													<div class="mt-3 flex items-stretch gap-2 overflow-x-auto pb-1">
+													@foreach ($itemTimeline as $timelineStep)
+															<div class="flex items-center gap-2 shrink-0">
+																<div class="rounded-lg border px-2.5 py-2 {{ $timelineStep['done'] ? 'border-emerald-200 bg-emerald-50' : 'border-gray-200 bg-white' }}">
+																	<div class="flex items-center gap-1 text-[11px] font-semibold {{ $timelineStep['done'] ? 'text-emerald-700' : 'text-gray-500' }}">
+																		<span class="h-1.5 w-1.5 rounded-full {{ $timelineStep['done'] ? 'bg-emerald-500' : 'bg-gray-400' }}"></span>
+																		{{ $timelineStep['label'] }}
+																	</div>
+																	<p class="mt-1 text-[10px] text-gray-500 dark:text-gray-400">{{ $timelineStep['value'] }}</p>
 																</div>
+																@if (! $loop->last)
+																	<svg class="h-4 w-4 shrink-0 self-center text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7M5 12h14"></path></svg>
+																@endif
 															</div>
-															@if ($recentReview->comment)
-																<p class="mt-1 text-sm text-gray-700 dark:text-gray-300">{{ \Illuminate\Support\Str::limit($recentReview->comment, 130) }}</p>
-															@endif
-														</div>
 													@endforeach
 												</div>
-											@endif
-										</div>
-
-										<div class="w-full md:w-80">
-											@if (auth()->user()->user_type === 'brand')
-												@if ($hasOrderReview)
-													<div class="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">
-														Review already submitted for this order.
-													</div>
-												@elseif ($canLeaveReview)
-													<form method="POST" action="{{ route('frontend.orders.reviews.store', $order) }}" class="space-y-3 rounded-lg border border-gray-200 p-4 dark:border-gray-700">
-														@csrf
-														<input type="hidden" name="influencer_id" value="{{ $influencer->id }}">
-
-														<div>
-															<label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-gray-600 dark:text-gray-400">Rating</label>
-															<select name="rating" required class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100">
-																<option value="">Select stars</option>
-																@for ($rating = 5; $rating >= 1; $rating--)
-																	<option value="{{ $rating }}">{{ $rating }} star{{ $rating > 1 ? 's' : '' }}</option>
-																@endfor
-															</select>
-														</div>
-
-														<div>
-															<label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-gray-600 dark:text-gray-400">Title (Optional)</label>
-															<input type="text" name="title" maxlength="120" class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100" placeholder="Great collaboration">
-														</div>
-
-														<div>
-															<label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-gray-600 dark:text-gray-400">Comment (Optional)</label>
-															<textarea name="comment" rows="3" maxlength="1200" class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100" placeholder="Share your experience with this influencer"></textarea>
-														</div>
-
-														<button type="submit" class="w-full rounded-lg bg-gray-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-gray-800 dark:bg-indigo-600 dark:hover:bg-indigo-500">
-															Submit Review
-														</button>
-													</form>
-												@else
-													<div class="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-700">
-														Review becomes available once this order is completed.
-													</div>
-												@endif
-											@endif
-										</div>
-									</div>
-								</div>
-							@empty
-								<div class="rounded-xl border border-dashed border-gray-300 px-4 py-6 text-center text-sm text-gray-500 dark:border-gray-700 dark:text-gray-400">
-									No influencers found for this order.
-								</div>
-							@endforelse
-						</div>
-					</div>
-
-					<!-- Timeline -->
-					<div class="rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
-						<div class="border-b border-gray-200 bg-gray-50 px-6 py-4 dark:border-gray-800 dark:bg-gray-800/50">
-							<h2 class="text-lg font-semibold text-gray-900 dark:text-white">Order Timeline</h2>
-						</div>
-						<div class="p-6">
-							<div class="space-y-6">
-								<!-- Order Placed -->
-								<div class="flex gap-4">
-									<div class="flex flex-col items-center">
-										<div class="w-10 h-10 rounded-full bg-green-100 dark:bg-green-900/20 flex items-center justify-center flex-shrink-0">
-											<svg class="w-6 h-6 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-												<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-											</svg>
-										</div>
-										<div class="w-0.5 h-12 bg-gray-200 dark:bg-gray-700 my-2"></div>
-									</div>
-									<div class="flex-1 pt-1">
-										<p class="font-semibold text-gray-900 dark:text-white">Order Placed</p>
-										<p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
-											{{ $order->placed_at?->format('M d, Y \a\t h:i A') }}
-										</p>
-									</div>
-								</div>
-
-								<!-- Awaiting Response or Accepted -->
-								@if ($order->accepted_at)
-									<div class="flex gap-4">
-										<div class="flex flex-col items-center">
-											<div class="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/20 flex items-center justify-center flex-shrink-0">
-												<svg class="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-													<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-												</svg>
 											</div>
-											<div class="w-0.5 h-12 bg-gray-200 dark:bg-gray-700 my-2"></div>
-										</div>
-										<div class="flex-1 pt-1">
-											<p class="font-semibold text-gray-900 dark:text-white">Order Accepted</p>
-											<p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
-												{{ $order->accepted_at->format('M d, Y \a\t h:i A') }}
-											</p>
-										</div>
-									</div>
-								@else
-									<div class="flex gap-4">
-										<div class="flex flex-col items-center">
-											<div class="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center flex-shrink-0">
-												<svg class="w-6 h-6 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-													<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4v.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-												</svg>
-											</div>
-											<div class="w-0.5 h-12 bg-gray-200 dark:bg-gray-700 my-2"></div>
-										</div>
-										<div class="flex-1 pt-1">
-											<p class="font-semibold text-gray-900 dark:text-white">Awaiting Influencer Response</p>
-											<p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
-												Influencer will accept or negotiate this order
-											</p>
+											<form method="POST" action="{{ route('frontend.orders.items.update-status', ['order' => $order, 'item' => $item]) }}" class="w-full lg:w-56">
+												@csrf
+												@method('PUT')
+												<label class="mb-1 block text-xs font-semibold text-gray-600 dark:text-gray-300">Update task status</label>
+												<select name="status" class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-800 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100" required>
+													<option value="pending" @selected($item->status === 'pending')>Pending</option>
+													<option value="accepted" @selected($item->status === 'accepted')>Accepted</option>
+													<option value="in_progress" @selected(in_array($item->status, ['in_progress', 'in-progress'], true))>In Progress</option>
+													<option value="delivered" @selected($item->status === 'delivered')>Delivered (Awaiting approval)</option>
+												</select>
+												<button type="submit" class="mt-2 inline-flex w-full items-center justify-center rounded-lg bg-indigo-600 px-3 py-2 text-sm font-semibold text-white hover:bg-indigo-500">Save status</button>
+											</form>
 										</div>
 									</div>
-								@endif
-
-								<!-- In Progress -->
-								@if ($order->status === 'in-progress' || $order->status === 'in_progress' || $order->completed_at)
-									<div class="flex gap-4">
-										<div class="flex flex-col items-center">
-											<div class="w-10 h-10 rounded-full bg-purple-100 dark:bg-purple-900/20 flex items-center justify-center flex-shrink-0">
-												<svg class="w-6 h-6 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-													<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-												</svg>
-											</div>
-											<div class="w-0.5 h-12 bg-gray-200 dark:bg-gray-700 my-2"></div>
-										</div>
-										<div class="flex-1 pt-1">
-											<p class="font-semibold text-gray-900 dark:text-white">In Progress</p>
-											<p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
-												Influencer is working on your content
-											</p>
-										</div>
-									</div>
-								@else
-									<div class="flex gap-4">
-										<div class="flex flex-col items-center">
-											<div class="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center flex-shrink-0">
-												<svg class="w-6 h-6 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-													<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4v.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-												</svg>
-											</div>
-											<div class="w-0.5 h-12 bg-gray-200 dark:bg-gray-700 my-2"></div>
-										</div>
-										<div class="flex-1 pt-1">
-											<p class="font-semibold text-gray-900 dark:text-white">In Progress</p>
-											<p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
-												Waiting to start
-											</p>
-										</div>
-									</div>
-								@endif
-
-								<!-- Completed -->
-								@if ($order->completed_at)
-									<div class="flex gap-4">
-										<div class="flex flex-col items-center">
-											<div class="w-10 h-10 rounded-full bg-green-100 dark:bg-green-900/20 flex items-center justify-center flex-shrink-0">
-												<svg class="w-6 h-6 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-													<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-												</svg>
-											</div>
-										</div>
-										<div class="flex-1 pt-1">
-											<p class="font-semibold text-gray-900 dark:text-white">Order Completed</p>
-											<p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
-												{{ $order->completed_at->format('M d, Y \a\t h:i A') }}
-											</p>
-										</div>
-									</div>
-								@else
-									<div class="flex gap-4">
-										<div class="flex flex-col items-center">
-											<div class="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center flex-shrink-0">
-												<svg class="w-6 h-6 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-													<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4v.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-												</svg>
-											</div>
-										</div>
-										<div class="flex-1 pt-1">
-											<p class="font-semibold text-gray-900 dark:text-white">Order Completion</p>
-											<p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
-												Pending completion
-											</p>
-										</div>
-									</div>
-								@endif
+								@empty
+									<div class="rounded-xl border border-dashed border-gray-300 px-4 py-8 text-center text-sm text-gray-500 dark:border-gray-700 dark:text-gray-400">No assigned tasks in this order.</div>
+								@endforelse
 							</div>
 						</div>
 					</div>
 
-					<!-- Messaging Section -->
-					<div class="rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
-						<div class="border-b border-gray-200 bg-gray-50 px-6 py-4 dark:border-gray-800 dark:bg-gray-800/50">
-							<h2 class="text-lg font-semibold text-gray-900 dark:text-white">Messages & Communication</h2>
-						</div>
-						<div class="p-6">
-							<p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
-								Message the influencer about this order. You can discuss details, ask questions, or share feedback.
-							</p>
-							<a href="{{ route('frontend.conversations.index') }}"
-								class="inline-flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 dark:hover:bg-purple-600 text-white text-sm font-semibold rounded-lg transition">
-								<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
-								</svg>
-								Open Conversations
-							</a>
+					<div class="space-y-6 xl:col-span-1">
+						@if ($brandInfo)
+							<div class="rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
+								<div class="border-b border-gray-200 px-6 py-4 dark:border-gray-800">
+									<h3 class="font-semibold text-gray-900 dark:text-white">Brand Info</h3>
+								</div>
+								<div class="p-6">
+									<div class="flex items-center gap-4">
+										<div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-100 text-sm font-bold text-indigo-700">{{ $brandInitial }}</div>
+										<div class="min-w-0">
+											<p class="truncate text-sm font-semibold text-gray-900 dark:text-white">{{ $brandInfo['name'] }}</p>
+											<p class="truncate text-xs text-gray-500 dark:text-gray-400">{{ $brandInfo['email'] }}</p>
+										</div>
+									</div>
+									@if ($brandSlug)
+										<a href="{{ route('brand.profile', ['slug' => $brandSlug]) }}" class="mt-4 inline-flex items-center gap-2 rounded-lg bg-gray-900 px-3 py-2 text-xs font-semibold text-white hover:bg-black dark:bg-indigo-600 dark:hover:bg-indigo-500">
+											<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A8 8 0 1118.88 6.196M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+											View brand profile
+										</a>
+									@endif
+								</div>
+							</div>
+						@endif
+
+						<div class="rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
+							<div class="border-b border-gray-200 px-6 py-4 dark:border-gray-800">
+								<h3 class="font-semibold text-gray-900 dark:text-white">Review Brand</h3>
+							</div>
+							<div class="space-y-3 p-6 text-sm text-gray-600 dark:text-gray-400">
+								@if ($canLeaveReview)
+									<form method="POST" action="{{ route('frontend.orders.reviews.store', $order) }}" class="space-y-3">
+										@csrf
+										<div>
+											<label class="mb-1 block text-xs font-semibold text-gray-600 dark:text-gray-300">Rating</label>
+											<select name="rating" class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-800 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100" required>
+												@for ($i = 5; $i >= 1; $i--)
+													<option value="{{ $i }}">{{ $i }} star{{ $i === 1 ? '' : 's' }}</option>
+												@endfor
+											</select>
+										</div>
+										<div>
+											<label class="mb-1 block text-xs font-semibold text-gray-600 dark:text-gray-300">Title</label>
+											<input type="text" name="title" class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-800 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100" placeholder="Short review title">
+										</div>
+										<div>
+											<label class="mb-1 block text-xs font-semibold text-gray-600 dark:text-gray-300">Comment</label>
+											<textarea name="comment" rows="4" class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-800 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100" placeholder="Share your experience with the brand"></textarea>
+										</div>
+										<button type="submit" class="w-full rounded-lg bg-emerald-600 px-4 py-2 text-center font-semibold text-white hover:bg-emerald-500">Submit Review</button>
+									</form>
+								@elseif (($hasSubmittedReview ?? false) === true)
+									<p class="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-xs text-emerald-700">You already reviewed this brand for this order.</p>
+								@else
+									<p class="rounded-lg border border-dashed border-gray-300 px-4 py-3 text-xs text-gray-500 dark:border-gray-700 dark:text-gray-400">You can leave a review after the brand completes the order.</p>
+								@endif
+								<a href="{{ route('frontend.orders.index') }}" class="block rounded-lg bg-gray-100 px-4 py-2 text-center font-semibold text-gray-900 hover:bg-gray-200 dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700">Back to Orders</a>
+							</div>
 						</div>
 					</div>
 				</div>
-
-				<!-- Sidebar -->
-				<div class="lg:col-span-1 space-y-6">
-					<!-- Order Summary -->
-					<div class="rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
-						<div class="border-b border-gray-200 bg-gray-50 px-6 py-4 dark:border-gray-800 dark:bg-gray-800/50">
-							<h3 class="font-semibold text-gray-900 dark:text-white">Order Summary</h3>
-						</div>
-						<div class="p-6 space-y-3">
-							@php
-								$itemsSubtotal = (float) ($order->subtotal ?? $order->items->sum('line_total'));
-								$serviceFee = (float) ($order->service_fee ?? 0);
-								$taxAmount = (float) ($order->tax_amount ?? 0);
-								$totalAmount = (float) ($order->total_amount ?? ($itemsSubtotal + $serviceFee + $taxAmount));
-							@endphp
-							<div class="flex justify-between text-sm">
-								<span class="text-gray-600 dark:text-gray-400">Subtotal</span>
-								<span class="font-medium text-gray-900 dark:text-white">
-									${{ number_format($itemsSubtotal, 2) }}
-								</span>
-							</div>
-							@if ($serviceFee > 0)
-								<div class="flex justify-between text-sm">
-									<span class="text-gray-600 dark:text-gray-400">Service Fee (20%)</span>
-									<span class="font-medium text-gray-900 dark:text-white">
-										${{ number_format($serviceFee, 2) }}
-									</span>
-								</div>
-							@endif
-							@if ($taxAmount > 0)
-								<div class="flex justify-between text-sm">
-									<span class="text-gray-600 dark:text-gray-400">Tax</span>
-									<span class="font-medium text-gray-900 dark:text-white">
-										${{ number_format($taxAmount, 2) }}
-									</span>
-								</div>
-							@endif
-							<div class="flex justify-between text-sm">
-								<span class="text-gray-600 dark:text-gray-400">Total Items</span>
-								<span class="font-medium text-gray-900 dark:text-white">{{ $order->items->count() }}</span>
-							</div>
-							<div class="flex justify-between text-sm">
-									<span class="text-gray-600 dark:text-gray-400">Influencers</span>
-									<span class="font-medium text-gray-900 dark:text-white">
-										{{ $order->items->pluck('influencer_id')->unique()->count() }}
-								</span>
-							</div>
-							<div class="border-t border-gray-200 dark:border-gray-700 pt-3 flex justify-between">
-								<span class="font-semibold text-gray-900 dark:text-white">Total Amount</span>
-								<span class="text-lg font-bold text-indigo-600 dark:text-indigo-400">
-									${{ number_format($totalAmount, 2) }}
-								</span>
-							</div>
-						</div>
-					</div>
-
-					<!-- Order Information -->
-					<div class="rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
-						<div class="border-b border-gray-200 bg-gray-50 px-6 py-4 dark:border-gray-800 dark:bg-gray-800/50">
-							<h3 class="font-semibold text-gray-900 dark:text-white">Order Information</h3>
-						</div>
-						<div class="p-6 space-y-3 text-sm">
-							<div>
-								<p class="text-gray-600 dark:text-gray-400 text-xs uppercase tracking-wider">Order Number</p>
-								<p class="font-medium text-gray-900 dark:text-white mt-1">{{ $order->order_number }}</p>
-							</div>
-							<div>
-								<p class="text-gray-600 dark:text-gray-400 text-xs uppercase tracking-wider">Placed Date</p>
-								<p class="font-medium text-gray-900 dark:text-white mt-1">
-									{{ $order->placed_at?->format('M d, Y') }}
-								</p>
-							</div>
-							@if ($order->accepted_at)
-								<div>
-									<p class="text-gray-600 dark:text-gray-400 text-xs uppercase tracking-wider">Accepted Date</p>
-									<p class="font-medium text-gray-900 dark:text-white mt-1">
-										{{ $order->accepted_at->format('M d, Y') }}
-									</p>
-								</div>
-							@endif
-							@if ($order->completed_at)
-								<div>
-									<p class="text-gray-600 dark:text-gray-400 text-xs uppercase tracking-wider">Completed Date</p>
-									<p class="font-medium text-gray-900 dark:text-white mt-1">
-										{{ $order->completed_at->format('M d, Y') }}
-									</p>
-								</div>
-							@endif
-						</div>
-					</div>
-
-					<!-- Actions -->
-					<div class="rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
-						<div class="p-6 space-y-3">
-							<a href="{{ route('frontend.orders.index') }}"
-								class="block w-full px-4 py-2 text-center bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white font-semibold rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition">
-								Back to Orders
-							</a>
-						</div>
-					</div>
-				</div>
-			</div>
+			@endif
 		</div>
 	</div>
 @endsection

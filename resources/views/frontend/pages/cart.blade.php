@@ -102,8 +102,9 @@
                         
                         @php
                             $subtotal = (float) $cart->total_price;
-                            $fee = $subtotal * 0.02;
-                            $total = $subtotal + $fee;
+                            $pricing = \App\Support\PlatformPricing::calculateFromNet($subtotal);
+                            $fee = $pricing['platform_charge'];
+                            $total = $pricing['gross_total'];
                         @endphp
 
                         <div class="space-y-3 pb-4 border-b border-gray-200 dark:border-gray-800">
@@ -112,7 +113,7 @@
                                 <span class="font-medium text-gray-900 dark:text-white">${{ number_format($subtotal, 2) }}</span>
                             </div>
                             <div class="flex justify-between text-sm">
-                                <span class="text-gray-600 dark:text-gray-400">Service Fee (2%)</span>
+                                <span class="text-gray-600 dark:text-gray-400">Platform Charge (20%)</span>
                                 <span class="font-medium text-gray-900 dark:text-white">${{ number_format($fee, 2) }}</span>
                             </div>
                         </div>

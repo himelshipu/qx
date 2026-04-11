@@ -9,9 +9,12 @@ use App\Models\Message;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Package;
+use App\Support\PlatformPricing;
 use App\Services\Auth\PendingPostAuthActionService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Carbon;
 use Illuminate\View\View;
 
 class CartController extends Controller
@@ -375,92 +378,120 @@ class CartController extends Controller
 
         try {
             $latestConversation = null;
+            $groupedByInfluencer = $cart->items->groupBy('influencer_id');
 
-            // Group by influencer to keep one conversation message per influencer.
-            foreach ($cart->items->groupBy('influencer_id') as $influencerId => $influencerCartItems) {
-                $latestOrderId = null;
-                $packageLines  = [];
+            $checkoutSubtotal = (float) $cart->items->sum(function ($item) {
+                return $item->unit_price * $item->quantity;
+            });
+            $checkoutPricing = PlatformPricing::calculateFromNet($checkoutSubtotal);
 
-                foreach ($influencerCartItems as $cartItem) {
-                    $package = $cartItem->package;
+            $parentOrder = DB::transaction(function () use ($groupedByInfluencer, $user, $checkoutPricing, &$latestConversation): Order {
+                $parent = Order::create([
+                    'order_number'  => 'ORD-' . uniqid(),
+                    'buyer_user_id' => $user->id,
+                    'brand_id'      => $user->brand?->id,
+                    'subtotal'      => $checkoutPricing['net_subtotal'],
+                    'service_fee'   => $checkoutPricing['platform_charge'],
+                    'tax_amount'    => 0,
+                    'total_amount'  => $checkoutPricing['gross_total'],
+                    'currency'      => 'USD',
+                    'status'        => 'pending',
+                    'placed_at'     => now()
+                ]);
 
-                    // Calculate pricing with 20% service fee
-                    $subtotal = $cartItem->unit_price * $cartItem->quantity;
-                    $serviceFee = $subtotal * 0.20;
-                    $totalAmount = $subtotal + $serviceFee;
+                // Create one child order per influencer and attach all that influencer's package items.
+                foreach ($groupedByInfluencer as $influencerId => $influencerCartItems) {
+                    $latestOrderId = null;
+                    $packageLines  = [];
+                    $influencerSubtotal = (float) $influencerCartItems->sum(function ($item) {
+                        return $item->unit_price * $item->quantity;
+                    });
+                    $influencerPricing = PlatformPricing::calculateFromNet($influencerSubtotal);
 
-                    // Create order
-                    $order = Order::create([
+                    $childOrder = Order::create([
                         'order_number'  => 'ORD-' . uniqid(),
                         'buyer_user_id' => $user->id,
                         'brand_id'      => $user->brand?->id,
-                        'subtotal'      => $subtotal,
-                        'service_fee'   => $serviceFee,
+                        'parent_order_id' => $parent->id,
+                        'accepted_for_influencer_id' => (int) $influencerId,
+                        'subtotal'      => $influencerPricing['net_subtotal'],
+                        'service_fee'   => $influencerPricing['platform_charge'],
                         'tax_amount'    => 0,
-                        'total_amount'  => $totalAmount,
+                        'total_amount'  => $influencerPricing['gross_total'],
                         'currency'      => 'USD',
                         'status'        => 'pending',
                         'placed_at'     => now()
                     ]);
 
-                    // Create order item
-                    OrderItem::create([
-                        'order_id'      => $order->id,
-                        'package_id'    => $package->id,
-                        'influencer_id' => $package->influencer_id,
-                        'title'         => $package->name,
-                        'quantity'      => $cartItem->quantity,
-                        'unit_price'    => $cartItem->unit_price,
-                        'line_total'    => $cartItem->unit_price * $cartItem->quantity,
-                        'status'        => 'pending'
-                    ]);
+                    foreach ($influencerCartItems as $cartItem) {
+                        $package = $cartItem->package;
+                        $dueDate = null;
 
-                    $latestOrderId  = $order->id;
-                    $packageLines[] = sprintf('%dx %s', (int) $cartItem->quantity, $package->name);
-                }
+                        if ($childOrder->placed_at && $package->delivery_days !== null) {
+                            $dueDate = Carbon::parse($childOrder->placed_at)->addDays((int) $package->delivery_days)->toDateString();
+                        }
 
-                $influencerSampleItem = $influencerCartItems->first();
-                $influencer           = $influencerSampleItem?->package?->influencer;
+                        OrderItem::create([
+                            'order_id'      => $childOrder->id,
+                            'package_id'    => $package->id,
+                            'influencer_id' => $package->influencer_id,
+                            'title'         => $package->name,
+                            'quantity'      => $cartItem->quantity,
+                            'unit_price'    => $cartItem->unit_price,
+                            'line_total'    => $cartItem->unit_price * $cartItem->quantity,
+                            'status'        => 'pending',
+                            'due_date'      => $dueDate,
+                        ]);
 
-                $conversation = Conversation::query()
-                    ->where('brand_user_id', $user->id)
-                    ->where('influencer_id', (int) $influencerId)
-                    ->latest('updated_at')
-                    ->first();
+                        $latestOrderId  = $childOrder->id;
+                        $packageLines[] = sprintf('%dx %s', (int) $cartItem->quantity, $package->name);
+                    }
 
-                if (!$conversation) {
-                    $conversation = ConversationController::createForPackageOrder(
-                        $user->id,
-                        (int) $influencerId,
-                        (int) $latestOrderId
+                    $influencerSampleItem = $influencerCartItems->first();
+                    $influencer           = $influencerSampleItem?->package?->influencer;
+
+                    $conversation = Conversation::query()
+                        ->where('brand_user_id', $user->id)
+                        ->where('influencer_id', (int) $influencerId)
+                        ->latest('updated_at')
+                        ->first();
+
+                    if (!$conversation) {
+                        $conversation = ConversationController::createForPackageOrder(
+                            $user->id,
+                            (int) $influencerId,
+                            (int) $latestOrderId
+                        );
+                    }
+
+                    if (!$conversation->order_id && $latestOrderId) {
+                        $conversation->update([
+                            'order_id'          => $latestOrderId,
+                            'conversation_type' => $conversation->conversation_type ?: 'order'
+                        ]);
+                    }
+
+                    $influencerName           = $influencer?->display_name ?: ($influencer?->user?->name ?? 'there');
+                    $orderConfirmationMessage = sprintf(
+                        "hello %s,i want to confirm order for this package:\n- %s",
+                        $influencerName,
+                        implode("\n- ", $packageLines)
                     );
-                }
 
-                if (!$conversation->order_id && $latestOrderId) {
-                    $conversation->update([
-                        'order_id'          => $latestOrderId,
-                        'conversation_type' => $conversation->conversation_type ?: 'order'
+                    Message::create([
+                        'conversation_id' => $conversation->id,
+                        'sender_user_id'  => $user->id,
+                        'sender_role'     => $user->user_type,
+                        'message'         => $orderConfirmationMessage,
+                        'read_at'         => null
                     ]);
+
+                    $conversation->touch();
+                    $latestConversation = $conversation;
                 }
 
-                $influencerName           = $influencer?->display_name ?: ($influencer?->user?->name ?? 'there');
-                $orderConfirmationMessage = sprintf(
-                    "hello %s,i want to confirm order for this package:\n- %s",
-                    $influencerName,
-                    implode("\n- ", $packageLines)
-                );
-
-                Message::create([
-                    'conversation_id' => $conversation->id,
-                    'sender_user_id'  => $user->id,
-                    'sender_role'     => $user->user_type,
-                    'message'         => $orderConfirmationMessage,
-                    'read_at'         => null
-                ]);
-
-                $conversation->touch();
-                $latestConversation = $conversation;
-            }
+                return $parent;
+            });
 
             // Clear cart
             $cart->items()->delete();
@@ -507,9 +538,13 @@ class CartController extends Controller
             return $item->unit_price * $item->quantity;
         });
 
+        $pricing = PlatformPricing::calculateFromNet((float) $subtotal);
+
         return [
             'items'         => $items,
-            'subtotal'      => $subtotal,
+            'subtotal'      => $pricing['net_subtotal'],
+            'platformCharge' => $pricing['platform_charge'],
+            'total'         => $pricing['gross_total'],
             'itemCount'     => $cart->items->count(),
             'totalQuantity' => $cart->items->sum('quantity')
         ];

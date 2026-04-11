@@ -17,6 +17,10 @@
 			<tbody class="divide-y divide-gray-100 dark:divide-gray-800">
 				@forelse ($orders as $order)
 					@php
+						$hasDirectPackageItems = (int) ($order->package_items_count ?? 0) > 0;
+						$hasChildPackageOrders = (int) ($order->child_package_orders_count ?? 0) > 0;
+						$isPackageOrder = $hasDirectPackageItems || $hasChildPackageOrders;
+
 						$statusColor = match ($order->status) {
 						    'completed' => 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
 						    'cancelled', 'refunded' => 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300',
@@ -24,7 +28,7 @@
 						    default => 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300',
 						};
 
-						$orderType = $order->campaign_id ? 'Campaign' : (($order->package_items_count ?? 0) > 0 ? 'Package' : 'Unknown');
+						$orderType = $order->campaign_id ? 'Campaign' : ($isPackageOrder ? 'Package' : 'Unknown');
 						$typeColor = match ($orderType) {
 						    'Campaign' => 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300',
 						    'Package' => 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300',
@@ -48,7 +52,7 @@
 					<tr class="transition hover:bg-gray-50/70 dark:hover:bg-gray-800/40">
 						<td class="px-4 py-3">
 							<p class="text-sm font-semibold text-gray-900 dark:text-white">{{ $order->order_number }}</p>
-							<p class="text-xs text-gray-500 dark:text-gray-400">#{{ $order->id }}</p>
+							<p class="text-xs text-gray-500 dark:text-gray-400">#{{ $order->id }} @if (($order->child_orders_count ?? 0) > 0) • {{ $order->child_orders_count }} child order(s) @endif</p>
 						</td>
 						<td class="px-4 py-3 text-sm">
 							<span class="inline-flex rounded-full px-2.5 py-1 text-xs font-semibold {{ $typeColor }}">{{ $orderType }}</span>

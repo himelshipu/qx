@@ -76,14 +76,10 @@ class ReviewController extends Controller
 
     public function toggleVisibility(Review $review): JsonResponse
     {
-        $review->update([
-            'is_public' => !$review->is_public
-        ]);
-
         return response()->json([
-            'success'   => true,
-            'message'   => 'Review visibility updated successfully.',
-            'is_public' => (bool) $review->is_public
-        ]);
+            'success' => false,
+            'message' => 'Reviews are immutable. Visibility cannot be changed after submission.',
+            'is_public' => true,
+        ], 422);
     }
 }

@@ -132,6 +132,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Frontend Orders
     Route::get('/orders', [App\Http\Controllers\Frontend\OrderController::class, 'index'])->name('frontend.orders.index');
     Route::get('/orders/{order}', [App\Http\Controllers\Frontend\OrderController::class, 'show'])->name('frontend.orders.show');
+    Route::put('/orders/{order}/items/{item}/status', [App\Http\Controllers\Frontend\OrderController::class, 'updateItemStatus'])->name('frontend.orders.items.update-status');
+    Route::put('/orders/{order}/items/{item}/decision', [App\Http\Controllers\Frontend\OrderController::class, 'updateBrandItemDecision'])->name('frontend.orders.items.update-decision');
+    Route::post('/orders/{order}/items/{item}/review', [App\Http\Controllers\Frontend\OrderController::class, 'storeBrandTaskReview'])->name('frontend.orders.items.reviews.store');
+    Route::put('/orders/{order}/complete', [App\Http\Controllers\Frontend\OrderController::class, 'completeOrder'])->name('frontend.orders.complete');
     Route::post('/orders/{order}/reviews', [App\Http\Controllers\Frontend\OrderController::class, 'storeReview'])->name('frontend.orders.reviews.store');
 
     // Frontend Conversations

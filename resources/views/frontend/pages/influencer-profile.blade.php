@@ -681,6 +681,7 @@
 					@foreach ($reviewsPage as $review)
 						@php
 							$reviewTitle = $review->orderItem?->package?->name ?: $review->orderItem?->title;
+							$orderNumber = $review->orderItem?->order?->order_number;
 						@endphp
 						<div class="pb-6 border-b border-gray-100 dark:border-gray-800 last:border-b-0">
 							<!-- Review Header -->
@@ -690,9 +691,12 @@
 										{{ \Illuminate\Support\Str::substr($review->brand?->brand_name ?? 'B', 0, 1) }}
 									</div>
 									<div>
-										<p class="font-semibold text-gray-900 dark:text-white text-sm">{{ $review->brand?->brand_name ?? 'Brand' }}</p>
+										<p class="font-semibold text-gray-900 dark:text-white text-sm">From {{ $review->brand?->brand_name ?? 'Brand' }}</p>
 										@if ($reviewTitle)
-											<p class="text-xs text-gray-500 dark:text-gray-400">{{ $reviewTitle }}</p>
+											<p class="text-xs text-gray-500 dark:text-gray-400">Task: {{ $reviewTitle }}</p>
+										@endif
+										@if ($orderNumber)
+											<p class="text-xs text-gray-500 dark:text-gray-400">Order: {{ $orderNumber }}</p>
 										@endif
 									</div>
 								</div>
