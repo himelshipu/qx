@@ -270,7 +270,9 @@ class CampaignController extends Controller
     public function updateApplicationStatus(Campaign $campaign, $applicationId, Request $request): RedirectResponse
     {
         Gate::authorize('update', $campaign);
-        $validated = $request->validate(['status' => 'required|in:approved,rejected']);
+        $validated = $request->validate([
+            'status' => 'required|in:approved,rejected'
+        ]);
 
         $application = \App\Models\CampaignApplication::where('campaign_id', $campaign->id)
             ->where('id', $applicationId)
@@ -304,11 +306,13 @@ class CampaignController extends Controller
         \Log::info('Update request', ['app_id' => $application->id, 'old_status' => $application->status, 'new_status' => $validated['status']]);
 
         try {
-            // Use update() instead of save() to ensure it works
-            $updated = $application->update([
+            $updateData = [
                 'status'     => $validated['status'],
                 'decided_at' => now()
-            ]);
+            ];
+
+            // Use update() instead of save() to ensure it works
+            $updated = $application->update($updateData);
 
             \Log::info('Update result', ['app_id' => $application->id, 'updated' => $updated, 'new_status' => $validated['status']]);
 
@@ -485,6 +489,7 @@ class CampaignController extends Controller
             return redirect()->back()->with('error', 'Only approved applications can have their work status updated');
         }
 
+        // Handle work status update
         $validated = $request->validate([
             'work_status' => 'required|in:pending,accepted,in_progress,on_review,completed',
         ]);

@@ -148,26 +148,44 @@
 			</div>
 		</div>
 
-		<!-- Create Order Button (if approved influencers exist) -->
-		@if ($influencers->where('status', 'approved')->count() > 0)
-			<div class="rounded-xl border border-green-200 bg-green-50 p-5 dark:border-green-900/30 dark:bg-green-900/20">
+		<!-- Create Order Button (if approved influencers with agreed prices exist) -->
+		@php
+			$approvedCount = $influencers->where('status', 'approved')->count();
+			$agreedCount = $influencers->where('status', 'approved')->whereNotNull('agreed_amount')->count();
+			$canCreateOrder = $approvedCount > 0 && $agreedCount === $approvedCount;
+		@endphp
+		@if ($approvedCount > 0)
+			<div class="rounded-xl border {{ $canCreateOrder ? 'border-green-200 bg-green-50 dark:border-green-900/30 dark:bg-green-900/20' : 'border-amber-200 bg-amber-50 dark:border-amber-900/30 dark:bg-amber-900/20' }} p-5">
 				<div class="flex items-center justify-between">
 					<div>
-						<h3 class="font-semibold text-green-900 dark:text-green-100">Ready to Create Orders</h3>
-						<p class="mt-1 text-sm text-green-800 dark:text-green-300">
-							You have {{ $influencers->where('status', 'approved')->count() }} approved influencers. Create the master order
-							with sub-orders.
+						<h3 class="font-semibold {{ $canCreateOrder ? 'text-green-900 dark:text-green-100' : 'text-amber-900 dark:text-amber-100' }}">
+							{{ $canCreateOrder ? '✓ Ready to Create Orders' : '⏳ Waiting for Price Agreement' }}
+						</h3>
+						<p class="mt-1 text-sm {{ $canCreateOrder ? 'text-green-800 dark:text-green-300' : 'text-amber-800 dark:text-amber-300' }}">
+							@if ($canCreateOrder)
+								You have {{ $approvedCount }} approved influencers with agreed prices. Create the master order with sub-orders.
+							@else
+								{{ $approvedCount }} approved influencers, but {{ $approvedCount - $agreedCount }} haven't agreed on price yet. Prices must be negotiated first.
+							@endif
 						</p>
 					</div>
-					<form action="{{ route('dashboard.orders.create-from-campaign') }}" method="POST" class="inline">
-						@csrf
-						<input type="hidden" name="campaign_id" value="{{ $campaign->id }}">
-						<input type="hidden" name="brand_id" value="{{ $campaign->brand_id }}">
-						<button type="submit"
-							class="rounded-lg bg-green-600 px-6 py-2 font-medium text-white transition hover:bg-green-700">
-							Create Master Order
+					@if ($canCreateOrder)
+						<form action="{{ route('dashboard.orders.create-from-campaign') }}" method="POST" class="inline">
+							@csrf
+							<input type="hidden" name="campaign_id" value="{{ $campaign->id }}">
+							<input type="hidden" name="brand_id" value="{{ $campaign->brand_id }}">
+							<button type="submit"
+								class="rounded-lg bg-green-600 px-6 py-2 font-medium text-white transition hover:bg-green-700">
+								Create Master Order
+							</button>
+						</form>
+					@else
+						<button type="button" disabled
+							class="rounded-lg bg-gray-300 px-6 py-2 font-medium text-gray-600 cursor-not-allowed opacity-60"
+							title="Complete price negotiation first">
+							Create Order (Disabled)
 						</button>
-					</form>
+					@endif
 				</div>
 			</div>
 		@endif

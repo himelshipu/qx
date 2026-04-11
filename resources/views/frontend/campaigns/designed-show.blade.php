@@ -2,7 +2,7 @@
 
 @section('content')
 	<div class="min-h-screen bg-white dark:bg-gray-900 px-4 py-6 sm:px-6 lg:px-8">
-		<div class="max-w-7xl mx-auto">
+		<div class="max-w-full mx-auto">
 			<!-- Back Button (above first card) -->
 			<div class="mb-4">
 				<a href="{{ route('frontend.campaigns.index') }}"
@@ -545,7 +545,6 @@
 										];
 										$workStatus = $workStatusKey ? ($workStatusLabelMap[$workStatusKey] ?? ucfirst(str_replace('_', ' ', $workStatusKey))) : null;
 										$assignment = ($assignmentByInfluencer ?? collect())->get($application->influencer_id);
-										$agreedAmount = $assignment?->agreed_amount ?? $application->agreed_rate ?? $application->proposed_rate;
 										$budgetCurrency = strtoupper((string) ($campaign->currency ?? 'USD'));
 									@endphp
 									<td class="px-4 py-3 text-xs text-gray-600 dark:text-gray-400 hidden md:table-cell">
@@ -566,13 +565,7 @@
 											—
 										@endif
 									</td>
-									<td class="px-4 py-3 hidden md:table-cell text-xs text-gray-700 dark:text-gray-300 whitespace-nowrap">
-										@if ($agreedAmount)
-											<span class="font-semibold">{{ $budgetCurrency }} {{ number_format((float) $agreedAmount, 2) }}</span>
-										@else
-											—
-										@endif
-									</td>
+
 									<td class="px-4 py-3 hidden sm:table-cell text-xs text-gray-600 dark:text-gray-400 whitespace-nowrap">
 										@if ($application->decided_at)
 											<span class="font-medium">{{ $application->decided_at->format('M d') }}</span>
