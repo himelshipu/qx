@@ -132,17 +132,16 @@
 							</a>
 
 							<!-- Edit Profile -->
-							<a href="{{ route('frontend.profile.edit') }}"
+							<a href="@if (auth()->user()->user_type === 'influencer') {{ route('influencer.profile.edit', auth()->user()->slug) }}@else{{ route('brand.profile.edit', auth()->user()->slug) }} @endif"
 								class="block w-full text-left px-4 py-3 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
 								<i class="fas fa-edit mr-2"></i>Edit Profile
 							</a>
 
-							<!-- Account Settings -->
-							<a href="{{ route('frontend.account.edit', Auth::user()->slug) }}" <i class="fas fa-cog mr-2"></i>Account
-								Settings
-							</a>
-
-							<!-- Orders -->
+						<!-- Account Settings -->
+						<a href="{{ route('frontend.account.edit', auth()->user()->slug) }}" 
+							class="block w-full text-left px-4 py-3 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
+							<i class="fas fa-cog mr-2"></i>Account Settings
+						</a>							<!-- Orders -->
 							<a href="{{ route('frontend.orders.index') }}"
 								class="block w-full text-left px-4 py-3 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
 								<i class="fas fa-receipt mr-2"></i>Orders

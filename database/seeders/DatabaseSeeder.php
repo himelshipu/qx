@@ -60,6 +60,7 @@ class DatabaseSeeder extends Seeder
             \Database\Seeders\FaqItemSeeder::class,
             \Database\Seeders\KnowledgeBaseSeeder::class,
             \Database\Seeders\FeaturedCollaborationSeeder::class,
+            \Database\Seeders\StaticPageSeeder::class,
 
             // Admin dashboard configuration
             \Database\Seeders\AdminMenuSeeder::class,

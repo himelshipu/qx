@@ -36,8 +36,16 @@
         <div class="max-w-7xl mx-auto px-2 py-6 flex flex-col md:flex-row items-center justify-between gap-4">
             <div class="flex flex-wrap items-center gap-4 md:gap-6 text-sm text-gray-600 dark:text-gray-400">
                 <span>© Rockies Inc.</span>
-                <a href="#" class="hover:text-gray-800 dark:hover:text-white">Privacy</a>
-                <a href="#" class="hover:text-gray-800 dark:hover:text-white">Terms & Conditions</a>
+                @php
+                    $footerPages = \App\Models\Setting::get('footer_pages', []);
+                    $pages = \App\Models\StaticPage::whereIn('id', $footerPages)->where('is_active', true)->get();
+                @endphp
+                @forelse($pages as $page)
+                    <a href="{{ route('pages.show', $page->slug) }}" class="hover:text-gray-800 dark:hover:text-white">{{ $page->title }}</a>
+                @empty
+                    <a href="#" class="hover:text-gray-800 dark:hover:text-white">Privacy</a>
+                    <a href="#" class="hover:text-gray-800 dark:hover:text-white">Terms & Conditions</a>
+                @endforelse
             </div>
 
             <div class="flex items-center gap-4 text-gray-800 dark:text-gray-300">

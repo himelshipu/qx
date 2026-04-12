@@ -67,23 +67,28 @@
 				<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
 					@foreach ($roles as $role)
 						<label
-							class="group relative flex items-center p-3 border-2 border-gray-200 dark:border-gray-700 rounded-lg cursor-pointer hover:border-purple-400 dark:hover:border-purple-600 hover:bg-purple-50 dark:hover:bg-purple-900/10 transition-all duration-200"
+							class="group relative flex items-center p-4 border-2 border-gray-200 dark:border-gray-700 rounded-lg cursor-pointer hover:border-purple-400 dark:hover:border-purple-600 hover:bg-purple-50 dark:hover:bg-purple-900/10 transition-all duration-200"
 							:class="{ 'border-purple-500 dark:border-purple-600 bg-purple-50 dark:bg-purple-900/20': selectedRoles.includes(
 							        '{{ $role->id }}') }">
 							<input type="checkbox" name="roles[]" value="{{ $role->id }}"
 								:checked="selectedRoles.includes('{{ $role->id }}')" @change="updateSelectedRoles()"
 								class="w-5 h-5 text-purple-600 rounded focus:ring-2 focus:ring-purple-500 dark:bg-gray-700 dark:border-gray-600 cursor-pointer">
-							<span class="ml-3 flex-1">
-								<span
-									class="block text-sm font-medium text-gray-900 dark:text-white group-hover:text-purple-700 dark:group-hover:text-purple-300">
-									{{ $role->name }}
-								</span>
+							<div class="ml-3 flex-1">
+								<div class="flex items-center justify-between mb-1">
+									<span
+										class="block text-sm font-semibold text-gray-900 dark:text-white group-hover:text-purple-700 dark:group-hover:text-purple-300">
+										{{ $role->name }}
+									</span>
+									<span class="px-2 py-0.5 text-xs font-medium bg-purple-100 dark:bg-purple-900/50 text-purple-800 dark:text-purple-300 rounded">
+										{{ $role->permissions_count ?? 0 }} perms
+									</span>
+								</div>
 								@if ($role->description)
-									<span class="block text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+									<span class="block text-xs text-gray-600 dark:text-gray-400 mt-1">
 										{{ $role->description }}
 									</span>
 								@endif
-							</span>
+							</div>
 						</label>
 					@endforeach
 				</div>

@@ -83,6 +83,15 @@ class MenuHelper
                             ['name' => 'All Articles', 'route' => 'knowledge-base.index', 'icon' => 'knowledge-base'],
                             ['name' => 'Create Article', 'route' => 'knowledge-base.create', 'icon' => 'campaign-new']
                         ]
+                    ],
+                    [
+                        'icon'     => 'pages',
+                        'name'     => 'Static Pages',
+                        'subItems' => [
+                            ['name' => 'All Pages', 'route' => 'static-pages.index', 'icon' => 'pages'],
+                            ['name' => 'Create Page', 'route' => 'static-pages.create', 'icon' => 'campaign-new'],
+                            ['name' => 'Footer Settings', 'route' => 'settings.index', 'icon' => 'settings']
+                        ]
                     ]
                 ]
             ],
@@ -100,11 +109,6 @@ class MenuHelper
                         'icon'  => 'campaign-new',
                         'name'  => 'New Campaign',
                         'route' => 'campaigns.standard.create'
-                    ],
-                    [
-                        'icon'  => 'content-library',
-                        'name'  => 'Content Library',
-                        'route' => 'content-library'
                     ],
                     [
                         'icon'  => 'reviews',
@@ -145,11 +149,6 @@ class MenuHelper
                         ]
                     ],
                     [
-                        'icon'  => 'cart',
-                        'name'  => 'Carts',
-                        'route' => 'carts.index'
-                    ],
-                    [
                         'icon'  => 'orders',
                         'name'  => 'Orders',
                         'route' => 'orders.index'
@@ -168,11 +167,6 @@ class MenuHelper
                         'icon'  => 'payouts',
                         'name'  => 'Payouts',
                         'route' => 'payouts.index'
-                    ],
-                    [
-                        'icon'  => 'wishlist',
-                        'name'  => 'Wishlists',
-                        'route' => 'wishlists.index'
                     ]
                 ]
             ],
@@ -411,21 +405,39 @@ class MenuHelper
             return null;
         }
 
-        // For routes like 'categories.index', check 'categories.index' permission
-        // For routes like 'dashboard.index', check 'dashboard.view' permission
-        
-        if ($route === 'dashboard.index' || $route === '/dashboard') {
-            return 'dashboard.view';
+        // Map special routes to permissions
+        $specialMappings = [
+            'dashboard.index' => 'dashboard.view',
+            '/dashboard' => 'dashboard.view',
+            'campaigns.standard' => 'campaigns.index',
+            'campaigns.standard.create' => 'campaigns.create',
+            'packages.purchase' => 'packages.purchase',
+            'payment-queue.index' => 'payment-queue.index',
+            'payment-audit.index' => 'payment-audit.index',
+            'payment-statement.index' => 'payment-statement.index',
+            'notifications.index' => 'notifications.index',
+            'settings' => 'settings.view',
+            'reviews.index' => 'reviews.index',
+            'case-studies.index' => 'case-studies.index',
+            'testimonials.index' => 'testimonials.index',
+            'faqs.sections.index' => 'faqs.sections.index',
+            'knowledge-base.index' => 'knowledge-base.index',
+            'featured-collaborations.index' => 'featured-collaborations.index',
+            'static-pages.index' => 'static-pages.index',
+            'settings.index' => 'settings.index',
+        ];
+
+        if (isset($specialMappings[$route])) {
+            return $specialMappings[$route];
         }
 
-        // Convert route to permission slug
-        // Most routes follow pattern: resource.action -> resource.action
+        // Standard pattern: resource.action -> resource.action permission
         if (strpos($route, '.') !== false) {
-            // For dashboard-prefixed routes that need prefix removed
             if (str_starts_with($route, 'dashboard.')) {
-                return $route; // Keep as is
+                return $route;
             }
             
+            // For routes like 'users.index', check 'users.index' permission
             return $route;
         }
 
@@ -463,23 +475,19 @@ class MenuHelper
 
             'knowledge-base'  => '<svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 6a2 2 0 012-2h5a3 3 0 013 3v11a3 3 0 00-3-3H6a2 2 0 01-2-2V6zm16 0a2 2 0 00-2-2h-5a3 3 0 00-3 3v11a3 3 0 013-3h5a2 2 0 002-2V6z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>',
 
+            'pages'           => '<svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9 4H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M9 9h6M9 15h3M17 3v6h6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+
             'campaign-new'    => '<svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 4v16m8-8H4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>',
 
             'user-add'        => '<svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="8.5" cy="7" r="4" stroke="currentColor" stroke-width="1.5"/><path d="M20 8v6M23 11h-6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>',
 
-            'content-library' => '<svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 5a2 2 0 012-2h8l6 6v10a2 2 0 01-2 2H6a2 2 0 01-2-2V5z" stroke="currentColor" stroke-width="1.5"/><path d="M14 3v5a1 1 0 001 1h5" stroke="currentColor" stroke-width="1.5"/></svg>',
-
             'packages'        => '<svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 7l9 4 9-4M3 7l9-4 9 4M3 7v10l9 4 9-4V7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>',
-
-            'cart'            => '<svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 3h2l3.6 7.59a2 2 0 001.88 1.41h9.72a2 2 0 001.88-1.41l3.6-7.59H6M6 20a1 1 0 110-2 1 1 0 110 2zM18 20a1 1 0 110-2 1 1 0 110 2z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>',
 
             'orders'          => '<svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 6h16M4 12h16M4 18h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M18 17l2 2 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>',
 
             'payments'        => '<svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="2.5" y="5" width="19" height="14" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M2.5 10h19" stroke="currentColor" stroke-width="1.5"/><path d="M7 15h4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>',
 
             'payouts'         => '<svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 4v16M5 11l7-7 7 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><rect x="4" y="18" width="16" height="2" rx="1" fill="currentColor"/></svg>',
-
-            'wishlist'        => '<svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 21s-7-4.35-9.5-8A5.5 5.5 0 1112 6.5 5.5 5.5 0 0121.5 13C19 16.65 12 21 12 21z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>',
 
             'support'         => '<svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9 9a3 3 0 116 0c0 2-3 2-3 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M12 17h.01" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.5"/></svg>',
 

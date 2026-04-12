@@ -127,10 +127,6 @@ class PermissionSeeder extends Seeder
             ['name' => 'Toggle Package Status', 'slug' => 'packages.toggle-status', 'module' => 'packages'],
             ['name' => 'Purchase Package', 'slug' => 'packages.purchase', 'module' => 'packages'],
 
-            // CARTS
-            ['name' => 'View Carts', 'slug' => 'carts.index', 'module' => 'commerce'],
-            ['name' => 'View Cart Details', 'slug' => 'carts.show', 'module' => 'commerce'],
-
             // ORDERS
             ['name' => 'View Orders', 'slug' => 'orders.index', 'module' => 'orders'],
             ['name' => 'View Order Details', 'slug' => 'orders.show', 'module' => 'orders'],
@@ -146,9 +142,6 @@ class PermissionSeeder extends Seeder
 
             // PAYOUTS
             ['name' => 'View Payouts', 'slug' => 'payouts.index', 'module' => 'payouts'],
-
-            // WISHLISTS
-            ['name' => 'View Wishlists', 'slug' => 'wishlists.index', 'module' => 'wishlists'],
 
             // REVIEWS
             ['name' => 'View Reviews', 'slug' => 'reviews.index', 'module' => 'reviews'],
@@ -219,13 +212,6 @@ class PermissionSeeder extends Seeder
             ['name' => 'Update Collaboration', 'slug' => 'featured-collaborations.update', 'module' => 'content'],
             ['name' => 'Delete Collaboration', 'slug' => 'featured-collaborations.destroy', 'module' => 'content'],
             ['name' => 'Toggle Collaboration Published', 'slug' => 'featured-collaborations.toggle-publish', 'module' => 'content'],
-
-            // CONTENT LIBRARY
-            ['name' => 'View Content Library', 'slug' => 'content-library.index', 'module' => 'campaigns'],
-
-            // CART MANAGER (Admin Only)
-            ['name' => 'View All Carts (Admin)', 'slug' => 'cart-manager.index', 'module' => 'admin'],
-            ['name' => 'View Cart Details (Admin)', 'slug' => 'cart-manager.show', 'module' => 'admin'],
 
             // USERS MANAGEMENT - CRUD OPERATIONS
             ['name' => 'Create User', 'slug' => 'users.create', 'module' => 'users'],
@@ -305,6 +291,43 @@ class PermissionSeeder extends Seeder
             ['name' => 'Review Flagged Content', 'slug' => 'moderation.review', 'module' => 'moderation'],
             ['name' => 'Block/Unblock Users', 'slug' => 'moderation.block-users', 'module' => 'moderation'],
             ['name' => 'Remove Content', 'slug' => 'moderation.remove-content', 'module' => 'moderation'],
+
+            // NOTIFICATIONS MANAGEMENT
+            ['name' => 'View Notifications', 'slug' => 'notifications.index', 'module' => 'notifications'],
+            ['name' => 'Send Notification', 'slug' => 'notifications.send', 'module' => 'notifications'],
+            ['name' => 'Delete Notification', 'slug' => 'notifications.destroy', 'module' => 'notifications'],
+
+            // PAYMENT QUEUE MANAGEMENT
+            ['name' => 'View Payment Queue', 'slug' => 'payment-queue.index', 'module' => 'payments'],
+            ['name' => 'Process Payment Queue', 'slug' => 'payment-queue.process', 'module' => 'payments'],
+            ['name' => 'Retry Failed Payments', 'slug' => 'payment-queue.retry', 'module' => 'payments'],
+
+            // PAYMENT AUDIT
+            ['name' => 'View Payment Audit Logs', 'slug' => 'payment-audit.index', 'module' => 'payments'],
+
+            // PAYMENT STATEMENTS  
+            ['name' => 'View Payment Statements', 'slug' => 'payment-statement.index', 'module' => 'payments'],
+            ['name' => 'Export Payment Statements', 'slug' => 'payment-statement.export', 'module' => 'payments'],
+
+            // ACTIVITY & AUDIT LOGGING
+            ['name' => 'View Activity Logs', 'slug' => 'logs.activity.view', 'module' => 'logs'],
+            ['name' => 'Export Activity Logs', 'slug' => 'logs.activity.export', 'module' => 'logs'],
+            ['name' => 'View RBAC Audit Trail', 'slug' => 'audit.rbac.view', 'module' => 'audit'],
+            ['name' => 'Export RBAC Audit', 'slug' => 'audit.rbac.export', 'module' => 'audit'],
+
+            // STATIC PAGES
+            ['name' => 'View Static Pages', 'slug' => 'static-pages.index', 'module' => 'content'],
+            ['name' => 'Create Static Page', 'slug' => 'static-pages.create', 'module' => 'content'],
+            ['name' => 'Store Static Page', 'slug' => 'static-pages.store', 'module' => 'content'],
+            ['name' => 'View Page Details', 'slug' => 'static-pages.show', 'module' => 'content'],
+            ['name' => 'Edit Static Page', 'slug' => 'static-pages.edit', 'module' => 'content'],
+            ['name' => 'Update Static Page', 'slug' => 'static-pages.update', 'module' => 'content'],
+            ['name' => 'Delete Static Page', 'slug' => 'static-pages.destroy', 'module' => 'content'],
+            ['name' => 'Toggle Page Status', 'slug' => 'static-pages.toggle-status', 'module' => 'content'],
+
+            // Settings
+            ['name' => 'View Settings', 'slug' => 'settings.index', 'module' => 'settings'],
+            ['name' => 'Update Settings', 'slug' => 'settings.update', 'module' => 'settings'],
         ];
     }
 }

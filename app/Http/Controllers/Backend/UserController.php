@@ -5,12 +5,14 @@ namespace App\Http\Controllers\Backend;
 use App\Http\Controllers\Controller;
 use App\Models\Role;
 use App\Models\User;
+use App\Traits\LogsRbacChanges;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class UserController extends Controller
 {
+    use LogsRbacChanges;
     /**
      * Display user list with realtime search and status filtering.
      */
@@ -110,6 +112,7 @@ class UserController extends Controller
 
         $roles = Role::where('is_active', true)
             ->where('is_superadmin', false) // Don't show superadmin role in the list to prevent accidental assignment
+            ->withCount('permissions')
             ->orderBy('name')
             ->get();
 
@@ -190,9 +193,15 @@ class UserController extends Controller
                 $user->roles()->sync($request->roles);
                 // Sync user_type with the primary role name
                 $user->update(['user_type' => strtolower($role->name)]);
+                
+                // Log the role sync
+                $this->logRoleSync($user->id, $request->roles);
+                
                 $message = 'Roles assigned to user successfully.';
             } else {
                 $user->roles()->sync([]);
+                // Log empty roles assignment
+                $this->logRoleSync($user->id, []);
                 $message = 'All roles removed from user.';
             }
 

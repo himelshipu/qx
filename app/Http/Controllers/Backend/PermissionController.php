@@ -5,11 +5,13 @@ namespace App\Http\Controllers\Backend;
 use App\Http\Controllers\Controller;
 use App\Models\Permission;
 use App\Models\Role;
+use App\Traits\LogsRbacChanges;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
 class PermissionController extends Controller
 {
+    use LogsRbacChanges;
     /**
      * Display a listing of the permissions.
      */
@@ -171,10 +173,28 @@ class PermissionController extends Controller
 
         $role = Role::findOrFail($request->role_id);
         
+        // Get current permissions for audit trail
+        $previousPermissions = $role->permissions()->pluck('id')->toArray();
+        
         if ($request->has('permissions')) {
             $role->syncPermissions($request->permissions);
         } else {
             $role->syncPermissions([]);
+        }
+
+        // Log permission changes
+        $newPermissions = $request->permissions ?? [];
+        
+        // Log removed permissions
+        $removedPermissions = array_diff($previousPermissions, $newPermissions);
+        foreach ($removedPermissions as $permissionId) {
+            $this->logPermissionRemoval($role->id, $permissionId);
+        }
+        
+        // Log added permissions
+        $addedPermissions = array_diff($newPermissions, $previousPermissions);
+        foreach ($addedPermissions as $permissionId) {
+            $this->logPermissionAddition($role->id, $permissionId);
         }
 
         return redirect()->route('dashboard.permissions.assign')

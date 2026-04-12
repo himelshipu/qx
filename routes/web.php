@@ -6,7 +6,6 @@ use App\Http\Controllers\AccountController;
 use App\Http\Controllers\Backend\BrandController;
 use App\Http\Controllers\Backend\CampaignController;
 use App\Http\Controllers\Backend\CampaignInfluencerController;
-use App\Http\Controllers\Backend\CartManagerController;
 use App\Http\Controllers\Backend\CaseStudyController;
 use App\Http\Controllers\Backend\CategoryController;
 use App\Http\Controllers\Backend\DashboardController;
@@ -29,6 +28,8 @@ use App\Http\Controllers\Backend\PermissionController;
 use App\Http\Controllers\Backend\ReviewController as BackendReviewController;
 use App\Http\Controllers\Backend\RoleController;
 use App\Http\Controllers\Backend\SupportTicketController;
+use App\Http\Controllers\Backend\StaticPageController;
+use App\Http\Controllers\Backend\SettingsController;
 use App\Http\Controllers\Backend\TestimonialController;
 use App\Http\Controllers\Backend\UserController;
 use App\Http\Controllers\BrandProfileController;
@@ -53,6 +54,7 @@ use App\Http\Controllers\Frontend\StaticPagesController;
 use App\Http\Controllers\Frontend\SupportTicketController as FrontendSupportTicketController;
 use App\Http\Controllers\InfluencerProfileController;
 use App\Http\Controllers\PaymentMethodController;
+use App\Http\Controllers\PublicPageController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -96,6 +98,9 @@ Route::middleware(['web'])->group(function () {
     Route::get('/influencers/{platformSlug}', [InfluencersController::class, 'index'])->name('influencers.platform');
     Route::get('/category/{categorySlug}', [InfluencersController::class, 'byCategory'])->name('influencers.category');
     Route::get('/ugc', [InfluencersController::class, 'ugc'])->name('influencers.ugc');
+
+    // Static pages (privacy, terms, about, contact, etc.)
+    Route::get('/page/{slug}', [PublicPageController::class, 'show'])->name('pages.show');
 
     // Case Studies page
     Route::get('/case-studies', [FrontendCaseStudyController::class, 'index'])->name('case-studies');
@@ -312,9 +317,6 @@ Route::prefix('dashboard')->name('dashboard.')->middleware(['auth', 'verified', 
     Route::delete('/packages/{package}', [PackageController::class, 'destroy'])->name('packages.destroy');
     Route::post('/packages/{package}/toggle-status', [PackageController::class, 'toggleStatus'])->name('packages.toggle-status');
 
-    Route::get('/carts', [CartManagerController::class, 'index'])->name('carts.index');
-    Route::get('/carts/{cart}', [CartManagerController::class, 'show'])->name('carts.show');
-
     Route::get('/orders', [BackendOrderController::class, 'index'])->name('orders.index');
     Route::get('/orders/{order}', [BackendOrderController::class, 'show'])->name('orders.show');
     Route::put('/orders/{order}/status', [BackendOrderController::class, 'updateStatus'])->name('orders.update-status');
@@ -349,8 +351,6 @@ Route::prefix('dashboard')->name('dashboard.')->middleware(['auth', 'verified', 
     Route::get('/payment-statement/{influencer}', [PaymentStatementController::class, 'show'])->name('payment-statement.show');
     Route::get('/payment-statement/{influencer}/pdf', [PaymentStatementController::class, 'pdf'])->name('payment-statement.pdf');
 
-    Route::view('/wishlists', 'backend.pages.coming-soon', ['module' => 'Wishlists'])->name('wishlists.index');
-
     // Conversations (Chat with Moderator Mediation)
     Route::get('/conversations', [ConversationController::class, 'index'])->name('conversations.index');
     Route::get('/conversations/{conversation:public_id}', [ConversationController::class, 'show'])->name('conversations.show');
@@ -373,9 +373,6 @@ Route::prefix('dashboard')->name('dashboard.')->middleware(['auth', 'verified', 
     Route::delete('/notifications/{notification}', [NotificationController::class, 'destroy'])->name('notifications.destroy');
     Route::delete('/notifications/clear-all', [NotificationController::class, 'clearAll'])->name('notifications.clear-all');
     Route::get('/notifications/{notification}/show', [NotificationController::class, 'show'])->name('notifications.show');
-
-    // Content Library
-    Route::get('/content-library', [ContentLibraryController::class, 'index'])->name('content-library');
 
     // Role routes (dashboard)
     Route::get('/roles', [RoleController::class, 'index'])->name('roles.index');
@@ -466,6 +463,21 @@ Route::prefix('dashboard')->name('dashboard.')->middleware(['auth', 'verified', 
     Route::put('/knowledge-base/{article}', [KnowledgeBaseController::class, 'update'])->name('knowledge-base.update');
     Route::delete('/knowledge-base/{article}', [KnowledgeBaseController::class, 'destroy'])->name('knowledge-base.destroy');
     Route::post('/knowledge-base/{article}/toggle-status', [KnowledgeBaseController::class, 'toggleStatus'])->name('knowledge-base.toggle-status');
+
+    // Static Pages routes
+    Route::get('/static-pages', [StaticPageController::class, 'index'])->name('static-pages.index');
+    Route::get('/static-pages/create', [StaticPageController::class, 'create'])->name('static-pages.create');
+    Route::post('/static-pages', [StaticPageController::class, 'store'])->name('static-pages.store');
+    Route::get('/static-pages/{staticPage}', [StaticPageController::class, 'show'])->name('static-pages.show');
+    Route::get('/static-pages/{staticPage}/edit', [StaticPageController::class, 'edit'])->name('static-pages.edit');
+    Route::put('/static-pages/{staticPage}', [StaticPageController::class, 'update'])->name('static-pages.update');
+    Route::delete('/static-pages/{staticPage}', [StaticPageController::class, 'destroy'])->name('static-pages.destroy');
+    Route::post('/static-pages/{staticPage}/toggle-status', [StaticPageController::class, 'toggleStatus'])->name('static-pages.toggle-status');
+
+    // Settings routes
+    Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
+    Route::post('/settings', [SettingsController::class, 'update'])->name('settings.update');
+    Route::post('/settings/update-order', [SettingsController::class, 'updateOrder'])->name('settings.update-order');
 
     // Account routes (dashboard-only)
     Route::get('/account/{slug}', [AccountController::class, 'edit'])->name('account.edit');

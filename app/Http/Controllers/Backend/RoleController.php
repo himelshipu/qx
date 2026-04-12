@@ -4,11 +4,13 @@ namespace App\Http\Controllers\Backend;
 
 use App\Http\Controllers\Controller;
 use App\Models\Role;
+use App\Traits\LogsRbacChanges;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
 class RoleController extends Controller
 {
+    use LogsRbacChanges;
     /**
      * Display a listing of the roles.
      */
@@ -37,6 +39,9 @@ class RoleController extends Controller
                 'slug'      => Str::slug($validated['name']),
                 'is_active' => $request->boolean('is_active', true)
             ]);
+
+            // Log role creation
+            $this->logRoleCreation($role->id, $this->getRoleData($role->id));
 
             return response()->json([
                 'success' => true,
@@ -78,11 +83,18 @@ class RoleController extends Controller
                 'is_active' => ['boolean']
             ]);
 
+            // Get before data for audit trail
+            $beforeData = $this->getRoleData($role->id);
+
             $role->update([
                 'name'      => $validated['name'],
                 'slug'      => Str::slug($validated['name']),
                 'is_active' => $request->boolean('is_active', true)
             ]);
+
+            // Log role update
+            $afterData = $this->getRoleData($role->id);
+            $this->logRoleUpdate($role->id, $beforeData, $afterData);
 
             return response()->json([
                 'success' => true,
