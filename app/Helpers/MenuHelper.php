@@ -244,12 +244,14 @@ class MenuHelper
 
     public static function buildSidebarMenu(string $currentRoute): array
     {
+        $user            = auth()->user();
         $menuItems       = self::getMainNavItems();
         $preparedItems   = [];
         $activeAccordion = null;
 
         foreach ($menuItems as $key => $item) {
             if ($key === 'dashboard') {
+                // Dashboard always visible to authenticated users who passed middleware
                 [$routeName, $url]   = self::resolveRouteMeta($item['route'] ?? null, false);
                 $preparedItems[$key] = [
                      ...$item,
@@ -268,6 +270,12 @@ class MenuHelper
                 foreach ($item['items'] as $index => $subItem) {
                     $menuId      = $key . '_' . $index;
                     $hasSubItems = isset($subItem['subItems']);
+                    
+                    // Check if user has permission to view this menu item
+                    $permission = self::getPermissionForMenuItem($key, $subItem);
+                    if ($permission && !$user->hasPermission($permission)) {
+                        continue; // Skip this menu item if user doesn't have permission
+                    }
 
                     if ($hasSubItems) {
                         $nestedItems   = [];
@@ -278,12 +286,23 @@ class MenuHelper
                             $isActive          = self::isRouteMatch($currentRoute, $routeName);
                             $subItemActive     = $subItemActive || $isActive;
 
+                            // Check if user has permission for nested item
+                            $nestedPermission = self::getPermissionForMenuItem($key, $nestedItem);
+                            if ($nestedPermission && !$user->hasPermission($nestedPermission)) {
+                                continue; // Skip if no permission
+                            }
+
                             $nestedItems[] = [
                                  ...$nestedItem,
                                 'route_name' => $routeName,
                                 'url'        => $url,
                                 'active'     => $isActive
                             ];
+                        }
+
+                        // Skip if no nested items left after filtering
+                        if (empty($nestedItems)) {
+                            continue;
                         }
 
                         if ($subItemActive && $activeAccordion === null) {
@@ -317,11 +336,14 @@ class MenuHelper
                     ];
                 }
 
-                $preparedItems[$key] = [
-                     ...$item,
-                    'items'  => $groupItems,
-                    'active' => $groupActive
-                ];
+                // Only add group if it has items
+                if (!empty($groupItems)) {
+                    $preparedItems[$key] = [
+                         ...$item,
+                        'items'  => $groupItems,
+                        'active' => $groupActive
+                    ];
+                }
 
                 continue;
             }
@@ -375,6 +397,39 @@ class MenuHelper
     private static function isRouteMatch(string $currentRoute, ?string $routeName): bool
     {
         return $routeName !== null && $currentRoute === $routeName;
+    }
+
+    /**
+     * Map menu items to their required permissions.
+     * Returns null if no specific permission is required (always visible).
+     */
+    private static function getPermissionForMenuItem(string $groupKey, array $item): ?string
+    {
+        // Extract route name from 'route' field
+        $route = $item['route'] ?? null;
+        if (!$route) {
+            return null;
+        }
+
+        // For routes like 'categories.index', check 'categories.index' permission
+        // For routes like 'dashboard.index', check 'dashboard.view' permission
+        
+        if ($route === 'dashboard.index' || $route === '/dashboard') {
+            return 'dashboard.view';
+        }
+
+        // Convert route to permission slug
+        // Most routes follow pattern: resource.action -> resource.action
+        if (strpos($route, '.') !== false) {
+            // For dashboard-prefixed routes that need prefix removed
+            if (str_starts_with($route, 'dashboard.')) {
+                return $route; // Keep as is
+            }
+            
+            return $route;
+        }
+
+        return null;
     }
 
     public static function getIconSvg($iconName)

@@ -86,6 +86,13 @@ class User extends Authenticatable
                 $user->slug = static::buildUniqueSlug($source, $user->id);
             }
         });
+
+        // Prevent deletion of superadmin users
+        static::deleting(function (self $user) {
+            if ($user->isSuperadmin()) {
+                throw new \Exception('Cannot delete superadmin users. They are protected.');
+            }
+        });
     }
 
     private static function buildUniqueSlug(?string $source, ?int $ignoreId): string
@@ -205,7 +212,7 @@ class User extends Authenticatable
     public function canAccessDashboard(): bool
     {
         // Based on user_type, not roles
-        $dashboardUserTypes = ['admin', 'moderator'];
+        $dashboardUserTypes = ['admin', 'moderator', 'superadmin'];
         return in_array($this->user_type, $dashboardUserTypes);
     }
 
@@ -254,9 +261,20 @@ class User extends Authenticatable
 
     /**
      * Sync roles for the user
+     * 
+     * IMPORTANT: Prevents superadmin role from being removed from superadmin users
      */
     public function syncRoles(array $roleIds): void
     {
+        // If user is superadmin, prevent complete removal of superadmin role
+        if ($this->isSuperadmin()) {
+            $superadminRole = Role::where('is_superadmin', true)->first();
+            if ($superadminRole && !in_array($superadminRole->id, $roleIds)) {
+                // Ensure superadmin role is always in the sync
+                $roleIds[] = $superadminRole->id;
+            }
+        }
+
         $this->roles()->sync($roleIds);
     }
 

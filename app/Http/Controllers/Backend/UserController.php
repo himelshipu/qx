@@ -150,6 +150,28 @@ class UserController extends Controller
 
             $user = User::findOrFail($request->user_id);
 
+            // Prevent modification of superadmin users
+            if ($user->isSuperadmin()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Cannot modify superadmin user roles.'
+                ], 403);
+            }
+
+            // Prevent current user from removing own dashboard access
+            if ($user->id === auth()->id() && $request->has('roles') && is_array($request->roles)) {
+                $hasDashboardAccess = Role::whereIn('id', $request->roles)
+                    ->whereHas('permissions', fn($q) => $q->where('slug', 'dashboard.view'))
+                    ->exists();
+
+                if (!$hasDashboardAccess) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'You cannot remove your own dashboard access.'
+                    ], 403);
+                }
+            }
+
             if ($request->has('roles') && is_array($request->roles)) {
                 // Prevent assignment of superadmin roles
                 $superadminRoles = Role::where('is_superadmin', true)->pluck('id')->toArray();
@@ -162,7 +184,12 @@ class UserController extends Controller
                     ], 403);
                 }
 
+                // Get the primary role (first role) to set as user_type
+                $role = Role::findOrFail($request->roles[0]);
+
                 $user->roles()->sync($request->roles);
+                // Sync user_type with the primary role name
+                $user->update(['user_type' => strtolower($role->name)]);
                 $message = 'Roles assigned to user successfully.';
             } else {
                 $user->roles()->sync([]);
@@ -173,10 +200,11 @@ class UserController extends Controller
                 'success' => true,
                 'message' => $message,
                 'user'    => [
-                    'id'    => $user->id,
-                    'name'  => $user->name,
-                    'email' => $user->email,
-                    'roles' => $user->roles()->pluck('name')->toArray()
+                    'id'        => $user->id,
+                    'name'      => $user->name,
+                    'email'     => $user->email,
+                    'user_type' => $user->user_type,
+                    'roles'     => $user->roles()->pluck('name')->toArray()
                 ]
             ]);
         } catch (\Illuminate\Validation\ValidationException $e) {
@@ -330,6 +358,18 @@ class UserController extends Controller
     public function update(Request $request, User $user)
     {
         try {
+            // Prevent editing of superadmin users
+            if ($user->isSuperadmin()) {
+                if ($request->expectsJson()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Cannot edit superadmin users.'
+                    ], 403);
+                }
+
+                return back()->with('error', 'Cannot edit superadmin users.');
+            }
+
             $request->validate([
                 'name'               => ['required', 'string', 'max:255'],
                 'email'              => ['required', 'email', 'unique:users,email,' . $user->id],
@@ -353,6 +393,20 @@ class UserController extends Controller
                     }
 
                     return back()->withErrors(['role_id' => 'Cannot assign superadmin role.']);
+                }
+
+                // Prevent current user from removing own dashboard access
+                if ($user->id === auth()->id()) {
+                    if (!$role->permissions()->where('slug', 'dashboard.view')->exists()) {
+                        if ($request->expectsJson()) {
+                            return response()->json([
+                                'success' => false,
+                                'message' => 'You cannot remove your own dashboard access.'
+                            ], 403);
+                        }
+
+                        return back()->withErrors(['role_id' => 'You cannot remove your own dashboard access.']);
+                    }
                 }
             }
 
@@ -390,6 +444,7 @@ class UserController extends Controller
             if ($request->filled('role_id')) {
                 $role = Role::find($request->role_id);
                 $user->roles()->sync([$request->role_id]);
+                // Sync user_type with the role name
                 $user->update(['user_type' => strtolower($role->name)]);
             }
 

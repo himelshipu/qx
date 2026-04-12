@@ -36,18 +36,6 @@
 			</div>
 		</div>
 
-		<!-- Sessions -->
-		@if (session('success'))
-			<div class="p-4 m-6 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
-				<div class="flex items-center gap-2">
-					<svg class="w-5 h-5 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-					</svg>
-					<p class="text-sm text-green-700 dark:text-green-300">{{ session('success') }}</p>
-				</div>
-			</div>
-		@endif
-
 		<form action="{{ route('dashboard.permissions.assign.store') }}" method="POST" x-ref="permissionsForm">
 			@csrf
 			<input type="hidden" name="role_id" :value="roleId">
@@ -74,17 +62,19 @@
 											<option value="{{ $role->id }}">{{ $role->name }}</option>
 										@endforeach
 									</select>
-									<button type="button" @click="checkAllPermissions()"
-										class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg transition-colors">
-										Check All
+									<button type="button" @click="allChecked ? uncheckAllPermissions() : checkAllPermissions()"
+										class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors flex items-center gap-2">
+										<svg x-show="!allChecked" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+											<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+										</svg>
+										<svg x-show="allChecked" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+											<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+										</svg>
+										<span x-text="allChecked ? 'Uncheck All' : 'Check All'"></span>
 									</button>
-									<button type="button" @click="uncheckAllPermissions()"
-										class="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white text-sm font-medium rounded-lg transition-colors">
-										Uncheck All
-									</button>
-									<button type="submit" :disabled="!roleId"
-										class="px-4 py-2 bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white text-sm font-medium rounded-lg transition-colors">
-										Apply
+									<button type="submit"
+										class="px-4 py-2 bg-gray-900 dark:bg-gray-700 hover:bg-gray-800 dark:hover:bg-gray-600 text-white text-sm font-medium rounded-lg transition-colors">
+										Save Permissions
 									</button>
 								</div>
 							</th>
@@ -145,15 +135,6 @@
 					</tbody>
 				</table>
 			</div>
-
-			<!-- Save Footer -->
-			<div class="p-6 border-t border-gray-200 dark:border-gray-700 flex justify-between items-center">
-				<p class="text-sm text-gray-500" x-text="selectedPermissionIds.length + ' permissions selected'"></p>
-				<button type="submit"
-					class="px-6 py-2 bg-gray-900 dark:bg-gray-700 hover:bg-gray-800 dark:hover:bg-gray-600 text-white text-sm font-medium rounded-lg transition-colors">
-					Save Permissions
-				</button>
-			</div>
 		</form>
 	</div>
 
@@ -166,6 +147,9 @@
 					allPermissionIds,
 					activePermissions: [],
 					selectedPermissionIds: [],
+					get allChecked() {
+						return this.selectedPermissionIds.length === this.allPermissionIds.length && this.allPermissionIds.length > 0;
+					},
 					async loadRolePermissions() {
 						if (!this.roleId) {
 							this.activePermissions = [];
