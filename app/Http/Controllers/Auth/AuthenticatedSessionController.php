@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\Brand;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Services\Auth\PendingPostAuthActionService;
 use Illuminate\Http\RedirectResponse;
@@ -42,6 +43,17 @@ class AuthenticatedSessionController extends Controller
         $user     = $request->user();
         $userType = $user->user_type;
 
+        if (!$user->hasVerifiedEmail()) {
+            return redirect()->route('verification.notice');
+        }
+
+        if ($userType === 'brand') {
+            $brand = $user->brand?->load('onboardingProfile');
+            if (!$this->hasCompletedBrandSetup($brand)) {
+                return redirect()->route('brand-setup.show');
+            }
+        }
+
         // Redirect based on user type
         if (in_array($userType, ['admin', 'superadmin', 'moderator'])) {
             return redirect()->intended(route('dashboard.index', absolute: false));
@@ -64,5 +76,24 @@ class AuthenticatedSessionController extends Controller
         $request->session()->regenerateToken();
 
         return redirect('/');
+    }
+
+    private function hasCompletedBrandSetup(?Brand $brand): bool
+    {
+        if (!$brand) {
+            return false;
+        }
+
+        $profile = $brand->onboardingProfile;
+        if (!$profile) {
+            return false;
+        }
+
+        return (bool) $profile->is_completed
+        || !empty($profile->objective)
+        || !empty($profile->budget_range)
+        || !empty($profile->business_type)
+        || !empty($profile->company_size)
+        || $profile->categories()->exists();
     }
 }

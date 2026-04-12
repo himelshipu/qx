@@ -59,7 +59,10 @@ class DatabaseSeeder extends Seeder
             \Database\Seeders\FaqSectionSeeder::class,
             \Database\Seeders\FaqItemSeeder::class,
             \Database\Seeders\KnowledgeBaseSeeder::class,
-            \Database\Seeders\FeaturedCollaborationSeeder::class
+            \Database\Seeders\FeaturedCollaborationSeeder::class,
+
+            // Admin dashboard configuration
+            \Database\Seeders\AdminMenuSeeder::class,
         ]);
     }
 }

@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Backend;
 use App\Http\Controllers\Controller;
 use App\Models\Permission;
 use App\Models\Role;
-use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
@@ -167,6 +166,7 @@ class PermissionController extends Controller
         $request->validate([
             'role_id' => ['required', 'exists:roles,id'],
             'permissions' => ['nullable', 'array'],
+            'permissions.*' => ['integer', 'exists:permissions,id'],
         ]);
 
         $role = Role::findOrFail($request->role_id);

@@ -88,6 +88,36 @@ class RegisteredUserController extends Controller
             return $pendingActionRedirect;
         }
 
+        if (!$user->hasVerifiedEmail()) {
+            return redirect()->route('verification.notice');
+        }
+
+        if ($user->user_type === 'brand') {
+            $brand = $user->brand?->load('onboardingProfile');
+            if (!$this->hasCompletedBrandSetup($brand)) {
+                return redirect()->route('brand-setup.show');
+            }
+        }
+
         return redirect()->intended(route('home', absolute: false));
+    }
+
+    private function hasCompletedBrandSetup(?Brand $brand): bool
+    {
+        if (!$brand) {
+            return false;
+        }
+
+        $profile = $brand->onboardingProfile;
+        if (!$profile) {
+            return false;
+        }
+
+        return (bool) $profile->is_completed
+        || !empty($profile->objective)
+        || !empty($profile->budget_range)
+        || !empty($profile->business_type)
+        || !empty($profile->company_size)
+        || $profile->categories()->exists();
     }
 }

@@ -15,8 +15,9 @@ use App\Http\Controllers\Backend\FeaturedCollaborationController;
 use App\Http\Controllers\Backend\InfluencerController;
 use App\Http\Controllers\Backend\InfluencerPortfolioController;
 use App\Http\Controllers\Backend\KnowledgeBaseController;
+use App\Http\Controllers\Backend\MenuController;
 use App\Http\Controllers\Backend\NotificationController;
-use App\Http\Controllers\Backend\OrderController;
+use App\Http\Controllers\Backend\OrderController as BackendOrderController;
 use App\Http\Controllers\Backend\PackageController;
 use App\Http\Controllers\Backend\PaymentAuditController;
 use App\Http\Controllers\Backend\PaymentQueueController;
@@ -24,7 +25,7 @@ use App\Http\Controllers\Backend\PaymentsController;
 use App\Http\Controllers\Backend\PaymentStatementController;
 use App\Http\Controllers\Backend\PayoutsController;
 use App\Http\Controllers\Backend\PermissionController;
-use App\Http\Controllers\Backend\ReviewController;
+use App\Http\Controllers\Backend\ReviewController as BackendReviewController;
 use App\Http\Controllers\Backend\RoleController;
 use App\Http\Controllers\Backend\SupportTicketController;
 use App\Http\Controllers\Backend\TestimonialController;
@@ -36,10 +37,13 @@ use App\Http\Controllers\EarningsController;
 use App\Http\Controllers\Frontend\CampaignController as FrontendCampaignController;
 use App\Http\Controllers\Frontend\CaseStudyController as FrontendCaseStudyController;
 use App\Http\Controllers\Frontend\ContentLibraryController;
+use App\Http\Controllers\Frontend\AccountController as FrontendAccountController;
+use App\Http\Controllers\Frontend\ConversationController as FrontendConversationController;
 use App\Http\Controllers\Frontend\HomeController;
 use App\Http\Controllers\Frontend\InfluencersController;
 use App\Http\Controllers\Frontend\KnowledgeBaseController as FrontendKnowledgeBaseController;
 use App\Http\Controllers\Frontend\NotificationController as FrontendNotificationController;
+use App\Http\Controllers\Frontend\OrderController as FrontendOrderController;
 use App\Http\Controllers\Frontend\PackageController as FrontendPackageController;
 use App\Http\Controllers\Frontend\PaymentAuditController as FrontendPaymentAuditController;
 use App\Http\Controllers\Frontend\PaymentQueueController as FrontendPaymentQueueController;
@@ -141,29 +145,29 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/cart/clear', [CartController::class, 'clear'])->name('cart.clear');
 
     // Frontend Orders
-    Route::get('/orders', [App\Http\Controllers\Frontend\OrderController::class, 'index'])->name('frontend.orders.index');
-    Route::get('/orders/{order}', [App\Http\Controllers\Frontend\OrderController::class, 'show'])->name('frontend.orders.show');
-    Route::put('/orders/{order}/items/{item}/status', [App\Http\Controllers\Frontend\OrderController::class, 'updateItemStatus'])->name('frontend.orders.items.update-status');
-    Route::put('/orders/{order}/items/{item}/decision', [App\Http\Controllers\Frontend\OrderController::class, 'updateBrandItemDecision'])->name('frontend.orders.items.update-decision');
-    Route::post('/orders/{order}/items/{item}/review', [App\Http\Controllers\Frontend\OrderController::class, 'storeBrandTaskReview'])->name('frontend.orders.items.reviews.store');
-    Route::put('/orders/{order}/complete', [App\Http\Controllers\Frontend\OrderController::class, 'completeOrder'])->name('frontend.orders.complete');
-    Route::post('/orders/{order}/reviews', [App\Http\Controllers\Frontend\OrderController::class, 'storeReview'])->name('frontend.orders.reviews.store');
+    Route::get('/orders', [FrontendOrderController::class, 'index'])->name('frontend.orders.index');
+    Route::get('/orders/{order}', [FrontendOrderController::class, 'show'])->name('frontend.orders.show');
+    Route::put('/orders/{order}/items/{item}/status', [FrontendOrderController::class, 'updateItemStatus'])->name('frontend.orders.items.update-status');
+    Route::put('/orders/{order}/items/{item}/decision', [FrontendOrderController::class, 'updateBrandItemDecision'])->name('frontend.orders.items.update-decision');
+    Route::post('/orders/{order}/items/{item}/review', [FrontendOrderController::class, 'storeBrandTaskReview'])->name('frontend.orders.items.reviews.store');
+    Route::put('/orders/{order}/complete', [FrontendOrderController::class, 'completeOrder'])->name('frontend.orders.complete');
+    Route::post('/orders/{order}/reviews', [FrontendOrderController::class, 'storeReview'])->name('frontend.orders.reviews.store');
 
     // Frontend Conversations
-    Route::get('/messages', [App\Http\Controllers\Frontend\ConversationController::class, 'index'])->name('frontend.conversations.index');
-    Route::get('/messages/open/{influencer}/{order?}', [App\Http\Controllers\Frontend\ConversationController::class, 'openOrderConversation'])->name('frontend.conversations.open-order');
-    Route::get('/messages/{conversation:public_id}', [App\Http\Controllers\Frontend\ConversationController::class, 'show'])->name('frontend.conversations.show');
-    Route::post('/messages/{conversation:public_id}/send', [App\Http\Controllers\Frontend\ConversationController::class, 'storeMessage'])->name('frontend.conversations.storeMessage');
+    Route::get('/messages', [FrontendConversationController::class, 'index'])->name('frontend.conversations.index');
+    Route::get('/messages/open/{influencer}/{order?}', [FrontendConversationController::class, 'openOrderConversation'])->name('frontend.conversations.open-order');
+    Route::get('/messages/{conversation:public_id}', [FrontendConversationController::class, 'show'])->name('frontend.conversations.show');
+    Route::post('/messages/{conversation:public_id}/send', [FrontendConversationController::class, 'storeMessage'])->name('frontend.conversations.storeMessage');
 
     // Frontend Content Library
     Route::get('/content-library', [ContentLibraryController::class, 'index'])->name('frontend.content-library');
 
     // Account Management (shared for both brand and Influencer)
-    Route::get('/account/{slug}', [App\Http\Controllers\Frontend\AccountController::class, 'edit'])->name('frontend.account.edit');
-    Route::post('/account/{slug}/details', [App\Http\Controllers\Frontend\AccountController::class, 'updateDetails'])->name('frontend.account.details.update');
-    Route::post('/account/{slug}/billing', [App\Http\Controllers\Frontend\AccountController::class, 'updateBilling'])->name('frontend.account.billing.update');
-    Route::post('/account/{slug}/password', [App\Http\Controllers\Frontend\AccountController::class, 'updatePassword'])->name('frontend.account.password.update');
-    Route::post('/account/{slug}/toggle-status', [App\Http\Controllers\Frontend\AccountController::class, 'toggleStatus'])->name('frontend.account.toggle-status');
+    Route::get('/account/{slug}', [FrontendAccountController::class, 'edit'])->name('frontend.account.edit');
+    Route::post('/account/{slug}/details', [FrontendAccountController::class, 'updateDetails'])->name('frontend.account.details.update');
+    Route::post('/account/{slug}/billing', [FrontendAccountController::class, 'updateBilling'])->name('frontend.account.billing.update');
+    Route::post('/account/{slug}/password', [FrontendAccountController::class, 'updatePassword'])->name('frontend.account.password.update');
+    Route::post('/account/{slug}/toggle-status', [FrontendAccountController::class, 'toggleStatus'])->name('frontend.account.toggle-status');
 
     // Brand Profile routes
     Route::get('/brand-profile/{slug}/edit', [BrandProfileController::class, 'edit'])->name('brand.profile.edit');
@@ -293,9 +297,9 @@ Route::prefix('dashboard')->name('dashboard.')->middleware(['auth', 'verified', 
     });
 
     // Commerce and operations modules
-    Route::get('/reviews', [ReviewController::class, 'index'])->name('reviews.index');
-    Route::get('/reviews/{review}', [ReviewController::class, 'show'])->name('reviews.show');
-    Route::post('/reviews/{review}/toggle-visibility', [ReviewController::class, 'toggleVisibility'])->name('reviews.toggle-visibility');
+    Route::get('/reviews', [BackendReviewController::class, 'index'])->name('reviews.index');
+    Route::get('/reviews/{review}', [BackendReviewController::class, 'show'])->name('reviews.show');
+    Route::post('/reviews/{review}/toggle-visibility', [BackendReviewController::class, 'toggleVisibility'])->name('reviews.toggle-visibility');
     Route::get('/packages', [PackageController::class, 'index'])->name('packages.index');
     Route::get('/packages/create', [PackageController::class, 'create'])->name('packages.create');
     Route::post('/packages', [PackageController::class, 'store'])->name('packages.store');
@@ -310,14 +314,14 @@ Route::prefix('dashboard')->name('dashboard.')->middleware(['auth', 'verified', 
     Route::get('/carts', [CartManagerController::class, 'index'])->name('carts.index');
     Route::get('/carts/{cart}', [CartManagerController::class, 'show'])->name('carts.show');
 
-    Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
-    Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
-    Route::put('/orders/{order}/status', [OrderController::class, 'updateStatus'])->name('orders.update-status');
-    Route::post('/orders/create-from-campaign', [OrderController::class, 'createFromCampaign'])->name('orders.create-from-campaign');
-    Route::put('/sub-orders/{subOrder}/status', [OrderController::class, 'updateSubOrderStatus'])->name('sub-orders.update-status');
-    Route::post('/sub-orders/{subOrder}/mark-paid', [OrderController::class, 'markSubOrderPaid'])->name('sub-orders.mark-paid');
-    Route::put('/order-items/{orderItem}/status', [OrderController::class, 'updateOrderItemStatus'])->name('order-items.update-status');
-    Route::post('/order-items/{orderItem}/mark-paid', [OrderController::class, 'markOrderItemPaid'])->name('order-items.mark-paid');
+    Route::get('/orders', [BackendOrderController::class, 'index'])->name('orders.index');
+    Route::get('/orders/{order}', [BackendOrderController::class, 'show'])->name('orders.show');
+    Route::put('/orders/{order}/status', [BackendOrderController::class, 'updateStatus'])->name('orders.update-status');
+    Route::post('/orders/create-from-campaign', [BackendOrderController::class, 'createFromCampaign'])->name('orders.create-from-campaign');
+    Route::put('/sub-orders/{subOrder}/status', [BackendOrderController::class, 'updateSubOrderStatus'])->name('sub-orders.update-status');
+    Route::post('/sub-orders/{subOrder}/mark-paid', [BackendOrderController::class, 'markSubOrderPaid'])->name('sub-orders.mark-paid');
+    Route::put('/order-items/{orderItem}/status', [BackendOrderController::class, 'updateOrderItemStatus'])->name('order-items.update-status');
+    Route::post('/order-items/{orderItem}/mark-paid', [BackendOrderController::class, 'markOrderItemPaid'])->name('order-items.mark-paid');
 
     // Payments & Payouts
     Route::get('/payments', [PaymentsController::class, 'index'])->name('payments.index');
@@ -460,6 +464,13 @@ Route::prefix('dashboard')->name('dashboard.')->middleware(['auth', 'verified', 
     Route::post('/account/{slug}/toggle-status', [AccountController::class, 'toggleStatus'])->name('account.toggle-status');
     Route::delete('/account/{slug}', [AccountController::class, 'destroy'])->name('account.destroy');
 
+    // Dashboard Menu & Permissions API routes
+    Route::prefix('api')->name('api.')->group(function () {
+        Route::get('/menu', [MenuController::class, 'getDashboardMenu'])->name('menu');
+        Route::get('/permissions', [MenuController::class, 'getUserPermissions'])->name('permissions');
+        Route::post('/check-permission', [MenuController::class, 'checkPermission'])->name('check-permission');
+        Route::post('/check-action', [MenuController::class, 'checkAction'])->name('check-action');
+    });
 });
 
 /*

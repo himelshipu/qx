@@ -347,13 +347,17 @@
 					}, 150);
 				}
 
-				if (window.brandActionRequiredMessage && window.confirmationModal) {
-					window.confirmationModal.open({
-						title: 'Brand Account Required',
-						message: window.brandActionRequiredMessage,
-						confirmText: 'OK',
-						variant: 'warning'
-					});
+				if (window.brandActionRequiredMessage) {
+					if (window.toast && window.toast.warning) {
+						window.toast.warning(window.brandActionRequiredMessage);
+					} else if (window.confirmationModal) {
+						window.confirmationModal.open({
+							title: 'Brand Account Required',
+							message: window.brandActionRequiredMessage,
+							confirmText: 'OK',
+							variant: 'warning'
+						});
+					}
 				}
 			});
 		</script>

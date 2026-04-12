@@ -225,7 +225,86 @@ class PermissionSeeder extends Seeder
 
             // CART MANAGER (Admin Only)
             ['name' => 'View All Carts (Admin)', 'slug' => 'cart-manager.index', 'module' => 'admin'],
-            ['name' => 'View Cart Details (Admin)', 'slug' => 'cart-manager.show', 'module' => 'admin']
+            ['name' => 'View Cart Details (Admin)', 'slug' => 'cart-manager.show', 'module' => 'admin'],
+
+            // USERS MANAGEMENT - CRUD OPERATIONS
+            ['name' => 'Create User', 'slug' => 'users.create', 'module' => 'users'],
+            ['name' => 'Store User', 'slug' => 'users.store', 'module' => 'users'],
+            ['name' => 'View User Details', 'slug' => 'users.show', 'module' => 'users'],
+            ['name' => 'Edit User', 'slug' => 'users.edit', 'module' => 'users'],
+            ['name' => 'Update User', 'slug' => 'users.update', 'module' => 'users'],
+            ['name' => 'Delete User', 'slug' => 'users.destroy', 'module' => 'users'],
+
+            // DASHBOARD ANALYTICS & INSIGHTS
+            ['name' => 'View Dashboard Analytics', 'slug' => 'analytics.view', 'module' => 'dashboard'],
+            ['name' => 'View System KPIs', 'slug' => 'analytics.kpis', 'module' => 'dashboard'],
+            ['name' => 'View Revenue Reports', 'slug' => 'analytics.revenue', 'module' => 'dashboard'],
+
+            // PAGES & CONTENT SECTIONS
+            ['name' => 'View Pages', 'slug' => 'pages.index', 'module' => 'content'],
+            ['name' => 'Create Page', 'slug' => 'pages.create', 'module' => 'content'],
+            ['name' => 'Store Page', 'slug' => 'pages.store', 'module' => 'content'],
+            ['name' => 'Edit Page', 'slug' => 'pages.edit', 'module' => 'content'],
+            ['name' => 'Update Page', 'slug' => 'pages.update', 'module' => 'content'],
+            ['name' => 'Delete Page', 'slug' => 'pages.destroy', 'module' => 'content'],
+            ['name' => 'Toggle Page Status', 'slug' => 'pages.toggle-status', 'module' => 'content'],
+
+            ['name' => 'View Page Sections', 'slug' => 'page-sections.index', 'module' => 'content'],
+            ['name' => 'Create Page Section', 'slug' => 'page-sections.create', 'module' => 'content'],
+            ['name' => 'Store Page Section', 'slug' => 'page-sections.store', 'module' => 'content'],
+            ['name' => 'Edit Page Section', 'slug' => 'page-sections.edit', 'module' => 'content'],
+            ['name' => 'Update Page Section', 'slug' => 'page-sections.update', 'module' => 'content'],
+            ['name' => 'Delete Page Section', 'slug' => 'page-sections.destroy', 'module' => 'content'],
+
+            // SETTINGS & CONFIGURATION
+            ['name' => 'View Settings', 'slug' => 'settings.view', 'module' => 'settings'],
+            ['name' => 'Edit Settings', 'slug' => 'settings.edit', 'module' => 'settings'],
+            ['name' => 'Update Settings', 'slug' => 'settings.update', 'module' => 'settings'],
+            ['name' => 'View System Logs', 'slug' => 'system.logs', 'module' => 'settings'],
+            ['name' => 'View Activity Logs', 'slug' => 'system.activity-logs', 'module' => 'settings'],
+
+            // USER VERIFICATION & APPROVAL
+            ['name' => 'View Pending Verifications', 'slug' => 'verification.index', 'module' => 'verification'],
+            ['name' => 'Approve User Verification', 'slug' => 'verification.approve', 'module' => 'verification'],
+            ['name' => 'Reject User Verification', 'slug' => 'verification.reject', 'module' => 'verification'],
+            ['name' => 'View Verification Details', 'slug' => 'verification.show', 'module' => 'verification'],
+
+            // REPORTS & EXPORTS
+            ['name' => 'View Reports', 'slug' => 'reports.view', 'module' => 'reports'],
+            ['name' => 'View Order Reports', 'slug' => 'reports.orders', 'module' => 'reports'],
+            ['name' => 'View Revenue Reports', 'slug' => 'reports.revenue', 'module' => 'reports'],
+            ['name' => 'View User Reports', 'slug' => 'reports.users', 'module' => 'reports'],
+            ['name' => 'View Campaign Reports', 'slug' => 'reports.campaigns', 'module' => 'reports'],
+            ['name' => 'Export Reports', 'slug' => 'reports.export', 'module' => 'reports'],
+            ['name' => 'Export to PDF', 'slug' => 'reports.export-pdf', 'module' => 'reports'],
+            ['name' => 'Export to CSV', 'slug' => 'reports.export-csv', 'module' => 'reports'],
+
+            // PERMISSION MANAGEMENT
+            ['name' => 'View Permissions', 'slug' => 'permissions.index', 'module' => 'permissions'],
+            ['name' => 'Manage Permissions', 'slug' => 'permissions.manage', 'module' => 'permissions'],
+
+            // BADGE & VERIFICATION SYSTEM
+            ['name' => 'View Badge Definitions', 'slug' => 'badges.index', 'module' => 'badges'],
+            ['name' => 'Create Badge', 'slug' => 'badges.create', 'module' => 'badges'],
+            ['name' => 'Edit Badge', 'slug' => 'badges.edit', 'module' => 'badges'],
+            ['name' => 'Assign Badges', 'slug' => 'badges.assign', 'module' => 'badges'],
+
+            // BULK OPERATIONS
+            ['name' => 'Bulk Update Users', 'slug' => 'bulk.users-update', 'module' => 'admin'],
+            ['name' => 'Bulk Delete Users', 'slug' => 'bulk.users-delete', 'module' => 'admin'],
+            ['name' => 'Bulk Update Influencers', 'slug' => 'bulk.influencers-update', 'module' => 'admin'],
+            ['name' => 'Bulk Update Brands', 'slug' => 'bulk.brands-update', 'module' => 'admin'],
+
+            // BILLING & INVOICING
+            ['name' => 'View Invoices', 'slug' => 'invoices.index', 'module' => 'billing'],
+            ['name' => 'Generate Invoice', 'slug' => 'invoices.generate', 'module' => 'billing'],
+            ['name' => 'Export Invoice', 'slug' => 'invoices.export', 'module' => 'billing'],
+
+            // PLATFORM MODERATION
+            ['name' => 'View Moderation Queue', 'slug' => 'moderation.queue', 'module' => 'moderation'],
+            ['name' => 'Review Flagged Content', 'slug' => 'moderation.review', 'module' => 'moderation'],
+            ['name' => 'Block/Unblock Users', 'slug' => 'moderation.block-users', 'module' => 'moderation'],
+            ['name' => 'Remove Content', 'slug' => 'moderation.remove-content', 'module' => 'moderation'],
         ];
     }
 }

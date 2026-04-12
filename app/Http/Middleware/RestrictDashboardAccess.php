@@ -11,44 +11,61 @@ class RestrictDashboardAccess
     /**
      * Handle an incoming request.
      *
-     * Users can access the dashboard only if they have a role with permissions assigned.
-     * Specifically, they must have the 'dashboard.view' permission through one of their roles.
-     *
-     * Brand and Influencer roles have NO permissions by default and cannot access the dashboard.
-     * Admin and custom roles with permissions can access the dashboard.
+     * Restrictions:
+     * 1. Brand and Influencer users are completely blocked from dashboard
+     * 2. Only admin and moderator users can access dashboard
+     * 3. Users must be authenticated and verified
+     * 4. Must have a role with 'dashboard.view' permission assigned
      */
     public function handle(Request $request, Closure $next): Response
     {
         $user = auth()->user();
 
+        // FIRST CHECK: User must be authenticated
         if (!$user) {
-            return redirect('/login');
+            return redirect('/login')->with('error', 'Please login to access the dashboard.');
         }
 
-        // Get all roles assigned to the user with their permissions
-        $userRoles = $user->roles()->with('permissions')->get();
-
-        // If user has no roles assigned, deny access
-        if ($userRoles->isEmpty()) {
-            return redirect('/')->with('error', 'You do not have dashboard access. Please contact administrator.');
+        // SECOND CHECK: User must be verified (email verified)
+        if (!$user->hasVerifiedEmail()) {
+            return redirect('/verify-email')->with('error', 'Please verify your email to access the dashboard.');
         }
 
-        // Check if any of the user's roles have the 'dashboard.view' permission
-        $hasDashboardPermission = false;
-        foreach ($userRoles as $role) {
-            if ($role->permissions()->where('slug', 'dashboard.view')->exists()) {
-                $hasDashboardPermission = true;
-                break;
-            }
+        // THIRD CHECK: Brand and Influencer users are COMPLETELY BLOCKED
+        // They should not have any access to admin dashboard
+        if ($user->user_type === 'brand' || $user->user_type === 'influencer') {
+            return redirect('/')
+                ->with('error', 'You do not have permission to access the dashboard.');
         }
 
-        // If user has dashboard.view permission through any role, allow access
-        if ($hasDashboardPermission) {
-            return $next($request);
+        // FOURTH CHECK: Only admin and moderator user types allowed
+        if (!in_array($user->user_type, ['admin', 'moderator', 'superadmin'])) {
+            return redirect('/')
+                ->with('error', 'Only administrators and moderators can access the dashboard.');
         }
 
-        // Otherwise, deny access
+        // FIFTH CHECK: User must be active
+        if (!$user->is_active) {
+            return redirect('/')
+                ->with('error', 'Your account has been deactivated. Please contact support.');
+        }
 
-        return redirect('/')->with('error', 'You do not have permission to access the dashboard.');
+        // SIXTH CHECK: User must have at least one role assigned
+        if ($user->roles()->count() === 0) {
+            return redirect('/')
+                ->with('error', 'You do not have a role assigned. Please contact an administrator.');
+        }
+
+        // SEVENTH CHECK: User must have at least one role with dashboard.view permission
+        $hasDashboardAccess = $user->roles()
+            ->whereHas('permissions', fn($q) => $q->where('slug', 'dashboard.view'))
+            ->exists();
+
+        if (!$hasDashboardAccess) {
+            return redirect('/')
+                ->with('error', 'Your role does not have permission to access the dashboard.');
+        }
+
+        return $next($request);
     }
 }

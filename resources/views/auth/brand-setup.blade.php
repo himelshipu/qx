@@ -201,7 +201,7 @@
 
         <div class="space-y-3">
             <button @click="completeBrandSetup()" class="w-full py-4 rounded-xl font-bold bg-gradient-to-r from-gray-900 to-gray-800 hover:from-purple-600 hover:to-purple-500 text-white">
-                Go to Dashboard
+                Go to Homepage
             </button>
         </div>
     </div>
@@ -393,16 +393,16 @@ function brandSetup() {
                 } else {
                     return response.json().then(data => {
                         if (data && data.success) {
-                            window.location.href = data.redirect || '{{ route("dashboard.index") }}';
+                            window.location.href = data.redirect || '{{ route("home") }}';
                         } else {
-                            window.location.href = '{{ route("dashboard.index") }}';
+                            window.location.href = '{{ route("home") }}';
                         }
                     });
                 }
             })
             .catch(error => {
                 console.error('Error completing setup:', error);
-                window.location.href = '{{ route("dashboard.index") }}';
+                window.location.href = '{{ route("home") }}';
             });
         }
     }

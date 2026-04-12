@@ -19,24 +19,10 @@
         <div class="bg-blue-50 dark:bg-blue-900/20 border border-purple-300 dark:border-purple-300 rounded-xl p-4">
             <p class="text-sm text-gray-700 dark:text-gray-300">
                 <span class="font-medium">Tip:</span> Check your <span class="font-semibold text-purple-400 dark:text-purple-400">spam</span> folder for an email from 
-                <span class="font-mono text-xs bg-blue-100 dark:bg-blue-900/40 px-2 py-1 rounded-md">info@gmail.com</span>
+                <span class="font-mono text-xs bg-blue-100 dark:bg-blue-900/40 px-2 py-1 rounded-md">info@rockies.com</span>
             </p>
         </div>
 
-        @if ($errors->any())
-            <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-4">
-                @foreach ($errors->all() as $error)
-                    <p class="text-sm text-red-700 dark:text-red-400">{{ $error }}</p>
-                @endforeach
-            </div>
-        @endif
-
-        @if (session('success'))
-            <div class="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl p-4">
-                <p class="text-sm text-green-700 dark:text-green-400">{{ session('success') }}</p>
-            </div>
-        @endif
-        
         <form method="POST" action="{{ route('verification.verify') }}" class="space-y-4">
             @csrf
             <div>

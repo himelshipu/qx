@@ -14,7 +14,8 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
 
         $middleware->alias([
-            'restrict-dashboard-access' => \App\Http\Middleware\RestrictDashboardAccess::class
+            'restrict-dashboard-access' => \App\Http\Middleware\RestrictDashboardAccess::class,
+            'permission' => \App\Http\Middleware\PermissionMiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

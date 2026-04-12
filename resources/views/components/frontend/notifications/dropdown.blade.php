@@ -97,31 +97,49 @@
 			unreadCount: 0,
 
 			async init() {
-				await this.loadNotifications();
-				// Refresh every minute
-				setInterval(() => this.loadNotifications(), 60000);
-			},
+		// Only load if user is authenticated by checking for CSRF token
+		const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+		if (!csrfToken) {
+			return; // User not authenticated, don't load notifications
+		}
+		await this.loadNotifications();
+		// Refresh every minute
+		setInterval(() => this.loadNotifications(), 60000);
+	},
 
-			async loadNotifications() {
-				this.isLoading = true;
-				try {
-					const response = await fetch('{{ route('frontend.notifications.api.unread') }}', {
-						headers: {
-							'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').getAttribute(
-								'content'),
-						}
-					});
-					const data = await response.json();
-
-					this.notifications = data.notifications;
-					this.unreadCount = data.unreadCount;
-				} catch (error) {
-					console.error('Failed to load notifications:', error);
-				} finally {
-					this.isLoading = false;
+	async loadNotifications() {
+		const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+		if (!csrfToken) {
+			return; // User not authenticated, skip loading
+		}
+		
+		this.isLoading = true;
+		try {
+			const response = await fetch('{{ route('frontend.notifications.api.unread') }}', {
+				headers: {
+					'X-CSRF-Token': csrfToken,
 				}
-			},
-
+			});
+			
+			// Silently ignore auth errors (user not logged in or session expired)
+			if (response.status === 401 || response.status === 403) {
+				this.isLoading = false;
+				return;
+			}
+			
+			if (!response.ok) {
+				throw new Error(`HTTP error! status: ${response.status}`);
+			}
+			
+			const data = await response.json();
+			this.notifications = data.notifications;
+			this.unreadCount = data.unreadCount;
+		} catch (error) {
+			console.error('Failed to load notifications:', error);
+		} finally {
+			this.isLoading = false;
+		}
+	},
 			getColorBg(colorClass) {
 				const colors = {
 					'emerald': '#ecfdf5',
