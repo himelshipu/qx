@@ -9,10 +9,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Influencer extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     protected $fillable = [
         'user_id',
@@ -116,6 +117,11 @@ class Influencer extends Model
     public function acceptedOrders(): HasMany
     {
         return $this->hasMany(Order::class, 'accepted_for_influencer_id');
+    }
+
+    public function orders(): HasMany
+    {
+        return $this->acceptedOrders();
     }
 
     public function billingProfiles(): MorphMany

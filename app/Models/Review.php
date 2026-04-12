@@ -5,10 +5,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Review extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     protected $fillable = [
         'order_item_id',
@@ -19,16 +20,16 @@ class Review extends Model
         'rating',
         'title',
         'comment',
-        'is_public',
+        'is_public'
     ];
 
     protected function casts(): array
     {
         return [
-            'rating' => 'integer',
-            'is_public' => 'boolean',
+            'rating'        => 'integer',
+            'is_public'     => 'boolean',
             'reviewer_type' => 'string',
-            'reviewee_type' => 'string',
+            'reviewee_type' => 'string'
         ];
     }
 

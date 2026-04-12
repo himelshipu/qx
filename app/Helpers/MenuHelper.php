@@ -45,14 +45,6 @@ class MenuHelper
                         ]
                     ],
                     [
-                        'icon'     => 'moderators',
-                        'name'     => 'Moderators',
-                        'subItems' => [
-                            ['name' => 'All Moderators', 'route' => 'moderators.index', 'icon' => 'moderators'],
-                            ['name' => 'Create Moderator', 'route' => 'moderators.create', 'icon' => 'campaign-new']
-                        ]
-                    ],
-                    [
                         'icon'     => 'case-studies',
                         'name'     => 'Case Studies',
                         'subItems' => [
@@ -163,9 +155,14 @@ class MenuHelper
                         'route' => 'orders.index'
                     ],
                     [
-                        'icon'  => 'payments',
-                        'name'  => 'Payments',
-                        'route' => 'payments.index'
+                        'icon'     => 'payments',
+                        'name'     => 'Payments',
+                        'subItems' => [
+                            ['name' => 'All Payments', 'route' => 'payments.index', 'icon' => 'payments'],
+                            ['name' => 'Payment Queue', 'route' => 'payment-queue.index', 'icon' => 'packages'],
+                            ['name' => 'Payment Audit Log', 'route' => 'payment-audit.index', 'icon' => 'history'],
+                            ['name' => 'Payment Statements', 'route' => 'payment-statement.index', 'icon' => 'document']
+                        ]
                     ],
                     [
                         'icon'  => 'payouts',
@@ -190,17 +187,17 @@ class MenuHelper
                         'route' => 'users.index'
                     ],
                     [
+                        'icon'  => 'assign-roles',
+                        'name'  => 'Assign User Roles',
+                        'route' => 'users.roles.assign'
+                    ],
+                    [
                         'icon'  => 'roles',
                         'name'  => 'Roles',
                         'route' => 'roles.index'
                     ],
                     [
                         'icon'  => 'permissions',
-                        'name'  => 'Permissions',
-                        'route' => 'permissions.index'
-                    ],
-                    [
-                        'icon'  => 'assign',
                         'name'  => 'Assign Permissions',
                         'route' => 'permissions.assign'
                     ]

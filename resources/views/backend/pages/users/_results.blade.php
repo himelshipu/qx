@@ -40,9 +40,9 @@
 						} elseif ($user->user_type === 'influencer' && $user->influencer) {
 						    $viewUrl = route('dashboard.influencers.view', $user->influencer);
 						    $editUrl = route('dashboard.influencers.edit', $user->influencer);
-						} elseif ($user->user_type === 'moderator') {
-						    $viewUrl = route('dashboard.moderators.show', $user);
-						    $editUrl = route('dashboard.moderators.edit', $user);
+						} else {
+						    // All other user types (moderator, admin, etc.) go to generic user edit
+						    $editUrl = route('dashboard.users.edit', $user);
 						}
 					@endphp
 					<tr class="transition hover:bg-gray-50/70 dark:hover:bg-gray-800/40">

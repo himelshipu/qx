@@ -15,9 +15,14 @@ use App\Http\Controllers\Backend\FeaturedCollaborationController;
 use App\Http\Controllers\Backend\InfluencerController;
 use App\Http\Controllers\Backend\InfluencerPortfolioController;
 use App\Http\Controllers\Backend\KnowledgeBaseController;
-use App\Http\Controllers\Backend\ModeratorController;
+use App\Http\Controllers\Backend\NotificationController;
 use App\Http\Controllers\Backend\OrderController;
 use App\Http\Controllers\Backend\PackageController;
+use App\Http\Controllers\Backend\PaymentAuditController;
+use App\Http\Controllers\Backend\PaymentQueueController;
+use App\Http\Controllers\Backend\PaymentsController;
+use App\Http\Controllers\Backend\PaymentStatementController;
+use App\Http\Controllers\Backend\PayoutsController;
 use App\Http\Controllers\Backend\PermissionController;
 use App\Http\Controllers\Backend\ReviewController;
 use App\Http\Controllers\Backend\RoleController;
@@ -27,13 +32,18 @@ use App\Http\Controllers\Backend\UserController;
 use App\Http\Controllers\BrandProfileController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\ConversationController;
+use App\Http\Controllers\EarningsController;
 use App\Http\Controllers\Frontend\CampaignController as FrontendCampaignController;
 use App\Http\Controllers\Frontend\CaseStudyController as FrontendCaseStudyController;
 use App\Http\Controllers\Frontend\ContentLibraryController;
 use App\Http\Controllers\Frontend\HomeController;
 use App\Http\Controllers\Frontend\InfluencersController;
 use App\Http\Controllers\Frontend\KnowledgeBaseController as FrontendKnowledgeBaseController;
+use App\Http\Controllers\Frontend\NotificationController as FrontendNotificationController;
 use App\Http\Controllers\Frontend\PackageController as FrontendPackageController;
+use App\Http\Controllers\Frontend\PaymentAuditController as FrontendPaymentAuditController;
+use App\Http\Controllers\Frontend\PaymentQueueController as FrontendPaymentQueueController;
+use App\Http\Controllers\Frontend\PaymentStatementController as FrontendPaymentStatementController;
 use App\Http\Controllers\Frontend\StaticPagesController;
 use App\Http\Controllers\Frontend\SupportTicketController as FrontendSupportTicketController;
 use App\Http\Controllers\InfluencerProfileController;
@@ -181,6 +191,32 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // AJAX API routes
     Route::get('/payment-methods/api/list', [PaymentMethodController::class, 'getJson'])->name('payment-methods.api.list');
     Route::get('/payment-methods/api/default', [PaymentMethodController::class, 'getDefaultJson'])->name('payment-methods.api.default');
+
+    // Earnings routes (influencers only)
+    Route::get('/earnings', [EarningsController::class, 'index'])->name('earnings.index');
+
+    // Payment Queue routes (influencers only)
+    Route::get('/payment-queue', [FrontendPaymentQueueController::class, 'index'])->name('payment-queue.index');
+
+    // Payment Audit Log routes (influencers only)
+    Route::get('/payment-audit', [FrontendPaymentAuditController::class, 'index'])->name('payment-audit.index');
+
+    // Payment Statement routes (influencers only)
+    Route::get('/payment-statements', [FrontendPaymentStatementController::class, 'index'])->name('payment-statements.index');
+    Route::get('/payment-statements/pdf', [FrontendPaymentStatementController::class, 'pdf'])->name('payment-statements.pdf');
+    Route::get('/payment-statements/pdf/monthly', [FrontendPaymentStatementController::class, 'monthlyPdf'])->name('payment-statements.pdf.monthly');
+
+    // Notification routes (both brand and influencer users)
+    Route::prefix('notifications')->name('frontend.notifications.')->group(function () {
+        Route::get('/', [FrontendNotificationController::class, 'index'])->name('index');
+        Route::get('/api/unread', [FrontendNotificationController::class, 'getUnread'])->name('api.unread');
+        Route::post('/{notification}/mark-as-read', [FrontendNotificationController::class, 'markAsRead'])->name('mark-as-read');
+        Route::post('/{notification}/mark-as-unread', [FrontendNotificationController::class, 'markAsUnread'])->name('mark-as-unread');
+        Route::post('/mark-all-as-read', [FrontendNotificationController::class, 'markAllAsRead'])->name('mark-all-as-read');
+        Route::delete('/{notification}', [FrontendNotificationController::class, 'destroy'])->name('destroy');
+        Route::post('/clear-all', [FrontendNotificationController::class, 'clearAll'])->name('clear-all');
+        Route::get('/{notification}/show', [FrontendNotificationController::class, 'show'])->name('show');
+    });
 });
 
 /*
@@ -282,8 +318,32 @@ Route::prefix('dashboard')->name('dashboard.')->middleware(['auth', 'verified', 
     Route::post('/sub-orders/{subOrder}/mark-paid', [OrderController::class, 'markSubOrderPaid'])->name('sub-orders.mark-paid');
     Route::put('/order-items/{orderItem}/status', [OrderController::class, 'updateOrderItemStatus'])->name('order-items.update-status');
     Route::post('/order-items/{orderItem}/mark-paid', [OrderController::class, 'markOrderItemPaid'])->name('order-items.mark-paid');
-    Route::view('/payments', 'backend.pages.coming-soon', ['module' => 'Payments'])->name('payments.index');
-    Route::view('/payouts', 'backend.pages.coming-soon', ['module' => 'Payouts'])->name('payouts.index');
+
+    // Payments & Payouts
+    Route::get('/payments', [PaymentsController::class, 'index'])->name('payments.index');
+    Route::get('/payments/{payment}', [PaymentsController::class, 'show'])->name('payments.show');
+    Route::post('/payments/{payment}/refund', [PaymentsController::class, 'refund'])->name('payments.refund');
+    Route::post('/payments/{payment}/retry', [PaymentsController::class, 'retry'])->name('payments.retry');
+
+    Route::get('/payouts', [PayoutsController::class, 'index'])->name('payouts.index');
+    Route::post('/payouts', [PayoutsController::class, 'store'])->name('payouts.store');
+    Route::get('/payouts/{payout}', [PayoutsController::class, 'show'])->name('payouts.show');
+    Route::put('/payouts/{payout}', [PayoutsController::class, 'update'])->name('payouts.update');
+    Route::post('/payouts/{payout}/mark-paid', [PayoutsController::class, 'markAsPaid'])->name('payouts.mark-paid');
+    Route::get('/payouts/influencer/{influencer}/accounts', [PayoutsController::class, 'getInfluencerAccounts'])->name('payouts.influencer-accounts');
+
+    // Payment Queue, Audit & Statements
+    Route::get('/payment-queue', [PaymentQueueController::class, 'index'])->name('payment-queue.index');
+    Route::post('/payment-queue/bulk-mark', [PaymentQueueController::class, 'bulkMark'])->name('payment-queue.bulk-mark');
+
+    Route::get('/payment-audit', [PaymentAuditController::class, 'index'])->name('payment-audit.index');
+    Route::post('/payment-audit/undo-item/{orderItem}', [PaymentAuditController::class, 'undo'])->name('payment-audit.undo-item');
+    Route::post('/payment-audit/undo-suborder/{subOrder}', [PaymentAuditController::class, 'undoSubOrder'])->name('payment-audit.undo-suborder');
+
+    Route::get('/payment-statement', [PaymentStatementController::class, 'index'])->name('payment-statement.index');
+    Route::get('/payment-statement/{influencer}', [PaymentStatementController::class, 'show'])->name('payment-statement.show');
+    Route::get('/payment-statement/{influencer}/pdf', [PaymentStatementController::class, 'pdf'])->name('payment-statement.pdf');
+
     Route::view('/wishlists', 'backend.pages.coming-soon', ['module' => 'Wishlists'])->name('wishlists.index');
 
     // Conversations (Chat with Moderator Mediation)
@@ -299,47 +359,44 @@ Route::prefix('dashboard')->name('dashboard.')->middleware(['auth', 'verified', 
     Route::delete('/support-tickets/{ticket}', [SupportTicketController::class, 'destroy'])->name('support-tickets.destroy');
     Route::post('/support-tickets/bulk-update', [SupportTicketController::class, 'bulkUpdate'])->name('support-tickets.bulk-update');
 
-    Route::view('/notifications', 'backend.pages.coming-soon', ['module' => 'Notifications'])->name('notifications.index');
+    // Notifications
+    Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
+    Route::get('/notifications/api/unread', [NotificationController::class, 'getUnread'])->name('notifications.api.unread');
+    Route::post('/notifications/{notification}/mark-as-read', [NotificationController::class, 'markAsRead'])->name('notifications.mark-as-read');
+    Route::post('/notifications/{notification}/mark-as-unread', [NotificationController::class, 'markAsUnread'])->name('notifications.mark-as-unread');
+    Route::post('/notifications/mark-all-as-read', [NotificationController::class, 'markAllAsRead'])->name('notifications.mark-all-as-read');
+    Route::delete('/notifications/{notification}', [NotificationController::class, 'destroy'])->name('notifications.destroy');
+    Route::delete('/notifications/clear-all', [NotificationController::class, 'clearAll'])->name('notifications.clear-all');
+    Route::get('/notifications/{notification}/show', [NotificationController::class, 'show'])->name('notifications.show');
 
     // Content Library
     Route::get('/content-library', [ContentLibraryController::class, 'index'])->name('content-library');
 
-    // Moderator routes (dashboard)
-    Route::get('/moderators', [ModeratorController::class, 'index'])->name('moderators.index');
-    Route::get('/moderators/create', [ModeratorController::class, 'create'])->name('moderators.create');
-    Route::post('/moderators', [ModeratorController::class, 'store'])->name('moderators.store');
-    Route::get('/moderators/{moderator}', [ModeratorController::class, 'show'])->name('moderators.show');
-    Route::get('/moderators/{moderator}/edit', [ModeratorController::class, 'edit'])->name('moderators.edit');
-    Route::put('/moderators/{moderator}', [ModeratorController::class, 'update'])->name('moderators.update');
-    Route::delete('/moderators/{moderator}', [ModeratorController::class, 'destroy'])->name('moderators.destroy');
-    Route::post('/moderators/{moderator}/toggle-status', [ModeratorController::class, 'toggleStatus'])->name('moderators.toggle-status');
-
     // Role routes (dashboard)
     Route::get('/roles', [RoleController::class, 'index'])->name('roles.index');
-    Route::get('/roles/create', [RoleController::class, 'create'])->name('roles.create');
     Route::post('/roles', [RoleController::class, 'store'])->name('roles.store');
-    Route::get('/roles/{id}', [RoleController::class, 'show'])->name('roles.show');
-    Route::get('/roles/{id}/edit', [RoleController::class, 'edit'])->name('roles.edit');
+    Route::get('/roles/{id}/data', [RoleController::class, 'getRoleData'])->name('roles.get-data');
+    Route::get('/roles/{id}/permissions/names', [RoleController::class, 'getPermissions'])->name('roles.permissions');
     Route::put('/roles/{id}', [RoleController::class, 'update'])->name('roles.update');
     Route::delete('/roles/{id}', [RoleController::class, 'destroy'])->name('roles.destroy');
     Route::post('/roles/{id}/toggle-status', [RoleController::class, 'toggleStatus'])->name('roles.toggle-status');
-    Route::get('/roles/{id}/permissions', [RoleController::class, 'getPermissions'])->name('roles.permissions');
 
-    // Permission routes (dashboard)
-    Route::get('/permissions', [PermissionController::class, 'index'])->name('permissions.index');
-    Route::get('/permissions/create', [PermissionController::class, 'create'])->name('permissions.create');
-    Route::post('/permissions', [PermissionController::class, 'store'])->name('permissions.store');
+    // Permission routes (for assigning permissions to roles)
     Route::get('/permissions/assign', [PermissionController::class, 'assign'])->name('permissions.assign');
     Route::post('/permissions/assign', [PermissionController::class, 'assignStore'])->name('permissions.assign.store');
-    Route::get('/permissions/{id}', [PermissionController::class, 'show'])->name('permissions.show');
-    Route::get('/permissions/{id}/edit', [PermissionController::class, 'edit'])->name('permissions.edit');
-    Route::put('/permissions/{id}', [PermissionController::class, 'update'])->name('permissions.update');
-    Route::delete('/permissions/{id}', [PermissionController::class, 'destroy'])->name('permissions.destroy');
-    Route::post('/permissions/{id}/toggle-status', [PermissionController::class, 'toggleStatus'])->name('permissions.toggle-status');
 
     // Users routes (dashboard)
     Route::get('/users', [UserController::class, 'index'])->name('users.index');
+    Route::get('/users/create', [UserController::class, 'create'])->name('users.create');
+    Route::post('/users', [UserController::class, 'store'])->name('users.store');
+    Route::get('/users/{user}/edit', [UserController::class, 'edit'])->name('users.edit');
+    Route::put('/users/{user}', [UserController::class, 'update'])->name('users.update');
     Route::post('/users/{user}/toggle-status', [UserController::class, 'toggleStatus'])->name('users.toggle-status');
+
+    // User Roles routes (for assigning roles to users)
+    Route::get('/users/roles/assign', [UserController::class, 'assignRoles'])->name('users.roles.assign');
+    Route::post('/users/roles/assign', [UserController::class, 'assignRolesStore'])->name('users.roles.assign.store');
+    Route::get('/users/{user}/roles', [UserController::class, 'getUserRoles'])->name('users.roles.get');
 
     // Case Studies routes
     Route::get('/case-studies', [CaseStudyController::class, 'index'])->name('case-studies.index');

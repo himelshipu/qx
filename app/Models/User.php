@@ -6,13 +6,14 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Str;
 
 class User extends Authenticatable
 {
-    use HasFactory, Notifiable;
+    use HasFactory, Notifiable, SoftDeletes;
 
     /**
      * The attributes that are mass assignable.
@@ -148,6 +149,102 @@ class User extends Authenticatable
         return $this->hasMany(Order::class, 'buyer_user_id');
     }
 
+    /**
+     * Check if user has a specific role
+     */
+    public function hasRole(string $roleSlug): bool
+    {
+        return $this->roles()->whereSlug($roleSlug)->exists();
+    }
+
+    /**
+     * Check if user has superadmin role
+     */
+    public function hasSuperadminRole(): bool
+    {
+        return $this->roles()->where('is_superadmin', true)->exists();
+    }
+
+    /**
+     * Check if user is a superadmin
+     */
+    public function isSuperadmin(): bool
+    {
+        return $this->hasSuperadminRole();
+    }
+
+    /**
+     * Check if user can access dashboard (admin, moderator, or superadmin)
+     * Brand and Influencer users cannot access dashboard
+     */
+    public function canAccessDashboard(): bool
+    {
+        // Based on user_type, not roles
+        $dashboardUserTypes = ['admin', 'moderator'];
+        return in_array($this->user_type, $dashboardUserTypes);
+    }
+
+    /**
+     * Check if user has a specific permission (directly or through roles)
+     */
+    public function hasPermission(string $permissionSlug): bool
+    {
+        // Superadmin has all permissions
+        if ($this->isSuperadmin()) {
+            return true;
+        }
+
+        // Check direct user permissions
+        if ($this->permissions()->whereSlug($permissionSlug)->exists()) {
+            return true;
+        }
+
+        // Check role permissions
+        return $this->roles()
+            ->whereHas('permissions', fn($q) => $q->where('slug', $permissionSlug))
+            ->exists();
+    }
+
+    /**
+     * Assign a role to the user
+     */
+    public function assignRole(string|Role $role): void
+    {
+        if (is_string($role)) {
+            $role = Role::whereSlug($role)->firstOrFail();
+        }
+
+        if (!$this->hasRole($role->slug)) {
+            $this->roles()->attach($role);
+        }
+    }
+
+    /**
+     * Remove a role from the user
+     */
+    public function removeRole(Role $role): void
+    {
+        $this->roles()->detach($role);
+    }
+
+    /**
+     * Sync roles for the user
+     */
+    public function syncRoles(array $roleIds): void
+    {
+        $this->roles()->sync($roleIds);
+    }
+
+    /**
+     * Get all user permissions from roles
+     */
+    public function getAllPermissions()
+    {
+        return Permission::whereHas('roles', function ($query) {
+            $query->whereIn('role_id', $this->roles()->pluck('role_id'));
+        })->get();
+    }
+
     public function acceptedOrders(): HasMany
     {
         return $this->hasMany(Order::class, 'accepted_by_user_id');
@@ -201,43 +298,6 @@ class User extends Authenticatable
     public function statusHistoryChanges(): HasMany
     {
         return $this->hasMany(OrderStatusHistory::class, 'changed_by_user_id');
-    }
-
-    public function hasRole(string $roleSlug): bool
-    {
-        return $this->roles()->where('slug', $roleSlug)->exists();
-    }
-
-    public function hasPermission(string $permissionSlug): bool
-    {
-        if ($this->permissions()->where('slug', $permissionSlug)->exists()) {
-            return true;
-        }
-
-        foreach ($this->roles as $role) {
-            if ($role->hasPermission($permissionSlug)) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    public function assignRole(Role $role): void
-    {
-        if (!$this->hasRole($role->slug)) {
-            $this->roles()->attach($role);
-        }
-    }
-
-    public function removeRole(Role $role): void
-    {
-        $this->roles()->detach($role);
-    }
-
-    public function syncRoles(array $roleIds): void
-    {
-        $this->roles()->sync($roleIds);
     }
 
     public function hasVerifiedEmail(): bool

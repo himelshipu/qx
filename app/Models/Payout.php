@@ -6,10 +6,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Payout extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     protected $fillable = [
         'influencer_id',
@@ -18,16 +19,16 @@ class Payout extends Model
         'currency',
         'status',
         'external_payout_id',
-        'paid_at',
+        'paid_at'
     ];
 
     protected function casts(): array
     {
         return [
-            'amount' => 'decimal:2',
-            'paid_at' => 'datetime',
+            'amount'     => 'decimal:2',
+            'paid_at'    => 'datetime',
             'created_at' => 'datetime',
-            'updated_at' => 'datetime',
+            'updated_at' => 'datetime'
         ];
     }
 

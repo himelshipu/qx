@@ -5,12 +5,12 @@
     'variant' => 'danger',
 ])
 
-<div x-data="window.Alpine.store('confirmModal')" x-show="isOpen" x-cloak x-on:keydown.escape.window="close()"
+<div x-show="$store.confirmModal.isOpen" x-cloak x-on:keydown.escape.window="$store.confirmModal.close()"
 	class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
 
 	<div
 		class="w-full max-w-lg rounded-2xl bg-white dark:bg-gray-900 shadow-2xl border border-gray-200 dark:border-gray-700 overflow-hidden"
-		@click.outside="close()">
+		@click.outside="$store.confirmModal.close()">
 
 		<!-- Header with variant-specific styling -->
 		<div
@@ -54,13 +54,14 @@
 				</div>
 
 				<div class="flex-1">
-					<h3 class="text-lg font-bold text-gray-900 dark:text-white" x-text="title || @js($title)"></h3>
+					<h3 class="text-lg font-bold text-gray-900 dark:text-white"
+						x-text="$store.confirmModal?.title || @js($title)"></h3>
 					<p class="mt-2 text-sm text-gray-600 dark:text-gray-300 whitespace-pre-line leading-relaxed"
-						x-text="message || @js($message)"></p>
+						x-text="$store.confirmModal?.message || @js($message)"></p>
 				</div>
 			</div>
 
-			<button type="button" @click="close()"
+			<button type="button" @click="$store.confirmModal.close()"
 				class="text-gray-400 hover:text-gray-600 dark:hover:text-white transition flex-shrink-0">
 				<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -70,11 +71,11 @@
 
 		<!-- Footer -->
 		<div class="p-6 flex justify-end gap-3 bg-gray-50/50 dark:bg-gray-800/50">
-			<button type="button" @click="close()"
+			<button type="button" @click="$store.confirmModal.close()"
 				class="px-4 py-2 rounded-lg text-sm font-medium border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition">
 				Cancel
 			</button>
-			<button type="button" @click="confirm()"
+			<button type="button" @click="$store.confirmModal.confirm()"
 				class="px-6 py-2 rounded-lg text-sm font-semibold text-white transition shadow-lg hover:shadow-xl"
 				:class="{
 				    'bg-amber-500 hover:bg-amber-600': (($store.confirmModal?.variant ??

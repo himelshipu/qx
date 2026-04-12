@@ -162,6 +162,32 @@
 								</a>
 							@endif
 
+							<!-- Earnings (Influencer Only) -->
+							@if (auth()->user()->user_type === 'influencer')
+								<a href="{{ route('earnings.index') }}"
+									class="block w-full text-left px-4 py-3 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
+									<i class="fas fa-wallet mr-2"></i>Earnings
+								</a>
+
+								<!-- Payment Queue (Influencer Only) -->
+								<a href="{{ route('payment-queue.index') }}"
+									class="block w-full text-left px-4 py-3 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
+									<i class="fas fa-hourglass-half mr-2"></i>Payment Queue
+								</a>
+
+								<!-- Payment Audit Log (Influencer Only) -->
+								<a href="{{ route('payment-audit.index') }}"
+									class="block w-full text-left px-4 py-3 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
+									<i class="fas fa-list-ul mr-2"></i>Payment Audit Log
+								</a>
+
+								<!-- Payment Statements (Influencer Only) -->
+								<a href="{{ route('payment-statements.index') }}"
+									class="block w-full text-left px-4 py-3 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
+									<i class="fas fa-file-invoice mr-2"></i>Statements
+								</a>
+							@endif
+
 							<hr class="my-1 border-gray-200 dark:border-gray-700">
 
 							<!-- Logout -->

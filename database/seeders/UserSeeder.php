@@ -15,6 +15,18 @@ class UserSeeder extends Seeder
 
         $users = [
             [
+                'name'         => 'Superadministrator',
+                'email'        => 'superadmin@rockies.com',
+                'user_type'    => 'admin',
+                'phone'        => '+1-415-555-0001',
+                'gender'       => 'other',
+                'address_line' => '1 Headquarters Ave',
+                'country'      => 'United States',
+                'city'         => 'Denver',
+                'postal_code'  => '80202',
+                'bio'          => 'Supreme administrator with complete platform control. Protected superadmin account.'
+            ],
+            [
                 'name'         => 'System Administrator',
                 'email'        => 'admin@rockies.local',
                 'user_type'    => 'admin',

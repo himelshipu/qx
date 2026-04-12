@@ -9,13 +9,13 @@ return new class extends Migration
 {
     public function up(): void
     {
-        if (! Schema::hasColumn('reviews', 'reviewer_type')) {
+        if (!Schema::hasColumn('reviews', 'reviewer_type')) {
             Schema::table('reviews', function (Blueprint $table): void {
                 $table->string('reviewer_type', 20)->default('influencer')->after('influencer_id');
             });
         }
 
-        if (! Schema::hasColumn('reviews', 'reviewee_type')) {
+        if (!Schema::hasColumn('reviews', 'reviewee_type')) {
             Schema::table('reviews', function (Blueprint $table): void {
                 $table->string('reviewee_type', 20)->default('brand')->after('reviewer_type');
             });
@@ -24,8 +24,17 @@ return new class extends Migration
         DB::table('reviews')->whereNull('reviewer_type')->update(['reviewer_type' => 'influencer']);
         DB::table('reviews')->whereNull('reviewee_type')->update(['reviewee_type' => 'brand']);
 
-        $hasLegacyUnique = collect(DB::select("SHOW INDEX FROM reviews"))
-            ->contains(fn ($index) => ($index->Key_name ?? null) === 'reviews_order_item_id_unique');
+        // Check if the legacy unique constraint exists (MySQL and PostgreSQL compatible)
+        $hasLegacyUnique = false;
+        if (DB::getDriverName() === 'mysql') {
+            $hasLegacyUnique = collect(DB::select("SHOW INDEX FROM reviews"))
+                ->contains(fn($index) => ($index->Key_name ?? null) === 'reviews_order_item_id_unique');
+        } elseif (DB::getDriverName() === 'pgsql') {
+            $hasLegacyUnique = DB::selectOne(
+                "SELECT to_regclass('public.reviews_order_item_id_unique') as exists"
+            )?->exists ?? false;
+        }
+        // SQLite doesn't have SHOW INDEX, so we'll skip this check for SQLite
 
         if ($hasLegacyUnique) {
             Schema::table('reviews', function (Blueprint $table): void {
@@ -39,10 +48,19 @@ return new class extends Migration
             });
         }
 
-        $hasCompositeUnique = collect(DB::select("SHOW INDEX FROM reviews"))
-            ->contains(fn ($index) => ($index->Key_name ?? null) === 'reviews_item_reviewer_unique');
+        // Check if the composite unique constraint exists (MySQL and PostgreSQL compatible)
+        $hasCompositeUnique = false;
+        if (DB::getDriverName() === 'mysql') {
+            $hasCompositeUnique = collect(DB::select("SHOW INDEX FROM reviews"))
+                ->contains(fn($index) => ($index->Key_name ?? null) === 'reviews_item_reviewer_unique');
+        } elseif (DB::getDriverName() === 'pgsql') {
+            $hasCompositeUnique = DB::selectOne(
+                "SELECT to_regclass('public.reviews_item_reviewer_unique') as exists"
+            )?->exists ?? false;
+        }
+        // SQLite doesn't have SHOW INDEX, so we'll skip this check for SQLite
 
-        if (! $hasCompositeUnique) {
+        if (!$hasCompositeUnique) {
             Schema::table('reviews', function (Blueprint $table): void {
                 $table->unique(['order_item_id', 'reviewer_type'], 'reviews_item_reviewer_unique');
             });
@@ -51,8 +69,17 @@ return new class extends Migration
 
     public function down(): void
     {
-        $hasCompositeUnique = collect(DB::select("SHOW INDEX FROM reviews"))
-            ->contains(fn ($index) => ($index->Key_name ?? null) === 'reviews_item_reviewer_unique');
+        // Check if the composite unique constraint exists (MySQL and PostgreSQL compatible)
+        $hasCompositeUnique = false;
+        if (DB::getDriverName() === 'mysql') {
+            $hasCompositeUnique = collect(DB::select("SHOW INDEX FROM reviews"))
+                ->contains(fn($index) => ($index->Key_name ?? null) === 'reviews_item_reviewer_unique');
+        } elseif (DB::getDriverName() === 'pgsql') {
+            $hasCompositeUnique = DB::selectOne(
+                "SELECT to_regclass('public.reviews_item_reviewer_unique') as exists"
+            )?->exists ?? false;
+        }
+        // SQLite doesn't have SHOW INDEX, so we'll skip this check for SQLite
 
         if ($hasCompositeUnique) {
             Schema::table('reviews', function (Blueprint $table): void {
@@ -61,9 +88,9 @@ return new class extends Migration
         }
 
         $hasLegacyUnique = collect(DB::select("SHOW INDEX FROM reviews"))
-            ->contains(fn ($index) => ($index->Key_name ?? null) === 'reviews_order_item_id_unique');
+            ->contains(fn($index) => ($index->Key_name ?? null) === 'reviews_order_item_id_unique');
 
-        if (! $hasLegacyUnique) {
+        if (!$hasLegacyUnique) {
             Schema::table('reviews', function (Blueprint $table): void {
                 $table->dropForeign('reviews_order_item_id_foreign');
                 $table->dropIndex('reviews_order_item_id_index');

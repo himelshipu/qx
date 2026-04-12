@@ -33,15 +33,23 @@
 				class="flex flex-col gap-4 border-b border-gray-200 p-5 sm:flex-row sm:items-center sm:justify-between dark:border-gray-800">
 				<div>
 					<h3 class="text-lg font-semibold text-gray-900 dark:text-white">User Directory</h3>
-					<p class="mt-1 text-sm text-gray-500 dark:text-gray-400">All brands, influencers, moderators, and admins in one place.
+					<p class="mt-1 text-sm text-gray-500 dark:text-gray-400">All brands, influencers, moderators, and admins in one
+						place.
 					</p>
 				</div>
+				<a href="{{ route('dashboard.users.create') }}"
+					class="inline-flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white text-sm font-medium rounded-lg transition-all duration-200 shadow-md hover:shadow-lg">
+					<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+					</svg>
+					Add User
+				</a>
 			</div>
 
 			<div class="p-5">
 				<form id="users-filters-form" method="GET" action="{{ route('dashboard.users.index') }}"
-					class="mb-5 grid grid-cols-1 gap-3 md:grid-cols-5">
-					<div class="md:col-span-3">
+					class="mb-5 grid grid-cols-1 gap-3 md:grid-cols-6">
+					<div class="md:col-span-2">
 						<div class="relative">
 							<span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
 								<x-icons.search class="h-4 w-4" />
@@ -54,9 +62,20 @@
 					<div>
 						<select id="status" name="status"
 							class="h-10 w-full rounded-lg border border-gray-200 bg-transparent px-3 text-sm text-gray-900 focus:border-gray-400 focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-white">
-							<option value="all" {{ $status === 'all' ? 'selected' : '' }}>All</option>
+							<option value="all" {{ $status === 'all' ? 'selected' : '' }}>All Status</option>
 							<option value="active" {{ $status === 'active' ? 'selected' : '' }}>Active</option>
 							<option value="inactive" {{ $status === 'inactive' ? 'selected' : '' }}>Inactive</option>
+						</select>
+					</div>
+					<div>
+						<select id="role" name="role"
+							class="h-10 w-full rounded-lg border border-gray-200 bg-transparent px-3 text-sm text-gray-900 focus:border-gray-400 focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-white">
+							<option value="" {{ empty($role) ? 'selected' : '' }}>All Roles</option>
+							@foreach ($roles as $roleItem)
+								<option value="{{ $roleItem->id }}" {{ $role === (string) $roleItem->id ? 'selected' : '' }}>
+									{{ $roleItem->name }}
+								</option>
+							@endforeach
 						</select>
 					</div>
 					<div class="flex items-end gap-2">
@@ -79,6 +98,7 @@
 				const resultsId = 'users-results';
 				const searchInput = document.getElementById('q');
 				const statusSelect = document.getElementById('status');
+				const roleSelect = document.getElementById('role');
 				let debounceTimer;
 				let activeRequestController = null;
 
@@ -90,6 +110,7 @@
 					const params = new URLSearchParams(new FormData(form));
 					if (!params.get('q')) params.delete('q');
 					if (!params.get('status') || params.get('status') === 'all') params.delete('status');
+					if (!params.get('role') || !params.get('role')) params.delete('role');
 					return params.toString();
 				};
 
@@ -135,6 +156,7 @@
 				});
 
 				statusSelect?.addEventListener('change', () => applyFilters());
+				roleSelect?.addEventListener('change', () => applyFilters());
 
 				document.addEventListener('click', function(event) {
 					const link = event.target.closest(`#${resultsId} a[href*="page="]`);

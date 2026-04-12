@@ -23,7 +23,9 @@
 	        $cart->load(['items.package.influencer.user']);
 	        foreach ($cart->items as $item) {
 	            $influencerUser = $item->package->influencer->user;
-	            $avatarPath = $influencerUser->profile_image_path ?? ($item->package->influencer->profile_image_path ?? '/default.webp');
+	            $avatarPath =
+	                $influencerUser->profile_image_path ??
+	                ($item->package->influencer->profile_image_path ?? '/default.webp');
 	            $cartItemsData[] = [
 	                'id' => $item->id,
 	                'name' => $influencerUser->name,
@@ -42,7 +44,8 @@
 @endphp
 
 
-<div x-data='cartModalData(@json($cartItemsData))' x-init="init()" class=" max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
+<div x-data='cartModalData(@json($cartItemsData))' x-init="init()"
+	class=" max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
 
 	<div class="relative">
 		<!-- After login menu -->
@@ -94,6 +97,11 @@
 						<div class="w-1 h-1 bg-black dark:bg-white rounded-full"></div>
 					</div>
 				</div>
+
+				<!-- Notification Dropdown -->
+				@auth
+					<x-frontend.notifications.dropdown />
+				@endauth
 
 				<!-- Profile Dropdown Wrapper -->
 				<div class="relative" @click.away="isProfileOpen = false">
@@ -153,7 +161,9 @@
 									<a href="{{ route('cart.index') }}"
 										class="px-7 py-3.5 text-[15px] font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors flex items-center justify-between">
 										<span><i class="fas fa-shopping-cart mr-2"></i>Cart</span>
-										<span x-show="totalItemCount > 0" x-cloak class="min-w-[20px] px-2 py-1 rounded-full bg-purple-600 text-white text-[11px] font-bold text-center" x-text="totalItemCount"></span>
+										<span x-show="totalItemCount > 0" x-cloak
+											class="min-w-[20px] px-2 py-1 rounded-full bg-purple-600 text-white text-[11px] font-bold text-center"
+											x-text="totalItemCount"></span>
 									</a>
 								@endif
 

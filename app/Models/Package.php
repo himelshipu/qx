@@ -6,10 +6,12 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Package extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     protected $fillable = [
         'influencer_id',
@@ -21,18 +23,18 @@ class Package extends Model
         'delivery_days',
         'revisions_included',
         'created_by',
-        'is_active',
+        'is_active'
     ];
 
     protected function casts(): array
     {
         return [
-            'base_price' => 'decimal:2',
-            'delivery_days' => 'integer',
+            'base_price'         => 'decimal:2',
+            'delivery_days'      => 'integer',
             'revisions_included' => 'integer',
-            'is_active' => 'boolean',
-            'created_at' => 'datetime',
-            'updated_at' => 'datetime',
+            'is_active'          => 'boolean',
+            'created_at'         => 'datetime',
+            'updated_at'         => 'datetime'
         ];
     }
 
@@ -54,5 +56,10 @@ class Package extends Model
     public function orderItems(): HasMany
     {
         return $this->hasMany(OrderItem::class);
+    }
+
+    public function orders(): HasManyThrough
+    {
+        return $this->hasManyThrough(Order::class, OrderItem::class, 'package_id', 'id', 'id', 'order_id');
     }
 }
