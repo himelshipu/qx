@@ -16,6 +16,7 @@ use App\Http\Controllers\Backend\InfluencerController;
 use App\Http\Controllers\Backend\InfluencerPortfolioController;
 use App\Http\Controllers\Backend\KnowledgeBaseController;
 use App\Http\Controllers\Backend\MenuController;
+use App\Http\Controllers\Backend\ModeratorController;
 use App\Http\Controllers\Backend\NotificationController;
 use App\Http\Controllers\Backend\OrderController as BackendOrderController;
 use App\Http\Controllers\Backend\PackageController;
@@ -396,6 +397,16 @@ Route::prefix('dashboard')->name('dashboard.')->middleware(['auth', 'verified', 
     Route::get('/users/{user}/edit', [UserController::class, 'edit'])->name('users.edit');
     Route::put('/users/{user}', [UserController::class, 'update'])->name('users.update');
     Route::post('/users/{user}/toggle-status', [UserController::class, 'toggleStatus'])->name('users.toggle-status');
+
+    // Moderator routes (dashboard)
+    Route::get('/moderators', [ModeratorController::class, 'index'])->name('moderators.index');
+    Route::get('/moderators/create', [ModeratorController::class, 'create'])->name('moderators.create');
+    Route::post('/moderators', [ModeratorController::class, 'store'])->name('moderators.store');
+    Route::get('/moderators/{moderator}', [ModeratorController::class, 'show'])->name('moderators.show');
+    Route::get('/moderators/{moderator}/edit', [ModeratorController::class, 'edit'])->name('moderators.edit');
+    Route::put('/moderators/{moderator}', [ModeratorController::class, 'update'])->name('moderators.update');
+    Route::delete('/moderators/{moderator}', [ModeratorController::class, 'destroy'])->name('moderators.destroy');
+    Route::post('/moderators/{moderator}/toggle-status', [ModeratorController::class, 'toggleStatus'])->name('moderators.toggle-status');
 
     // User Roles routes (for assigning roles to users)
     Route::get('/users/roles/assign', [UserController::class, 'assignRoles'])->name('users.roles.assign');

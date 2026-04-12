@@ -116,19 +116,31 @@
 		this.isLoading = true;
 		try {
 			const response = await fetch('{{ route('frontend.notifications.api.unread') }}', {
+				credentials: 'same-origin',
 				headers: {
 					'X-CSRF-Token': csrfToken,
+					'X-Requested-With': 'XMLHttpRequest',
+					'Accept': 'application/json',
 				}
 			});
 			
-			// Silently ignore auth errors (user not logged in or session expired)
-			if (response.status === 401 || response.status === 403) {
+			// Middleware may redirect to HTML pages during auth/session transitions.
+			if (response.redirected || response.status === 401 || response.status === 403 || response.status === 419) {
+				this.notifications = [];
+				this.unreadCount = 0;
 				this.isLoading = false;
 				return;
 			}
 			
 			if (!response.ok) {
 				throw new Error(`HTTP error! status: ${response.status}`);
+			}
+
+			const contentType = response.headers.get('content-type') || '';
+			if (!contentType.includes('application/json')) {
+				this.notifications = [];
+				this.unreadCount = 0;
+				return;
 			}
 			
 			const data = await response.json();

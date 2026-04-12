@@ -614,6 +614,11 @@
 					const submitBtn = form.querySelector('button[type="submit"]');
 
 					form.addEventListener('submit', async function(e) {
+						if (formId === 'imagesForm') {
+							// Use native multipart form submission for image uploads.
+							return;
+						}
+
 						e.preventDefault();
 						const formData = new FormData(this);
 						const activeTab = this.querySelector('input[name="active_tab"]').value;
@@ -628,6 +633,7 @@
 						try {
 							const response = await fetch(this.action, {
 								method: 'POST',
+								credentials: 'same-origin',
 								headers: {
 									'X-Requested-With': 'XMLHttpRequest',
 									'Accept': 'application/json'
@@ -635,8 +641,15 @@
 								body: formData
 							});
 
+							const contentType = response.headers.get('content-type') || '';
+							const isJson = contentType.includes('application/json');
+
 							if (response.status === 422) {
-								const data = await response.json();
+								const data = isJson ? await response.json() : {
+									errors: {
+										form: ['Validation failed. Please check your inputs.']
+									}
+								};
 								const errors = Object.values(data.errors).flat().join('\n');
 								if (window.toast) {
 									window.toast.error(errors);
@@ -662,7 +675,9 @@
 								}
 								return;
 							} else if (response.ok) {
-								const data = await response.json();
+								const data = isJson ? await response.json() : {
+									message: 'Profile updated successfully!'
+								};
 								if (window.toast) {
 									window.toast.success(data.message ||
 										'Profile updated successfully!');

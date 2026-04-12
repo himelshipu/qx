@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\ImageHelper;
 use App\Models\Influencer;
 use App\Models\InfluencerPortfolio;
 use App\Models\Package;
@@ -144,12 +145,13 @@ class InfluencerProfileController extends Controller
      */
     public function update(Request $request, string $slug)
     {
-        $user       = Auth::user();
         $influencer = $this->getDashboardInfluencerBySlug($slug);
 
         if (!$influencer) {
             return redirect()->route('influencer.profile.edit', ['slug' => Auth::user()->slug])->with('error', 'Influencer profile not found');
         }
+
+        $user = $influencer->user;
 
         $activeTab = $request->string('active_tab')->toString() ?: 'details';
 
@@ -232,10 +234,9 @@ class InfluencerProfileController extends Controller
                     if ($user->profile_image_path && Storage::disk('public')->exists($user->profile_image_path)) {
                         Storage::disk('public')->delete($user->profile_image_path);
                     }
-                    Storage::disk('public')->makeDirectory('influencers/profile');
-                    $path                     = $request->file('profile_image')->store('influencers/profile', 'public');
+                    $path                     = $request->file('profile_image')->store('creators/profile', 'public');
                     $user->profile_image_path = $path;
-                    $user->save();
+                    $saved = $user->save();
                 } catch (\Exception $e) {
                     Log::error('Profile image upload error: ' . $e->getMessage());
 
@@ -248,10 +249,9 @@ class InfluencerProfileController extends Controller
                     if ($user->cover_image_path && Storage::disk('public')->exists($user->cover_image_path)) {
                         Storage::disk('public')->delete($user->cover_image_path);
                     }
-                    Storage::disk('public')->makeDirectory('influencers/cover');
-                    $path                   = $request->file('cover_image')->store('influencers/cover', 'public');
+                    $path                   = $request->file('cover_image')->store('creators/cover', 'public');
                     $user->cover_image_path = $path;
-                    $user->save();
+                    $saved = $user->save();
                 } catch (\Exception $e) {
                     Log::error('Cover image upload error: ' . $e->getMessage());
 
@@ -261,9 +261,8 @@ class InfluencerProfileController extends Controller
 
             if ($request->hasFile('portfolio_images')) {
                 try {
-                    Storage::disk('public')->makeDirectory('influencers/portfolio');
                     foreach ($request->file('portfolio_images', []) as $portfolioImage) {
-                        $path = $portfolioImage->store('influencers/portfolio', 'public');
+                        $path = $portfolioImage->store('creators/portfolio', 'public');
                         $influencer->portfolios()->create([
                             'media_type' => 'image',
                             'file_path'  => $path,
@@ -289,7 +288,12 @@ class InfluencerProfileController extends Controller
         $message = $messages[$activeTab] ?? 'Profile updated successfully.';
 
         if ($request->expectsJson() || $request->ajax()) {
-            return response()->json(['message' => $message, 'active_tab' => $activeTab]);
+            return response()->json([
+                'message'       => $message,
+                'active_tab'    => $activeTab,
+                'profile_image' => ImageHelper::url($user->profile_image_path),
+                'cover_image'   => ImageHelper::url($user->cover_image_path),
+            ]);
         }
 
         return redirect()->route('influencer.profile.edit', ['slug' => $slug])->with('success', $message)->with('active_tab', $activeTab);

@@ -135,6 +135,30 @@ class User extends Authenticatable
         return $this->hasMany(Package::class, 'created_by');
     }
 
+    public function setProfileImagePathAttribute($value): void
+    {
+        $this->attributes['profile_image_path'] = $this->normalizeImagePathValue($value);
+    }
+
+    public function setCoverImagePathAttribute($value): void
+    {
+        $this->attributes['cover_image_path'] = $this->normalizeImagePathValue($value);
+    }
+
+    private function normalizeImagePathValue(mixed $value): ?string
+    {
+        if ($value === null || $value === false || $value === 0 || $value === '0') {
+            return null;
+        }
+
+        $normalized = trim((string) $value);
+        if ($normalized === '' || strtolower($normalized) === 'null') {
+            return null;
+        }
+
+        return ltrim($normalized, '/');
+    }
+
     public function createdCampaigns(): HasMany
     {
         return $this->hasMany(Campaign::class, 'created_by');
