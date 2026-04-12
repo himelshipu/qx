@@ -34,7 +34,13 @@ class PermissionSeeder extends Seeder
 
             // USERS
             ['name' => 'View Users', 'slug' => 'users.index', 'module' => 'users'],
+            ['name' => 'Create User', 'slug' => 'users.create', 'module' => 'users'],
+            ['name' => 'Store User', 'slug' => 'users.store', 'module' => 'users'],
+            ['name' => 'View User Details', 'slug' => 'users.show', 'module' => 'users'],
+            ['name' => 'Edit User', 'slug' => 'users.edit', 'module' => 'users'],
+            ['name' => 'Update User', 'slug' => 'users.update', 'module' => 'users'],
             ['name' => 'Toggle User Status', 'slug' => 'users.toggle-status', 'module' => 'users'],
+            ['name' => 'Delete User', 'slug' => 'users.destroy', 'module' => 'users'],
 
             // ROLES
             ['name' => 'View Roles', 'slug' => 'roles.index', 'module' => 'roles'],
@@ -53,6 +59,7 @@ class PermissionSeeder extends Seeder
             ['name' => 'Update Category', 'slug' => 'categories.update', 'module' => 'categories'],
             ['name' => 'Delete Category', 'slug' => 'categories.destroy', 'module' => 'categories'],
             ['name' => 'Toggle Category Status', 'slug' => 'categories.toggle-status', 'module' => 'categories'],
+            ['name' => 'Reorder Categories', 'slug' => 'categories.reorder', 'module' => 'categories'],
 
             // BRANDS
             ['name' => 'View Brands', 'slug' => 'brands.index', 'module' => 'brands'],
@@ -63,6 +70,7 @@ class PermissionSeeder extends Seeder
             ['name' => 'Update Brand', 'slug' => 'brands.update', 'module' => 'brands'],
             ['name' => 'Delete Brand', 'slug' => 'brands.destroy', 'module' => 'brands'],
             ['name' => 'Toggle Brand Status', 'slug' => 'brands.toggle-status', 'module' => 'brands'],
+            ['name' => 'Reorder Brands', 'slug' => 'brands.reorder', 'module' => 'brands'],
 
             // INFLUENCERS
             ['name' => 'View Influencers', 'slug' => 'influencers.index', 'module' => 'influencers'],
@@ -74,6 +82,7 @@ class PermissionSeeder extends Seeder
             ['name' => 'Delete Influencer', 'slug' => 'influencers.destroy', 'module' => 'influencers'],
             ['name' => 'Toggle Influencer Status', 'slug' => 'influencers.toggle-status', 'module' => 'influencers'],
             ['name' => 'Toggle Influencer Featured', 'slug' => 'influencers.toggle-featured', 'module' => 'influencers'],
+            ['name' => 'Reorder Influencers', 'slug' => 'influencers.reorder', 'module' => 'influencers'],
 
             // INFLUENCER PORTFOLIOS
             ['name' => 'View Portfolios', 'slug' => 'portfolios.index', 'module' => 'portfolios'],
@@ -176,6 +185,7 @@ class PermissionSeeder extends Seeder
             ['name' => 'Update Testimonial', 'slug' => 'testimonials.update', 'module' => 'content'],
             ['name' => 'Delete Testimonial', 'slug' => 'testimonials.destroy', 'module' => 'content'],
             ['name' => 'Toggle Testimonial Status', 'slug' => 'testimonials.toggle-status', 'module' => 'content'],
+            ['name' => 'Reorder Testimonials', 'slug' => 'testimonials.reorder', 'module' => 'content'],
 
             // FAQ SECTIONS
             ['name' => 'View FAQ Sections', 'slug' => 'faqs.sections.index', 'module' => 'content'],
@@ -225,6 +235,9 @@ class PermissionSeeder extends Seeder
             ['name' => 'View Dashboard Analytics', 'slug' => 'analytics.view', 'module' => 'dashboard'],
             ['name' => 'View System KPIs', 'slug' => 'analytics.kpis', 'module' => 'dashboard'],
             ['name' => 'View Revenue Reports', 'slug' => 'analytics.revenue', 'module' => 'dashboard'],
+            ['name' => 'View User Analytics', 'slug' => 'analytics.users', 'module' => 'dashboard'],
+            ['name' => 'View Campaign Analytics', 'slug' => 'analytics.campaigns', 'module' => 'dashboard'],
+            ['name' => 'View Order Analytics', 'slug' => 'analytics.orders', 'module' => 'dashboard'],
 
             // PAGES & CONTENT SECTIONS
             ['name' => 'View Pages', 'slug' => 'pages.index', 'module' => 'content'],

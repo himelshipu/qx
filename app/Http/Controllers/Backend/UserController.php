@@ -6,13 +6,14 @@ use App\Http\Controllers\Controller;
 use App\Models\Role;
 use App\Models\User;
 use App\Traits\LogsRbacChanges;
+use App\Traits\PermissionChecker;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class UserController extends Controller
 {
-    use LogsRbacChanges;
+    use LogsRbacChanges, PermissionChecker;
     /**
      * Display user list with realtime search and status filtering.
      */

@@ -79,12 +79,12 @@ class RolePermissionSeeder extends Seeder
 
             // Content Management - Full CRUD
             'categories.index', 'categories.create', 'categories.store', 'categories.edit',
-            'categories.update', 'categories.toggle-status', 'categories.destroy',
+            'categories.update', 'categories.toggle-status', 'categories.destroy', 'categories.reorder',
             'brands.index', 'brands.create', 'brands.store', 'brands.show',
-            'brands.edit', 'brands.update', 'brands.toggle-status', 'brands.destroy',
+            'brands.edit', 'brands.update', 'brands.toggle-status', 'brands.destroy', 'brands.reorder',
             'influencers.index', 'influencers.create', 'influencers.store', 'influencers.show',
             'influencers.edit', 'influencers.update', 'influencers.toggle-status',
-            'influencers.toggle-featured', 'influencers.destroy',
+            'influencers.toggle-featured', 'influencers.destroy', 'influencers.reorder',
 
             // Campaigns - Full Management
             'campaigns.index', 'campaigns.create', 'campaigns.store', 'campaigns.show',
@@ -123,7 +123,7 @@ class RolePermissionSeeder extends Seeder
 
             // Testimonials & Case Studies
             'testimonials.index', 'testimonials.create', 'testimonials.store',
-            'testimonials.edit', 'testimonials.update', 'testimonials.toggle-status', 'testimonials.destroy',
+            'testimonials.edit', 'testimonials.update', 'testimonials.toggle-status', 'testimonials.destroy', 'testimonials.reorder',
             'case-studies.index', 'case-studies.create', 'case-studies.store',
             'case-studies.edit', 'case-studies.update', 'case-studies.toggle-status', 'case-studies.destroy',
 

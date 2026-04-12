@@ -16,6 +16,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'restrict-dashboard-access' => \App\Http\Middleware\RestrictDashboardAccess::class,
             'permission' => \App\Http\Middleware\PermissionMiddleware::class,
+            'check-permission' => \App\Http\Middleware\CheckPermission::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
