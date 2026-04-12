@@ -245,6 +245,7 @@ Route::prefix('dashboard')->name('dashboard.')->middleware(['auth', 'verified', 
     Route::put('/categories/{category}', [CategoryController::class, 'update'])->name('categories.update');
     Route::delete('/categories/{category}', [CategoryController::class, 'destroy'])->name('categories.destroy');
     Route::post('/categories/{category}/toggle-status', [CategoryController::class, 'toggleStatus'])->name('categories.toggle-status');
+    Route::post('/categories/reorder', [CategoryController::class, 'reorder'])->name('categories.reorder');
 
     Route::get('/brands', [BrandController::class, 'index'])->name('brands.index');
     Route::get('/brands/create', [BrandController::class, 'create'])->name('brands.create');
@@ -254,6 +255,7 @@ Route::prefix('dashboard')->name('dashboard.')->middleware(['auth', 'verified', 
     Route::put('/brands/{brand}', [BrandController::class, 'update'])->name('brands.update');
     Route::delete('/brands/{brand}', [BrandController::class, 'destroy'])->name('brands.destroy');
     Route::post('/brands/{brand}/toggle-status', [BrandController::class, 'toggleStatus'])->name('brands.toggle-status');
+    Route::post('/brands/reorder', [BrandController::class, 'reorder'])->name('brands.reorder');
 
     Route::get('/influencers', [InfluencerController::class, 'index'])->name('influencers.index');
     Route::get('/influencers/create', [InfluencerController::class, 'create'])->name('influencers.create');
@@ -264,6 +266,7 @@ Route::prefix('dashboard')->name('dashboard.')->middleware(['auth', 'verified', 
     Route::delete('/influencers/{influencer}', [InfluencerController::class, 'destroy'])->name('influencers.destroy');
     Route::post('/influencers/{influencer}/toggle-status', [InfluencerController::class, 'toggleStatus'])->name('influencers.toggle-status');
     Route::post('/influencers/{influencer}/toggle-featured', [InfluencerController::class, 'toggleFeatured'])->name('influencers.toggle-featured');
+    Route::post('/influencers/reorder', [InfluencerController::class, 'reorder'])->name('influencers.reorder');
 
     // Influencer Portfolio Management
     Route::get('/influencers/{influencer}/portfolio', [InfluencerPortfolioController::class, 'index'])->name('influencers.portfolio.index');
@@ -428,6 +431,7 @@ Route::prefix('dashboard')->name('dashboard.')->middleware(['auth', 'verified', 
     Route::put('/testimonials/{testimonial}', [TestimonialController::class, 'update'])->name('testimonials.update');
     Route::delete('/testimonials/{testimonial}', [TestimonialController::class, 'destroy'])->name('testimonials.destroy');
     Route::post('/testimonials/{testimonial}/toggle-status', [TestimonialController::class, 'toggleStatus'])->name('testimonials.toggle-status');
+    Route::post('/testimonials/reorder', [TestimonialController::class, 'reorder'])->name('testimonials.reorder');
 
     // Featured Collaborations routes
     Route::get('/featured-collaborations', [FeaturedCollaborationController::class, 'index'])->name('featured-collaborations.index');

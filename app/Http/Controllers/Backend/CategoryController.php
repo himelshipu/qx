@@ -7,6 +7,7 @@ use App\Http\Requests\Backend\Category\StoreCategoryRequest;
 use App\Http\Requests\Backend\Category\UpdateCategoryRequest;
 use App\Models\Category;
 use App\Services\Admin\CategoryService;
+use App\Traits\Sortable;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -14,6 +15,8 @@ use Illuminate\View\View;
 
 class CategoryController extends Controller
 {
+    use Sortable;
+
     public function __construct(
         private readonly CategoryService $categoryService
     ) {}
@@ -110,5 +113,18 @@ class CategoryController extends Controller
             'message'   => 'Category status updated successfully.',
             'is_active' => $isActive
         ]);
+    }
+
+    /**
+     * Reorder categories via AJAX.
+     */
+    public function reorder(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'order' => 'required|array',
+            'order.*' => 'exists:categories,id',
+        ]);
+
+        return $this->reorderItems($validated['order'], Category::class);
     }
 }

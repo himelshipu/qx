@@ -23,7 +23,8 @@ class Influencer extends Model
         'brands_worked_with',
         'is_active',
         'is_featured',
-        'featured_priority'
+        'featured_priority',
+        'sort_order'
     ];
 
     protected function casts(): array
@@ -32,6 +33,7 @@ class Influencer extends Model
             'is_active'         => 'boolean',
             'is_featured'       => 'boolean',
             'featured_priority' => 'integer',
+            'sort_order'        => 'integer',
             'created_at'        => 'datetime',
             'updated_at'        => 'datetime'
         ];

@@ -25,6 +25,16 @@
 			</div>
 		</div>
 
+		<!-- Reorder Section -->
+		<x-sortable-list
+			:items="$testimonials"
+			modelName="Testimonial"
+			reorderRoute="{{ route('dashboard.testimonials.reorder') }}"
+			editRoute="dashboard.testimonials.edit"
+			title="Reorder Testimonials"
+			description="Drag testimonials to reorder them. The order determines how they appear on your website."
+		/>
+
 		<div class="rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
 			<div
 				class="flex flex-col gap-4 border-b border-gray-200 p-5 sm:flex-row sm:items-center sm:justify-between dark:border-gray-800">

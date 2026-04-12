@@ -7,6 +7,7 @@ use App\Http\Requests\Backend\Brand\StoreBrandRequest;
 use App\Http\Requests\Backend\Brand\UpdateBrandRequest;
 use App\Models\Brand;
 use App\Services\Admin\BrandService;
+use App\Traits\Sortable;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -14,6 +15,8 @@ use Illuminate\View\View;
 
 class BrandController extends Controller
 {
+    use Sortable;
+
     public function __construct(
         private readonly BrandService $brandService
     ) {}
@@ -114,5 +117,18 @@ class BrandController extends Controller
             'message'   => 'Brand status updated successfully.',
             'is_active' => $isActive
         ]);
+    }
+
+    /**
+     * Reorder brands via AJAX.
+     */
+    public function reorder(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'order' => 'required|array',
+            'order.*' => 'exists:brands,id',
+        ]);
+
+        return $this->reorderItems($validated['order'], Brand::class);
     }
 }

@@ -7,6 +7,7 @@ use App\Http\Requests\Backend\Influencer\StoreInfluencerRequest;
 use App\Http\Requests\Backend\Influencer\UpdateInfluencerRequest;
 use App\Models\Influencer;
 use App\Services\Admin\InfluencerService;
+use App\Traits\Sortable;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -14,6 +15,8 @@ use Illuminate\View\View;
 
 class InfluencerController extends Controller
 {
+    use Sortable;
+
     public function __construct(
         private readonly InfluencerService $influencerService
     ) {}
@@ -133,5 +136,18 @@ class InfluencerController extends Controller
             'message'     => 'Influencer featured status updated successfully.',
             'is_featured' => $isFeatured
         ]);
+    }
+
+    /**
+     * Reorder influencers via AJAX.
+     */
+    public function reorder(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'order' => 'required|array',
+            'order.*' => 'exists:influencers,id',
+        ]);
+
+        return $this->reorderItems($validated['order'], Influencer::class);
     }
 }

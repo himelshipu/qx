@@ -24,7 +24,8 @@ class Brand extends Model
         'is_active',
         'profile_image_path',
         'cover_image_path',
-        'setup_data'
+        'setup_data',
+        'sort_order'
     ];
 
     protected function casts(): array
@@ -33,6 +34,7 @@ class Brand extends Model
             'is_verified' => 'boolean',
             'is_active'   => 'boolean',
             'setup_data'  => 'array',
+            'sort_order'  => 'integer',
             'created_at'  => 'datetime',
             'updated_at'  => 'datetime'
         ];

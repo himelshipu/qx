@@ -4,10 +4,13 @@ namespace App\Http\Controllers\Backend;
 
 use App\Http\Controllers\Controller;
 use App\Models\Testimonial;
+use App\Traits\Sortable;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class TestimonialController extends Controller
 {
+    use Sortable;
     /**
      * Display a listing of the testimonials.
      */
@@ -100,7 +103,8 @@ class TestimonialController extends Controller
     }
     /**
      * Toggle the publish status of a testimonial.
-     */public function toggleStatus(Testimonial $testimonial)
+     */
+    public function toggleStatus(Testimonial $testimonial)
     {
         $testimonial->update([
             'is_published' => !$testimonial->is_published
@@ -108,5 +112,18 @@ class TestimonialController extends Controller
 
         return redirect()->back()
             ->with('success', 'Testimonial status updated successfully.');
+    }
+
+    /**
+     * Reorder testimonials via AJAX.
+     */
+    public function reorder(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'order' => 'required|array',
+            'order.*' => 'exists:testimonials,id',
+        ]);
+
+        return $this->reorderItems($validated['order'], Testimonial::class);
     }
 }
