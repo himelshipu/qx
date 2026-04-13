@@ -137,19 +137,19 @@ trait HasPermissionsHelper
         // Get key permissions for common actions
         $keyPermissions = [
             'can_view_dashboard' => $this->canDo('dashboard.view'),
-            'can_view_analytics' => $this->canDo('analytics.view'),
-            'can_manage_users' => $this->canDoAny(['users.create', 'users.edit', 'users.destroy']),
-            'can_manage_roles' => $this->canDoAny(['roles.create', 'roles.edit', 'roles.destroy']),
-            'can_manage_permissions' => $this->canDo('permissions.manage'),
+            'can_view_analytics' => $this->canDoAny(['orders.index', 'payments.index', 'payouts.index']),
+            'can_manage_users' => $this->canDoAny(['users.create', 'users.edit', 'users.update', 'users.toggle-status']),
+            'can_manage_roles' => $this->canDoAny(['roles.store', 'roles.update', 'roles.destroy']),
+            'can_manage_permissions' => $this->canDo('permissions.assign'),
             'can_manage_content' => $this->canAccessModule('content'),
             'can_manage_campaigns' => $this->canAccessModule('campaigns'),
             'can_manage_orders' => $this->canAccessModule('orders'),
             'can_manage_brands' => $this->canAccessModule('brands'),
             'can_manage_influencers' => $this->canAccessModule('influencers'),
             'can_manage_support' => $this->canAccessModule('support'),
-            'can_manage_settings' => $this->canDo('settings.view'),
-            'can_moderate_content' => $this->canAccessModule('moderation'),
-            'can_view_reports' => $this->canDo('reports.view'),
+            'can_manage_settings' => $this->canDoAny(['settings.index', 'settings.update', 'settings.update-order']),
+            'can_moderate_content' => $this->canDoAny(['reviews.toggle-visibility', 'support-tickets.update', 'conversations.assign-moderator']),
+            'can_view_reports' => $this->canDoAny(['orders.index', 'payment-statement.index', 'payments.index']),
         ];
 
         return [

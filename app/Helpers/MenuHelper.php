@@ -416,7 +416,7 @@ class MenuHelper
             'payment-audit.index' => 'payment-audit.index',
             'payment-statement.index' => 'payment-statement.index',
             'notifications.index' => 'notifications.index',
-            'settings' => 'settings.view',
+            'settings' => 'settings.index',
             'reviews.index' => 'reviews.index',
             'case-studies.index' => 'case-studies.index',
             'testimonials.index' => 'testimonials.index',

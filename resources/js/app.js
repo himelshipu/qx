@@ -103,6 +103,7 @@ Alpine.store("roleFormModal", {
     errors: {},
     formData: {
         name: "",
+        description: "",
         is_active: true,
     },
 
@@ -110,6 +111,7 @@ Alpine.store("roleFormModal", {
         this.editingId = null;
         this.formData = {
             name: "",
+            description: "",
             is_active: true,
         };
         this.errors = {};
@@ -127,6 +129,7 @@ Alpine.store("roleFormModal", {
         this.editingId = null;
         this.formData = {
             name: "",
+            description: "",
             is_active: true,
         };
         this.errors = {};
@@ -139,6 +142,7 @@ Alpine.store("roleFormModal", {
             if (data.success) {
                 this.formData = {
                     name: data.role.name,
+                    description: data.role.description || "",
                     is_active: data.role.is_active,
                 };
             }

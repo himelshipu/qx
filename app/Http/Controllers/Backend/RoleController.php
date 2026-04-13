@@ -10,7 +10,9 @@ use Illuminate\Support\Str;
 
 class RoleController extends Controller
 {
-    use LogsRbacChanges;
+    use LogsRbacChanges {
+        getRoleData as protected getRoleDataForAudit;
+    }
     /**
      * Display a listing of the roles.
      */
@@ -31,17 +33,19 @@ class RoleController extends Controller
         try {
             $validated = $request->validate([
                 'name'      => ['required', 'string', 'max:255', 'unique:roles,name'],
+                'description' => ['nullable', 'string', 'max:2000'],
                 'is_active' => ['boolean']
             ]);
 
             $role = Role::create([
                 'name'      => $validated['name'],
                 'slug'      => Str::slug($validated['name']),
+                'description' => $validated['description'] ?? null,
                 'is_active' => $request->boolean('is_active', true)
             ]);
 
             // Log role creation
-            $this->logRoleCreation($role->id, $this->getRoleData($role->id));
+            $this->logRoleCreation($role->id, $this->getRoleAuditData($role->id));
 
             return response()->json([
                 'success' => true,
@@ -80,20 +84,22 @@ class RoleController extends Controller
 
             $validated = $request->validate([
                 'name'      => ['required', 'string', 'max:255', 'unique:roles,name,' . $role->id],
+                'description' => ['nullable', 'string', 'max:2000'],
                 'is_active' => ['boolean']
             ]);
 
             // Get before data for audit trail
-            $beforeData = $this->getRoleData($role->id);
+            $beforeData = $this->getRoleAuditData($role->id);
 
             $role->update([
                 'name'      => $validated['name'],
                 'slug'      => Str::slug($validated['name']),
+                'description' => $validated['description'] ?? null,
                 'is_active' => $request->boolean('is_active', true)
             ]);
 
             // Log role update
-            $afterData = $this->getRoleData($role->id);
+            $afterData = $this->getRoleAuditData($role->id);
             $this->logRoleUpdate($role->id, $beforeData, $afterData);
 
             return response()->json([
@@ -224,5 +230,13 @@ class RoleController extends Controller
                 'message' => $e->getMessage()
             ], 404);
         }
+    }
+
+    /**
+     * Build role payload for audit logs without colliding with the public JSON endpoint.
+     */
+    private function getRoleAuditData(int $roleId): array
+    {
+        return $this->getRoleDataForAudit($roleId);
     }
 }

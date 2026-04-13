@@ -78,7 +78,7 @@
 									</button>
 								</div>
 							</th>
-							@php $standardActions = ['View', 'Create', 'Edit', 'Delete', 'Show', 'Status']; @endphp
+							@php $standardActions = ['View', 'Create', 'Edit', 'Delete', 'Show', 'Status', 'Manage']; @endphp
 							@foreach ($standardActions as $action)
 								<th class="px-4 py-4 text-center">{{ $action }}</th>
 							@endforeach
@@ -93,25 +93,65 @@
 								<td class="px-4 py-4"></td>
 								@foreach ($standardActions as $action)
 									@php
+										$modulePermissions = $permissions->get($moduleName, collect());
 										$moduleSlug = strtolower($moduleName);
 										$actionCandidates = match (strtolower($action)) {
 											'view' => ['index', 'view'],
-											'create' => ['create'],
-											'edit' => ['edit'],
+											'create' => ['create', 'store'],
+											'edit' => ['edit', 'update'],
 											'delete' => ['destroy', 'delete'],
 											'show' => ['show'],
 											'status' => ['toggle-status', 'update-status', 'status'],
+											'manage' => ['assign', 'reorder', 'purchase', 'bulk-update', 'bulk-mark', 'refund', 'retry', 'pdf'],
 											default => [strtolower($action)],
 										};
 
-										$candidateSlugs = array_map(
-											fn($suffix) => $moduleSlug . '.' . $suffix,
-											$actionCandidates,
-										);
+										$specialModuleActionSlugs = [
+											'content' => [
+												'view' => 'static-pages.index',
+												'create' => 'static-pages.create',
+												'edit' => 'static-pages.edit',
+												'delete' => 'static-pages.destroy',
+												'show' => 'static-pages.show',
+												'status' => 'static-pages.toggle-status',
+												'manage' => 'settings.index',
+											],
+											'permissions' => [
+												'view' => 'permissions.assign',
+												'create' => 'permissions.assign.store',
+												'manage' => 'permissions.assign',
+											],
+											'support' => [
+												'view' => 'support-tickets.index',
+												'edit' => 'support-tickets.update',
+												'delete' => 'support-tickets.destroy',
+												'show' => 'support-tickets.show',
+												'manage' => 'support-tickets.bulk-update',
+											],
+											'roles' => [
+												'create' => 'roles.store',
+												'edit' => 'roles.update',
+												'show' => 'roles.permissions',
+												'status' => 'roles.toggle-status',
+											],
+										];
 
-										$matchedPermission = $permissions
-											->get($moduleName, collect())
-											->first(fn($permission) => in_array($permission->slug, $candidateSlugs, true));
+										$specialSlug = $specialModuleActionSlugs[$moduleSlug][strtolower($action)] ?? null;
+
+										if ($specialSlug) {
+											$matchedPermission = $modulePermissions->first(fn($permission) => $permission->slug === $specialSlug);
+										} else {
+											$matchedPermission = $modulePermissions->first(function ($permission) use ($actionCandidates) {
+												$slug = $permission->slug;
+												foreach ($actionCandidates as $candidate) {
+													if ($slug === $candidate || str_ends_with($slug, '.' . $candidate)) {
+														return true;
+													}
+												}
+
+												return false;
+											});
+										}
 
 										$permissionId = $matchedPermission?->id;
 										$permissionSlug = $matchedPermission?->slug;

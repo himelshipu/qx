@@ -206,6 +206,17 @@
 					</template>
 				</div>
 
+				<!-- Description -->
+				<div>
+					<label for="description" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Description</label>
+					<textarea id="description" x-model="$store.roleFormModal.formData.description" rows="3"
+						placeholder="Optional role description"
+						class="mt-2 w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"></textarea>
+					<template x-if="$store.roleFormModal.errors.description">
+						<p class="mt-1 text-sm text-red-600 dark:text-red-400" x-text="$store.roleFormModal.errors.description[0]"></p>
+					</template>
+				</div>
+
 				<!-- Status -->
 				<div class="flex items-center gap-3 rounded-lg border border-gray-200 p-4 dark:border-gray-700">
 					<label class="flex items-center gap-2 cursor-pointer flex-1">
