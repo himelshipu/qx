@@ -241,7 +241,11 @@
 											<td class="px-4 py-3 text-sm text-gray-600 dark:text-gray-400">{{ $item['identifier'] }}</td>
 											<td class="px-4 py-3 text-sm text-gray-600 dark:text-gray-400">{{ $item['deleted_at']?->format('M d, Y h:i A') ?? '-' }}</td>
 											<td class="px-4 py-3 text-right">
-												<form action="{{ route('dashboard.settings.recovery.restore', ['type' => $item['type'], 'id' => $item['id']]) }}" method="POST" class="inline-block">
+												<form action="{{ route('dashboard.settings.recovery.restore', ['type' => $item['type'], 'id' => $item['id']]) }}" method="POST" class="inline-block js-confirmable"
+													data-confirm-title="Restore Record"
+													data-confirm-message="Restore this deleted record?"
+													data-confirm-button="Restore"
+													data-confirm-variant="warning">
 													@csrf
 													<button type="submit" class="rounded-lg bg-emerald-600 px-3 py-2 text-xs font-semibold text-white transition hover:bg-emerald-700">Restore</button>
 												</form>

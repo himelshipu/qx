@@ -43,6 +43,11 @@
 	}
 	$brandingLogoLight = \App\Models\Setting::fileUrl('branding.logo_light', '/images/logo/header-logo.png');
 	$brandingLogoDark = \App\Models\Setting::fileUrl('branding.logo_dark', '/images/logo/header-logo.png');
+	$userType = (string) ($currentUser?->user_type ?? '');
+	$isBrandUser = $userType === 'brand';
+	$isInfluencerUser = $userType === 'influencer';
+	$brandPayoutUrl = route('frontend.orders.index');
+	$influencerPaymentUrl = route('payment-statements.index');
 @endphp
 
 
@@ -77,28 +82,21 @@
 			<!-- Action Icons Section -->
 			<div class="flex items-center justify-between gap-3 sm:gap-5 w-full sm:w-auto">
 
-				<!-- Shopping Cart Icon (THIS ONLY opens the Cart Modal) -->
-				<div @click="isCartOpen = true" class="relative cursor-pointer hover:opacity-70 transition-opacity p-2">
-					<x-icons.shopping-cart class="w-5 h-5 " />
+				@if ($isBrandUser)
+					<!-- Shopping Cart Icon (Brand only) -->
+					<div @click="isCartOpen = true" class="relative cursor-pointer hover:opacity-70 transition-opacity p-2">
+						<x-icons.shopping-cart class="w-5 h-5 " />
 
-					<span x-show="totalItemCount > 0" x-cloak
-						class="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-purple-600 text-white text-[10px] font-bold leading-[18px] text-center"
-						x-text="totalItemCount"></span>
+						<span x-show="totalItemCount > 0" x-cloak
+							class="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-purple-600 text-white text-[10px] font-bold leading-[18px] text-center"
+							x-text="totalItemCount"></span>
 
-
-
-
-
-
-
-
-
-
-					<div class="absolute bottom-1.5 left-1/2 -translate-x-1/2 flex items-center gap-0.5">
-						<div class="w-1 h-1 bg-black dark:bg-white rounded-full"></div>
-						<div class="w-1 h-1 bg-black dark:bg-white rounded-full"></div>
+						<div class="absolute bottom-1.5 left-1/2 -translate-x-1/2 flex items-center gap-0.5">
+							<div class="w-1 h-1 bg-black dark:bg-white rounded-full"></div>
+							<div class="w-1 h-1 bg-black dark:bg-white rounded-full"></div>
+						</div>
 					</div>
-				</div>
+				@endif
 
 				<!-- Notification Dropdown -->
 				@auth
@@ -139,27 +137,17 @@
 						class="absolute right-0 top-full mt-3 w-56 bg-white dark:bg-gray-800 rounded-[20px] shadow-[0_10px_40px_rgba(0,0,0,0.1)] border border-gray-50 dark:border-gray-700 z-50 overflow-hidden">
 						<div class="py-2 flex flex-col">
 							@auth
-								<!-- Profile -->
-								@if (Auth::user()->brand)
+								@if ($isBrandUser)
 									<a href="{{ route('brand.profile', Auth::user()->slug) }}"
 										class="px-7 py-3.5 text-[15px] font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
 										<i class="fas fa-user mr-2"></i>Profile
 									</a>
-								@elseif(Auth::user()->influencer)
-									<a href="{{ route('influencer.profile', Auth::user()->slug) }}"
+
+									<a href="{{ route('frontend.account.edit', Auth::user()->slug) }}"
 										class="px-7 py-3.5 text-[15px] font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
-										<i class="fas fa-user mr-2"></i>Profile
+										<i class="fas fa-cog mr-2"></i>Account
 									</a>
-								@endif
 
-								<!-- Account -->
-								<a href="{{ route('frontend.account.edit', Auth::user()->slug) }}"
-									class="px-7 py-3.5 text-[15px] font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
-									<i class="fas fa-cog mr-2"></i>Account
-								</a>
-
-								<!-- Cart (Brand Only) -->
-								@if (Auth::user()->user_type === 'brand')
 									<a href="{{ route('cart.index') }}"
 										class="px-7 py-3.5 text-[15px] font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors flex items-center justify-between">
 										<span><i class="fas fa-shopping-cart mr-2"></i>Cart</span>
@@ -167,31 +155,70 @@
 											class="min-w-[20px] px-2 py-1 rounded-full bg-purple-600 text-white text-[11px] font-bold text-center"
 											x-text="totalItemCount"></span>
 									</a>
-								@endif
 
-								<!-- Orders -->
-								<a href="{{ route('frontend.orders.index') }}"
-									class="px-7 py-3.5 text-[15px] font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
-									<i class="fas fa-receipt mr-2"></i>Orders
-								</a>
+									<a href="{{ route('frontend.orders.index') }}"
+										class="px-7 py-3.5 text-[15px] font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+										<i class="fas fa-receipt mr-2"></i>Orders
+									</a>
 
-								<!-- Packages (Influencer & Brand) -->
-								<a href="{{ route('frontend.packages.index') }}"
-									class="px-7 py-3.5 text-[15px] font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
-									<i class="fas fa-box mr-2"></i>Packages
-								</a>
+									<a href="{{ route('frontend.packages.index') }}"
+										class="px-7 py-3.5 text-[15px] font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+										<i class="fas fa-box mr-2"></i>Packages
+									</a>
 
-								<!-- Campaigns -->
-								<a href="{{ route('frontend.campaigns.index') }}"
-									class="px-7 py-3.5 text-[15px] font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
-									<i class="fas fa-bullseye mr-2"></i>Campaigns
-								</a>
+									<a href="{{ route('frontend.campaigns.index') }}"
+										class="px-7 py-3.5 text-[15px] font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+										<i class="fas fa-bullseye mr-2"></i>Campaign
+									</a>
 
-								<!-- Conversations (Brand Only) -->
-								@if (Auth::user()->user_type === 'brand')
+									<a href="{{ $brandPayoutUrl }}"
+										class="px-7 py-3.5 text-[15px] font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+										<i class="fas fa-wallet mr-2"></i>Payout
+									</a>
+
 									<a href="{{ route('frontend.conversations.index') }}"
 										class="px-7 py-3.5 text-[15px] font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
 										<i class="fas fa-comments mr-2"></i>Conversations
+									</a>
+								@elseif ($isInfluencerUser)
+									<a href="{{ route('influencer.profile', Auth::user()->slug) }}"
+										class="px-7 py-3.5 text-[15px] font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+										<i class="fas fa-user mr-2"></i>Profile
+									</a>
+
+									<a href="{{ route('frontend.account.edit', Auth::user()->slug) }}"
+										class="px-7 py-3.5 text-[15px] font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+										<i class="fas fa-cog mr-2"></i>Account
+									</a>
+
+									<a href="{{ route('frontend.orders.index') }}"
+										class="px-7 py-3.5 text-[15px] font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+										<i class="fas fa-receipt mr-2"></i>Orders
+									</a>
+
+									<a href="{{ $influencerPaymentUrl }}"
+										class="px-7 py-3.5 text-[15px] font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+										<i class="fas fa-credit-card mr-2"></i>Payment
+									</a>
+
+									<a href="{{ route('frontend.packages.index') }}"
+										class="px-7 py-3.5 text-[15px] font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+										<i class="fas fa-box mr-2"></i>Packages
+									</a>
+
+									<a href="{{ route('frontend.campaigns.index') }}"
+										class="px-7 py-3.5 text-[15px] font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+										<i class="fas fa-bullseye mr-2"></i>Campaign
+									</a>
+								@else
+									<a href="{{ route('frontend.account.edit', Auth::user()->slug) }}"
+										class="px-7 py-3.5 text-[15px] font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+										<i class="fas fa-cog mr-2"></i>Account
+									</a>
+
+									<a href="{{ route('dashboard.index') }}"
+										class="px-7 py-3.5 text-[15px] font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+										<i class="fas fa-th-large mr-2"></i>Dashboard
 									</a>
 								@endif
 
