@@ -3,6 +3,7 @@ import { createPopper } from "@popperjs/core";
 import Alpine from "alpinejs";
 import ApexCharts from "apexcharts";
 import flatpickr from "flatpickr";
+import Sortable from "sortablejs";
 import "flatpickr/dist/flatpickr.min.css";
 import "./conversation";
 import "./stripe/payment";
@@ -13,6 +14,7 @@ window.Alpine = Alpine;
 window.flatpickr = flatpickr;
 window.ApexCharts = ApexCharts;
 window.createPopper = createPopper;
+window.Sortable = Sortable;
 
 // Custom Toast System using Alpine.js
 Alpine.store("toast", {

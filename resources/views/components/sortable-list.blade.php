@@ -70,7 +70,7 @@
                         
                         <div class="flex items-center gap-4 p-5 md:p-6">
                             <!-- Drag Handle -->
-                            <div class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-slate-200 dark:bg-slate-700/50 text-slate-400 dark:text-slate-500 group-hover:bg-indigo-100 dark:group-hover:bg-indigo-900/30 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-all duration-150 cursor-grab active:cursor-grabbing active:bg-indigo-200 dark:active:bg-indigo-900/50">
+                            <div class="sortable-handle flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-slate-200 dark:bg-slate-700/50 text-slate-400 dark:text-slate-500 group-hover:bg-indigo-100 dark:group-hover:bg-indigo-900/30 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-all duration-150 cursor-grab active:cursor-grabbing active:bg-indigo-200 dark:active:bg-indigo-900/50 select-none">
                                 <i class="fas fa-grip-vertical text-sm"></i>
                             </div>
 
@@ -164,15 +164,12 @@
     @endif
 </div>
 
-<!-- Sortable.js Library -->
-<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
-
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const sortableList = document.getElementById('sortable-list');
         const saveIndicator = document.getElementById('save-indicator');
         
-        if (sortableList && sortableList.children.length > 0) {
+        if (sortableList && sortableList.querySelectorAll('.sortable-item').length > 0 && typeof Sortable !== 'undefined') {
             const reorderRoute = sortableList.dataset.reorderRoute;
             let saveTimeout;
 
@@ -180,12 +177,13 @@
                 animation: 300,
                 ghostClass: 'opacity-50 bg-indigo-50 dark:bg-indigo-900/20 scale-98',
                 dragClass: 'dragging',
-                handle: '.fa-grip-vertical',
+                draggable: '.sortable-item',
+                handle: '.sortable-handle',
                 forceFallback: false,
                 easing: 'cubic-bezier(0.25, 0.46, 0.45, 0.94)',
                 onEnd: function(evt) {
                     // Update position numbers
-                    const items = document.querySelectorAll('.sortable-item');
+                    const items = sortableList.querySelectorAll('.sortable-item');
                     items.forEach((item, index) => {
                         const numberBadge = item.querySelector('div:nth-child(2)');
                         if (numberBadge) {

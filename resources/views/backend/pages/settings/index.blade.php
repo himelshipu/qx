@@ -265,7 +265,6 @@
 		</div>
 	</div>
 
-	<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
 	@push('scripts')
 		<script>
 			function settingsTabs(initialTab) {
@@ -326,14 +325,15 @@
 
 			document.addEventListener('DOMContentLoaded', function() {
 				const sortableList = document.getElementById('sortable-list');
-				if (!sortableList) return;
+				if (!sortableList || typeof Sortable === 'undefined') return;
 
 				Sortable.create(sortableList, {
 					animation: 150,
 					ghostClass: 'opacity-50 bg-indigo-100 dark:bg-indigo-900/30',
-					handle: '.fa-grip-vertical',
+					draggable: '.sortable-item',
+					handle: '.sortable-handle',
 					onEnd: function() {
-						const items = document.querySelectorAll('.sortable-item');
+						const items = sortableList.querySelectorAll('.sortable-item');
 						const order = Array.from(items).map(item => item.dataset.id);
 						const orderInput = document.getElementById('footer_pages_order');
 						if (orderInput) {
