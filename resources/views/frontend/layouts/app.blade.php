@@ -111,6 +111,7 @@
 			window.initialCartData = {!! json_encode($cartItemsData ?? []) !!};
 			window.loginUrl = @js(route('login'));
 			window.autoOpenCartSidebar = @json((bool) session('auto_open_cart_sidebar'));
+			window.brandActionRequiredModal = @json((bool) session('brand_action_required_modal'));
 			window.brandActionRequiredMessage = @json(session('brand_action_required_message'));
 
 			// Global store for cart state (accessible from anywhere)
@@ -393,16 +394,16 @@
 					}, 150);
 				}
 
-				if (window.brandActionRequiredMessage) {
-					if (window.toast && window.toast.warning) {
-						window.toast.warning(window.brandActionRequiredMessage);
-					} else if (window.confirmationModal) {
+				if (window.brandActionRequiredModal && window.brandActionRequiredMessage) {
+					if (window.confirmationModal) {
 						window.confirmationModal.open({
 							title: 'Brand Account Required',
 							message: window.brandActionRequiredMessage,
 							confirmText: 'OK',
 							variant: 'warning'
 						});
+					} else if (window.toast && window.toast.warning) {
+						window.toast.warning(window.brandActionRequiredMessage);
 					}
 				}
 			});

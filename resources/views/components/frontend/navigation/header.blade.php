@@ -5,6 +5,9 @@
 		$brandingLogoDark = \App\Models\Setting::fileUrl('branding.logo_dark', '/images/logo/header-logo.png');
 	@endphp
 	<div class="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
+		@php
+			$authRedirect = request()->fullUrl();
+		@endphp
 		<div class="py-6 flex flex-col sm:px-0 px-4 sm:flex-row items-center justify-between space-y-4 sm:space-y-0">
 			<div class="flex items-center gap-2">
 				<a href="{{ route('home') }}">
@@ -23,12 +26,12 @@
 				@auth
 					<a href="{{ route('dashboard.index') }}" class="nav-link">Dashboard</a>
 				@else
-					<a href="{{ route('login') }}" class="nav-link">Login</a>
-					<a href="{{ route('register', ['user-type' => 'brand']) }}" class="nav-link">Join as Brand</a>
+					<a href="{{ route('login', ['redirect' => $authRedirect]) }}" class="nav-link">Login</a>
+					<a href="{{ route('register', ['user-type' => 'brand', 'redirect' => $authRedirect]) }}" class="nav-link">Join as Brand</a>
 				@endauth
 
 				<!-- Influencer link -->
-				<a href="{{ route('register', ['user-type' => 'influencer']) }}" class="nav-link nav-gradient font-bold">
+				<a href="{{ route('register', ['user-type' => 'influencer', 'redirect' => $authRedirect]) }}" class="nav-link nav-gradient font-bold">
 					Join as Influencer
 				</a>
 

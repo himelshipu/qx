@@ -5,8 +5,9 @@
     'variant' => 'danger',
 ])
 
-<div x-show="$store.confirmModal.isOpen" x-cloak x-on:keydown.escape.window="$store.confirmModal.close()"
-	class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+
+<div x-data="{}" x-show="$store.confirmModal.isOpen" x-cloak x-on:keydown.escape.window="$store.confirmModal.close()"
+	class="fixed inset-0 z-100 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
 
 	<div
 		class="w-full max-w-lg rounded-2xl bg-white dark:bg-gray-900 shadow-2xl border border-gray-200 dark:border-gray-700 overflow-hidden"
@@ -15,11 +16,11 @@
 		<!-- Header with variant-specific styling -->
 		<div
 			:class="{
-			    'bg-gradient-to-r from-amber-50 to-amber-100/50 dark:from-amber-900/20 dark:to-amber-800/20': (($store
+			    'bg-linear-to-r from-amber-50 to-amber-100/50 dark:from-amber-900/20 dark:to-amber-800/20': (($store
 			        .confirmModal?.variant ?? @js($variant)) === 'warning'),
-			    'bg-gradient-to-r from-red-50 to-red-100/50 dark:from-red-900/20 dark:to-red-800/20': (($store.confirmModal
+			    'bg-linear-to-r from-red-50 to-red-100/50 dark:from-red-900/20 dark:to-red-800/20': (($store.confirmModal
 			        ?.variant ?? @js($variant)) === 'danger'),
-			    'bg-gradient-to-r from-blue-50 to-blue-100/50 dark:from-blue-900/20 dark:to-blue-800/20': (($store.confirmModal
+			    'bg-linear-to-r from-blue-50 to-blue-100/50 dark:from-blue-900/20 dark:to-blue-800/20': (($store.confirmModal
 			        ?.variant ?? @js($variant)) === 'info')
 			}"
 			class="flex items-start justify-between p-6 border-b border-gray-200 dark:border-gray-700">
@@ -34,7 +35,7 @@
 					    'bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400': (($store.confirmModal?.variant ??
 					        @js($variant)) === 'info')
 					}"
-					class="flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center">
+					class="shrink-0 w-12 h-12 rounded-full flex items-center justify-center">
 					<template x-if="($store.confirmModal?.variant ?? @js($variant)) === 'warning'">
 						<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
 							<path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4v2m0 0v2m-6-8a9 9 0 1118 0 9 9 0 01-18 0z" />
@@ -62,7 +63,7 @@
 			</div>
 
 			<button type="button" @click="$store.confirmModal.close()"
-				class="text-gray-400 hover:text-gray-600 dark:hover:text-white transition flex-shrink-0">
+					class="text-gray-400 hover:text-gray-600 dark:hover:text-white transition shrink-0">
 				<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
 				</svg>

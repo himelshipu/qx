@@ -19,6 +19,9 @@
                     <div>
                         <form method="POST" action="{{ route('login') }}">
                             @csrf
+                            @if (!empty($redirectTo))
+                                <input type="hidden" name="redirect_to" value="{{ $redirectTo }}">
+                            @endif
 
                             <!-- Email Address -->
                             <div>
@@ -85,7 +88,9 @@
                     </div>
 
                     <p class="mt-6 text-sm text-center text-gray-800 dark:text-gray-400">
-                        Don't have an account? <a href="{{ route('register') }}" class="text-purple-400 font-bold pl-1">Sign Up</a>
+                        Don't have an account?
+                        <a href="{{ route('register', array_filter(['redirect' => $redirectTo ?? request('redirect')])) }}"
+                            class="text-purple-400 font-bold pl-1">Sign Up</a>
                     </p>
                 </div>
             </div>

@@ -56,6 +56,9 @@
 						<div x-show="role === 'brand'" x-cloak>
 							<form method="POST" action="{{ route('register') }}">
 								@csrf
+								@if (!empty($redirectTo))
+									<input type="hidden" name="redirect_to" value="{{ $redirectTo }}">
+								@endif
 								<input type="hidden" name="user_type" value="brand">
 								<x-frontend.signup.brand />
 							</form>
@@ -65,6 +68,9 @@
 						<div x-show="role === 'influencer'" x-cloak>
 							<form method="POST" action="{{ route('register') }}">
 								@csrf
+								@if (!empty($redirectTo))
+									<input type="hidden" name="redirect_to" value="{{ $redirectTo }}">
+								@endif
 								<input type="hidden" name="user_type" value="influencer">
 								<x-frontend.signup.influencer />
 							</form>
@@ -73,7 +79,8 @@
 						<!-- Login Link -->
 						<p class="mt-6 text-sm text-center text-gray-800 dark:text-gray-400">
 							Already have an account?
-							<a href="{{ route('login') }}" class="text-purple-400 font-bold pl-1">Sign In</a>
+							<a href="{{ route('login', array_filter(['redirect' => $redirectTo ?? request('redirect')])) }}"
+								class="text-purple-400 font-bold pl-1">Sign In</a>
 						</p>
 					</div>
 				</div>

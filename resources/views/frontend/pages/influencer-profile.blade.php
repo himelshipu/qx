@@ -295,7 +295,6 @@
 
 					<!-- BADGES SYSTEM -->
 					<div class="space-y-3">
-						<!-- Top Influencer Badge -->
 						<div class="flex items-start gap-4 group">
 							<div class="w-10 h-10 shrink-0 rounded-lg flex items-center justify-center transition-colors"
 								:class="@js($hasTopInfluencer) ? 'bg-amber-100 text-amber-600' : 'bg-gray-100 text-gray-400'">
@@ -316,7 +315,6 @@
 							</div>
 						</div>
 
-						<!-- Responds Fast Badge -->
 						<div class="flex items-start gap-4 group">
 							<div class="w-10 h-10 shrink-0 rounded-lg flex items-center justify-center transition-colors"
 								:class="@js($hasResponsesFast) ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-400'">
@@ -340,7 +338,11 @@
 
 					<!-- DESCRIPTION BIO -->
 					<div class="text-gray-600 dark:text-gray-300 text-base max-w-4xl font-normal opacity-90">
-						{{ $bioText }}
+						@if ($bioText !== '')
+							<p class="leading-relaxed">{{ $bioText }}</p>
+						@else
+							<p class="leading-relaxed">No bio available.</p>
+						@endif
 					</div>
 
 					<!-- 3. NEW PACKAGES SECTION -->
@@ -827,6 +829,14 @@
 						}
 					},
 
+					get normalizedUserType() {
+						return (this.userType || '').toString().trim().toLowerCase();
+					},
+
+					get isBrandUser() {
+						return this.normalizedUserType === 'brand';
+					},
+
 					async handleAddToCart() {
 						if (!this.selectedPackage) {
 							return;
@@ -834,12 +844,12 @@
 
 						// Use global addToCart function for real-time cart updates
 						if (!this.isAuthenticated) {
-							// Redirect to login for unauthenticated users
-							window.location.href = this.loginUrl;
+							// Redirect via pending-action endpoint so post-login add-to-cart completes automatically.
+							window.location.href = this.startAddToCartUrl(this.selectedPackage.id);
 							return;
 						}
 
-						if (this.userType !== 'brand') {
+						if (!this.isBrandUser) {
 							// Show error modal for non-brand users
 							if (window.confirmationModal) {
 								window.confirmationModal.open({
@@ -863,7 +873,7 @@
 					negotiatePackage() {
 						if (!this.isAuthenticated) {
 							window.location.href = this.startNegotiationUrl;
-						} else if (this.userType === 'brand') {
+						} else if (this.isBrandUser) {
 							window.location.href = this.startNegotiationUrl;
 						} else {
 							window.confirmationModal.open({

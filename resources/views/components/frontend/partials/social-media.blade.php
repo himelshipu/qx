@@ -42,13 +42,6 @@
 							class="flex-shrink-0 w-[80%] sm:w-[60%] lg:w-auto group overflow-hidden font-sans cursor-pointer influencer-card block"
 							data-influencer-id="{{ $influencer['id'] }}">
 							<div class="relative overflow-hidden rounded-xl">
-								<button type="button"
-									class="wishlist-btn absolute top-3 right-3 z-30 p-1.5 transition-all duration-300 hover:scale-110 drop-shadow-md"
-									onclick="event.preventDefault(); event.stopPropagation();">
-									<x-icons.heart class="w-6 h-6 wishlist-heart-icon fill-none stroke-white stroke-[2px]" />
-
-								</button>
-
 								<img src="{{ image_url($influencer['image_url']) }}"
 									class="w-full h-48 sm:h-64 object-cover transition-transform duration-500 ease-out group-hover:scale-110"
 									alt="{{ $influencer['name'] }}">

@@ -17,6 +17,8 @@ use Illuminate\View\View;
 
 class RegisteredUserController extends Controller
 {
+    private const POST_AUTH_REDIRECT_KEY = 'auth_post_login_redirect';
+
     /**
      * Display the registration view.
      */
@@ -29,7 +31,9 @@ class RegisteredUserController extends Controller
             $userType = 'brand';
         }
 
-        return view('auth.register', ['userType' => $userType]);
+        $redirectTo = $this->rememberPostAuthRedirect($request);
+
+        return view('auth.register', ['userType' => $userType, 'redirectTo' => $redirectTo]);
     }
 
     /**
@@ -99,6 +103,11 @@ class RegisteredUserController extends Controller
             }
         }
 
+        $postAuthRedirect = $this->consumePostAuthRedirect($request);
+        if ($postAuthRedirect !== null) {
+            return redirect($postAuthRedirect);
+        }
+
         return redirect()->intended(route('home', absolute: false));
     }
 
@@ -119,5 +128,56 @@ class RegisteredUserController extends Controller
         || !empty($profile->business_type)
         || !empty($profile->company_size)
         || $profile->categories()->exists();
+    }
+
+    private function rememberPostAuthRedirect(Request $request): ?string
+    {
+        $candidate = $this->resolveRedirectCandidate($request);
+
+        if ($candidate !== null && !$this->isAuthRoutePath($candidate)) {
+            $request->session()->put(self::POST_AUTH_REDIRECT_KEY, $candidate);
+
+            return $candidate;
+        }
+
+        return null;
+    }
+
+    private function consumePostAuthRedirect(Request $request): ?string
+    {
+        $candidate = (string) $request->session()->pull(self::POST_AUTH_REDIRECT_KEY, '');
+
+        if ($candidate !== '' && str_starts_with($candidate, url('/')) && !$this->isAuthRoutePath($candidate)) {
+            return $candidate;
+        }
+
+        return null;
+    }
+
+    private function resolveRedirectCandidate(Request $request): ?string
+    {
+        $explicit = (string) $request->input('redirect_to', $request->query('redirect', ''));
+        if ($explicit !== '' && str_starts_with($explicit, url('/'))) {
+            return $explicit;
+        }
+
+        $previous = (string) url()->previous();
+        if ($previous !== '' && str_starts_with($previous, url('/'))) {
+            return $previous;
+        }
+
+        return null;
+    }
+
+    private function isAuthRoutePath(string $url): bool
+    {
+        $path = (string) parse_url($url, PHP_URL_PATH);
+
+        return $path === '/login'
+            || $path === '/register'
+            || $path === '/forgot-password'
+            || str_starts_with($path, '/reset-password')
+            || $path === '/email/verify'
+            || $path === '/verify-email';
     }
 }
