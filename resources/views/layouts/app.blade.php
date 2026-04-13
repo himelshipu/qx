@@ -5,8 +5,54 @@
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1">
 		<meta name="csrf-token" content="{{ csrf_token() }}">
+		@php
+			$siteName = \App\Models\Setting::get('branding.site_name', config('app.name', 'QX Marketplace'));
+			$explicitTitle = trim((string) $__env->yieldContent('title'));
+			if ($explicitTitle === '' && isset($title)) {
+				$explicitTitle = trim((string) $title);
+			}
 
-		<title>{{ $title ?? \App\Models\Setting::get('branding.site_name', 'QX Marketplace') }}</title>
+			$humanize = static function (string $value): string {
+				return ucwords(str_replace(['-', '_'], ' ', $value));
+			};
+
+			$deriveFromRoute = static function (string $routeName) use ($humanize): string {
+				if ($routeName === '') {
+					return '';
+				}
+
+				$parts = array_values(array_filter(explode('.', $routeName), fn ($part) => !in_array($part, ['frontend', 'dashboard', 'api'], true)));
+				if (empty($parts)) {
+					return '';
+				}
+
+				$action = end($parts);
+				$resource = count($parts) >= 2 ? $parts[count($parts) - 2] : $parts[0];
+				$actionMap = [
+					'index' => '',
+					'show' => '',
+					'create' => 'Create ',
+					'store' => 'Create ',
+					'edit' => 'Edit ',
+					'update' => 'Update ',
+					'destroy' => 'Delete ',
+				];
+
+				if (array_key_exists($action, $actionMap)) {
+					return trim($actionMap[$action] . $humanize($resource));
+				}
+
+				return implode(' - ', array_map($humanize, $parts));
+			};
+
+			$routeName = (string) (\Illuminate\Support\Facades\Route::currentRouteName() ?? '');
+			$pageTitle = $explicitTitle !== '' ? $explicitTitle : $deriveFromRoute($routeName);
+			if ($pageTitle === '') {
+				$pageTitle = 'Home';
+			}
+		@endphp
+
+		<title>{{ $pageTitle }} | {{ $siteName }}</title>
 
 		<!-- Apply theme before CSS loads -->
 		<script>
@@ -37,7 +83,11 @@
 	<body class="bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100">
 		<div class="min-h-screen flex flex-col">
 			<!-- Header/Navigation -->
-			<x-frontend.header />
+			@auth
+				<x-frontend.navigation.auth-header />
+			@else
+				<x-frontend.navigation.header />
+			@endauth
 
 			<!-- Main Content -->
 			<main class="flex-1 w-full">
@@ -45,7 +95,7 @@
 			</main>
 
 			<!-- Footer -->
-			<x-frontend.footer />
+			<x-frontend.navigation.footer />
 		</div>
 
 		<!-- Toast Container -->

@@ -240,7 +240,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 | Admin/Moderator Dashboard Routes
 |--------------------------------------------------------------------------
  */
-Route::prefix('dashboard')->name('dashboard.')->middleware(['auth', 'verified', 'restrict-dashboard-access'])->group(function () {
+Route::prefix('dashboard')->name('dashboard.')->middleware(['auth', 'verified', 'restrict-dashboard-access', 'dashboard-route-permission'])->group(function () {
 
     // Dashboard
     Route::get('/', [DashboardController::class, 'index'])->name('index');

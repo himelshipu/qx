@@ -5,8 +5,54 @@
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1">
 		<meta name="csrf-token" content="{{ csrf_token() }}">
+		@php
+			$siteName = \App\Models\Setting::get('branding.site_name', config('app.name', 'QX Marketplace'));
+			$explicitTitle = trim((string) $__env->yieldContent('title'));
+			if ($explicitTitle === '' && isset($title)) {
+				$explicitTitle = trim((string) $title);
+			}
 
-		<title>{{ $title ?? 'Admin Dashboard' }} | {{ \App\Models\Setting::get('branding.site_name', 'ROCKIES - Admin') }}</title>
+			$humanize = static function (string $value): string {
+				return ucwords(str_replace(['-', '_'], ' ', $value));
+			};
+
+			$deriveFromRoute = static function (string $routeName) use ($humanize): string {
+				if ($routeName === '') {
+					return '';
+				}
+
+				$parts = array_values(array_filter(explode('.', $routeName), fn ($part) => !in_array($part, ['dashboard', 'frontend', 'api'], true)));
+				if (empty($parts)) {
+					return '';
+				}
+
+				$action = end($parts);
+				$resource = count($parts) >= 2 ? $parts[count($parts) - 2] : $parts[0];
+				$actionMap = [
+					'index' => '',
+					'show' => '',
+					'create' => 'Create ',
+					'store' => 'Create ',
+					'edit' => 'Edit ',
+					'update' => 'Update ',
+					'destroy' => 'Delete ',
+				];
+
+				if (array_key_exists($action, $actionMap)) {
+					return trim($actionMap[$action] . $humanize($resource));
+				}
+
+				return implode(' - ', array_map($humanize, $parts));
+			};
+
+			$routeName = (string) (\Illuminate\Support\Facades\Route::currentRouteName() ?? '');
+			$pageTitle = $explicitTitle !== '' ? $explicitTitle : $deriveFromRoute($routeName);
+			if ($pageTitle === '') {
+				$pageTitle = 'Dashboard';
+			}
+		@endphp
+
+		<title>{{ $pageTitle }} | {{ $siteName }} Admin</title>
 
 		<!-- Apply theme before CSS loads to avoid first-paint flash -->
 		<script>

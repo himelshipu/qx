@@ -296,6 +296,8 @@ class PermissionSeeder extends Seeder
             ['name' => 'Update Account Password', 'slug' => 'account.password.update', 'module' => 'account'],
             ['name' => 'Toggle Account Status', 'slug' => 'account.toggle-status', 'module' => 'account'],
             ['name' => 'Delete Account', 'slug' => 'account.destroy', 'module' => 'account'],
+            ['name' => 'View Own Profile', 'slug' => 'profile.edit', 'module' => 'account'],
+            ['name' => 'Update Own Profile', 'slug' => 'profile.update', 'module' => 'account'],
         ];
     }
 }

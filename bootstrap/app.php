@@ -17,6 +17,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'restrict-dashboard-access' => \App\Http\Middleware\RestrictDashboardAccess::class,
             'permission' => \App\Http\Middleware\PermissionMiddleware::class,
             'check-permission' => \App\Http\Middleware\CheckPermission::class,
+            'dashboard-route-permission' => \App\Http\Middleware\EnforceDashboardRoutePermission::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

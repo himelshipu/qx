@@ -67,6 +67,8 @@ class RolePermissionSeeder extends Seeder
         // MODERATOR: content review + support + limited read-only operational access.
         $moderatorPermissions = [
             'dashboard.view',
+            'profile.edit',
+            'profile.update',
 
             // Support and communication
             'support-tickets.index', 'support-tickets.show', 'support-tickets.update',
@@ -95,6 +97,8 @@ class RolePermissionSeeder extends Seeder
         // MANAGER: read-only dashboard operations.
         $managerPermissions = [
             'dashboard.view',
+            'profile.edit',
+            'profile.update',
 
             'users.index',
             'campaigns.index', 'campaigns.view',
