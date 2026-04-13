@@ -126,6 +126,13 @@ class AdminMenuSeeder extends Seeder
                         'module' => 'content',
                     ],
                     [
+                        'label' => 'Blog',
+                        'icon' => 'article',
+                        'route' => 'dashboard.blogs.index',
+                        'permission' => 'blogs.index',
+                        'module' => 'content',
+                    ],
+                    [
                         'label' => 'Collaborations',
                         'icon' => 'groups',
                         'route' => 'dashboard.featured-collaborations.index',
@@ -139,9 +146,34 @@ class AdminMenuSeeder extends Seeder
                         'permission' => 'static-pages.index',
                         'module' => 'content',
                     ],
+                ],
+            ],
+
+            // SETTINGS
+            [
+                'label' => 'Settings',
+                'icon' => 'tune',
+                'permission' => 'settings.index',
+                'module' => 'settings',
+                'order' => 7,
+                'children' => [
                     [
-                        'label' => 'Footer Settings',
-                        'icon' => 'tune',
+                        'label' => 'Static Pages',
+                        'icon' => 'description',
+                        'route' => 'dashboard.static-pages.index',
+                        'permission' => 'static-pages.index',
+                        'module' => 'settings',
+                    ],
+                    [
+                        'label' => 'Create Static Page',
+                        'icon' => 'add',
+                        'route' => 'dashboard.static-pages.create',
+                        'permission' => 'static-pages.create',
+                        'module' => 'settings',
+                    ],
+                    [
+                        'label' => 'Site Settings',
+                        'icon' => 'settings',
                         'route' => 'dashboard.settings.index',
                         'permission' => 'settings.index',
                         'module' => 'settings',

@@ -174,7 +174,7 @@ class PermissionController extends Controller
         $role = Role::findOrFail($request->role_id);
         
         // Get current permissions for audit trail
-        $previousPermissions = $role->permissions()->pluck('id')->toArray();
+        $previousPermissions = $role->permissions()->pluck('permissions.id')->toArray();
         
         if ($request->has('permissions')) {
             $role->syncPermissions($request->permissions);

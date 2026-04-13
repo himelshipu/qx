@@ -6,6 +6,7 @@ use App\Http\Controllers\AccountController;
 use App\Http\Controllers\Backend\BrandController;
 use App\Http\Controllers\Backend\CampaignController;
 use App\Http\Controllers\Backend\CampaignInfluencerController;
+use App\Http\Controllers\Backend\BlogController;
 use App\Http\Controllers\Backend\CaseStudyController;
 use App\Http\Controllers\Backend\CategoryController;
 use App\Http\Controllers\Backend\DashboardController;
@@ -37,6 +38,7 @@ use App\Http\Controllers\CartController;
 use App\Http\Controllers\ConversationController;
 use App\Http\Controllers\EarningsController;
 use App\Http\Controllers\Frontend\CampaignController as FrontendCampaignController;
+use App\Http\Controllers\Frontend\BlogController as FrontendBlogController;
 use App\Http\Controllers\Frontend\CaseStudyController as FrontendCaseStudyController;
 use App\Http\Controllers\Frontend\ContentLibraryController;
 use App\Http\Controllers\Frontend\AccountController as FrontendAccountController;
@@ -105,6 +107,10 @@ Route::middleware(['web'])->group(function () {
     // Case Studies page
     Route::get('/case-studies', [FrontendCaseStudyController::class, 'index'])->name('case-studies');
     Route::get('/case-studies/{caseStudy:slug}', [FrontendCaseStudyController::class, 'show'])->name('case-studies.show');
+
+    // Public Blog
+    Route::get('/blogs', [FrontendBlogController::class, 'index'])->name('frontend.blogs.index');
+    Route::get('/blogs/{blogPost:slug}', [FrontendBlogController::class, 'show'])->name('frontend.blogs.show');
 
     // API endpoints
     Route::get('/api/categories', [InfluencersController::class, 'apiCategories']);
@@ -486,10 +492,26 @@ Route::prefix('dashboard')->name('dashboard.')->middleware(['auth', 'verified', 
     Route::delete('/static-pages/{staticPage}', [StaticPageController::class, 'destroy'])->name('static-pages.destroy');
     Route::post('/static-pages/{staticPage}/toggle-status', [StaticPageController::class, 'toggleStatus'])->name('static-pages.toggle-status');
 
+    // Blog routes
+    Route::get('/blogs', [BlogController::class, 'index'])->name('blogs.index');
+    Route::get('/blogs/create', [BlogController::class, 'create'])->name('blogs.create');
+    Route::post('/blogs', [BlogController::class, 'store'])->name('blogs.store');
+    Route::get('/blogs/{blogPost}', [BlogController::class, 'show'])->name('blogs.show');
+    Route::get('/blogs/{blogPost}/edit', [BlogController::class, 'edit'])->name('blogs.edit');
+    Route::put('/blogs/{blogPost}', [BlogController::class, 'update'])->name('blogs.update');
+    Route::delete('/blogs/{blogPost}', [BlogController::class, 'destroy'])->name('blogs.destroy');
+    Route::post('/blogs/{blogPost}/toggle-status', [BlogController::class, 'toggleStatus'])->name('blogs.toggle-status');
+    Route::post('/blogs/{slug}/restore', [BlogController::class, 'restore'])->name('blogs.restore');
+
     // Settings routes
     Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
     Route::post('/settings', [SettingsController::class, 'update'])->name('settings.update');
     Route::post('/settings/update-order', [SettingsController::class, 'updateOrder'])->name('settings.update-order');
+    Route::post('/settings/recovery/{type}/{id}/restore', [SettingsController::class, 'restoreEntity'])->name('settings.recovery.restore');
+
+    // Profile routes (dashboard-only)
+    Route::get('/profile', [AccountController::class, 'profileEdit'])->name('profile.edit');
+    Route::post('/profile', [AccountController::class, 'profileUpdate'])->name('profile.update');
 
     // Account routes (dashboard-only)
     Route::get('/account/{slug}', [AccountController::class, 'edit'])->name('account.edit');

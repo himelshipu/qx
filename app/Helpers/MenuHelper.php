@@ -85,12 +85,11 @@ class MenuHelper
                         ]
                     ],
                     [
-                        'icon'     => 'pages',
-                        'name'     => 'Static Pages',
+                        'icon'     => 'blog',
+                        'name'     => 'Blog',
                         'subItems' => [
-                            ['name' => 'All Pages', 'route' => 'static-pages.index', 'icon' => 'pages'],
-                            ['name' => 'Create Page', 'route' => 'static-pages.create', 'icon' => 'campaign-new'],
-                            ['name' => 'Footer Settings', 'route' => 'settings.index', 'icon' => 'settings']
+                            ['name' => 'All Posts', 'route' => 'blogs.index', 'icon' => 'blog'],
+                            ['name' => 'Create Post', 'route' => 'blogs.create', 'icon' => 'campaign-new']
                         ]
                     ]
                 ]
@@ -223,10 +222,26 @@ class MenuHelper
                 ]
             ],
 
-            'profile'       => [
-                'icon'  => 'profile',
-                'name'  => 'Profile',
-                'route' => '/profile'
+            'settings'      => [
+                'type'  => 'group',
+                'name'  => 'SETTINGS',
+                'items' => [
+                    [
+                        'icon'  => 'pages',
+                        'name'  => 'Static Pages',
+                        'route' => 'static-pages.index'
+                    ],
+                    [
+                        'icon'  => 'campaign-new',
+                        'name'  => 'Create Static Page',
+                        'route' => 'static-pages.create'
+                    ],
+                    [
+                        'icon'  => 'settings',
+                        'name'  => 'Site Settings',
+                        'route' => 'settings.index'
+                    ]
+                ]
             ]
         ];
     }
@@ -342,18 +357,6 @@ class MenuHelper
                 continue;
             }
 
-            if ($key === 'profile') {
-                [$routeName, $url]   = self::resolveRouteMeta($item['route'] ?? null, false);
-                $preparedItems[$key] = [
-                     ...$item,
-                    'route_name' => $routeName,
-                    'url'        => $url,
-                    'active'     => self::isRouteMatch($currentRoute, $routeName) || request()->is('profile*')
-                ];
-
-                continue;
-            }
-
             $preparedItems[$key] = $item;
         }
 
@@ -424,6 +427,7 @@ class MenuHelper
             'knowledge-base.index' => 'knowledge-base.index',
             'featured-collaborations.index' => 'featured-collaborations.index',
             'static-pages.index' => 'static-pages.index',
+            'static-pages.create' => 'static-pages.create',
             'settings.index' => 'settings.index',
         ];
 
@@ -474,6 +478,8 @@ class MenuHelper
             'faqs'            => '<svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 8v4m0 4v.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>',
 
             'knowledge-base'  => '<svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 6a2 2 0 012-2h5a3 3 0 013 3v11a3 3 0 00-3-3H6a2 2 0 01-2-2V6zm16 0a2 2 0 00-2-2h-5a3 3 0 00-3 3v11a3 3 0 013-3h5a2 2 0 002-2V6z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+
+            'blog'            => '<svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M7 4h10a2 2 0 012 2v12a2 2 0 01-2 2H7a2 2 0 01-2-2V6a2 2 0 012-2z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M9 8h6M9 12h6M9 16h4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>',
 
             'pages'           => '<svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9 4H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M9 9h6M9 15h3M17 3v6h6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>',
 

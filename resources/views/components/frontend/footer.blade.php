@@ -1,11 +1,16 @@
+@php
+	$brandingSiteName = \App\Models\Setting::get('branding.site_name', config('app.name', 'QX Marketplace'));
+	$brandingTagline = \App\Models\Setting::get('branding.tagline', 'Connect brands with influencers for authentic influencer marketing campaigns.');
+@endphp
+
 <footer class="bg-gray-50 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 mt-12">
 	<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
 		<div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
 			<!-- Brand Section -->
 			<div>
-				<h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4">QX Marketplace</h3>
+				<h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4">{{ $brandingSiteName }}</h3>
 				<p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
-					Connect brands with influencers for authentic influencer marketing campaigns.
+					{{ $brandingTagline }}
 				</p>
 				<div class="flex gap-4">
 					<a href="#"
@@ -89,7 +94,7 @@
 		<div class="border-t border-gray-200 dark:border-gray-800 pt-8">
 			<div class="flex flex-col md:flex-row items-center justify-between">
 				<p class="text-sm text-gray-600 dark:text-gray-400">
-					&copy; {{ date('Y') }} QX Marketplace. All rights reserved.
+						&copy; {{ date('Y') }} {{ $brandingSiteName }}. All rights reserved.
 				</p>
 				<div class="mt-4 md:mt-0 flex gap-6 text-sm">
 					<a href="#"

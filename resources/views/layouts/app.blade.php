@@ -6,7 +6,7 @@
 		<meta name="viewport" content="width=device-width, initial-scale=1">
 		<meta name="csrf-token" content="{{ csrf_token() }}">
 
-		<title>{{ $title ?? 'QX Marketplace' }}</title>
+		<title>{{ $title ?? \App\Models\Setting::get('branding.site_name', 'QX Marketplace') }}</title>
 
 		<!-- Apply theme before CSS loads -->
 		<script>
@@ -51,14 +51,14 @@
 		<!-- Toast Container -->
 		<div x-data="window.Alpine.store('toast')" class="fixed top-4 right-4 z-50 flex flex-col gap-2">
 			<template x-for="t in toasts" :key="t.id">
-				<div class="px-4 py-3 rounded-lg shadow-lg flex items-center gap-3 min-w-[300px] max-w-md animate-slide-in"
+				<div class="px-4 py-3 rounded-lg shadow-lg flex items-center gap-3 min-w-75 max-w-md animate-slide-in"
 					:class="{
 					    'success': 'bg-green-50 dark:bg-green-900 border border-green-200 dark:border-green-700 text-green-800 dark:text-green-100',
 					    'error': 'bg-red-50 dark:bg-red-900 border border-red-200 dark:border-red-700 text-red-800 dark:text-red-100',
 					    'info': 'bg-blue-50 dark:bg-blue-900 border border-blue-200 dark:border-blue-700 text-blue-800 dark:text-blue-100',
 					    'warning': 'bg-yellow-50 dark:bg-yellow-900 border border-yellow-200 dark:border-yellow-700 text-yellow-800 dark:text-yellow-100',
 					} [t.type]">
-					<div class="flex-shrink-0">
+					<div class="shrink-0">
 						<template x-if="t.type === 'success'">
 							<svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"

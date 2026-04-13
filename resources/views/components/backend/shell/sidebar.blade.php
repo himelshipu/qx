@@ -5,6 +5,8 @@
 
     $menuItems = $sidebarData['items'] ?? [];
     $activeAccordion = $sidebarData['activeAccordion'] ?? null;
+    $brandingLogoLight = \App\Models\Setting::fileUrl('branding.logo_light', '/images/logo/header-logo.png');
+    $brandingLogoDark = \App\Models\Setting::fileUrl('branding.logo_dark', '/images/logo/header-logo.png');
 @endphp
 
 <aside id="sidebar"
@@ -41,8 +43,8 @@
     
     <div class="h-20 flex items-center justify-center px-4 border-b border-gray-100 dark:border-gray-800">
         <a href="/">
-            <img src="/images/logo/header-logo.png" alt="Logo" class="h-11 dark:hidden block" x-show="$store.sidebar.isExpanded">
-            <img src="/images/logo/header-logo.png" alt="Logo" class="h-11 dark:block hidden" x-show="$store.sidebar.isExpanded">
+            <img src="{{ $brandingLogoLight }}" alt="Logo" class="h-11 dark:hidden block" x-show="$store.sidebar.isExpanded">
+            <img src="{{ $brandingLogoDark }}" alt="Logo" class="h-11 dark:block hidden" x-show="$store.sidebar.isExpanded">
             <img src="/images/logo/logo-icon.png" alt="logo icon" class="h-9 w-9" x-show="!$store.sidebar.isExpanded">
         </a>
     </div>
@@ -61,7 +63,7 @@
                                 'bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 text-indigo-600 dark:text-indigo-400' => !empty($item['active']),
                                 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800' => empty($item['active']),
                             ])>
-                            <span class="flex-shrink-0 w-5 h-5" @class([
+                            <span class="shrink-0 w-5 h-5" @class([
                                 'text-indigo-600 dark:text-indigo-400' => !empty($item['active']),
                                 'text-gray-500 dark:text-gray-400' => empty($item['active']),
                             ])>
@@ -88,7 +90,7 @@
                                                 'bg-gray-100 dark:bg-gray-800 text-indigo-600 dark:text-indigo-400' => !empty($subItem['active']),
                                                 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800' => empty($subItem['active']),
                                             ])>
-                                            <span class="flex-shrink-0 w-5 h-5" @class([
+                                            <span class="shrink-0 w-5 h-5" @class([
                                                 'text-indigo-600 dark:text-indigo-400' => !empty($subItem['active']),
                                                 'text-gray-500 dark:text-gray-400' => empty($subItem['active']),
                                             ])>
@@ -108,7 +110,7 @@
                                                 'bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 text-indigo-600 dark:text-indigo-400' => !empty($subItem['active']),
                                                 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800' => empty($subItem['active']),
                                             ])>
-                                            <span class="flex-shrink-0 w-5 h-5" @class([
+                                            <span class="shrink-0 w-5 h-5" @class([
                                                 'text-indigo-600 dark:text-indigo-400' => !empty($subItem['active']),
                                                 'text-gray-500 dark:text-gray-400' => empty($subItem['active']),
                                             ])>
@@ -129,7 +131,7 @@
                                                             'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 font-medium' => !empty($nestedItem['active']),
                                                             'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800' => empty($nestedItem['active']),
                                                         ])>
-                                                        <span class="flex-shrink-0 w-5 h-5" @class([
+                                                        <span class="shrink-0 w-5 h-5" @class([
                                                             'text-indigo-600 dark:text-indigo-400' => !empty($nestedItem['active']),
                                                             'text-gray-500 dark:text-gray-400' => empty($nestedItem['active']),
                                                         ])>
@@ -153,7 +155,7 @@
                                                 'bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 text-indigo-600 dark:text-indigo-400' => !empty($subItem['active']),
                                                 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800' => empty($subItem['active']),
                                             ])>
-                                            <span class="flex-shrink-0 w-5 h-5" @class([
+                                            <span class="shrink-0 w-5 h-5" @class([
                                                 'text-indigo-600 dark:text-indigo-400' => !empty($subItem['active']),
                                                 'text-gray-500 dark:text-gray-400' => empty($subItem['active']),
                                             ])>
@@ -180,7 +182,7 @@
                                 'bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 text-indigo-600 dark:text-indigo-400' => !empty($item['active']),
                                 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800' => empty($item['active']),
                             ])>
-                            <span class="flex-shrink-0 w-5 h-5" @class([
+                            <span class="shrink-0 w-5 h-5" @class([
                                 'text-indigo-600 dark:text-indigo-400' => !empty($item['active']),
                                 'text-gray-500 dark:text-gray-400' => empty($item['active']),
                             ])>

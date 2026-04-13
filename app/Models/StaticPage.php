@@ -4,10 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Str;
 
 class StaticPage extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     /**
      * The attributes that are mass assignable.
@@ -61,7 +63,8 @@ class StaticPage extends Model
      */
     public function setSlugAttribute($value)
     {
-        $this->attributes['slug'] = $value ?: str_slug($this->attributes['title'] ?? '');
+        $source = trim((string) $value) !== '' ? (string) $value : (string) ($this->attributes['title'] ?? '');
+        $this->attributes['slug'] = Str::slug($source);
     }
 
     /**

@@ -1,3 +1,8 @@
+@php
+    $brandingLogoLight = \App\Models\Setting::fileUrl('branding.logo_light', '/images/logo/header-logo.png');
+    $brandingLogoDark = \App\Models\Setting::fileUrl('branding.logo_dark', '/images/logo/header-logo.png');
+@endphp
+
 <header class="sticky top-0 z-50 w-full bg-white border-b border-gray-200 dark:bg-gray-900 dark:border-gray-800" x-data="{ appMenuOpen: false }">
     <div class="flex flex-col xl:flex-row xl:items-center xl:px-6">
         <div class="flex items-center justify-between w-full gap-2 px-3 py-3 border-b border-gray-200 dark:border-gray-800 xl:border-b-0 xl:px-0">
@@ -11,8 +16,8 @@
                 </button>
 
                 <a href="/" class="lg:hidden">
-                    <img src="/images/logo/header-logo.png" alt="Logo" class="h-12 dark:block hidden">
-                    <img src="/images/logo/header-logo.png" alt="Logo" class="h-12 dark:hidden block">
+                    <img src="{{ $brandingLogoDark }}" alt="Logo" class="h-12 dark:block hidden">
+                    <img src="{{ $brandingLogoLight }}" alt="Logo" class="h-12 dark:hidden block">
                 </a>
 
                 <!-- Search Bar (desktop only) - Now positioned after logo/menu on left -->

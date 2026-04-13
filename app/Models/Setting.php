@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class Setting extends Model
 {
@@ -27,5 +29,20 @@ class Setting extends Model
             ['key' => $key],
             ['value' => $value]
         );
+    }
+
+    public static function fileUrl(string $key, ?string $default = null): ?string
+    {
+        $value = self::get($key, $default);
+
+        if (! $value) {
+            return $default;
+        }
+
+        if (Str::startsWith($value, ['http://', 'https://', '/'])) {
+            return $value;
+        }
+
+        return Storage::url($value);
     }
 }

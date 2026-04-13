@@ -41,6 +41,8 @@
 	        }
 	    }
 	}
+	$brandingLogoLight = \App\Models\Setting::fileUrl('branding.logo_light', '/images/logo/header-logo.png');
+	$brandingLogoDark = \App\Models\Setting::fileUrl('branding.logo_dark', '/images/logo/header-logo.png');
 @endphp
 
 
@@ -55,8 +57,8 @@
 			<!-- Logo Section -->
 			<div class="flex items-center gap-2">
 				<a href="{{ route('home') }}">
-					<img src="/images/logo/header-logo.png" alt="Logo" class="h-11 dark:hidden block">
-					<img src="/images/logo/header-logo.png" alt="Logo" class="h-11 dark:block hidden">
+					<img src="{{ $brandingLogoLight }}" alt="Logo" class="h-11 dark:hidden block">
+					<img src="{{ $brandingLogoDark }}" alt="Logo" class="h-11 dark:block hidden">
 				</a>
 			</div>
 

@@ -122,6 +122,17 @@ class PermissionSeeder extends Seeder
             ['name' => 'Delete Article', 'slug' => 'knowledge-base.destroy', 'module' => 'content'],
             ['name' => 'Toggle Article Status', 'slug' => 'knowledge-base.toggle-status', 'module' => 'content'],
 
+            // MANAGEMENT: BLOG
+            ['name' => 'View Blog Posts', 'slug' => 'blogs.index', 'module' => 'content'],
+            ['name' => 'Create Blog Post', 'slug' => 'blogs.create', 'module' => 'content'],
+            ['name' => 'Store Blog Post', 'slug' => 'blogs.store', 'module' => 'content'],
+            ['name' => 'View Blog Details', 'slug' => 'blogs.show', 'module' => 'content'],
+            ['name' => 'Edit Blog Post', 'slug' => 'blogs.edit', 'module' => 'content'],
+            ['name' => 'Update Blog Post', 'slug' => 'blogs.update', 'module' => 'content'],
+            ['name' => 'Delete Blog Post', 'slug' => 'blogs.destroy', 'module' => 'content'],
+            ['name' => 'Toggle Blog Status', 'slug' => 'blogs.toggle-status', 'module' => 'content'],
+            ['name' => 'Restore Blog Post', 'slug' => 'blogs.restore', 'module' => 'content'],
+
             // MANAGEMENT: FEATURED COLLABORATIONS
             ['name' => 'View Collaborations', 'slug' => 'featured-collaborations.index', 'module' => 'content'],
             ['name' => 'Create Collaboration', 'slug' => 'featured-collaborations.create', 'module' => 'content'],
@@ -143,6 +154,7 @@ class PermissionSeeder extends Seeder
             ['name' => 'View Settings', 'slug' => 'settings.index', 'module' => 'settings'],
             ['name' => 'Update Settings', 'slug' => 'settings.update', 'module' => 'settings'],
             ['name' => 'Update Settings Order', 'slug' => 'settings.update-order', 'module' => 'settings'],
+            ['name' => 'Restore Deleted Content', 'slug' => 'settings.restore', 'module' => 'settings'],
 
             // CAMPAIGNS
             ['name' => 'View Campaigns', 'slug' => 'campaigns.index', 'module' => 'campaigns'],

@@ -5,12 +5,24 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rules\Password;
 
 class AccountController extends Controller
 {
+    private function getAuthenticatedUser(): User
+    {
+        $user = Auth::user();
+
+        if (! $user) {
+            abort(403, 'Unauthorized access');
+        }
+
+        return $user;
+    }
+
     private function redirectToAccount(User $user, Request $request, string $fallbackTab)
     {
         $tab = $request->input('tab', $request->query('tab', $fallbackTab));
@@ -42,13 +54,54 @@ class AccountController extends Controller
     public function edit($slug)
     {
         $user = $this->getUserBySlug($slug);
-        $brand = $user->brand;
 
-        return view('frontend.pages.account', [
+        $canManageBilling = in_array($user->user_type, ['brand', 'influencer'], true);
+        $profileOwner = match ($user->user_type) {
+            'brand' => $user->brand,
+            'influencer' => $user->influencer,
+            default => null,
+        };
+        $billingProfile = $canManageBilling ? $profileOwner?->billingProfiles()->first() : null;
+
+        return view('backend.pages.account.edit', [
             'user' => $user,
-            'brand' => $brand,
-            'paymentMethods' => $user->paymentMethods,
+            'canManageBilling' => $canManageBilling,
+            'billingProfile' => $billingProfile,
+            'initialTab' => request('tab', session('tab', 'details')),
         ]);
+    }
+
+    public function profileEdit()
+    {
+        $user = $this->getAuthenticatedUser();
+
+        return view('backend.pages.account.profile', [
+            'user' => $user,
+        ]);
+    }
+
+    public function profileUpdate(Request $request)
+    {
+        $user = $this->getAuthenticatedUser();
+
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'email', 'max:255', 'unique:users,email,'.$user->id],
+            'phone' => ['nullable', 'string', 'max:20', 'regex:/^[0-9+\-\s\(\)]+$/'],
+            'date_of_birth' => ['nullable', 'date', 'before:today'],
+            'gender' => ['nullable', 'in:male,female,other'],
+            'bio' => ['nullable', 'string', 'max:1000'],
+            'address_line' => ['nullable', 'string', 'max:255'],
+            'country' => ['nullable', 'string', 'max:255'],
+            'city' => ['nullable', 'string', 'max:255'],
+            'postal_code' => ['nullable', 'string', 'max:20'],
+        ]);
+
+        $user->update($validated);
+
+        return redirect()
+            ->route('dashboard.profile.edit')
+            ->with('success', 'Profile updated successfully.');
     }
 
     /**
@@ -158,25 +211,41 @@ class AccountController extends Controller
             'password' => ['required', 'current_password'],
         ]);
 
-        // Delete user's profile image if exists
-        if ($user->profile_image_path && Storage::disk('public')->exists($user->profile_image_path)) {
-            Storage::disk('public')->delete($user->profile_image_path);
+        if ($user->isSuperadmin()) {
+            return $this->redirectToAccount($user, $request, 'security')
+                ->with('error', 'Superadmin account is protected and cannot be deleted.');
         }
 
-        // Delete related brand with cascade
-        if ($user->brand) {
-            // Delete brand images
-            if ($user->brand->profile_image_path && Storage::disk('public')->exists($user->brand->profile_image_path)) {
-                Storage::disk('public')->delete($user->brand->profile_image_path);
+        try {
+            DB::beginTransaction();
+
+            // Delete user's profile image if exists
+            if ($user->profile_image_path && Storage::disk('public')->exists($user->profile_image_path)) {
+                Storage::disk('public')->delete($user->profile_image_path);
             }
-            if ($user->brand->cover_image_path && Storage::disk('public')->exists($user->brand->cover_image_path)) {
-                Storage::disk('public')->delete($user->brand->cover_image_path);
+
+            // Delete related brand with cascade
+            if ($user->brand) {
+                // Delete brand images
+                if ($user->brand->profile_image_path && Storage::disk('public')->exists($user->brand->profile_image_path)) {
+                    Storage::disk('public')->delete($user->brand->profile_image_path);
+                }
+                if ($user->brand->cover_image_path && Storage::disk('public')->exists($user->brand->cover_image_path)) {
+                    Storage::disk('public')->delete($user->brand->cover_image_path);
+                }
+                $user->brand->delete();
             }
-            $user->brand->delete();
+
+            $user->delete();
+            DB::commit();
+        } catch (\Throwable $exception) {
+            DB::rollBack();
+
+            return $this->redirectToAccount($user, $request, 'security')
+                ->with('error', 'Unable to delete your account at this time. Please contact support.');
         }
 
         Auth::logout();
-        $user->delete();
 
         $request->session()->invalidate();
         $request->session()->regenerateToken();
