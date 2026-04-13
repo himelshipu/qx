@@ -15,6 +15,80 @@
 			->unique()
 			->values()
 			->all();
+
+		$preferredActionOrder = [
+			'index',
+			'view',
+			'create',
+			'store',
+			'edit',
+			'update',
+			'destroy',
+			'show',
+			'toggle-status',
+			'update-status',
+			'assign',
+			'assign.store',
+			'reorder',
+			'purchase',
+			'purchase.store',
+			'bulk-update',
+			'bulk-mark',
+			'refund',
+			'retry',
+			'pdf',
+		];
+
+		$actionLabels = [
+			'index' => 'View List',
+			'view' => 'View',
+			'create' => 'Create',
+			'store' => 'Store',
+			'edit' => 'Edit',
+			'update' => 'Update',
+			'destroy' => 'Delete',
+			'show' => 'Show',
+			'toggle-status' => 'Status',
+			'update-status' => 'Update Status',
+			'assign' => 'Assign',
+			'assign.store' => 'Assign Save',
+			'reorder' => 'Reorder',
+			'purchase' => 'Purchase',
+			'purchase.store' => 'Purchase Save',
+			'bulk-update' => 'Bulk Update',
+			'bulk-mark' => 'Bulk Mark',
+			'refund' => 'Refund',
+			'retry' => 'Retry',
+			'pdf' => 'PDF',
+		];
+
+		$moduleActionPermissionIds = [];
+		$detectedActions = collect();
+
+		foreach ($permissions as $moduleName => $modulePermissions) {
+			$moduleActionPermissionIds[$moduleName] = [];
+
+			foreach ($modulePermissions as $permission) {
+				$slug = (string) $permission->slug;
+				$action = str_contains($slug, '.') ? explode('.', $slug, 2)[1] : $slug;
+
+				$moduleActionPermissionIds[$moduleName][$action] ??= [];
+				$moduleActionPermissionIds[$moduleName][$action][] = (int) $permission->id;
+				$detectedActions->push($action);
+			}
+		}
+
+		$detectedActions = $detectedActions->unique()->values();
+
+		$orderedActions = collect($preferredActionOrder)
+			->filter(fn($action) => $detectedActions->contains($action));
+
+		$extraActions = $detectedActions
+			->reject(fn($action) => in_array($action, $preferredActionOrder, true))
+			->sort()
+			->values();
+
+		$tableActions = $orderedActions->concat($extraActions)->values();
 	@endphp
 
 	<div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700"
@@ -43,7 +117,7 @@
 				<input type="hidden" name="permissions[]" :value="permissionId">
 			</template>
 			<p class="px-6 pt-4 text-xs text-gray-500 dark:text-gray-400">
-				The grid shows common actions only. `Check All` still selects all active permissions in the system for this role.
+				Columns are generated from active permission slugs. Each toggle controls all permissions in that module matching the action.
 			</p>
 
 			<!-- Table Wrapper -->
@@ -78,9 +152,8 @@
 									</button>
 								</div>
 							</th>
-							@php $standardActions = ['View', 'Create', 'Edit', 'Delete', 'Show', 'Status', 'Manage']; @endphp
-							@foreach ($standardActions as $action)
-								<th class="px-4 py-4 text-center">{{ $action }}</th>
+							@foreach ($tableActions as $action)
+								<th class="px-4 py-4 text-center whitespace-nowrap">{{ $actionLabels[$action] ?? ucfirst(str_replace(['-', '.'], ' ', $action)) }}</th>
 							@endforeach
 						</tr>
 					</thead>
@@ -91,78 +164,17 @@
 									{{ $moduleName }}
 								</td>
 								<td class="px-4 py-4"></td>
-								@foreach ($standardActions as $action)
+								@foreach ($tableActions as $action)
 									@php
-										$modulePermissions = $permissions->get($moduleName, collect());
-										$moduleSlug = strtolower($moduleName);
-										$actionCandidates = match (strtolower($action)) {
-											'view' => ['index', 'view'],
-											'create' => ['create', 'store'],
-											'edit' => ['edit', 'update'],
-											'delete' => ['destroy', 'delete'],
-											'show' => ['show'],
-											'status' => ['toggle-status', 'update-status', 'status'],
-											'manage' => ['assign', 'reorder', 'purchase', 'bulk-update', 'bulk-mark', 'refund', 'retry', 'pdf'],
-											default => [strtolower($action)],
-										};
-
-										$specialModuleActionSlugs = [
-											'content' => [
-												'view' => 'static-pages.index',
-												'create' => 'static-pages.create',
-												'edit' => 'static-pages.edit',
-												'delete' => 'static-pages.destroy',
-												'show' => 'static-pages.show',
-												'status' => 'static-pages.toggle-status',
-												'manage' => 'settings.index',
-											],
-											'permissions' => [
-												'view' => 'permissions.assign',
-												'create' => 'permissions.assign.store',
-												'manage' => 'permissions.assign',
-											],
-											'support' => [
-												'view' => 'support-tickets.index',
-												'edit' => 'support-tickets.update',
-												'delete' => 'support-tickets.destroy',
-												'show' => 'support-tickets.show',
-												'manage' => 'support-tickets.bulk-update',
-											],
-											'roles' => [
-												'create' => 'roles.store',
-												'edit' => 'roles.update',
-												'show' => 'roles.permissions',
-												'status' => 'roles.toggle-status',
-											],
-										];
-
-										$specialSlug = $specialModuleActionSlugs[$moduleSlug][strtolower($action)] ?? null;
-
-										if ($specialSlug) {
-											$matchedPermission = $modulePermissions->first(fn($permission) => $permission->slug === $specialSlug);
-										} else {
-											$matchedPermission = $modulePermissions->first(function ($permission) use ($actionCandidates) {
-												$slug = $permission->slug;
-												foreach ($actionCandidates as $candidate) {
-													if ($slug === $candidate || str_ends_with($slug, '.' . $candidate)) {
-														return true;
-													}
-												}
-
-												return false;
-											});
-										}
-
-										$permissionId = $matchedPermission?->id;
-										$permissionSlug = $matchedPermission?->slug;
+										$actionPermissionIds = $moduleActionPermissionIds[$moduleName][$action] ?? [];
 									@endphp
 									<td class="px-4 py-4 text-center">
 										<div class="flex justify-center">
 											<label class="relative inline-flex items-center cursor-pointer">
 												<input type="checkbox" class="sr-only peer"
-													@disabled(!$permissionId)
-													:checked="selectedPermissionIds.includes({{ $permissionId ?? 'null' }})"
-													@change="togglePermission($event, {{ $permissionId ?? 'null' }}, '{{ $permissionSlug }}')">
+													@disabled(empty($actionPermissionIds))
+													:checked="isActionChecked(@js($actionPermissionIds))"
+													@change="toggleActionPermissions($event, @js($actionPermissionIds))">
 												<div
 													class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-disabled:opacity-40 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600">
 												</div>
@@ -218,6 +230,30 @@
 					uncheckAllPermissions() {
 						this.activePermissions = [];
 						this.selectedPermissionIds = [];
+					},
+					isActionChecked(permissionIds = []) {
+						if (!Array.isArray(permissionIds) || permissionIds.length === 0) {
+							return false;
+						}
+
+						return permissionIds.every((id) => this.selectedPermissionIds.includes(id));
+					},
+					toggleActionPermissions(event, permissionIds = []) {
+						if (!Array.isArray(permissionIds) || permissionIds.length === 0) {
+							return;
+						}
+
+						if (event.target.checked) {
+							permissionIds.forEach((id) => {
+								if (!this.selectedPermissionIds.includes(id)) {
+									this.selectedPermissionIds.push(id);
+								}
+							});
+
+							return;
+						}
+
+						this.selectedPermissionIds = this.selectedPermissionIds.filter((id) => !permissionIds.includes(id));
 					},
 					togglePermission(event, permissionId, permissionSlug) {
 						if (!Number.isInteger(permissionId)) {
