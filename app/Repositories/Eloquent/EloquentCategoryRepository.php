@@ -7,6 +7,8 @@ namespace App\Repositories\Eloquent;
 use App\Models\Category;
 use App\Repositories\Contracts\CategoryRepositoryInterface;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\Cache;
 
 /**
  * Class EloquentCategoryRepository
@@ -15,27 +17,20 @@ use Illuminate\Contracts\Pagination\LengthAwarePaginator;
  */
 class EloquentCategoryRepository implements CategoryRepositoryInterface
 {
+    private const STATS_CACHE_KEY = 'dashboard.categories.stats';
+    private const STATS_CACHE_TTL_SECONDS = 60;
+
     /**
      * Get paginated categories for dashboard listing.
      */
     public function paginateForDashboard(string $search, string $status, string $featured = 'all', int $perPage = 12): LengthAwarePaginator
     {
         return Category::query()
-            ->withCount(['influencers', 'campaigns', 'onboardingProfiles'])
-            ->when($search !== '', function ($query) use ($search) {
-                $query->where(function ($subQuery) use ($search) {
-                    $subQuery
-                        ->where('name', 'like', '%' . $search . '%')
-                        ->orWhere('slug', 'like', '%' . $search . '%')
-                        ->orWhere('description', 'like', '%' . $search . '%');
-                });
-            })
-            ->when($status === 'active', fn($query) => $query->where('is_active', true))
-            ->when($status === 'inactive', fn($query) => $query->where('is_active', false))
-            ->when($featured === 'featured', fn($query) => $query->where('is_featured', true))
-            ->when($featured === 'non-featured', fn($query) => $query->where('is_featured', false))
-            ->orderBy('sort_order')
-            ->orderBy('name')
+            ->forDashboard()
+            ->search($search)
+            ->dashboardStatus($status)
+            ->dashboardFeatured($featured)
+            ->dashboardOrder()
             ->paginate($perPage)
             ->withQueryString();
     }
@@ -47,16 +42,28 @@ class EloquentCategoryRepository implements CategoryRepositoryInterface
      */
     public function getStats(): array
     {
-        return [
-            'total'    => Category::count(),
-            'active'   => Category::where('is_active', true)->count(),
-            'inactive' => Category::where('is_active', false)->count(),
-            'linked'   => Category::query()
-                ->whereHas('influencers')
-                ->orWhereHas('campaigns')
-                ->orWhereHas('onboardingProfiles')
-                ->count()
-        ];
+        return Cache::remember(self::STATS_CACHE_KEY, self::STATS_CACHE_TTL_SECONDS, function (): array {
+            $summary = Category::query()
+                ->selectRaw('COUNT(*) as total')
+                ->selectRaw('SUM(CASE WHEN is_active = 1 THEN 1 ELSE 0 END) as active')
+                ->selectRaw('SUM(CASE WHEN is_active = 0 THEN 1 ELSE 0 END) as inactive')
+                ->first();
+
+            $linked = Category::query()
+                ->where(function ($query): void {
+                    $query->whereHas('influencers')
+                        ->orWhereHas('campaigns')
+                        ->orWhereHas('onboardingProfiles');
+                })
+                ->count();
+
+            return [
+                'total'    => (int) ($summary->total ?? 0),
+                'active'   => (int) ($summary->active ?? 0),
+                'inactive' => (int) ($summary->inactive ?? 0),
+                'linked'   => $linked,
+            ];
+        });
     }
 
     /**
@@ -74,7 +81,10 @@ class EloquentCategoryRepository implements CategoryRepositoryInterface
      */
     public function create(array $data): Category
     {
-        return Category::create($data);
+        $category = Category::create($data);
+        $this->forgetDashboardCache();
+
+        return $category;
     }
 
     /**
@@ -85,6 +95,7 @@ class EloquentCategoryRepository implements CategoryRepositoryInterface
     public function update(Category $category, array $data): Category
     {
         $category->update($data);
+        $this->forgetDashboardCache();
 
         return $category;
     }
@@ -94,7 +105,13 @@ class EloquentCategoryRepository implements CategoryRepositoryInterface
      */
     public function delete(Category $category): bool
     {
-        return $category->delete();
+        $deleted = (bool) $category->delete();
+
+        if ($deleted) {
+            $this->forgetDashboardCache();
+        }
+
+        return $deleted;
     }
 
     /**
@@ -127,6 +144,8 @@ class EloquentCategoryRepository implements CategoryRepositoryInterface
             'is_active' => !$category->is_active
         ]);
 
+        $this->forgetDashboardCache();
+
         return $category->refresh();
     }
 
@@ -136,11 +155,12 @@ class EloquentCategoryRepository implements CategoryRepositoryInterface
      * @param int $limit Maximum number of featured categories to retrieve
      * @return \Illuminate\Database\Eloquent\Collection
      */
-    public function getFeaturedCategories(int $limit = 10): \Illuminate\Database\Eloquent\Collection
+    public function getFeaturedCategories(int $limit = 10): Collection
     {
         return Category::query()
-            ->where('is_featured', true)
-            ->where('is_active', true)
+            ->select(['id', 'name', 'slug', 'icon_path', 'image_path', 'featured_order'])
+            ->featured()
+            ->active()
             ->orderBy('featured_order')
             ->limit($limit)
             ->get();
@@ -153,14 +173,12 @@ class EloquentCategoryRepository implements CategoryRepositoryInterface
      * @param int $limit Limit results
      * @return \Illuminate\Database\Eloquent\Collection
      */
-    public function searchCategories(string $query, int $limit = 50): \Illuminate\Database\Eloquent\Collection
+    public function searchCategories(string $query, int $limit = 50): Collection
     {
         return Category::query()
-            ->where('is_active', true)
-            ->where(function ($q) use ($query) {
-                $q->where('name', 'like', '%' . $query . '%')
-                  ->orWhere('slug', 'like', '%' . $query . '%');
-            })
+            ->select(['id', 'name', 'slug', 'icon_path', 'image_path', 'is_featured', 'featured_order'])
+            ->active()
+            ->search($query)
             ->orderBy('name')
             ->limit($limit)
             ->get();
@@ -179,6 +197,8 @@ class EloquentCategoryRepository implements CategoryRepositoryInterface
                 'featured_order' => $order + 1
             ]);
         }
+
+        $this->forgetDashboardCache();
     }
 
     /**
@@ -186,7 +206,7 @@ class EloquentCategoryRepository implements CategoryRepositoryInterface
      */
     public function getFeaturedCount(): int
     {
-        return Category::where('is_featured', true)->count();
+        return Category::featured()->count();
     }
 
     /**
@@ -195,9 +215,17 @@ class EloquentCategoryRepository implements CategoryRepositoryInterface
     public function getLowestPriorityFeatured(): ?Category
     {
         return Category::query()
-            ->where('is_featured', true)
+            ->featured()
             ->orderByDesc('featured_order')
             ->first();
+    }
+
+    /**
+     * Forget cached dashboard fragments that depend on category mutations.
+     */
+    private function forgetDashboardCache(): void
+    {
+        Cache::forget(self::STATS_CACHE_KEY);
     }
 
 }
