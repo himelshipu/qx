@@ -9,6 +9,7 @@ use App\Http\Controllers\Backend\CampaignInfluencerController;
 use App\Http\Controllers\Backend\BlogController;
 use App\Http\Controllers\Backend\CaseStudyController;
 use App\Http\Controllers\Backend\CategoryController;
+use App\Http\Controllers\Backend\CategoryFeaturedController;
 use App\Http\Controllers\Backend\DashboardController;
 use App\Http\Controllers\Backend\FaqController;
 use App\Http\Controllers\Backend\FeaturedCollaborationController;
@@ -251,9 +252,15 @@ Route::prefix('dashboard')->name('dashboard.')->middleware(['auth', 'verified', 
     Route::put('/categories/{category}', [CategoryController::class, 'update'])->name('categories.update');
     Route::delete('/categories/{category}', [CategoryController::class, 'destroy'])->name('categories.destroy');
     Route::post('/categories/{category}/toggle-status', [CategoryController::class, 'toggleStatus'])->name('categories.toggle-status');
-    Route::post('/categories/reorder', [CategoryController::class, 'reorder'])
-        ->middleware('check-permission:categories.reorder')
-        ->name('categories.reorder');
+
+    // Featured Categories Routes
+    Route::prefix('categories-featured')->name('categories-featured.')->group(function () {
+        Route::get('/', [CategoryFeaturedController::class, 'getFeatured'])->name('list');
+        Route::post('/add/{category}', [CategoryFeaturedController::class, 'addFeatured'])->name('add');
+        Route::post('/remove/{category}', [CategoryFeaturedController::class, 'removeFeatured'])->name('remove');
+        Route::post('/reorder', [CategoryFeaturedController::class, 'reorderFeatured'])->name('reorder');
+        Route::get('/search', [CategoryFeaturedController::class, 'searchCategories'])->name('search');
+    });
 
     Route::get('/brands', [BrandController::class, 'index'])->name('brands.index');
     Route::get('/brands/create', [BrandController::class, 'create'])->name('brands.create');

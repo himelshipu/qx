@@ -6,6 +6,7 @@ namespace App\Repositories\Contracts;
 
 use App\Models\Category;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Collection;
 
 /**
  * Interface CategoryRepositoryInterface
@@ -17,7 +18,7 @@ interface CategoryRepositoryInterface
     /**
      * Get paginated categories for dashboard listing.
      */
-    public function paginateForDashboard(string $search, string $status, int $perPage = 12): LengthAwarePaginator;
+    public function paginateForDashboard(string $search, string $status, string $featured = 'all', int $perPage = 12): LengthAwarePaginator;
 
     /**
      * Get dashboard category summary stats.
@@ -64,4 +65,35 @@ interface CategoryRepositoryInterface
      * Toggle active status and return updated category.
      */
     public function toggleStatus(Category $category): Category;
+
+    /**
+     * Get top featured categories ordered by featured_order.
+     *
+     * @return Collection<int, Category>
+     */
+    public function getFeaturedCategories(int $limit = 10): Collection;
+
+    /**
+     * Search categories by name/slug.
+     *
+     * @return Collection<int, Category>
+     */
+    public function searchCategories(string $query, int $limit = 50): Collection;
+
+    /**
+     * Update featured_order for provided category ids.
+     *
+     * @param array<int> $categoryIds
+     */
+    public function updateFeaturedOrder(array $categoryIds): void;
+
+    /**
+     * Get count of featured categories.
+     */
+    public function getFeaturedCount(): int;
+
+    /**
+     * Get the featured category with lowest priority.
+     */
+    public function getLowestPriorityFeatured(): ?Category;
 }

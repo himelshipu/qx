@@ -18,7 +18,7 @@ class EloquentCategoryRepository implements CategoryRepositoryInterface
     /**
      * Get paginated categories for dashboard listing.
      */
-    public function paginateForDashboard(string $search, string $status, int $perPage = 12): LengthAwarePaginator
+    public function paginateForDashboard(string $search, string $status, string $featured = 'all', int $perPage = 12): LengthAwarePaginator
     {
         return Category::query()
             ->withCount(['influencers', 'campaigns', 'onboardingProfiles'])
@@ -32,6 +32,8 @@ class EloquentCategoryRepository implements CategoryRepositoryInterface
             })
             ->when($status === 'active', fn($query) => $query->where('is_active', true))
             ->when($status === 'inactive', fn($query) => $query->where('is_active', false))
+            ->when($featured === 'featured', fn($query) => $query->where('is_featured', true))
+            ->when($featured === 'non-featured', fn($query) => $query->where('is_featured', false))
             ->orderBy('sort_order')
             ->orderBy('name')
             ->paginate($perPage)
@@ -127,4 +129,75 @@ class EloquentCategoryRepository implements CategoryRepositoryInterface
 
         return $category->refresh();
     }
+
+    /**
+     * Get top featured categories.
+     *
+     * @param int $limit Maximum number of featured categories to retrieve
+     * @return \Illuminate\Database\Eloquent\Collection
+     */
+    public function getFeaturedCategories(int $limit = 10): \Illuminate\Database\Eloquent\Collection
+    {
+        return Category::query()
+            ->where('is_featured', true)
+            ->where('is_active', true)
+            ->orderBy('featured_order')
+            ->limit($limit)
+            ->get();
+    }
+
+    /**
+     * Search categories by name for modal search.
+     *
+     * @param string $query Search query
+     * @param int $limit Limit results
+     * @return \Illuminate\Database\Eloquent\Collection
+     */
+    public function searchCategories(string $query, int $limit = 50): \Illuminate\Database\Eloquent\Collection
+    {
+        return Category::query()
+            ->where('is_active', true)
+            ->where(function ($q) use ($query) {
+                $q->where('name', 'like', '%' . $query . '%')
+                  ->orWhere('slug', 'like', '%' . $query . '%');
+            })
+            ->orderBy('name')
+            ->limit($limit)
+            ->get();
+    }
+
+    /**
+     * Update featured order for categories.
+     *
+     * @param array<int> $categoryIds Ordered list of category IDs
+     * @return void
+     */
+    public function updateFeaturedOrder(array $categoryIds): void
+    {
+        foreach ($categoryIds as $order => $categoryId) {
+            Category::where('id', $categoryId)->update([
+                'featured_order' => $order + 1
+            ]);
+        }
+    }
+
+    /**
+     * Get count of featured categories.
+     */
+    public function getFeaturedCount(): int
+    {
+        return Category::where('is_featured', true)->count();
+    }
+
+    /**
+     * Get lowest priority featured category (last to be removed).
+     */
+    public function getLowestPriorityFeatured(): ?Category
+    {
+        return Category::query()
+            ->where('is_featured', true)
+            ->orderByDesc('featured_order')
+            ->first();
+    }
+
 }

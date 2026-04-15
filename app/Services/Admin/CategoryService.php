@@ -25,15 +25,16 @@ final class CategoryService
     /**
      * Build category listing payload for the dashboard index view.
      *
-     * @return array{categories:LengthAwarePaginator,stats:array{total:int,active:int,inactive:int,linked:int},search:string,status:string}
+     * @return array{categories:LengthAwarePaginator,stats:array{total:int,active:int,inactive:int,linked:int},search:string,status:string,featured:string}
      */
-    public function getListingPayload(string $search, string $status): array
+    public function getListingPayload(string $search, string $status, string $featured = 'all'): array
     {
         return [
-            'categories' => $this->categoryRepository->paginateForDashboard($search, $status),
+            'categories' => $this->categoryRepository->paginateForDashboard($search, $status, $featured),
             'stats'      => $this->categoryRepository->getStats(),
             'search'     => $search,
-            'status'     => $status
+            'status'     => $status,
+            'featured'   => $featured
         ];
     }
 
