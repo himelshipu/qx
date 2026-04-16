@@ -55,7 +55,7 @@
 		</div>
 		<div>
 			<label for="sort_order" class="block text-sm font-medium text-gray-900 dark:text-white">Sort Order</label>
-			<input type="number" id="sort_order" name="sort_order" min="0" value="{{ old('sort_order', $article->sort_order ?? 0) }}"
+			<input type="number" id="sort_order" name="sort_order" min="0" value="{{ old('sort_order', $article->sort_order ?? ($nextSortOrder ?? 0)) }}"
 				class="mt-2 w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white">
 			@error('sort_order')
 				<p class="mt-1 text-sm text-red-500">{{ $message }}</p>

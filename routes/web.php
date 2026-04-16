@@ -11,7 +11,8 @@ use App\Http\Controllers\Backend\CaseStudyController;
 use App\Http\Controllers\Backend\CategoryController;
 use App\Http\Controllers\Backend\CategoryFeaturedController;
 use App\Http\Controllers\Backend\DashboardController;
-use App\Http\Controllers\Backend\FaqController;
+use App\Http\Controllers\Backend\FaqItemController;
+use App\Http\Controllers\Backend\FaqSectionController;
 use App\Http\Controllers\Backend\FeaturedCollaborationController;
 use App\Http\Controllers\Backend\InfluencerController;
 use App\Http\Controllers\Backend\InfluencerPortfolioController;
@@ -448,6 +449,7 @@ Route::prefix('dashboard')->name('dashboard.')->middleware(['auth', 'verified', 
 
     // Testimonials routes
     Route::get('/testimonials', [TestimonialController::class, 'index'])->name('testimonials.index');
+    Route::get('/testimonials/table', [TestimonialController::class, 'table'])->name('testimonials.table');
     Route::get('/testimonials/create', [TestimonialController::class, 'create'])->name('testimonials.create');
     Route::post('/testimonials', [TestimonialController::class, 'store'])->name('testimonials.store');
     Route::get('/testimonials/{testimonial}/edit', [TestimonialController::class, 'edit'])->name('testimonials.edit');
@@ -460,38 +462,45 @@ Route::prefix('dashboard')->name('dashboard.')->middleware(['auth', 'verified', 
 
     // Featured Collaborations routes
     Route::get('/featured-collaborations', [FeaturedCollaborationController::class, 'index'])->name('featured-collaborations.index');
+    Route::get('/featured-collaborations/table', [FeaturedCollaborationController::class, 'table'])->name('featured-collaborations.table');
     Route::get('/featured-collaborations/create', [FeaturedCollaborationController::class, 'create'])->name('featured-collaborations.create');
     Route::post('/featured-collaborations', [FeaturedCollaborationController::class, 'store'])->name('featured-collaborations.store');
     Route::get('/featured-collaborations/{featuredCollaboration}/edit', [FeaturedCollaborationController::class, 'edit'])->name('featured-collaborations.edit');
     Route::patch('/featured-collaborations/{featuredCollaboration}', [FeaturedCollaborationController::class, 'update'])->name('featured-collaborations.update');
     Route::delete('/featured-collaborations/{featuredCollaboration}', [FeaturedCollaborationController::class, 'destroy'])->name('featured-collaborations.destroy');
     Route::patch('/featured-collaborations/{featuredCollaboration}/toggle-publish', [FeaturedCollaborationController::class, 'togglePublish'])->name('featured-collaborations.toggle-publish');
+    Route::post('/featured-collaborations/reorder', [FeaturedCollaborationController::class, 'reorder'])->name('featured-collaborations.reorder');
 
-    // FAQ routes
-    Route::get('/faqs/sections', [FaqController::class, 'indexSections'])->name('faqs.sections.index');
-    Route::get('/faqs/sections/create', [FaqController::class, 'createSection'])->name('faqs.sections.create');
-    Route::post('/faqs/sections', [FaqController::class, 'storeSection'])->name('faqs.sections.store');
-    Route::get('/faqs/sections/{section}/edit', [FaqController::class, 'editSection'])->name('faqs.sections.edit');
-    Route::put('/faqs/sections/{section}', [FaqController::class, 'updateSection'])->name('faqs.sections.update');
-    Route::delete('/faqs/sections/{section}', [FaqController::class, 'destroySection'])->name('faqs.sections.destroy');
-    Route::post('/faqs/sections/{section}/toggle-status', [FaqController::class, 'toggleSectionStatus'])->name('faqs.sections.toggle-status');
+    // FAQ section routes
+    Route::get('/faqs/sections', [FaqSectionController::class, 'index'])->name('faqs.sections.index');
+    Route::get('/faqs/sections/table', [FaqSectionController::class, 'table'])->name('faqs.sections.table');
+    Route::get('/faqs/sections/create', [FaqSectionController::class, 'create'])->name('faqs.sections.create');
+    Route::post('/faqs/sections', [FaqSectionController::class, 'store'])->name('faqs.sections.store');
+    Route::get('/faqs/sections/{section}/edit', [FaqSectionController::class, 'edit'])->name('faqs.sections.edit');
+    Route::put('/faqs/sections/{section}', [FaqSectionController::class, 'update'])->name('faqs.sections.update');
+    Route::delete('/faqs/sections/{section}', [FaqSectionController::class, 'destroy'])->name('faqs.sections.destroy');
+    Route::post('/faqs/sections/{section}/toggle-status', [FaqSectionController::class, 'toggleStatus'])->name('faqs.sections.toggle-status');
 
-    Route::get('/faqs/sections/{section}/items', [FaqController::class, 'indexItems'])->name('faqs.items.index');
-    Route::get('/faqs/sections/{section}/items/create', [FaqController::class, 'createItem'])->name('faqs.items.create');
-    Route::post('/faqs/sections/{section}/items', [FaqController::class, 'storeItem'])->name('faqs.items.store');
-    Route::get('/faqs/sections/{section}/items/{item}/edit', [FaqController::class, 'editItem'])->name('faqs.items.edit');
-    Route::put('/faqs/sections/{section}/items/{item}', [FaqController::class, 'updateItem'])->name('faqs.items.update');
-    Route::delete('/faqs/sections/{section}/items/{item}', [FaqController::class, 'destroyItem'])->name('faqs.items.destroy');
-    Route::post('/faqs/sections/{section}/items/{item}/toggle-status', [FaqController::class, 'toggleItemStatus'])->name('faqs.items.toggle-status');
+    // FAQ item routes
+    Route::get('/faqs/sections/{section}/items', [FaqItemController::class, 'index'])->name('faqs.items.index');
+    Route::get('/faqs/sections/{section}/items/table', [FaqItemController::class, 'table'])->name('faqs.items.table');
+    Route::get('/faqs/sections/{section}/items/create', [FaqItemController::class, 'create'])->name('faqs.items.create');
+    Route::post('/faqs/sections/{section}/items', [FaqItemController::class, 'store'])->name('faqs.items.store');
+    Route::get('/faqs/sections/{section}/items/{item}/edit', [FaqItemController::class, 'edit'])->name('faqs.items.edit');
+    Route::put('/faqs/sections/{section}/items/{item}', [FaqItemController::class, 'update'])->name('faqs.items.update');
+    Route::delete('/faqs/sections/{section}/items/{item}', [FaqItemController::class, 'destroy'])->name('faqs.items.destroy');
+    Route::post('/faqs/sections/{section}/items/{item}/toggle-status', [FaqItemController::class, 'toggleStatus'])->name('faqs.items.toggle-status');
 
     // Knowledge Base routes
     Route::get('/knowledge-base', [KnowledgeBaseController::class, 'index'])->name('knowledge-base.index');
+    Route::get('/knowledge-base/table', [KnowledgeBaseController::class, 'table'])->name('knowledge-base.table');
     Route::get('/knowledge-base/create', [KnowledgeBaseController::class, 'create'])->name('knowledge-base.create');
     Route::post('/knowledge-base', [KnowledgeBaseController::class, 'store'])->name('knowledge-base.store');
     Route::get('/knowledge-base/{article}/edit', [KnowledgeBaseController::class, 'edit'])->name('knowledge-base.edit');
     Route::put('/knowledge-base/{article}', [KnowledgeBaseController::class, 'update'])->name('knowledge-base.update');
     Route::delete('/knowledge-base/{article}', [KnowledgeBaseController::class, 'destroy'])->name('knowledge-base.destroy');
     Route::post('/knowledge-base/{article}/toggle-status', [KnowledgeBaseController::class, 'toggleStatus'])->name('knowledge-base.toggle-status');
+    Route::post('/knowledge-base/reorder', [KnowledgeBaseController::class, 'reorder'])->name('knowledge-base.reorder');
 
     // Static Pages routes
     Route::get('/static-pages', [StaticPageController::class, 'index'])->name('static-pages.index');

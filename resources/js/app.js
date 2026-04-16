@@ -10,6 +10,12 @@ import "./admin/categories-dashboard";
 import "./admin/category-form";
 import "./admin/case-studies-dashboard";
 import "./admin/case-study-form";
+import "./admin/featured-collaborations-dashboard";
+import "./admin/featured-collaboration-form";
+import "./admin/faq-items-dashboard";
+import "./admin/faq-sections-dashboard";
+import "./admin/knowledge-base-dashboard";
+import "./admin/testimonials-dashboard";
 
 Alpine.plugin(collapse);
 

@@ -8,17 +8,27 @@ use App\Repositories\Contracts\BrandRepositoryInterface;
 use App\Repositories\Contracts\CampaignRepositoryInterface;
 use App\Repositories\Contracts\CaseStudyRepositoryInterface;
 use App\Repositories\Contracts\CategoryRepositoryInterface;
+use App\Repositories\Contracts\FeaturedCollaborationRepositoryInterface;
+use App\Repositories\Contracts\FaqItemRepositoryInterface;
+use App\Repositories\Contracts\FaqSectionRepositoryInterface;
 use App\Repositories\Contracts\InfluencerRepositoryInterface;
+use App\Repositories\Contracts\KnowledgeBaseArticleRepositoryInterface;
 use App\Repositories\Contracts\ModeratorRepositoryInterface;
 use App\Repositories\Contracts\PackageRepositoryInterface;
+use App\Repositories\Contracts\TestimonialRepositoryInterface;
 use App\Repositories\Contracts\UserRepositoryInterface;
 use App\Repositories\Eloquent\EloquentBrandRepository;
 use App\Repositories\Eloquent\EloquentCampaignRepository;
 use App\Repositories\Eloquent\EloquentCaseStudyRepository;
 use App\Repositories\Eloquent\EloquentCategoryRepository;
+use App\Repositories\Eloquent\EloquentFeaturedCollaborationRepository;
+use App\Repositories\Eloquent\EloquentFaqItemRepository;
+use App\Repositories\Eloquent\EloquentFaqSectionRepository;
 use App\Repositories\Eloquent\EloquentInfluencerRepository;
+use App\Repositories\Eloquent\EloquentKnowledgeBaseArticleRepository;
 use App\Repositories\Eloquent\EloquentModeratorRepository;
 use App\Repositories\Eloquent\EloquentPackageRepository;
+use App\Repositories\Eloquent\EloquentTestimonialRepository;
 use App\Repositories\Eloquent\EloquentUserRepository;
 use Illuminate\Support\ServiceProvider;
 
@@ -57,6 +67,11 @@ class RepositoryServiceProvider extends ServiceProvider
         );
 
         $this->app->bind(
+            KnowledgeBaseArticleRepositoryInterface::class,
+            EloquentKnowledgeBaseArticleRepository::class
+        );
+
+        $this->app->bind(
             CampaignRepositoryInterface::class,
             EloquentCampaignRepository::class
         );
@@ -67,6 +82,21 @@ class RepositoryServiceProvider extends ServiceProvider
         );
 
         $this->app->bind(
+            FeaturedCollaborationRepositoryInterface::class,
+            EloquentFeaturedCollaborationRepository::class
+        );
+
+        $this->app->bind(
+            FaqSectionRepositoryInterface::class,
+            EloquentFaqSectionRepository::class
+        );
+
+        $this->app->bind(
+            FaqItemRepositoryInterface::class,
+            EloquentFaqItemRepository::class
+        );
+
+        $this->app->bind(
             ModeratorRepositoryInterface::class,
             EloquentModeratorRepository::class
         );
@@ -74,6 +104,11 @@ class RepositoryServiceProvider extends ServiceProvider
         $this->app->bind(
             PackageRepositoryInterface::class,
             EloquentPackageRepository::class
+        );
+
+        $this->app->bind(
+            TestimonialRepositoryInterface::class,
+            EloquentTestimonialRepository::class
         );
     }
 

@@ -3,115 +3,138 @@
 namespace App\Http\Controllers\Backend;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Backend\KnowledgeBase\StoreKnowledgeBaseArticleRequest;
+use App\Http\Requests\Backend\KnowledgeBase\UpdateKnowledgeBaseArticleRequest;
 use App\Models\KnowledgeBaseArticle;
+use App\Services\Admin\KnowledgeBaseArticleService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\View\View;
 
 class KnowledgeBaseController extends Controller
 {
-    public function index()
-    {
-        $articles = KnowledgeBaseArticle::orderBy('sort_order', 'asc')
-            ->orderBy('created_at', 'desc')
-            ->paginate(15);
-
-        return view('backend.pages.knowledge-base.index', compact('articles'));
+    public function __construct(
+        private readonly KnowledgeBaseArticleService $service
+    ) {
     }
 
-    public function create()
+    public function index(Request $request): View
     {
-        return view('backend.pages.knowledge-base.create');
-    }
+        $search = trim((string) $request->query('q', ''));
+        $status = (string) $request->query('status', 'all');
+        $featured = (string) $request->query('featured', 'all');
 
-    public function store(Request $request)
-    {
-        $validated = $request->validate([
-            'title' => 'required|string|max:255',
-            'slug' => 'nullable|string|max:255|unique:knowledge_base_articles,slug',
-            'badge' => 'nullable|string|max:120',
-            'summary' => 'nullable|string|max:500',
-            'content' => 'required|string',
-            'read_time_minutes' => 'required|integer|min:1|max:60',
-            'sort_order' => 'nullable|integer|min:0',
-            'published_at' => 'nullable|date',
-            'is_featured' => 'boolean',
-            'is_published' => 'boolean',
+        $articles = $this->service->paginateForDashboard($search, $status, $featured);
+
+        $articles->appends([
+            'q' => $search,
+            'status' => $status,
+            'featured' => $featured,
         ]);
 
+        return view('backend.pages.knowledge-base.index', [
+            'articles' => $articles,
+            'stats' => $this->service->stats(),
+            'search' => $search,
+            'status' => $status,
+            'featured' => $featured,
+        ]);
+    }
+
+    public function table(Request $request): View
+    {
+        $search = trim((string) $request->query('q', ''));
+        $status = (string) $request->query('status', 'all');
+        $featured = (string) $request->query('featured', 'all');
+
+        $articles = $this->service->paginateForDashboard($search, $status, $featured);
+        $articles->appends([
+            'q' => $search,
+            'status' => $status,
+            'featured' => $featured,
+        ]);
+
+        return view('backend.pages.knowledge-base._results', [
+            'articles' => $articles,
+        ]);
+    }
+
+    public function create(): View
+    {
+        return view('backend.pages.knowledge-base.create', [
+            'article' => new KnowledgeBaseArticle(),
+            'nextSortOrder' => $this->service->nextSortOrder(),
+        ]);
+    }
+
+    public function store(StoreKnowledgeBaseArticleRequest $request): RedirectResponse
+    {
+        $validated = $request->validated();
         $isPublished = $request->boolean('is_published');
+        $isFeatured = $request->boolean('is_featured');
 
-        KnowledgeBaseArticle::create([
-            'title' => $validated['title'],
-            'slug' => $validated['slug'] ?? Str::slug($validated['title']),
-            'badge' => $validated['badge'] ?? null,
-            'summary' => $validated['summary'] ?? null,
-            'content' => $validated['content'],
-            'read_time_minutes' => $validated['read_time_minutes'],
-            'sort_order' => $validated['sort_order'] ?? 0,
-            'published_at' => $validated['published_at'] ?? ($isPublished ? now() : null),
-            'is_featured' => $request->boolean('is_featured'),
-            'is_published' => $isPublished,
-        ]);
+        $this->service->create($validated, $isPublished, $isFeatured);
 
         return redirect()->route('dashboard.knowledge-base.index')
             ->with('success', 'Knowledge base article created successfully.');
     }
 
-    public function edit(KnowledgeBaseArticle $article)
+    public function edit(KnowledgeBaseArticle $article): View
     {
         return view('backend.pages.knowledge-base.edit', compact('article'));
     }
 
-    public function update(Request $request, KnowledgeBaseArticle $article)
+    public function update(UpdateKnowledgeBaseArticleRequest $request, KnowledgeBaseArticle $article): RedirectResponse
     {
-        $validated = $request->validate([
-            'title' => 'required|string|max:255',
-            'slug' => 'nullable|string|max:255|unique:knowledge_base_articles,slug,' . $article->id,
-            'badge' => 'nullable|string|max:120',
-            'summary' => 'nullable|string|max:500',
-            'content' => 'required|string',
-            'read_time_minutes' => 'required|integer|min:1|max:60',
-            'sort_order' => 'nullable|integer|min:0',
-            'published_at' => 'nullable|date',
-            'is_featured' => 'boolean',
-            'is_published' => 'boolean',
-        ]);
+        $validated = $request->validated();
 
         $isPublished = $request->boolean('is_published');
+        $isFeatured = $request->boolean('is_featured');
 
-        $article->update([
-            'title' => $validated['title'],
-            'slug' => $validated['slug'] ?? Str::slug($validated['title']),
-            'badge' => $validated['badge'] ?? null,
-            'summary' => $validated['summary'] ?? null,
-            'content' => $validated['content'],
-            'read_time_minutes' => $validated['read_time_minutes'],
-            'sort_order' => $validated['sort_order'] ?? 0,
-            'published_at' => $validated['published_at'] ?? ($isPublished && !$article->published_at ? now() : $article->published_at),
-            'is_featured' => $request->boolean('is_featured'),
-            'is_published' => $isPublished,
-        ]);
+        $this->service->update($article, $validated, $isPublished, $isFeatured);
 
         return redirect()->route('dashboard.knowledge-base.index')
             ->with('success', 'Knowledge base article updated successfully.');
     }
 
-    public function destroy(KnowledgeBaseArticle $article)
+    public function destroy(KnowledgeBaseArticle $article): RedirectResponse
     {
-        $article->delete();
+        $this->service->delete($article);
 
         return redirect()->route('dashboard.knowledge-base.index')
             ->with('success', 'Knowledge base article deleted successfully.');
     }
 
-    public function toggleStatus(KnowledgeBaseArticle $article)
+    public function toggleStatus(Request $request, KnowledgeBaseArticle $article): JsonResponse|RedirectResponse
     {
-        $article->update([
-            'is_published' => !$article->is_published,
-            'published_at' => !$article->is_published ? ($article->published_at ?? now()) : $article->published_at,
-        ]);
+        $article = $this->service->toggleStatus($article);
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'ok' => true,
+                'id' => $article->id,
+                'is_published' => (bool) $article->is_published,
+                'published_at' => optional($article->published_at)?->format('M d, Y'),
+            ]);
+        }
 
         return redirect()->back()
             ->with('success', 'Knowledge base article status updated successfully.');
+    }
+
+    public function reorder(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'ordered_ids' => ['required', 'array', 'min:1'],
+            'ordered_ids.*' => ['required', 'integer', 'exists:knowledge_base_articles,id'],
+        ]);
+
+        $this->service->reorder($validated['ordered_ids']);
+
+        return response()->json([
+            'ok' => true,
+            'message' => 'Knowledge base article order updated successfully.',
+        ]);
     }
 }
