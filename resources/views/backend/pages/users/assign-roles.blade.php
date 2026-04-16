@@ -29,32 +29,6 @@
 				<div class="space-y-3">
 					<label for="user_id" class="block text-sm font-semibold text-gray-900 dark:text-white">
 						Select User <span class="text-red-500">*</span>
-	<x-backend.shell.breadcrumb :links="[['label' => 'Users', 'url' => route('dashboard.users.index')]]" pageTitle="Assign User Roles" />
-
-	<div id="user-role-assignment"
-		data-fetch-user-roles-template="{{ route('dashboard.users.roles.get', ['user' => '__ID__']) }}"
-		data-assign-route="{{ route('dashboard.users.roles.assign.store') }}"
-		data-csrf-token="{{ csrf_token() }}"
-		class="space-y-6">
-		<div class="rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800">
-			<div class="border-b border-gray-200 p-6 dark:border-gray-700">
-				<div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-					<div>
-						<h2 class="text-2xl font-bold text-gray-900 dark:text-white">Assign Roles to Users</h2>
-						<p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Manage role access for active dashboard users.</p>
-					</div>
-					<a href="{{ route('dashboard.users.index') }}"
-						class="inline-flex items-center gap-2 rounded-lg bg-gray-100 px-4 py-2.5 text-sm font-medium text-gray-700 transition-colors duration-200 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600">
-						<x-icons.chevron-left class="h-4 w-4" />
-						Back to Users
-					</a>
-				</div>
-			</div>
-
-			<form id="user-role-assignment-form" class="space-y-6 p-6">
-				<div class="space-y-3">
-					<label for="user_id" class="block text-sm font-semibold text-gray-900 dark:text-white">
-						Select User <span class="text-red-500">*</span>
 					</label>
 					<select id="user_id" name="user_id"
 						class="h-11 w-full rounded-lg border border-gray-300 bg-white px-4 text-sm font-medium text-gray-900 transition-all duration-200 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500 dark:border-gray-600 dark:bg-gray-900 dark:text-white"
@@ -112,3 +86,4 @@
 			</form>
 		</div>
 	</div>
+@endsection
