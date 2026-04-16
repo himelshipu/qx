@@ -5,7 +5,10 @@
 @section('content')
 	<x-backend.shell.breadcrumb pageTitle="Users" />
 
-	<div class="space-y-6">
+	<div class="space-y-6" id="users-dashboard"
+		data-filter-results-route="{{ route('dashboard.users.table') }}"
+		data-status-toggle-template="{{ route('dashboard.users.toggle-status', ['user' => '__ID__']) }}"
+		data-csrf-token="{{ csrf_token() }}">
 		<div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
 			<div class="rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-gray-900">
 				<p class="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Total</p>
@@ -86,150 +89,8 @@
 					</div>
 				</form>
 
-				@include('backend.pages.users._results')
+				@include('backend.pages.users._results', ['users' => $users])
 			</div>
 		</div>
 	</div>
-
-	@push('scripts')
-		<script>
-			document.addEventListener('DOMContentLoaded', function() {
-				const form = document.getElementById('users-filters-form');
-				const resultsId = 'users-results';
-				const searchInput = document.getElementById('q');
-				const statusSelect = document.getElementById('status');
-				const roleSelect = document.getElementById('role');
-				let debounceTimer;
-				let activeRequestController = null;
-
-				if (!form) {
-					return;
-				}
-
-				const buildQueryString = () => {
-					const params = new URLSearchParams(new FormData(form));
-					if (!params.get('q')) params.delete('q');
-					if (!params.get('status') || params.get('status') === 'all') params.delete('status');
-					if (!params.get('role') || !params.get('role')) params.delete('role');
-					return params.toString();
-				};
-
-				const applyFilters = async (explicitUrl = null) => {
-					const query = buildQueryString();
-					const requestUrl = explicitUrl || `${form.action}${query ? `?${query}` : ''}`;
-
-					if (activeRequestController) {
-						activeRequestController.abort();
-					}
-
-					activeRequestController = new AbortController();
-
-					try {
-						const response = await fetch(requestUrl, {
-							headers: {
-								'X-Requested-With': 'XMLHttpRequest'
-							},
-							signal: activeRequestController.signal,
-						});
-
-						const html = await response.text();
-						const parser = new DOMParser();
-						const doc = parser.parseFromString(html, 'text/html');
-
-						const newResults = doc.getElementById(resultsId);
-						const currentResults = document.getElementById(resultsId);
-
-						if (newResults && currentResults) {
-							currentResults.outerHTML = newResults.outerHTML;
-							window.history.replaceState({}, '', requestUrl);
-						}
-					} catch (error) {
-						if (error.name !== 'AbortError') {
-							window.location.href = requestUrl;
-						}
-					}
-				};
-
-				searchInput?.addEventListener('input', function() {
-					clearTimeout(debounceTimer);
-					debounceTimer = setTimeout(() => applyFilters(), 350);
-				});
-
-				statusSelect?.addEventListener('change', () => applyFilters());
-				roleSelect?.addEventListener('change', () => applyFilters());
-
-				document.addEventListener('click', function(event) {
-					const link = event.target.closest(`#${resultsId} a[href*="page="]`);
-					if (!link) return;
-
-					event.preventDefault();
-					const href = link.getAttribute('href');
-					if (href) {
-						applyFilters(href);
-					}
-				});
-			});
-
-			function toggleUserStatus(userId, checkbox) {
-				if (checkbox?.disabled) {
-					return;
-				}
-
-				if (checkbox) {
-					checkbox.disabled = true;
-				}
-
-				const urlTemplate = @json(route('dashboard.users.toggle-status', ['user' => '__ID__']));
-				const url = urlTemplate.replace('__ID__', String(userId));
-
-				fetch(url, {
-						method: 'POST',
-						headers: {
-							'X-CSRF-TOKEN': @json(csrf_token()),
-							'Accept': 'application/json',
-							'Content-Type': 'application/json'
-						}
-					})
-					.then((response) => {
-						if (!response.ok) {
-							throw new Error('Failed to update status');
-						}
-
-						return response.json();
-					})
-					.then((data) => {
-						if (data.success) {
-							if (checkbox && typeof data.is_active !== 'undefined') {
-								checkbox.checked = Boolean(data.is_active);
-							}
-
-							const message = data.message || 'User status updated successfully.';
-							if (window.toast) {
-								window.toast.success(message);
-							}
-
-							return;
-						}
-
-						throw new Error(data.message || 'Failed to update user status.');
-					})
-					.catch((error) => {
-						console.error(error);
-						const message = error?.message || 'Unable to update user status right now.';
-						if (window.toast) {
-							window.toast.error(message);
-						}
-
-						if (checkbox) {
-							checkbox.checked = !checkbox.checked;
-						}
-					})
-					.finally(() => {
-						if (checkbox) {
-							checkbox.disabled = false;
-						}
-					});
-			}
-		</script>
-	@endpush
 @endsection

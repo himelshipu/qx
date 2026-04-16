@@ -16,6 +16,9 @@ import "./admin/faq-items-dashboard";
 import "./admin/faq-sections-dashboard";
 import "./admin/knowledge-base-dashboard";
 import "./admin/testimonials-dashboard";
+import "./admin/users-dashboard";
+import "./admin/user-role-assignment";
+import "./admin/permission-assignment";
 
 Alpine.plugin(collapse);
 

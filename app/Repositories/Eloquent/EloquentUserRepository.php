@@ -7,6 +7,7 @@ namespace App\Repositories\Eloquent;
 use App\Models\User;
 use App\Repositories\Contracts\UserRepositoryInterface;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
 /**
  * Class EloquentUserRepository
@@ -81,5 +82,66 @@ class EloquentUserRepository implements UserRepositoryInterface
     public function delete(User $user): bool
     {
         return $user->delete();
+    }
+
+    public function paginateForDashboard(string $search, string $status, ?int $roleId, int $perPage): LengthAwarePaginator
+    {
+        return User::query()
+            ->with([
+                'brand:id,user_id',
+                'influencer:id,user_id',
+                'roles:id,name',
+            ])
+            ->forDashboard()
+            ->dashboardUserTypes()
+            ->search($search)
+            ->dashboardStatus($status)
+            ->dashboardRole($roleId)
+            ->dashboardOrder()
+            ->paginate($perPage)
+            ->withQueryString();
+    }
+
+    public function getDashboardStats(): array
+    {
+        $base = User::query()->dashboardUserTypes();
+
+        return [
+            'total' => (clone $base)->count(),
+            'brands' => (clone $base)->where('user_type', 'brand')->count(),
+            'influencers' => (clone $base)->where('user_type', 'influencer')->count(),
+            'moderators' => (clone $base)->where('user_type', 'moderator')->count(),
+            'admins' => (clone $base)->where('user_type', 'admin')->count(),
+            'active' => (clone $base)->where('is_active', true)->count(),
+            'inactive' => (clone $base)->where('is_active', false)->count(),
+        ];
+    }
+
+    public function getAssignableUsers(): Collection
+    {
+        return User::query()
+            ->whereNotIn('user_type', ['brand', 'influencer'])
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->get(['id', 'name', 'email', 'user_type']);
+    }
+
+    public function getRoleIds(User $user): array
+    {
+        return $user->roles()->pluck('roles.id')->map(fn ($id) => (int) $id)->all();
+    }
+
+    public function syncRoles(User $user, array $roleIds): void
+    {
+        $user->roles()->sync($roleIds);
+    }
+
+    public function toggleStatus(User $user): User
+    {
+        $user->update([
+            'is_active' => !$user->is_active,
+        ]);
+
+        return $user->fresh();
     }
 }

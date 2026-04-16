@@ -62,6 +62,7 @@ class EnforceDashboardRoutePermission
             'knowledge-base.reorder' => 'knowledge-base.update',
             'faqs.sections.table' => 'faqs.sections.index',
             'faqs.items.table' => 'faqs.items.index',
+            'users.table' => 'users.index',
             'settings.recovery.restore' => 'settings.restore',
             // Internal permission/menu helper APIs should require dashboard access.
             'api.menu' => 'dashboard.view',

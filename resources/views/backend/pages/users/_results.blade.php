@@ -23,35 +23,13 @@
 			</thead>
 			<tbody class="divide-y divide-gray-100 dark:divide-gray-800">
 				@forelse ($users as $user)
-					@php
-						$previewPath = $user->profile_image_path ?: $user->cover_image_path;
-						$previewUrl = null;
-						if (!empty($previewPath)) {
-						    $isExternal = str_starts_with($previewPath, 'http://') || str_starts_with($previewPath, 'https://');
-						    $previewUrl = $isExternal ? $previewPath : asset($previewPath);
-						}
-
-						$viewUrl = null;
-						$editUrl = null;
-
-						if ($user->user_type === 'brand' && $user->brand) {
-						    $viewUrl = route('dashboard.brands.view', $user->brand);
-						    $editUrl = route('dashboard.brands.edit', $user->brand);
-						} elseif ($user->user_type === 'influencer' && $user->influencer) {
-						    $viewUrl = route('dashboard.influencers.view', $user->influencer);
-						    $editUrl = route('dashboard.influencers.edit', $user->influencer);
-						} else {
-						    // All other user types (moderator, admin, etc.) go to generic user edit
-						    $editUrl = route('dashboard.users.edit', $user);
-						}
-					@endphp
 					<tr class="transition hover:bg-gray-50/70 dark:hover:bg-gray-800/40">
 						<td class="px-4 py-3">
 							<div class="flex items-center gap-3">
 								<div
 									class="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-gray-100 dark:bg-gray-800">
-									@if ($previewUrl)
-										<img src="{{ $previewUrl }}" alt="{{ $user->name }}" class="h-10 w-10 object-cover">
+									@if ($user->previewImageUrl())
+										<img src="{{ $user->previewImageUrl() }}" alt="{{ $user->name }}" class="h-10 w-10 object-cover">
 									@else
 										<span
 											class="text-sm font-semibold text-gray-500 dark:text-gray-300">{{ strtoupper(substr($user->name ?? 'U', 0, 1)) }}</span>
@@ -78,7 +56,7 @@
 							<div class="flex items-center">
 								<label class="relative inline-flex cursor-pointer items-center">
 									<input type="checkbox" {{ $user->is_active ? 'checked' : '' }}
-										onchange="toggleUserStatus({{ $user->id }}, this)" class="peer sr-only" />
+										data-status-toggle data-id="{{ $user->id }}" class="peer sr-only" />
 									<div
 										class="h-6 w-11 rounded-full bg-gray-200 transition-colors duration-200 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-green-400 peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:ring-4 peer-focus:ring-green-300 dark:bg-gray-700 dark:peer-focus:ring-green-800">
 									</div>
@@ -88,23 +66,23 @@
 						<td class="px-4 py-3 text-sm text-gray-600 dark:text-gray-300">{{ $user->created_at?->format('M d, Y') }}</td>
 						<td class="px-4 py-3">
 							<div class="flex items-center justify-end gap-2">
-								@if ($viewUrl)
-									<a href="{{ $viewUrl }}"
+								@if ($user->dashboardViewUrl())
+									<a href="{{ $user->dashboardViewUrl() }}"
 										class="inline-flex items-center rounded-lg border border-gray-200 p-2 text-gray-600 transition hover:bg-gray-100 hover:text-gray-900 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-white"
 										title="View user resource">
 										<x-icons.eye class="h-4 w-4" />
 									</a>
 								@endif
 
-								@if ($editUrl)
-									<a href="{{ $editUrl }}"
+								@if ($user->dashboardEditUrl())
+									<a href="{{ $user->dashboardEditUrl() }}"
 										class="inline-flex items-center rounded-lg border border-gray-200 p-2 text-gray-600 transition hover:bg-gray-100 hover:text-gray-900 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-white"
 										title="Edit user resource">
 										<x-icons.edit class="h-4 w-4" />
 									</a>
 								@endif
 
-								@if (!$viewUrl && !$editUrl)
+								@if (!$user->dashboardViewUrl() && !$user->dashboardEditUrl())
 									<span class="text-xs text-gray-400 dark:text-gray-500">N/A</span>
 								@endif
 							</div>
@@ -122,7 +100,7 @@
 	</div>
 
 	@if ($users->hasPages())
-		<div class="mt-5 border-t border-gray-200 pt-4 dark:border-gray-800">
+		<div class="mt-5 border-t border-gray-200 pt-4 dark:border-gray-800" data-pagination-container>
 			{{ $users->links() }}
 		</div>
 	@endif

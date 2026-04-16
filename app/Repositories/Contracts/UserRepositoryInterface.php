@@ -6,6 +6,7 @@ namespace App\Repositories\Contracts;
 
 use App\Models\User;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
 /**
  * Interface UserRepositoryInterface
@@ -61,4 +62,28 @@ interface UserRepositoryInterface
      * @return bool
      */
     public function delete(User $user): bool;
+
+    public function paginateForDashboard(string $search, string $status, ?int $roleId, int $perPage): LengthAwarePaginator;
+
+    /**
+     * @return array{total:int,brands:int,influencers:int,moderators:int,admins:int,active:int,inactive:int}
+     */
+    public function getDashboardStats(): array;
+
+    /**
+     * @return Collection<int, User>
+     */
+    public function getAssignableUsers(): Collection;
+
+    /**
+     * @return array<int, int>
+     */
+    public function getRoleIds(User $user): array;
+
+    /**
+     * @param array<int, int> $roleIds
+     */
+    public function syncRoles(User $user, array $roleIds): void;
+
+    public function toggleStatus(User $user): User;
 }

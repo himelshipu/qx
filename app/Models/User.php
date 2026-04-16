@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Traits\HasPermissionsHelper;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
@@ -11,6 +12,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Str;
+use App\Models\Session;
+use App\Models\Wishlist;
 
 class User extends Authenticatable
 {
@@ -130,6 +133,72 @@ class User extends Authenticatable
     public function roles(): BelongsToMany
     {
         return $this->belongsToMany(Role::class, 'user_roles')->withTimestamps();
+    }
+
+    public function scopeForDashboard(Builder $query): Builder
+    {
+        return $query->select([
+            'id',
+            'name',
+            'slug',
+            'email',
+            'phone',
+            'city',
+            'country',
+            'user_type',
+            'profile_image_path',
+            'cover_image_path',
+            'is_active',
+            'created_at',
+            'updated_at',
+        ]);
+    }
+
+    public function scopeDashboardUserTypes(Builder $query): Builder
+    {
+        return $query->whereIn('user_type', ['brand', 'influencer', 'moderator', 'admin']);
+    }
+
+    public function scopeSearch(Builder $query, string $search): Builder
+    {
+        if ($search === '') {
+            return $query;
+        }
+
+        return $query->where(function (Builder $builder) use ($search): void {
+            $builder
+                ->where('name', 'like', "%{$search}%")
+                ->orWhere('email', 'like', "%{$search}%")
+                ->orWhere('phone', 'like', "%{$search}%")
+                ->orWhere('city', 'like', "%{$search}%")
+                ->orWhere('country', 'like', "%{$search}%")
+                ->orWhere('user_type', 'like', "%{$search}%");
+        });
+    }
+
+    public function scopeDashboardStatus(Builder $query, string $status): Builder
+    {
+        return match ($status) {
+            'active' => $query->where('is_active', true),
+            'inactive' => $query->where('is_active', false),
+            default => $query,
+        };
+    }
+
+    public function scopeDashboardRole(Builder $query, ?int $roleId): Builder
+    {
+        if (!$roleId) {
+            return $query;
+        }
+
+        return $query->whereHas('roles', function (Builder $builder) use ($roleId): void {
+            $builder->where('roles.id', $roleId);
+        });
+    }
+
+    public function scopeDashboardOrder(Builder $query): Builder
+    {
+        return $query->orderByDesc('updated_at');
     }
 
     public function permissions(): BelongsToMany
@@ -376,6 +445,46 @@ class User extends Authenticatable
         \Illuminate\Support\Facades\Mail::send(
             new \App\Mail\SendVerificationCodeMail($this, $verificationCode)
         );
+    }
+
+    public function previewImageUrl(): ?string
+    {
+        $path = $this->profile_image_path ?: $this->cover_image_path;
+        if (!$path) {
+            return null;
+        }
+
+        if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) {
+            return $path;
+        }
+
+        return asset($path);
+    }
+
+    public function dashboardViewUrl(): ?string
+    {
+        if ($this->user_type === 'brand' && $this->brand) {
+            return route('dashboard.brands.view', $this->brand);
+        }
+
+        if ($this->user_type === 'influencer' && $this->influencer) {
+            return route('dashboard.influencers.view', $this->influencer);
+        }
+
+        return null;
+    }
+
+    public function dashboardEditUrl(): ?string
+    {
+        if ($this->user_type === 'brand' && $this->brand) {
+            return route('dashboard.brands.edit', $this->brand);
+        }
+
+        if ($this->user_type === 'influencer' && $this->influencer) {
+            return route('dashboard.influencers.edit', $this->influencer);
+        }
+
+        return route('dashboard.users.edit', $this);
     }
 
     public function sendEmailVerificationNotification(): void
