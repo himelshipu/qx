@@ -17,6 +17,7 @@ use App\Repositories\Contracts\ModeratorRepositoryInterface;
 use App\Repositories\Contracts\PackageRepositoryInterface;
 use App\Repositories\Contracts\PermissionRepositoryInterface;
 use App\Repositories\Contracts\RoleRepositoryInterface;
+use App\Repositories\Contracts\SettingRepositoryInterface;
 use App\Repositories\Contracts\TestimonialRepositoryInterface;
 use App\Repositories\Contracts\UserRepositoryInterface;
 use App\Repositories\Eloquent\EloquentBrandRepository;
@@ -32,6 +33,7 @@ use App\Repositories\Eloquent\EloquentModeratorRepository;
 use App\Repositories\Eloquent\EloquentPackageRepository;
 use App\Repositories\Eloquent\EloquentPermissionRepository;
 use App\Repositories\Eloquent\EloquentRoleRepository;
+use App\Repositories\Eloquent\EloquentSettingRepository;
 use App\Repositories\Eloquent\EloquentTestimonialRepository;
 use App\Repositories\Eloquent\EloquentUserRepository;
 use Illuminate\Support\ServiceProvider;
@@ -123,6 +125,11 @@ class RepositoryServiceProvider extends ServiceProvider
         $this->app->bind(
             TestimonialRepositoryInterface::class,
             EloquentTestimonialRepository::class
+        );
+
+        $this->app->bind(
+            SettingRepositoryInterface::class,
+            EloquentSettingRepository::class
         );
     }
 

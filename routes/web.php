@@ -526,7 +526,10 @@ Route::prefix('dashboard')->name('dashboard.')->middleware(['auth', 'verified', 
 
     // Settings routes
     Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
-    Route::post('/settings', [SettingsController::class, 'update'])->name('settings.update');
+    Route::post('/settings/branding', [SettingsController::class, 'updateBranding'])->name('settings.update-branding');
+    Route::post('/settings/email', [SettingsController::class, 'updateEmail'])->name('settings.update-email');
+    Route::post('/settings/platform', [SettingsController::class, 'updatePlatform'])->name('settings.update-platform');
+    Route::post('/settings/footer', [SettingsController::class, 'updateFooter'])->name('settings.update-footer');
     Route::post('/settings/update-order', [SettingsController::class, 'updateOrder'])->name('settings.update-order');
     Route::post('/settings/recovery/{type}/{id}/restore', [SettingsController::class, 'restoreEntity'])->name('settings.recovery.restore');
 

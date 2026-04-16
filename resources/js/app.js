@@ -15,6 +15,7 @@ import "./admin/featured-collaboration-form";
 import "./admin/faq-items-dashboard";
 import "./admin/faq-sections-dashboard";
 import "./admin/knowledge-base-dashboard";
+import "./admin/settings-dashboard";
 import "./admin/testimonials-dashboard";
 import "./admin/users-dashboard";
 import "./admin/user-role-assignment";

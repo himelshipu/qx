@@ -1,4 +1,4 @@
-<footer class="w-full border-t border-gray-100 dark:border-gray-800">
+<footer class="container mx-auto w-full border-t border-gray-100 dark:border-gray-800">
     <div class="max-w-screen-2xl mx-auto px-4 py-4">
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 lg:gap-16">
             <div class="flex flex-col items-start">

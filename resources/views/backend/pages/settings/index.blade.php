@@ -24,15 +24,8 @@
 
 			<div class="p-5">
 				<div x-show="tab === 'branding'" x-cloak>
-					@php
-						$initialLogoLight = $brandingSettings['logo_light'] ?? null;
-						$initialLogoDark = $brandingSettings['logo_dark'] ?? null;
-						$initialFavicon = $brandingSettings['favicon'] ?? null;
-					@endphp
-					<form action="{{ route('dashboard.settings.update') }}" method="POST" enctype="multipart/form-data" class="space-y-6" x-data="settingsBrandingUploader({ logoLight: @js($initialLogoLight), logoDark: @js($initialLogoDark), favicon: @js($initialFavicon) })">
+					<form action="{{ route('dashboard.settings.update-branding') }}" method="POST" enctype="multipart/form-data" class="space-y-6" x-data="settingsBrandingUploader({ logoLight: @js($brandingSettings['logo_light']), logoDark: @js($brandingSettings['logo_dark']), favicon: @js($brandingSettings['favicon']) })">
 						@csrf
-						<input type="hidden" name="section" value="branding">
-
 						<div class="grid grid-cols-1 gap-5 md:grid-cols-2">
 							<div>
 								<label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Site Name *</label>
@@ -106,16 +99,15 @@
 						</div>
 
 						<div class="flex flex-col-reverse gap-3 border-t border-gray-200 pt-5 sm:flex-row sm:justify-end dark:border-gray-800">
-							<a href="{{ route('dashboard.settings.index', ['tab' => 'branding']) }}" class="inline-flex items-center justify-center rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800">Cancel</a>
+							<a href="{{ route('dashboard.settings.index') }}" class="inline-flex items-center justify-center rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800">Cancel</a>
 							<button type="submit" class="inline-flex items-center justify-center rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-gray-800 dark:bg-gray-700 dark:hover:bg-gray-600">Save Branding</button>
 						</div>
 					</form>
 				</div>
 
 				<div x-show="tab === 'email'" x-cloak>
-					<form action="{{ route('dashboard.settings.update') }}" method="POST" class="space-y-6">
+					<form action="{{ route('dashboard.settings.update-email') }}" method="POST" class="space-y-6">
 						@csrf
-						<input type="hidden" name="section" value="email">
 						<div class="grid grid-cols-1 gap-5 md:grid-cols-2">
 							<div>
 								<label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Mailer</label>
@@ -151,16 +143,15 @@
 							</div>
 						</div>
 						<div class="flex flex-col-reverse gap-3 border-t border-gray-200 pt-5 sm:flex-row sm:justify-end dark:border-gray-800">
-							<a href="{{ route('dashboard.settings.index', ['tab' => 'email']) }}" class="inline-flex items-center justify-center rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800">Cancel</a>
+							<a href="{{ route('dashboard.settings.index') }}" class="inline-flex items-center justify-center rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800">Cancel</a>
 							<button type="submit" class="inline-flex items-center justify-center rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-gray-800 dark:bg-gray-700 dark:hover:bg-gray-600">Save Email Settings</button>
 						</div>
 					</form>
 				</div>
 
 				<div x-show="tab === 'platform'" x-cloak>
-					<form action="{{ route('dashboard.settings.update') }}" method="POST" class="space-y-6">
+					<form action="{{ route('dashboard.settings.update-platform') }}" method="POST" class="space-y-6">
 						@csrf
-						<input type="hidden" name="section" value="platform">
 						<div class="grid grid-cols-1 gap-5 md:grid-cols-2">
 							<div>
 								<label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Charge Type</label>
@@ -175,45 +166,59 @@
 							</div>
 						</div>
 						<div class="flex flex-col-reverse gap-3 border-t border-gray-200 pt-5 sm:flex-row sm:justify-end dark:border-gray-800">
-							<a href="{{ route('dashboard.settings.index', ['tab' => 'platform']) }}" class="inline-flex items-center justify-center rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800">Cancel</a>
+							<a href="{{ route('dashboard.settings.index') }}" class="inline-flex items-center justify-center rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800">Cancel</a>
 							<button type="submit" class="inline-flex items-center justify-center rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-gray-800 dark:bg-gray-700 dark:hover:bg-gray-600">Save Platform Charge</button>
 						</div>
 					</form>
 				</div>
 
 				<div x-show="tab === 'footer'" x-cloak>
-					<form action="{{ route('dashboard.settings.update') }}" method="POST" class="space-y-6">
-						@csrf
-						<input type="hidden" name="section" value="footer">
+					<div id="settings-footer-dashboard" 
+						data-csrf-token="{{ csrf_token() }}"
+						data-reorder-route="{{ route('dashboard.settings.update-order') }}">
+						
 						@if($pages->count() > 0)
-							<div class="mb-4 rounded-lg border border-amber-200 bg-amber-50 p-4 dark:border-amber-800/30 dark:bg-amber-900/20">
-								<p class="text-sm font-medium text-amber-900 dark:text-amber-300">Drag pages to set footer order. Only checked pages will be shown.</p>
+							<div class="mb-6 rounded-lg border border-amber-200 bg-amber-50 p-4 dark:border-amber-800/30 dark:bg-amber-900/20">
+								<p class="text-sm font-medium text-amber-900 dark:text-amber-300">Drag pages to reorder footer pages.</p>
 							</div>
-							<div id="sortable-list" class="space-y-2">
-								@foreach($pages as $page)
-									<div class="sortable-item rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800/50" data-id="{{ $page->id }}">
-										<div class="flex items-center gap-4">
-											<div class="flex h-8 w-8 items-center justify-center rounded text-gray-400"><i class="fas fa-grip-vertical text-sm"></i></div>
-											<input type="checkbox" id="page_{{ $page->id }}" name="footer_pages[]" value="{{ $page->id }}" {{ in_array($page->id, $footerPages ?? []) ? 'checked' : '' }} class="h-5 w-5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700">
-											<div class="min-w-0 flex-1">
-												<label for="page_{{ $page->id }}" class="cursor-pointer">
-													<span class="font-semibold text-gray-900 dark:text-white">{{ $page->title }}</span>
-													<p class="mt-1 text-sm text-gray-500 dark:text-gray-400">{{ $page->content_summary ?? 'No description' }}</p>
-												</label>
-											</div>
-										</div>
-									</div>
-								@endforeach
+
+							<div class="overflow-x-auto">
+								<table class="w-full">
+									<thead class="border-b border-gray-200 dark:border-gray-800">
+										<tr class="bg-gray-50 dark:bg-gray-800/50">
+											<th class="w-12 px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-400">Drag</th>
+											<th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-400">Page Title</th>
+											<th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-400">Status</th>
+											<th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-400">Order</th>
+										</tr>
+									</thead>
+									<tbody id="settings-footer-sortable" class="divide-y divide-gray-200 dark:divide-gray-800">
+										@foreach($pages as $page)
+											<tr class="cursor-move" data-page-id="{{ $page->id }}">
+												<td class="px-4 py-3 text-gray-400">
+													<svg class="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
+														<path d="M8 5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM8 12a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM8 19a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM14 5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM14 12a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM14 19a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z"></path>
+													</svg>
+												</td>
+												<td class="px-4 py-3 text-sm font-medium text-gray-900 dark:text-white">{{ $page->title }}</td>
+												<td class="px-4 py-3">
+													<div class="flex items-center">
+														<label class="relative inline-flex cursor-pointer items-center">
+															<input type="checkbox" {{ $page->is_active ? 'checked' : '' }} class="peer sr-only js-page-status-toggle" data-page-id="{{ $page->id }}" />
+															<div class="h-6 w-11 rounded-full bg-gray-200 transition-colors duration-200 after:absolute after:left-0.5 after:top-0.5 after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-green-400 peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:ring-4 peer-focus:ring-green-300 dark:bg-gray-700 dark:peer-focus:ring-green-800"></div>
+														</label>
+													</div>
+												</td>
+												<td class="js-sort-order-value px-4 py-3 text-sm text-gray-600 dark:text-gray-400">{{ $loop->iteration }}</td>
+											</tr>
+										@endforeach
+									</tbody>
+								</table>
 							</div>
-							<input type="hidden" id="footer_pages_order" name="footer_pages_order" value="">
 						@else
 							<p class="text-sm text-gray-500 dark:text-gray-400">No static pages available.</p>
 						@endif
-						<div class="flex flex-col-reverse gap-3 border-t border-gray-200 pt-5 sm:flex-row sm:justify-end dark:border-gray-800">
-							<a href="{{ route('dashboard.settings.index', ['tab' => 'footer']) }}" class="inline-flex items-center justify-center rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800">Cancel</a>
-							<button type="submit" class="inline-flex items-center justify-center rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-gray-800 dark:bg-gray-700 dark:hover:bg-gray-600">Save Footer Pages</button>
-						</div>
-					</form>
+					</div>
 				</div>
 
 				<div x-show="tab === 'recovery'" x-cloak>

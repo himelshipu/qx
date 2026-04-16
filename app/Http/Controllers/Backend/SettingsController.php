@@ -3,6 +3,10 @@
 namespace App\Http\Controllers\Backend;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Backend\Setting\UpdateBrandingSettingRequest;
+use App\Http\Requests\Backend\Setting\UpdateEmailSettingRequest;
+use App\Http\Requests\Backend\Setting\UpdatePlatformSettingRequest;
+use App\Http\Requests\Backend\Setting\UpdateFooterSettingRequest;
 use App\Models\BlogPost;
 use App\Models\Brand;
 use App\Models\Campaign;
@@ -21,13 +25,12 @@ use App\Models\Payment;
 use App\Models\Payout;
 use App\Models\Review;
 use App\Models\Role;
-use App\Models\Setting;
 use App\Models\StaticPage;
 use App\Models\SupportTicket;
 use App\Models\Testimonial;
+use App\Services\Admin\SettingService;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\View\View;
 use Throwable;
@@ -37,8 +40,9 @@ class SettingsController extends Controller
     /**
      * Create a new controller instance.
      */
-    public function __construct()
-    {
+    public function __construct(
+        private SettingService $service,
+    ) {
         $this->middleware('permission:settings.index')->only(['index']);
         $this->middleware('permission:settings.update')->only(['update']);
         $this->middleware('permission:settings.restore')->only(['restoreEntity']);
@@ -49,166 +53,108 @@ class SettingsController extends Controller
      */
     public function index(): View
     {
-        $pages = StaticPage::orderBy('title')->get();
-        $footerPages = Setting::get('footer_pages', []);
+        $footerPageIds = $this->service->getFooterSettings();
+        $allPages = StaticPage::all();
+        
+        // Reorder pages based on footer_pages setting
+        $pages = $allPages->sortBy(function ($page) use ($footerPageIds) {
+            $position = array_search($page->id, $footerPageIds);
+            return $position !== false ? $position : PHP_INT_MAX;
+        })->values();
+
         $recoveryItems = $this->buildRecoveryItems();
         $activeTab = (string) request()->string('tab', 'branding');
 
         return view('backend.pages.settings.index', [
             'activeTab' => in_array($activeTab, ['branding', 'email', 'platform', 'footer', 'recovery'], true) ? $activeTab : 'branding',
             'pages' => $pages,
-            'footerPages' => $footerPages,
-            'brandingSettings' => [
-                'site_name' => Setting::get('branding.site_name', config('app.name')),
-                'tagline' => Setting::get('branding.tagline', ''),
-                'logo_light' => Setting::fileUrl('branding.logo_light', '/images/logo/header-logo.png'),
-                'logo_dark' => Setting::fileUrl('branding.logo_dark', '/images/logo/header-logo.png'),
-                'favicon' => Setting::fileUrl('branding.favicon', '/default.webp'),
-            ],
-            'emailSettings' => [
-                'mailer' => Setting::get('email.mailer', config('mail.default')),
-                'host' => Setting::get('email.host', config('mail.mailers.smtp.host')),
-                'port' => Setting::get('email.port', config('mail.mailers.smtp.port')),
-                'username' => Setting::get('email.username', config('mail.mailers.smtp.username')),
-                'password' => Setting::get('email.password', config('mail.mailers.smtp.password')),
-                'encryption' => Setting::get('email.encryption', config('mail.mailers.smtp.encryption')),
-                'from_name' => Setting::get('email.from_name', config('mail.from.name')),
-                'from_address' => Setting::get('email.from_address', config('mail.from.address')),
-            ],
-            'platformSettings' => [
-                'charge_type' => Setting::get('platform.charge_type', 'percentage'),
-                'charge_value' => Setting::get('platform.charge_value', 10),
-            ],
+            'footerPages' => $footerPageIds,
+            'brandingSettings' => $this->service->getBrandingSettings(),
+            'emailSettings' => $this->service->getEmailSettings(),
+            'platformSettings' => $this->service->getPlatformSettings(),
             'recoveryItems' => $recoveryItems,
         ]);
     }
 
     /**
-     * Update settings.
+     * Update branding settings.
      */
-    public function update(Request $request): RedirectResponse
+    public function updateBranding(UpdateBrandingSettingRequest $request): RedirectResponse
     {
-        $section = (string) $request->string('section', 'branding');
+        $validated = $request->validated();
 
-        switch ($section) {
-            case 'branding':
-                $validated = $request->validate([
-                    'site_name' => 'required|string|max:255',
-                    'tagline' => 'nullable|string|max:255',
-                    'logo_light' => 'nullable|image|mimes:png,jpg,jpeg,webp,avif,gif,svg|max:6144',
-                    'logo_dark' => 'nullable|image|mimes:png,jpg,jpeg,webp,avif,gif,svg|max:6144',
-                    'favicon' => 'nullable|image|mimes:png,ico,svg|max:2048',
-                ]);
-
-                $branding = [
-                    'site_name' => $validated['site_name'],
-                    'tagline' => $validated['tagline'] ?? '',
-                    'logo_light' => Setting::get('branding.logo_light', '/images/logo/header-logo.png'),
-                    'logo_dark' => Setting::get('branding.logo_dark', '/images/logo/header-logo.png'),
-                    'favicon' => Setting::get('branding.favicon', '/default.webp'),
-                ];
-
-                if ($request->hasFile('logo_light')) {
-                    $branding['logo_light'] = $request->file('logo_light')->store('settings/branding', 'public');
-                }
-
-                if ($request->hasFile('logo_dark')) {
-                    $branding['logo_dark'] = $request->file('logo_dark')->store('settings/branding', 'public');
-                }
-
-                if ($request->hasFile('favicon')) {
-                    $branding['favicon'] = $request->file('favicon')->store('settings/branding', 'public');
-                }
-
-                Setting::set('branding.site_name', $branding['site_name']);
-                Setting::set('branding.tagline', $branding['tagline']);
-                Setting::set('branding.logo_light', $branding['logo_light']);
-                Setting::set('branding.logo_dark', $branding['logo_dark']);
-                Setting::set('branding.favicon', $branding['favicon']);
-                break;
-
-            case 'email':
-                $validated = $request->validate([
-                    'mailer' => 'nullable|string|max:50',
-                    'host' => 'nullable|string|max:255',
-                    'port' => 'nullable|integer|min:1|max:65535',
-                    'username' => 'nullable|string|max:255',
-                    'password' => 'nullable|string|max:255',
-                    'encryption' => 'nullable|string|max:20',
-                    'from_name' => 'nullable|string|max:255',
-                    'from_address' => 'nullable|email|max:255',
-                ]);
-
-                Setting::set('email.mailer', $validated['mailer'] ?? 'smtp');
-                Setting::set('email.host', $validated['host'] ?? '');
-                Setting::set('email.port', $validated['port'] ?? '');
-                Setting::set('email.username', $validated['username'] ?? '');
-                Setting::set('email.password', $validated['password'] ?? '');
-                Setting::set('email.encryption', $validated['encryption'] ?? '');
-                Setting::set('email.from_name', $validated['from_name'] ?? config('app.name'));
-                Setting::set('email.from_address', $validated['from_address'] ?? '');
-                break;
-
-            case 'platform':
-                $validated = $request->validate([
-                    'charge_type' => 'required|in:percentage,fixed',
-                    'charge_value' => 'required|numeric|min:0',
-                ]);
-
-                Setting::set('platform.charge_type', $validated['charge_type']);
-                Setting::set('platform.charge_value', $validated['charge_value']);
-                break;
-
-            case 'footer':
-                $validated = $request->validate([
-                    'footer_pages' => 'nullable|array',
-                    'footer_pages.*' => 'exists:static_pages,id',
-                    'footer_pages_order' => 'nullable|string',
-                ]);
-
-                $selectedPages = $validated['footer_pages'] ?? [];
-                $orderedPages = $selectedPages;
-
-                if (!empty($validated['footer_pages_order'])) {
-                    $decoded = json_decode((string) $validated['footer_pages_order'], true);
-                    if (is_array($decoded)) {
-                        $decoded = array_map('intval', $decoded);
-                        $selectedMap = array_flip(array_map('intval', $selectedPages));
-                        $orderedPages = array_values(array_filter($decoded, fn ($id) => isset($selectedMap[$id])));
-
-                        foreach ($selectedPages as $id) {
-                            if (!in_array((int) $id, $orderedPages, true)) {
-                                $orderedPages[] = (int) $id;
-                            }
-                        }
-                    }
-                }
-
-                Setting::set('footer_pages', $orderedPages);
-                break;
-
-            default:
-                return redirect()
-                    ->route('dashboard.settings.index')
-                    ->with('error', 'Invalid settings section submitted.');
+        // Handle file uploads
+        if ($request->hasFile('logo_light')) {
+            $validated['logo_light'] = $request->file('logo_light')->store('settings/branding', 'public');
         }
 
+        if ($request->hasFile('logo_dark')) {
+            $validated['logo_dark'] = $request->file('logo_dark')->store('settings/branding', 'public');
+        }
+
+        if ($request->hasFile('favicon')) {
+            $validated['favicon'] = $request->file('favicon')->store('settings/branding', 'public');
+        }
+
+        $this->service->updateBrandingSettings($validated);
+
         return redirect()
-            ->route('dashboard.settings.index', ['tab' => $section])
-            ->with('success', 'Settings updated successfully.');
+            ->route('dashboard.settings.index', ['tab' => 'branding'])
+            ->with('success', 'Branding settings updated successfully.');
+    }
+
+    /**
+     * Update email settings.
+     */
+    public function updateEmail(UpdateEmailSettingRequest $request): RedirectResponse
+    {
+        $this->service->updateEmailSettings($request->validated());
+
+        return redirect()
+            ->route('dashboard.settings.index', ['tab' => 'email'])
+            ->with('success', 'Email settings updated successfully.');
+    }
+
+    /**
+     * Update platform settings.
+     */
+    public function updatePlatform(UpdatePlatformSettingRequest $request): RedirectResponse
+    {
+        $this->service->updatePlatformSettings($request->validated());
+
+        return redirect()
+            ->route('dashboard.settings.index', ['tab' => 'platform'])
+            ->with('success', 'Platform settings updated successfully.');
+    }
+
+    /**
+     * Update footer settings.
+     */
+    public function updateFooter(UpdateFooterSettingRequest $request): RedirectResponse
+    {
+        $validated = $request->validated();
+
+        $this->service->updateFooterSettings(
+            $validated['footer_pages'] ?? [],
+            $validated['footer_pages_order'] ?? null
+        );
+
+        return redirect()
+            ->route('dashboard.settings.index', ['tab' => 'footer'])
+            ->with('success', 'Footer settings updated successfully.');
     }
 
     /**
      * Update page order via AJAX
      */
-    public function updateOrder(Request $request)
+    public function updateOrder(UpdateFooterSettingRequest $request)
     {
         $validated = $request->validate([
             'order' => 'required|array',
             'order.*' => 'exists:static_pages,id',
         ]);
 
-        Setting::set('footer_pages', $validated['order']);
+        $this->service->reorderFooterPages($validated['order']);
 
         return response()->json([
             'success' => true,
@@ -275,7 +221,7 @@ class SettingsController extends Controller
             /** @var class-string<Model> $modelClass */
             $modelClass = $meta['model'];
             try {
-                $records = $modelClass::onlyTrashed()->latest('deleted_at')->limit(100)->get();
+                $records = $modelClass::onlyTrashed()->latest('deleted_at')->limit(config('settings.dashboard.max_recovery_items'))->get();
             } catch (Throwable $exception) {
                 continue;
             }
