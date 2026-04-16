@@ -8,6 +8,8 @@ import "./conversation";
 import "./stripe/payment";
 import "./admin/categories-dashboard";
 import "./admin/category-form";
+import "./admin/case-studies-dashboard";
+import "./admin/case-study-form";
 
 Alpine.plugin(collapse);
 

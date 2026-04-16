@@ -2,17 +2,17 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class CaseStudy extends Model
 {
     use SoftDeletes;
+
     protected $table = 'case_studies';
 
     protected $fillable = [
-        'page_id',
         'title',
         'slug',
         'summary',
@@ -32,9 +32,62 @@ class CaseStudy extends Model
         ];
     }
 
-    public function page(): BelongsTo
+    /**
+     * Scope a query for dashboard listing payload.
+     */
+    public function scopeForDashboard(Builder $query): Builder
     {
-        return $this->belongsTo(Page::class, 'page_id');
+        return $query->select([
+            'id',
+            'title',
+            'slug',
+            'summary',
+            'cover_image_path',
+            'external_url',
+            'is_published',
+            'sort_order',
+            'published_at',
+            'updated_at',
+        ]);
+    }
+
+    /**
+     * Scope a query by search term.
+     */
+    public function scopeSearch(Builder $query, string $term): Builder
+    {
+        $term = trim($term);
+
+        if ($term === '') {
+            return $query;
+        }
+
+        return $query->where(function (Builder $builder) use ($term): void {
+            $builder
+                ->where('title', 'like', '%' . $term . '%')
+                ->orWhere('summary', 'like', '%' . $term . '%')
+                ->orWhere('slug', 'like', '%' . $term . '%');
+        });
+    }
+
+    /**
+     * Scope dashboard status filter.
+     */
+    public function scopeDashboardStatus(Builder $query, string $status): Builder
+    {
+        return match ($status) {
+            'published' => $query->where('is_published', true),
+            'draft' => $query->where('is_published', false),
+            default => $query,
+        };
+    }
+
+    /**
+     * Scope dashboard ordering.
+     */
+    public function scopeDashboardOrder(Builder $query): Builder
+    {
+        return $query->orderBy('sort_order')->orderByDesc('published_at');
     }
 
     /**
@@ -42,9 +95,9 @@ class CaseStudy extends Model
      */
     public static function getPublished()
     {
-        return self::where('is_published', true)
-            ->orderBy('sort_order', 'asc')
-            ->orderBy('published_at', 'desc')
+        return self::query()
+            ->where('is_published', true)
+            ->dashboardOrder()
             ->get();
     }
 }

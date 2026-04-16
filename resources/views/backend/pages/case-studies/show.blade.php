@@ -3,12 +3,6 @@
 @section('title', 'Case Study Details - ' . $caseStudy->title)
 
 @section('content')
-	@php
-		$coverUrl = $caseStudy->cover_image_path 
-			? \App\Helpers\ImageHelper::url($caseStudy->cover_image_path)
-			: null;
-	@endphp
-
 	<x-backend.shell.breadcrumb :links="[['label' => 'Case Studies', 'url' => route('dashboard.case-studies.index')]]" 
 		pageTitle="Case Study Details: {{ $caseStudy->title }}" />
 

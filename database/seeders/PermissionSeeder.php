@@ -84,6 +84,7 @@ class PermissionSeeder extends Seeder
             ['name' => 'Update Case Study', 'slug' => 'case-studies.update', 'module' => 'content'],
             ['name' => 'Delete Case Study', 'slug' => 'case-studies.destroy', 'module' => 'content'],
             ['name' => 'Toggle Case Study Status', 'slug' => 'case-studies.toggle-status', 'module' => 'content'],
+            ['name' => 'Reorder Case Studies', 'slug' => 'case-studies.reorder', 'module' => 'content'],
 
             // MANAGEMENT: TESTIMONIALS
             ['name' => 'View Testimonials', 'slug' => 'testimonials.index', 'module' => 'content'],

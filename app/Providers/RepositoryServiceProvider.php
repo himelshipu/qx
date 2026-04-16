@@ -6,6 +6,7 @@ namespace App\Providers;
 
 use App\Repositories\Contracts\BrandRepositoryInterface;
 use App\Repositories\Contracts\CampaignRepositoryInterface;
+use App\Repositories\Contracts\CaseStudyRepositoryInterface;
 use App\Repositories\Contracts\CategoryRepositoryInterface;
 use App\Repositories\Contracts\InfluencerRepositoryInterface;
 use App\Repositories\Contracts\ModeratorRepositoryInterface;
@@ -13,6 +14,7 @@ use App\Repositories\Contracts\PackageRepositoryInterface;
 use App\Repositories\Contracts\UserRepositoryInterface;
 use App\Repositories\Eloquent\EloquentBrandRepository;
 use App\Repositories\Eloquent\EloquentCampaignRepository;
+use App\Repositories\Eloquent\EloquentCaseStudyRepository;
 use App\Repositories\Eloquent\EloquentCategoryRepository;
 use App\Repositories\Eloquent\EloquentInfluencerRepository;
 use App\Repositories\Eloquent\EloquentModeratorRepository;
@@ -57,6 +59,11 @@ class RepositoryServiceProvider extends ServiceProvider
         $this->app->bind(
             CampaignRepositoryInterface::class,
             EloquentCampaignRepository::class
+        );
+
+        $this->app->bind(
+            CaseStudyRepositoryInterface::class,
+            EloquentCaseStudyRepository::class
         );
 
         $this->app->bind(

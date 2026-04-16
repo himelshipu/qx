@@ -3,68 +3,56 @@
 namespace App\Http\Controllers\Backend;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Backend\CaseStudy\StoreCaseStudyRequest;
+use App\Http\Requests\Backend\CaseStudy\UpdateCaseStudyRequest;
 use App\Models\CaseStudy;
+use App\Services\Admin\CaseStudyService;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
+use Illuminate\View\View;
 
 class CaseStudyController extends Controller
 {
+    public function __construct(
+        private readonly CaseStudyService $caseStudyService
+    ) {}
+
     /**
      * Display a listing of the case studies.
      */
-    public function index()
+    public function index(Request $request): View
     {
-        $caseStudies = CaseStudy::orderBy('sort_order', 'asc')
-            ->orderBy('published_at', 'desc')
-            ->paginate(15);
+        $search = trim((string) $request->string('q', ''));
+        $status = (string) $request->string('status', 'all');
 
-        return view('backend.pages.case-studies.index', compact('caseStudies'));
+        return view('backend.pages.case-studies.index', $this->caseStudyService->getListingPayload($search, $status));
     }
 
     /**
      * Show the form for creating a new case study.
      */
-    public function create()
+    public function create(): View
     {
-        return view('backend.pages.case-studies.create');
+        return view('backend.pages.case-studies.create', [
+            'caseStudy' => null,
+            'nextSortOrder' => $this->caseStudyService->getNextSortOrder(),
+            'initialCoverPreview' => null,
+        ]);
     }
 
     /**
      * Store a newly created case study in storage.
      */
-    public function store(Request $request)
+    public function store(StoreCaseStudyRequest $request): RedirectResponse
     {
-        $validated = $request->validate([
-            'title'        => 'required|string|max:255',
-            'summary'      => 'required|string',
-            'cover_image'  => 'nullable|image|mimes:jpeg,png,jpg,gif,svg,webp|max:5120',
-            'external_url' => 'nullable|url',
-            'is_published' => 'boolean',
-            'sort_order'   => 'integer|min:0'
-        ]);
+        $validated = $request->validated();
+        $validated['is_published'] = $request->boolean('is_published');
 
-        $imagePath = null;
-        if ($request->hasFile('cover_image')) {
-            $imagePath = $request->file('cover_image')->store('case-studies', 'public');
-        }
-
-        $slug    = Str::slug($request->input('title'));
-        $counter = 1;
-        while (CaseStudy::where('slug', $slug)->exists()) {
-            $slug = Str::slug($request->input('title')) . '-' . $counter++;
-        }
-
-        CaseStudy::create([
-            'title'            => $validated['title'],
-            'slug'             => $slug,
-            'summary'          => $validated['summary'],
-            'cover_image_path' => $imagePath,
-            'external_url'     => $validated['external_url'] ?? null,
-            'is_published'     => $request->boolean('is_published'),
-            'sort_order'       => $validated['sort_order'] ?? 0,
-            'published_at'     => $request->boolean('is_published') ? now() : null
-        ]);
+        $this->caseStudyService->createCaseStudy(
+            $validated,
+            $request->file('cover_image')
+        );
 
         return redirect()->route('dashboard.case-studies.index')
             ->with('success', 'Case study created successfully.');
@@ -73,58 +61,38 @@ class CaseStudyController extends Controller
     /**
      * Show the case study details page.
      */
-    public function show(CaseStudy $caseStudy)
+    public function show(CaseStudy $caseStudy): View
     {
-        return view('backend.pages.case-studies.show', compact('caseStudy'));
+        return view('backend.pages.case-studies.show', [
+            'caseStudy' => $caseStudy,
+            'coverUrl' => $this->caseStudyService->buildCoverPreview($caseStudy),
+        ]);
     }
 
     /**
      * Show the form for editing the specified case study.
      */
-    public function edit(CaseStudy $caseStudy)
+    public function edit(CaseStudy $caseStudy): View
     {
-        return view('backend.pages.case-studies.edit', compact('caseStudy'));
+        return view('backend.pages.case-studies.edit', [
+            'caseStudy' => $caseStudy,
+            'initialCoverPreview' => $this->caseStudyService->buildCoverPreview($caseStudy),
+        ]);
     }
 
     /**
      * Update the specified case study in storage.
      */
-    public function update(Request $request, CaseStudy $caseStudy)
+    public function update(UpdateCaseStudyRequest $request, CaseStudy $caseStudy): RedirectResponse
     {
-        $validated = $request->validate([
-            'title'        => 'required|string|max:255',
-            'summary'      => 'required|string',
-            'cover_image'  => 'nullable|image|mimes:jpeg,png,jpg,gif,svg,webp|max:5120',
-            'external_url' => 'nullable|url',
-            'is_published' => 'boolean',
-            'sort_order'   => 'integer|min:0'
-        ]);
-
-        // Handle image update
-        if ($request->hasFile('cover_image')) {
-            if ($caseStudy->cover_image_path) {
-                Storage::disk('public')->delete($caseStudy->cover_image_path);
-            }
-            $validated['cover_image_path'] = $request->file('cover_image')->store('case-studies', 'public');
-        }
-
-        // Update slug if title changed
-        if ($request->input('title') !== $caseStudy->title) {
-            $slug    = Str::slug($request->input('title'));
-            $counter = 1;
-            while (CaseStudy::where('slug', $slug)->where('id', '!=', $caseStudy->id)->exists()) {
-                $slug = Str::slug($request->input('title')) . '-' . $counter++;
-            }
-            $validated['slug'] = $slug;
-        }
-
-        $validated['external_url'] = $request->input('external_url') ?? null;
+        $validated = $request->validated();
         $validated['is_published'] = $request->boolean('is_published');
-        if ($request->boolean('is_published') && !$caseStudy->published_at) {
-            $validated['published_at'] = now();
-        }
 
-        $caseStudy->update($validated);
+        $this->caseStudyService->updateCaseStudy(
+            $caseStudy,
+            $validated,
+            $request->file('cover_image')
+        );
 
         return redirect()->route('dashboard.case-studies.index')
             ->with('success', 'Case study updated successfully.');
@@ -133,27 +101,48 @@ class CaseStudyController extends Controller
     /**
      * Remove the specified case study from storage.
      */
-    public function destroy(CaseStudy $caseStudy)
+    public function destroy(CaseStudy $caseStudy): RedirectResponse
     {
-        if ($caseStudy->cover_image_path) {
-            Storage::disk('public')->delete($caseStudy->cover_image_path);
-        }
-
-        $caseStudy->delete();
+        $this->caseStudyService->deleteCaseStudy($caseStudy);
 
         return redirect()->route('dashboard.case-studies.index')
             ->with('success', 'Case study deleted successfully.');
     }
+
     /**
      * Toggle the publish status of a case study.
-     */public function toggleStatus(CaseStudy $caseStudy)
+     */
+    public function toggleStatus(Request $request, CaseStudy $caseStudy): JsonResponse|RedirectResponse
     {
-        $caseStudy->update([
-            'is_published' => !$caseStudy->is_published,
-            'published_at' => !$caseStudy->is_published ? now() : null
-        ]);
+        $updated = $this->caseStudyService->toggleStatus($caseStudy);
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Case study status updated successfully.',
+                'is_published' => (bool) $updated->is_published,
+            ]);
+        }
 
         return redirect()->back()
             ->with('success', 'Case study status updated successfully.');
+    }
+
+    /**
+     * Reorder case studies based on drag-drop sequence.
+     */
+    public function reorder(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'order' => ['required', 'array', 'min:1'],
+            'order.*' => ['required', 'integer', 'min:1'],
+        ]);
+
+        $this->caseStudyService->reorderCaseStudies($validated['order']);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Case studies reordered successfully.',
+        ]);
     }
 }

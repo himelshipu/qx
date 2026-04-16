@@ -22,7 +22,11 @@
 			class="space-y-6 p-5">
 			@csrf
 
-			@include('backend.pages.case-studies._form')
+			@include('backend.pages.case-studies._form', [
+				'caseStudy' => $caseStudy,
+				'initialCoverPreview' => $initialCoverPreview,
+				'nextSortOrder' => $nextSortOrder,
+			])
 
 			<div
 				class="flex flex-col-reverse gap-3 border-t border-gray-200 pt-5 sm:flex-row sm:justify-end dark:border-gray-800">

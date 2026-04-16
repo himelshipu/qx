@@ -442,6 +442,9 @@ Route::prefix('dashboard')->name('dashboard.')->middleware(['auth', 'verified', 
     Route::put('/case-studies/{caseStudy}', [CaseStudyController::class, 'update'])->name('case-studies.update');
     Route::delete('/case-studies/{caseStudy}', [CaseStudyController::class, 'destroy'])->name('case-studies.destroy');
     Route::post('/case-studies/{caseStudy}/toggle-status', [CaseStudyController::class, 'toggleStatus'])->name('case-studies.toggle-status');
+    Route::post('/case-studies/reorder', [CaseStudyController::class, 'reorder'])
+        ->middleware('check-permission:case-studies.reorder')
+        ->name('case-studies.reorder');
 
     // Testimonials routes
     Route::get('/testimonials', [TestimonialController::class, 'index'])->name('testimonials.index');

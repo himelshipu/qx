@@ -23,7 +23,11 @@
 			@csrf
 			@method('PUT')
 
-			@include('backend.pages.case-studies._form')
+			@include('backend.pages.case-studies._form', [
+				'caseStudy' => $caseStudy,
+				'initialCoverPreview' => $initialCoverPreview,
+				'nextSortOrder' => null,
+			])
 
 			<div
 				class="flex flex-col-reverse gap-3 border-t border-gray-200 pt-5 sm:flex-row sm:justify-end dark:border-gray-800">
