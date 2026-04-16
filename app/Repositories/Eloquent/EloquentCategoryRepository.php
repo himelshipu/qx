@@ -8,6 +8,7 @@ use App\Models\Category;
 use App\Repositories\Contracts\CategoryRepositoryInterface;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
 
 /**
@@ -64,14 +65,6 @@ class EloquentCategoryRepository implements CategoryRepositoryInterface
                 'linked'   => $linked,
             ];
         });
-    }
-
-    /**
-     * Get next sort order value.
-     */
-    public function getNextSortOrder(): int
-    {
-        return (int) Category::max('sort_order') + 1;
     }
 
     /**
@@ -155,14 +148,16 @@ class EloquentCategoryRepository implements CategoryRepositoryInterface
      * @param int $limit Maximum number of featured categories to retrieve
      * @return \Illuminate\Database\Eloquent\Collection
      */
-    public function getFeaturedCategories(int $limit = 10): Collection
+    public function getFeaturedCategories(?int $limit = null): Collection
     {
+        $resolvedLimit = $limit ?? (int) config('category.max_featured', 20);
+
         return Category::query()
             ->select(['id', 'name', 'slug', 'icon_path', 'image_path', 'featured_order'])
             ->featured()
             ->active()
             ->orderBy('featured_order')
-            ->limit($limit)
+            ->limit($resolvedLimit)
             ->get();
     }
 
@@ -185,6 +180,75 @@ class EloquentCategoryRepository implements CategoryRepositoryInterface
     }
 
     /**
+     * Count how many provided IDs are currently featured.
+     *
+     * @param array<int> $categoryIds
+     */
+    public function countFeaturedByIds(array $categoryIds): int
+    {
+        return Category::query()
+            ->whereIn('id', $categoryIds)
+            ->featured()
+            ->count();
+    }
+
+    /**
+     * Increment featured_order for all featured categories.
+     */
+    public function incrementFeaturedOrder(?int $excludeCategoryId = null): void
+    {
+        Category::query()
+            ->featured()
+            ->when($excludeCategoryId !== null, fn ($query) => $query->where('id', '!=', $excludeCategoryId))
+            ->increment('featured_order');
+    }
+
+    /**
+     * Mark a category as featured at a given priority.
+     */
+    public function markAsFeatured(Category $category, int $priority = 1): Category
+    {
+        $category->update([
+            'is_featured' => true,
+            'featured_order' => $priority,
+        ]);
+
+        $this->forgetDashboardCache();
+
+        return $category->refresh();
+    }
+
+    /**
+     * Remove featured state from a category.
+     */
+    public function unmarkFeatured(Category $category): Category
+    {
+        $category->update([
+            'is_featured' => false,
+            'featured_order' => null,
+        ]);
+
+        $this->forgetDashboardCache();
+
+        return $category->refresh();
+    }
+
+    /**
+     * Get featured category IDs ordered by featured_order.
+     *
+     * @return array<int>
+     */
+    public function getFeaturedCategoryIdsByPriority(): array
+    {
+        return Category::query()
+            ->featured()
+            ->orderBy('featured_order')
+            ->pluck('id')
+            ->map(fn ($id) => (int) $id)
+            ->all();
+    }
+
+    /**
      * Update featured order for categories.
      *
      * @param array<int> $categoryIds Ordered list of category IDs
@@ -192,11 +256,22 @@ class EloquentCategoryRepository implements CategoryRepositoryInterface
      */
     public function updateFeaturedOrder(array $categoryIds): void
     {
-        foreach ($categoryIds as $order => $categoryId) {
-            Category::where('id', $categoryId)->update([
-                'featured_order' => $order + 1
-            ]);
+        $normalizedIds = array_values(array_unique(array_map('intval', $categoryIds)));
+
+        if ($normalizedIds === []) {
+            return;
         }
+
+        $cases = [];
+        foreach ($normalizedIds as $order => $categoryId) {
+            $cases[] = 'WHEN ' . $categoryId . ' THEN ' . ($order + 1);
+        }
+
+        $caseSql = 'CASE id ' . implode(' ', $cases) . ' END';
+
+        Category::query()
+            ->whereIn('id', $normalizedIds)
+            ->update(['featured_order' => DB::raw($caseSql)]);
 
         $this->forgetDashboardCache();
     }

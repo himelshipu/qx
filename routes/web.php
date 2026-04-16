@@ -246,6 +246,7 @@ Route::prefix('dashboard')->name('dashboard.')->middleware(['auth', 'verified', 
     // Dashboard
     Route::get('/', [DashboardController::class, 'index'])->name('index');
     Route::get('/categories', [CategoryController::class, 'index'])->name('categories.index');
+    Route::get('/categories/table', [CategoryController::class, 'table'])->name('categories.table');
     Route::get('/categories/create', [CategoryController::class, 'create'])->name('categories.create');
     Route::post('/categories', [CategoryController::class, 'store'])->name('categories.store');
     Route::get('/categories/{category}/edit', [CategoryController::class, 'edit'])->name('categories.edit');

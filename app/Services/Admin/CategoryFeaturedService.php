@@ -13,12 +13,9 @@ use Illuminate\Support\Facades\DB;
  * Class CategoryFeaturedService
  *
  * Handles featured category management with priority ordering.
- * Maximum 10 featured categories enforced.
  */
 final class CategoryFeaturedService
 {
-    private const MAX_FEATURED = 10;
-
     public function __construct(
         private readonly CategoryRepositoryInterface $categoryRepository
     ) {}
@@ -30,11 +27,7 @@ final class CategoryFeaturedService
      */
     public function getFeaturedCategories(): Collection
     {
-        return Category::query()
-            ->where('is_featured', true)
-            ->where('is_active', true)
-            ->orderBy('featured_order')
-            ->get();
+        return $this->categoryRepository->getFeaturedCategories($this->maxFeatured());
     }
 
     /**
@@ -56,15 +49,8 @@ final class CategoryFeaturedService
         return DB::transaction(function () use ($category): array {
             // If already featured, move it to top priority.
             if ($category->is_featured) {
-                Category::query()
-                    ->where('is_featured', true)
-                    ->where('id', '!=', $category->id)
-                    ->increment('featured_order');
-
-                $category->update([
-                    'is_featured' => true,
-                    'featured_order' => 1,
-                ]);
+                $this->categoryRepository->incrementFeaturedOrder($category->id);
+                $this->categoryRepository->markAsFeatured($category, 1);
 
                 $this->updatePriorities();
 
@@ -79,25 +65,16 @@ final class CategoryFeaturedService
             $removedCategory = null;
 
             // If at max, remove the lowest priority (highest featured_order number)
-            if ($currentCount >= self::MAX_FEATURED) {
+            if ($currentCount >= $this->maxFeatured()) {
                 $removedCategory = $this->categoryRepository->getLowestPriorityFeatured();
                 if ($removedCategory) {
-                    $removedCategory->update([
-                        'is_featured' => false,
-                        'featured_order' => null,
-                    ]);
+                    $this->categoryRepository->unmarkFeatured($removedCategory);
                 }
             }
 
             // Shift existing featured categories down and place new one at top.
-            Category::query()
-                ->where('is_featured', true)
-                ->increment('featured_order');
-
-            $category->update([
-                'is_featured' => true,
-                'featured_order' => 1,
-            ]);
+            $this->categoryRepository->incrementFeaturedOrder();
+            $this->categoryRepository->markAsFeatured($category, 1);
 
             $this->updatePriorities();
 
@@ -119,13 +96,10 @@ final class CategoryFeaturedService
             return false;
         }
 
-        $category->update([
-            'is_featured'    => false,
-            'featured_order' => null
-        ]);
-
-        // Recalculate priorities
-        $this->updatePriorities();
+        DB::transaction(function () use ($category): void {
+            $this->categoryRepository->unmarkFeatured($category);
+            $this->updatePriorities();
+        });
 
         return true;
     }
@@ -139,27 +113,23 @@ final class CategoryFeaturedService
      */
     public function updateOrder(array $categoryIds): bool
     {
-        $normalizedIds = array_values(array_unique(array_map('intval', $categoryIds)));
+        $normalizedIds = array_values(array_filter(
+            array_unique(array_map('intval', $categoryIds)),
+            fn (int $id): bool => $id > 0
+        ));
 
         if ($normalizedIds === []) {
             return false;
         }
 
         // Verify all IDs are featured.
-        $featured = Category::whereIn('id', $normalizedIds)
-            ->where('is_featured', true)
-            ->count();
+        $featured = $this->categoryRepository->countFeaturedByIds($normalizedIds);
 
         if ($featured !== count($normalizedIds)) {
             return false;
         }
 
-        // Update featured_order based on array position
-        foreach ($normalizedIds as $order => $categoryId) {
-            Category::where('id', $categoryId)->update([
-                'featured_order' => $order + 1
-            ]);
-        }
+        $this->categoryRepository->updateFeaturedOrder($normalizedIds);
 
         return true;
     }
@@ -170,29 +140,18 @@ final class CategoryFeaturedService
      */
     public function updatePriorities(): void
     {
-        $featured = Category::query()
-            ->where('is_featured', true)
-            ->orderBy('featured_order')
-            ->get();
+        $featuredIds = $this->categoryRepository->getFeaturedCategoryIdsByPriority();
 
-        /** @var Category $category */
-        foreach ($featured as $order => $category) {
-            $category->update([
-                'featured_order' => $order + 1
-            ]);
+        if ($featuredIds === []) {
+            return;
         }
+
+        $this->categoryRepository->updateFeaturedOrder($featuredIds);
     }
 
     /**
      * Validate and get featured category by ID.
      */
-    public function getFeaturedById(int $categoryId): ?Category
-    {
-        return Category::where('id', $categoryId)
-            ->where('is_featured', true)
-            ->first();
-    }
-
     /**
      * Get modal payload with featured categories and stats.
      *
@@ -203,7 +162,25 @@ final class CategoryFeaturedService
         return [
             'featured' => $this->getFeaturedCategories(),
             'count' => $this->getFeaturedCount(),
-            'maxAllowed' => self::MAX_FEATURED
+            'maxAllowed' => $this->maxFeatured()
         ];
+    }
+
+    /**
+     * Search active categories for featured modal.
+     *
+     * @return Collection<int, Category>
+     */
+    public function searchCategories(string $query, int $limit = 20): Collection
+    {
+        return $this->categoryRepository->searchCategories($query, $limit);
+    }
+
+    /**
+     * Resolve max featured count from configuration.
+     */
+    private function maxFeatured(): int
+    {
+        return (int) config('category.max_featured', 20);
     }
 }

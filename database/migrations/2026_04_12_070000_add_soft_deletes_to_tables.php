@@ -39,13 +39,6 @@ return new class extends Migration
             });
         }
 
-        // Categories table
-        if (Schema::hasTable('categories') && !Schema::hasColumn('categories', 'deleted_at')) {
-            Schema::table('categories', function (Blueprint $table): void {
-                $table->softDeletes();
-            });
-        }
-
         // Reviews table
         if (Schema::hasTable('reviews') && !Schema::hasColumn('reviews', 'deleted_at')) {
             Schema::table('reviews', function (Blueprint $table): void {
@@ -114,10 +107,6 @@ return new class extends Migration
         });
 
         Schema::table('orders', function (Blueprint $table): void {
-            $table->dropSoftDeletes();
-        });
-
-        Schema::table('categories', function (Blueprint $table): void {
             $table->dropSoftDeletes();
         });
 

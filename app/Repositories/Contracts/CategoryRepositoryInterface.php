@@ -28,11 +28,6 @@ interface CategoryRepositoryInterface
     public function getStats(): array;
 
     /**
-     * Get next sort order value.
-     */
-    public function getNextSortOrder(): int;
-
-    /**
      * Create a category.
      *
      * @param array<string, mixed> $data
@@ -71,7 +66,7 @@ interface CategoryRepositoryInterface
      *
      * @return Collection<int, Category>
      */
-    public function getFeaturedCategories(int $limit = 10): Collection;
+    public function getFeaturedCategories(?int $limit = null): Collection;
 
     /**
      * Search categories by name/slug.
@@ -79,6 +74,36 @@ interface CategoryRepositoryInterface
      * @return Collection<int, Category>
      */
     public function searchCategories(string $query, int $limit = 50): Collection;
+
+    /**
+     * Count how many provided IDs are currently featured.
+     *
+     * @param array<int> $categoryIds
+     */
+    public function countFeaturedByIds(array $categoryIds): int;
+
+    /**
+     * Increment featured_order for all featured categories.
+     * Optionally skip one category ID.
+     */
+    public function incrementFeaturedOrder(?int $excludeCategoryId = null): void;
+
+    /**
+     * Mark a category as featured at a given priority.
+     */
+    public function markAsFeatured(Category $category, int $priority = 1): Category;
+
+    /**
+     * Remove featured state from a category.
+     */
+    public function unmarkFeatured(Category $category): Category;
+
+    /**
+     * Get featured category IDs ordered by featured_order.
+     *
+     * @return array<int>
+     */
+    public function getFeaturedCategoryIdsByPriority(): array;
 
     /**
      * Update featured_order for provided category ids.

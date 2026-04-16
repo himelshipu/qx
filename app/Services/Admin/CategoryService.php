@@ -39,18 +39,6 @@ final class CategoryService
     }
 
     /**
-     * Get next form defaults for create page.
-     *
-     * @return array{nextSortOrder:int}
-     */
-    public function getCreatePayload(): array
-    {
-        return [
-            'nextSortOrder' => $this->categoryRepository->getNextSortOrder()
-        ];
-    }
-
-    /**
      * Create a category.
      *
      * @param array<string, mixed> $validated
@@ -65,7 +53,6 @@ final class CategoryService
             'description'     => $this->nullableString($validated['description'] ?? null),
             'icon_path'       => $this->storeUploadedAsset($iconFile, 'categories/icons'),
             'image_path'      => $this->storeUploadedAsset($imageFile, 'categories/images'),
-            'sort_order'      => $validated['sort_order'] ?? $this->categoryRepository->getNextSortOrder(),
             'is_featured'     => $validated['is_featured'] ?? false,
             'featured_order'  => $validated['featured_order'] ?? null,
             'is_active'       => $isActive
@@ -104,7 +91,6 @@ final class CategoryService
             'description'     => $this->nullableString($validated['description'] ?? null),
             'icon_path'       => $iconPath,
             'image_path'      => $imagePath,
-            'sort_order'      => $validated['sort_order'] ?? $category->sort_order,
             'is_featured'     => $validated['is_featured'] ?? $category->is_featured,
             'featured_order'  => $validated['featured_order'] ?? $category->featured_order,
             'is_active'       => $isActive

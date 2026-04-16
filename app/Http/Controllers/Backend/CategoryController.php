@@ -23,11 +23,27 @@ class CategoryController extends Controller
      */
     public function index(Request $request): View
     {
-        $search = trim((string) $request->string('q', ''));
-        $status = (string) $request->string('status', 'all');
-        $featured = (string) $request->string('featured', 'all');
+        [$search, $status, $featured] = $this->resolveFilters($request);
 
         return view('backend.pages.categories.index', $this->categoryService->getListingPayload($search, $status, $featured));
+    }
+
+    /**
+     * Return only dashboard category table HTML for faster filter updates.
+     */
+    public function table(Request $request): JsonResponse
+    {
+        [$search, $status, $featured] = $this->resolveFilters($request);
+        $payload = $this->categoryService->getListingPayload($search, $status, $featured);
+
+        $html = view('backend.pages.categories._results', [
+            'categories' => $payload['categories'],
+        ])->render();
+
+        return response()->json([
+            'success' => true,
+            'html' => $html,
+        ]);
     }
 
     /**
@@ -35,7 +51,9 @@ class CategoryController extends Controller
      */
     public function create(): View
     {
-        return view('backend.pages.categories.create', $this->categoryService->getCreatePayload());
+        return view('backend.pages.categories.create', [
+            'maxFeatured' => (int) config('category.max_featured', 20),
+        ]);
     }
 
     /**
@@ -60,7 +78,10 @@ class CategoryController extends Controller
      */
     public function edit(Category $category): View
     {
-        return view('backend.pages.categories.edit', compact('category'));
+        return view('backend.pages.categories.edit', [
+            'category' => $category,
+            'maxFeatured' => (int) config('category.max_featured', 20),
+        ]);
     }
 
     /**
@@ -111,6 +132,20 @@ class CategoryController extends Controller
             'message'   => 'Category status updated successfully.',
             'is_active' => $isActive
         ]);
+    }
+
+    /**
+     * Resolve category dashboard filters from the request.
+     *
+     * @return array{0:string,1:string,2:string}
+     */
+    private function resolveFilters(Request $request): array
+    {
+        $search = trim((string) $request->string('q', ''));
+        $status = (string) $request->string('status', 'all');
+        $featured = (string) $request->string('featured', 'all');
+
+        return [$search, $status, $featured];
     }
 
 }

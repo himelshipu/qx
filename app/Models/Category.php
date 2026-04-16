@@ -19,7 +19,6 @@ class Category extends Model
         'icon_path',
         'image_path',
         'is_active',
-        'sort_order',
         'is_featured',
         'featured_order'
     ];
@@ -77,7 +76,6 @@ class Category extends Model
             'icon_path',
             'image_path',
             'is_active',
-            'sort_order',
             'is_featured',
             'featured_order',
             'updated_at',
@@ -132,7 +130,7 @@ class Category extends Model
      */
     public function scopeDashboardOrder(Builder $query): Builder
     {
-        return $query->orderBy('sort_order')->orderBy('name');
+        return $query->orderBy('name');
     }
 
     public function influencers(): BelongsToMany

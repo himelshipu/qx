@@ -6,7 +6,8 @@ import flatpickr from "flatpickr";
 import "flatpickr/dist/flatpickr.min.css";
 import "./conversation";
 import "./stripe/payment";
-import "./pages/backend/categories/index";
+import "./admin/categories-dashboard";
+import "./admin/category-form";
 
 Alpine.plugin(collapse);
 

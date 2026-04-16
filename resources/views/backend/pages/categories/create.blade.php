@@ -23,7 +23,7 @@
 			class="space-y-6 p-5">
 			@csrf
 
-			@include('backend.pages.categories._form', ['nextSortOrder' => $nextSortOrder])
+			@include('backend.pages.categories._form', ['category' => null, 'maxFeatured' => $maxFeatured])
 
 			<div
 				class="flex flex-col-reverse gap-3 border-t border-gray-200 pt-5 sm:flex-row sm:justify-end dark:border-gray-800">
@@ -38,36 +38,4 @@
 			</div>
 		</form>
 	</div>
-
-	@push('scripts')
-		<script>
-			(function() {
-				const nameInput = document.getElementById('name');
-				const slugInput = document.getElementById('slug');
-
-				if (!nameInput || !slugInput) {
-					return;
-				}
-
-				let slugTouched = slugInput.value.trim() !== '';
-
-				slugInput.addEventListener('input', () => {
-					slugTouched = true;
-				});
-
-				nameInput.addEventListener('input', (event) => {
-					if (slugTouched && slugInput.value.trim() !== '') {
-						return;
-					}
-
-					slugInput.value = event.target.value
-						.toLowerCase()
-						.trim()
-						.replace(/[^a-z0-9\s-]/g, '')
-						.replace(/\s+/g, '-')
-						.replace(/-+/g, '-');
-				});
-			})();
-		</script>
-	@endpush
 @endsection

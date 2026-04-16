@@ -38,7 +38,6 @@ class CategorySeeder extends Seeder
                 'is_active' => true,
                 'is_featured' => $index < 6,
                 'featured_order' => $index + 1,
-                'sort_order' => $index + 1,
                 'created_at' => now(),
                 'updated_at' => now(),
             ];

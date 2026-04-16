@@ -24,7 +24,7 @@
 			@csrf
 			@method('PUT')
 
-			@include('backend.pages.categories._form', ['category' => $category])
+			@include('backend.pages.categories._form', ['category' => $category, 'maxFeatured' => $maxFeatured])
 
 			<div
 				class="flex flex-col-reverse gap-3 border-t border-gray-200 pt-5 sm:flex-row sm:justify-end dark:border-gray-800">

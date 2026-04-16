@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Backend;
 use App\Http\Controllers\Controller;
 use App\Models\Category;
 use App\Services\Admin\CategoryFeaturedService;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -24,15 +25,7 @@ class CategoryFeaturedController extends Controller
         return response()->json([
             'success' => true,
             'data' => [
-                'featured' => $payload['featured']->map(function ($category) {
-                    return [
-                        'id' => $category->id,
-                        'name' => $category->name,
-                        'priority' => $category->featured_order,
-                        'icon_path' => $category->icon_path,
-                        'image_path' => $category->image_path,
-                    ];
-                }),
+                'featured' => $this->mapCategoryCollection($payload['featured']),
                 'count' => $payload['count'],
                 'maxAllowed' => $payload['maxAllowed']
             ]
@@ -53,15 +46,7 @@ class CategoryFeaturedController extends Controller
                 'id' => $result['removedCategory']->id,
                 'name' => $result['removedCategory']->name,
             ] : null,
-            'featured' => $this->featuredService->getFeaturedCategories()->map(function ($cat) {
-                return [
-                    'id' => $cat->id,
-                    'name' => $cat->name,
-                    'priority' => $cat->featured_order,
-                    'icon_path' => $cat->icon_path,
-                    'image_path' => $cat->image_path,
-                ];
-            })
+            'featured' => $this->mapCategoryCollection($this->featuredService->getFeaturedCategories())
         ]);
     }
 
@@ -82,15 +67,7 @@ class CategoryFeaturedController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Category removed from featured list.',
-            'featured' => $this->featuredService->getFeaturedCategories()->map(function ($cat) {
-                return [
-                    'id' => $cat->id,
-                    'name' => $cat->name,
-                    'priority' => $cat->featured_order,
-                    'icon_path' => $cat->icon_path,
-                    'image_path' => $cat->image_path,
-                ];
-            })
+            'featured' => $this->mapCategoryCollection($this->featuredService->getFeaturedCategories())
         ]);
     }
 
@@ -116,15 +93,7 @@ class CategoryFeaturedController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Featured categories reordered successfully.',
-            'featured' => $this->featuredService->getFeaturedCategories()->map(function ($cat) {
-                return [
-                    'id' => $cat->id,
-                    'name' => $cat->name,
-                    'priority' => $cat->featured_order,
-                    'icon_path' => $cat->icon_path,
-                    'image_path' => $cat->image_path,
-                ];
-            })
+            'featured' => $this->mapCategoryCollection($this->featuredService->getFeaturedCategories())
         ]);
     }
 
@@ -134,37 +103,47 @@ class CategoryFeaturedController extends Controller
     public function searchCategories(Request $request): JsonResponse
     {
         $query = trim((string) $request->string('q', ''));
+        $minLength = (int) config('category.search_min_length', 2);
 
-        if (strlen($query) < 2) {
+        if (strlen($query) < $minLength) {
             return response()->json([
                 'success' => false,
-                'message' => 'Query must be at least 2 characters.',
+                'message' => 'Query must be at least ' . $minLength . ' characters.',
                 'results' => []
             ]);
         }
 
-        $categories = Category::where('is_active', true)
-            ->where(function ($q) use ($query) {
-                $q->where('name', 'like', '%' . $query . '%')
-                  ->orWhere('slug', 'like', '%' . $query . '%');
-            })
-            ->orderBy('name')
-            ->limit(20)
-            ->get();
+        $categories = $this->featuredService->searchCategories($query, 20);
 
         return response()->json([
             'success' => true,
-            'results' => $categories->map(function ($category) {
-                return [
-                    'id' => $category->id,
-                    'name' => $category->name,
-                    'slug' => $category->slug,
-                    'is_featured' => (bool) $category->is_featured,
-                    'priority' => $category->featured_order,
-                    'icon_path' => $category->icon_path,
-                    'image_path' => $category->image_path,
-                ];
-            })
+            'results' => $this->mapCategoryCollection($categories)
         ]);
+    }
+
+    /**
+     * Transform a category collection for featured responses.
+     */
+    private function mapCategoryCollection(Collection $categories): array
+    {
+        return $categories->map(fn (Category $category) => $this->mapCategory($category))->all();
+    }
+
+    /**
+     * Transform a category model to API payload.
+     *
+     * @return array{id:int,name:string,slug:string,is_featured:bool,priority:int|null,icon_path:string|null,image_path:string|null}
+     */
+    private function mapCategory(Category $category): array
+    {
+        return [
+            'id' => (int) $category->id,
+            'name' => (string) $category->name,
+            'slug' => (string) $category->slug,
+            'is_featured' => (bool) $category->is_featured,
+            'priority' => $category->featured_order,
+            'icon_path' => $category->icon_path,
+            'image_path' => $category->image_path,
+        ];
     }
 }

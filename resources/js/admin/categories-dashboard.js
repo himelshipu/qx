@@ -1,4 +1,4 @@
-import { createDashboardSortable } from "../../../modules/sortable/dashboard-sortable";
+import { createDashboardSortable } from "../shared/sortable";
 
 const ROOT_SELECTOR = "#categories-dashboard";
 
@@ -32,7 +32,9 @@ class CategoriesDashboardPage {
         this.featuredListSortable = null;
 
         this.csrfToken = root.dataset.csrfToken || "";
+        this.maxFeatured = Number.parseInt(root.dataset.maxFeatured || "20", 10);
         this.routes = {
+            filterResults: root.dataset.filterResultsRoute || "",
             statusToggleTemplate: root.dataset.statusToggleTemplate || "",
             featuredAddTemplate: root.dataset.featuredAddTemplate || "",
             featuredRemoveTemplate: root.dataset.featuredRemoveTemplate || "",
@@ -168,8 +170,12 @@ class CategoriesDashboardPage {
     }
 
     async applyFilters(explicitUrl = null) {
-        const query = this.buildQueryString();
-        const requestUrl = explicitUrl || `${this.form.action}${query ? `?${query}` : ""}`;
+        const query = explicitUrl
+            ? new URL(explicitUrl, window.location.origin).searchParams.toString()
+            : this.buildQueryString();
+
+        const requestUrl = `${this.form.action}${query ? `?${query}` : ""}`;
+        const resultsUrl = `${this.routes.filterResults}${query ? `?${query}` : ""}`;
 
         if (this.activeRequestController) {
             this.activeRequestController.abort();
@@ -178,22 +184,27 @@ class CategoriesDashboardPage {
         this.activeRequestController = new AbortController();
 
         try {
-            const response = await fetch(requestUrl, {
+            const response = await fetch(resultsUrl, {
                 headers: {
                     "X-Requested-With": "XMLHttpRequest",
+                    Accept: "application/json",
                 },
                 signal: this.activeRequestController.signal,
             });
 
-            const html = await response.text();
-            const parser = new DOMParser();
-            const doc = parser.parseFromString(html, "text/html");
+            if (!response.ok) {
+                throw new Error("Failed to load category table");
+            }
 
-            const newResults = doc.getElementById(this.resultsId);
+            const data = await response.json();
+            if (!data.success || typeof data.html !== "string") {
+                throw new Error("Invalid category table payload");
+            }
+
             const currentResults = document.getElementById(this.resultsId);
 
-            if (newResults && currentResults) {
-                currentResults.outerHTML = newResults.outerHTML;
+            if (currentResults) {
+                currentResults.outerHTML = data.html;
                 window.history.replaceState({}, "", requestUrl);
             }
         } catch (error) {
@@ -322,6 +333,10 @@ class CategoriesDashboardPage {
                 throw new Error(data.message || "Failed to load featured categories");
             }
 
+            if (Number.isInteger(data.data?.maxAllowed)) {
+                this.maxFeatured = data.data.maxAllowed;
+            }
+
             this.renderFeaturedList(data.data.featured, data.data.count);
         } catch (error) {
             console.error(error);
@@ -348,11 +363,11 @@ class CategoriesDashboardPage {
         featured.forEach((category) => {
             const li = document.createElement("li");
             li.className =
-                "flex items-center gap-3 p-2.5 transition hover:bg-gray-100 dark:hover:bg-gray-700/50";
+                "flex cursor-move items-center gap-3 p-2.5 transition hover:bg-gray-100 dark:hover:bg-gray-700/50";
             li.dataset.categoryId = category.id;
 
             li.innerHTML = `
-                <div class="dashboard-sortable-handle shrink-0 cursor-grab active:cursor-grabbing" title="Drag to reorder">
+                <div class="shrink-0 text-gray-400" title="Drag to reorder">
                     <svg class="h-4 w-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
                         <path d="M8 5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM8 12a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM8 19a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM14 5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM14 12a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM14 19a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z"></path>
                     </svg>
@@ -383,7 +398,6 @@ class CategoriesDashboardPage {
         }
 
         this.featuredListSortable = createDashboardSortable(this.featuredList, {
-            handle: ".dashboard-sortable-handle",
             onEnd: async () => {
                 const rawIds = Array.from(
                     this.featuredList.querySelectorAll("[data-category-id]"),
@@ -422,11 +436,11 @@ class CategoriesDashboardPage {
                 this.searchResults.classList.remove("hidden");
                 return;
             }
-
+                        "flex cursor-move items-center gap-3 p-2.5 transition hover:bg-gray-100 dark:hover:bg-gray-700/50";
             this.searchResults.innerHTML = data.results
                 .map(
                     (category) => `
-                    <div class="flex cursor-pointer items-center justify-between p-2 hover:bg-gray-100 dark:hover:bg-gray-700">
+                        <div class="shrink-0 text-gray-400" title="Drag to reorder">
                         <div class="flex-1">
                             <p class="text-sm font-medium text-gray-900 dark:text-white">${category.name}</p>
                             <p class="text-xs text-gray-500 dark:text-gray-400">${category.is_featured ? "Already featured" : "Not featured"}</p>
@@ -473,7 +487,7 @@ class CategoriesDashboardPage {
 
             if (data.removedCategory && window.toast) {
                 window.toast.info(
-                    `Removed "${data.removedCategory.name}" (max 10 featured categories)`,
+                    `Removed "${data.removedCategory.name}" (max ${this.maxFeatured} featured categories)`,
                 );
             }
 

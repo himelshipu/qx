@@ -1,15 +1,6 @@
-@php
-	/** @var \App\Models\Category|null $category */
-	$category = $category ?? null;
-	$resolvedSortOrder = old('sort_order', $category?->sort_order ?? ($nextSortOrder ?? 1));
-
-	$initialIconPreview = $category?->icon_path ? \App\Helpers\ImageHelper::url($category->icon_path) : null;
-	$initialImagePreview = $category?->image_path ? \App\Helpers\ImageHelper::url($category->image_path) : null;
-@endphp
-
 <div x-data="categoryUploader({
-    iconPreview: @js($initialIconPreview),
-    imagePreview: @js($initialImagePreview)
+    iconPreview: @js(($category?->icon_path ?? null) ? \App\Helpers\ImageHelper::url($category->icon_path) : null),
+    imagePreview: @js(($category?->image_path ?? null) ? \App\Helpers\ImageHelper::url($category->image_path) : null)
 })" class="grid grid-cols-1 gap-6 lg:grid-cols-3">
 	<div class="space-y-5 lg:col-span-2">
 		<div>
@@ -96,7 +87,7 @@
 				<label for="image_file"
 					class="flex cursor-pointer flex-col items-center justify-center rounded-lg border border-dashed border-gray-300 px-4 py-6 text-center transition hover:border-gray-400 dark:border-gray-600 dark:hover:border-gray-500">
 					<template x-if="imagePreview">
-						<img :src="imagePreview" alt="Image preview" class="mb-3 h-20 w-full max-w-[180px] rounded object-cover">
+						<img :src="imagePreview" alt="Image preview" class="mb-3 h-20 w-full max-w-45 rounded object-cover">
 					</template>
 					<template x-if="!imagePreview">
 						<div class="mb-3 flex h-16 w-16 items-center justify-center rounded-lg bg-gray-100 dark:bg-gray-800">
@@ -121,15 +112,6 @@
 
 	<div class="space-y-5 rounded-xl border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800/50">
 		<h4 class="text-sm font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-300">Display and Ordering</h4>
-
-		<div>
-			<label for="sort_order" class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Sort Order</label>
-			<input id="sort_order" name="sort_order" type="number" min="0" value="{{ $resolvedSortOrder }}"
-				class="h-11 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-900 focus:border-gray-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white">
-			@error('sort_order')
-				<p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
-			@enderror
-		</div>
 
 		<div class="rounded-lg border border-gray-200 bg-white px-3 py-3 dark:border-gray-700 dark:bg-gray-900">
 			<input type="hidden" name="is_active" value="0">
@@ -159,11 +141,11 @@
 
 			<div x-show="isFeatured" class="mt-3 border-t border-gray-200 pt-3 dark:border-gray-700">
 				<label for="featured_order" class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Featured Order <span class="text-red-500">*</span></label>
-				<input id="featured_order" name="featured_order" type="number" min="1" max="4" 
+				<input id="featured_order" name="featured_order" type="number" min="1" max="{{ $maxFeatured }}" 
 					value="{{ old('featured_order', $category?->featured_order) }}"
-					placeholder="1-4"
+					placeholder="1-{{ $maxFeatured }}"
 					class="h-11 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-900 focus:border-gray-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white">
-				<p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Position 1-4 in featured section (1 = first)</p>
+				<p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Position 1-{{ $maxFeatured }} in featured section (1 = first)</p>
 				@error('featured_order')
 					<p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
 				@enderror
@@ -171,81 +153,3 @@
 		</div>
 	</div>
 </div>
-
-@once
-	@push('scripts')
-		<script>
-			function categoryUploader(config) {
-				return {
-					iconPreview: config.iconPreview || null,
-					imagePreview: config.imagePreview || null,
-					iconFileName: '',
-					imageFileName: '',
-					iconClientError: '',
-					imageClientError: '',
-
-					onIconSelected(event) {
-						this.iconClientError = '';
-						const file = event.target.files[0];
-
-						if (!file) {
-							return;
-						}
-
-						const extension = (file.name.split('.').pop() || '').toLowerCase();
-						const isSvg = extension === 'svg' || file.type === 'image/svg+xml';
-
-						if (!isSvg) {
-							this.iconClientError = 'Icon must be an SVG file.';
-							this.clearIcon();
-							return;
-						}
-
-						this.iconFileName = file.name;
-						this.iconPreview = URL.createObjectURL(file);
-					},
-
-					onImageSelected(event) {
-						this.imageClientError = '';
-						const file = event.target.files[0];
-
-						if (!file) {
-							return;
-						}
-
-						const extension = (file.name.split('.').pop() || '').toLowerCase();
-						const allowedExtensions = ['jpg', 'jpeg', 'png', 'webp', 'avif', 'gif'];
-						const isSvg = extension === 'svg' || file.type === 'image/svg+xml';
-
-						if (isSvg || !allowedExtensions.includes(extension)) {
-							this.imageClientError = 'Image must be JPG, PNG, WEBP, AVIF, or GIF.';
-							this.clearImage();
-							return;
-						}
-
-						this.imageFileName = file.name;
-						this.imagePreview = URL.createObjectURL(file);
-					},
-
-					clearIcon() {
-						this.iconClientError = '';
-						this.iconFileName = '';
-						this.iconPreview = config.iconPreview || null;
-						if (this.$refs.iconInput) {
-							this.$refs.iconInput.value = '';
-						}
-					},
-
-					clearImage() {
-						this.imageClientError = '';
-						this.imageFileName = '';
-						this.imagePreview = config.imagePreview || null;
-						if (this.$refs.imageInput) {
-							this.$refs.imageInput.value = '';
-						}
-					}
-				};
-			}
-		</script>
-	@endpush
-@endonce
