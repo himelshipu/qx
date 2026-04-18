@@ -2,9 +2,10 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Str;
 
 class StaticPage extends Model
@@ -35,7 +36,7 @@ class StaticPage extends Model
     /**
      * Scope to get only active pages.
      */
-    public function scopeActive($query)
+    public function scopeActive(Builder $query): Builder
     {
         return $query->where('is_active', true);
     }
@@ -43,7 +44,7 @@ class StaticPage extends Model
     /**
      * Scope to get pages by slug.
      */
-    public function scopeBySlug($query, $slug)
+    public function scopeBySlug(Builder $query, string $slug): Builder
     {
         return $query->where('slug', $slug);
     }
@@ -51,11 +52,47 @@ class StaticPage extends Model
     /**
      * Scope to filter by search term.
      */
-    public function scopeSearch($query, $term)
+    public function scopeSearch(Builder $query, string $term): Builder
     {
-        return $query->where('title', 'like', "%{$term}%")
-            ->orWhere('slug', 'like', "%{$term}%")
-            ->orWhere('content', 'like', "%{$term}%");
+        $term = trim($term);
+        if ($term === '') {
+            return $query;
+        }
+
+        return $query->where(function (Builder $builder) use ($term): void {
+            $builder->where('title', 'like', "%{$term}%")
+                ->orWhere('slug', 'like', "%{$term}%")
+                ->orWhere('content', 'like', "%{$term}%");
+        });
+    }
+
+    public function scopeForDashboard(Builder $query): Builder
+    {
+        return $query->select([
+            'id',
+            'title',
+            'slug',
+            'content',
+            'meta_description',
+            'meta_keywords',
+            'is_active',
+            'updated_at',
+            'created_at',
+        ]);
+    }
+
+    public function scopeDashboardStatus(Builder $query, string $status): Builder
+    {
+        return match ($status) {
+            'published' => $query->where('is_active', true),
+            'draft' => $query->where('is_active', false),
+            default => $query,
+        };
+    }
+
+    public function scopeDashboardOrder(Builder $query): Builder
+    {
+        return $query->orderByDesc('updated_at')->orderByDesc('id');
     }
 
     /**

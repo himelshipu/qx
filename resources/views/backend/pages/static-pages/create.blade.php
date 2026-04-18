@@ -22,12 +22,7 @@
 			class="space-y-6 p-5">
 			@csrf
 
-			@include('backend.pages.static-pages.form', [
-				'page' => new App\Models\StaticPage(),
-				'action' => route('dashboard.static-pages.store'),
-				'method' => 'POST',
-				'submitButtonText' => 'Create Page'
-			])
+			@include('backend.pages.static-pages._form', ['page' => $page])
 
 			<div
 				class="flex flex-col-reverse gap-3 border-t border-gray-200 pt-5 sm:flex-row sm:justify-end dark:border-gray-800">

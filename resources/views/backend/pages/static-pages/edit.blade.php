@@ -9,7 +9,7 @@
 		<div
 			class="flex flex-col gap-4 border-b border-gray-200 p-5 sm:flex-row sm:items-center sm:justify-between dark:border-gray-800">
 			<div>
-				<h3 class="text-lg font-semibold text-gray-900 dark:text-white">Edit: {{ $page->title }}</h3>
+				<h3 class="text-lg font-semibold text-gray-900 dark:text-white">Edit: {{ data_get($page, 'title', 'Static Page') }}</h3>
 				<p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Update page content and settings.</p>
 			</div>
 			<a href="{{ route('dashboard.static-pages.index') }}"
@@ -23,12 +23,7 @@
 			@csrf
 			@method('PUT')
 
-			@include('backend.pages.static-pages.form', [
-				'page' => $page,
-				'action' => route('dashboard.static-pages.update', $page),
-				'method' => 'PUT',
-				'submitButtonText' => 'Save Changes'
-			])
+			@include('backend.pages.static-pages._form', ['page' => $page])
 
 			<div
 				class="flex flex-col-reverse gap-3 border-t border-gray-200 pt-5 sm:flex-row sm:justify-end dark:border-gray-800">

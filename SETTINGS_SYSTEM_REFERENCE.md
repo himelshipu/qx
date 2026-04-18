@@ -20,6 +20,8 @@ app/
           UpdateEmailSettingRequest.php
           UpdatePlatformSettingRequest.php
           UpdateFooterSettingRequest.php
+          UpdateFooterOrderSettingRequest.php
+          RestoreSettingEntityRequest.php
   Models/
     Setting.php
   Repositories/
@@ -71,8 +73,8 @@ Rules:
 
 1. Controller orchestrates request parsing, form validation, and response formatting.
 2. Service owns business operations: data composition, transformation, and section-specific logic.
-3. Repository owns data persistence, caching, and file URL generation.
-4. Model owns static helper methods (existing).
+3. Repository owns data persistence, caching, query access, and restore operations.
+4. Model owns relationships/scopes/helpers only; avoid static query helpers in controller.
 5. FormRequest owns validation rules and config-bound limits.
 
 ### 2.2 Blade and JS Pattern
@@ -83,7 +85,7 @@ Rules:
 2. index.blade.php contains tab navigation and includes partial sections.
 3. Each tab form is inline with separate route targets.
 4. settings-dashboard.js handles file preview updates and sortable functionality.
-5. All derived values pre-computed in controller, passed to view.
+5. All derived values are pre-computed in service and passed from controller.
 
 ### 2.3 Request Validation Pattern
 
@@ -93,6 +95,8 @@ Use section-specific FormRequest classes:
 2. UpdateEmailSettingRequest
 3. UpdatePlatformSettingRequest
 4. UpdateFooterSettingRequest
+5. UpdateFooterOrderSettingRequest
+6. RestoreSettingEntityRequest
 
 Rules:
 
@@ -118,9 +122,11 @@ Service handles:
 1. Branding settings assembly (logo_light, logo_dark, favicon, site_name, tagline).
 2. Email settings assembly (mailer, host, port, encryption, username, password, from_*).
 3. Platform settings assembly (charge_type, charge_value).
-4. Footer settings assembly (ordered page IDs).
-5. Footer page reordering with JSON order normalization.
-6. Update operations delegated to repository.
+4. Footer settings assembly (ordered page IDs + sorted StaticPage list).
+5. Recovery list assembly from soft-deleted model sources.
+6. Footer page reordering with JSON order normalization.
+7. Restore operation orchestration for recovery entities.
+8. Update operations delegated to repository.
 
 ### 2.6 Configuration Pattern
 
@@ -225,13 +231,14 @@ All validation rules reference config keys, not hard-coded values.
 3. Never use raw PHP blocks in Blade (@php forbidden).
 4. Never bypass service and repository layers from controllers.
 5. Never hard-code limits that belong in config/settings.php.
+6. Never run direct model queries in SettingsController.
 
 ### 5.2 Implementation Sequence (Must Follow in Order)
 
 1. Create config/settings.php with all section constraints.
 2. Create SettingRepositoryInterface and EloquentSettingRepository.
 3. Create SettingService with section-specific methods.
-4. Create FormRequest classes for each section (UpdateBrandingSetting, etc.).
+4. Create FormRequest classes for each section and action (including reorder/restore).
 5. Create SettingsController with index + update methods per section.
 6. Create Blade index view with tab navigation and section forms.
 7. Create JS module for file preview and sortable interactions.
@@ -252,6 +259,7 @@ Do not mark task complete unless all checks pass:
 7. FormRequest classes validate against config values.
 8. SettingService is injected into controller constructor.
 9. SettingRepositoryInterface is bound in RepositoryServiceProvider.
+10. SettingsController has no direct model query logic.
 
 ## 6) File Uploads and Storage
 
@@ -318,9 +326,11 @@ A module is not complete unless all items below are done.
 - [ ] No raw PHP blocks in Blade.
 - [ ] All validation limits in config/settings.php.
 - [ ] FormRequest classes for each section.
+- [ ] FormRequest classes exist for reorder and restore actions.
 - [ ] SettingService with section-specific methods.
 - [ ] EloquentSettingRepository with caching.
 - [ ] SettingsController with index + update methods.
+- [ ] SettingsController contains no direct model queries.
 - [ ] Routes named dashboard.settings.*.
 - [ ] Tab navigation and section forms in index.blade.php.
 - [ ] JS module for file preview and sortable.

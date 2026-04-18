@@ -505,6 +505,7 @@ Route::prefix('dashboard')->name('dashboard.')->middleware(['auth', 'verified', 
 
     // Static Pages routes
     Route::get('/static-pages', [StaticPageController::class, 'index'])->name('static-pages.index');
+    Route::get('/static-pages/table', [StaticPageController::class, 'table'])->name('static-pages.table');
     Route::get('/static-pages/create', [StaticPageController::class, 'create'])->name('static-pages.create');
     Route::post('/static-pages', [StaticPageController::class, 'store'])->name('static-pages.store');
     Route::get('/static-pages/{staticPage}', [StaticPageController::class, 'show'])->name('static-pages.show');

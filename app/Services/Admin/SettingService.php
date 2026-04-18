@@ -1,18 +1,68 @@
 <?php
 
+declare (strict_types = 1);
+
 namespace App\Services\Admin;
 
+use App\Models\BlogPost;
+use App\Models\Brand;
+use App\Models\Campaign;
+use App\Models\CampaignApplication;
+use App\Models\CampaignAsset;
+use App\Models\CampaignInfluencer;
+use App\Models\CampaignTargetCountry;
+use App\Models\CampaignTargeting;
+use App\Models\CaseStudy;
+use App\Models\Category;
+use App\Models\Influencer;
+use App\Models\Notification;
+use App\Models\Order;
+use App\Models\Package;
+use App\Models\Payment;
+use App\Models\Payout;
+use App\Models\Review;
+use App\Models\Role;
+use App\Models\StaticPage;
+use App\Models\SupportTicket;
+use App\Models\Testimonial;
 use App\Repositories\Contracts\SettingRepositoryInterface;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
+use Throwable;
 
-class SettingService
+final class SettingService
 {
     public function __construct(
-        private SettingRepositoryInterface $repository,
-    ) {}
+        private readonly SettingRepositoryInterface $repository,
+    ) {
+    }
+
+    /**
+     * @return array{activeTab:string,pages:Collection<int,StaticPage>,footerPages:array<int,int>,brandingSettings:array<string,mixed>,emailSettings:array<string,mixed>,platformSettings:array<string,mixed>,recoveryItems:Collection<int,array<string,mixed>>}
+     */
+    public function getIndexPayload(string $activeTab): array
+    {
+        $resolvedTab = in_array($activeTab, ['branding', 'email', 'platform', 'footer', 'recovery'], true)
+            ? $activeTab
+            : 'branding';
+
+        $footerPageIds = $this->getFooterSettings();
+
+        return [
+            'activeTab' => $resolvedTab,
+            'pages' => $this->getOrderedFooterPages($footerPageIds),
+            'footerPages' => $footerPageIds,
+            'brandingSettings' => $this->getBrandingSettings(),
+            'emailSettings' => $this->getEmailSettings(),
+            'platformSettings' => $this->getPlatformSettings(),
+            'recoveryItems' => $this->buildRecoveryItems(),
+        ];
+    }
 
     /**
      * Get branding settings for display.
+     *
+     * @return array<string,mixed>
      */
     public function getBrandingSettings(): array
     {
@@ -27,6 +77,8 @@ class SettingService
 
     /**
      * Get email settings for display.
+     *
+     * @return array<string,mixed>
      */
     public function getEmailSettings(): array
     {
@@ -44,6 +96,8 @@ class SettingService
 
     /**
      * Get platform settings for display.
+     *
+     * @return array<string,mixed>
      */
     public function getPlatformSettings(): array
     {
@@ -54,15 +108,15 @@ class SettingService
     }
 
     /**
-     * Get footer pages settings for display.
+     * @return array<int,int>
      */
     public function getFooterSettings(): array
     {
-        return (array) $this->repository->get('footer_pages', []);
+        return array_values(array_map('intval', (array) $this->repository->get('footer_pages', [])));
     }
 
     /**
-     * Update branding settings.
+     * @param array<string,mixed> $data
      */
     public function updateBrandingSettings(array $data): bool
     {
@@ -76,7 +130,7 @@ class SettingService
     }
 
     /**
-     * Update email settings.
+     * @param array<string,mixed> $data
      */
     public function updateEmailSettings(array $data): bool
     {
@@ -93,7 +147,7 @@ class SettingService
     }
 
     /**
-     * Update platform settings.
+     * @param array<string,mixed> $data
      */
     public function updatePlatformSettings(array $data): bool
     {
@@ -104,22 +158,23 @@ class SettingService
     }
 
     /**
-     * Update footer pages settings.
+     * @param array<int,int|string> $selectedPages
      */
     public function updateFooterSettings(array $selectedPages, ?string $orderedPagesJson): bool
     {
-        $orderedPages = $selectedPages;
+        $normalizedSelected = array_values(array_unique(array_map('intval', $selectedPages)));
+        $orderedPages = $normalizedSelected;
 
         if (!empty($orderedPagesJson)) {
             $decoded = json_decode($orderedPagesJson, true);
             if (is_array($decoded)) {
-                $decoded = array_map('intval', $decoded);
-                $selectedMap = array_flip(array_map('intval', $selectedPages));
+                $decoded = array_values(array_unique(array_map('intval', $decoded)));
+                $selectedMap = array_flip($normalizedSelected);
                 $orderedPages = array_values(array_filter($decoded, fn ($id) => isset($selectedMap[$id])));
 
-                foreach ($selectedPages as $id) {
-                    if (!in_array((int) $id, $orderedPages, true)) {
-                        $orderedPages[] = (int) $id;
+                foreach ($normalizedSelected as $id) {
+                    if (!in_array($id, $orderedPages, true)) {
+                        $orderedPages[] = $id;
                     }
                 }
             }
@@ -129,26 +184,150 @@ class SettingService
     }
 
     /**
-     * Reorder footer pages.
+     * @param array<int,int|string> $pageIds
      */
     public function reorderFooterPages(array $pageIds): bool
     {
-        // Validate and normalize IDs
         $ids = array_values(array_filter(
             array_unique(array_map('intval', $pageIds)),
             fn (int $id): bool => $id > 0
         ));
 
-        // Save the new order
         return $this->repository->set('footer_pages', $ids);
     }
 
-    /**
-     * Get recovery items from all trashed models.
-     */
-    public function getRecoveryItems(int $limit = 100): Collection
+    public function restoreEntity(string $type, int $id): string
     {
-        // This will be handled by a separate RecoveryService, but kept here for reference
-        return collect();
+        $map = $this->getRecoveryModelMap();
+
+        if (!isset($map[$type])) {
+            throw new \RuntimeException('Unknown recovery type.');
+        }
+
+        $this->repository->restoreTrashedRecord($map[$type]['model'], $id);
+
+        return $map[$type]['label'] . ' restored successfully.';
+    }
+
+    /**
+     * @return array<string, array{label:string, model:class-string<Model>}>
+     */
+    public function getRecoveryModelMap(): array
+    {
+        return [
+            'blog-post' => ['label' => 'Blog Post', 'model' => BlogPost::class],
+            'static-page' => ['label' => 'Static Page', 'model' => StaticPage::class],
+            'brand' => ['label' => 'Brand', 'model' => Brand::class],
+            'influencer' => ['label' => 'Influencer', 'model' => Influencer::class],
+            'campaign' => ['label' => 'Campaign', 'model' => Campaign::class],
+            'campaign-application' => ['label' => 'Campaign Application', 'model' => CampaignApplication::class],
+            'campaign-asset' => ['label' => 'Campaign Asset', 'model' => CampaignAsset::class],
+            'campaign-influencer' => ['label' => 'Campaign Influencer', 'model' => CampaignInfluencer::class],
+            'campaign-target-country' => ['label' => 'Campaign Target Country', 'model' => CampaignTargetCountry::class],
+            'campaign-targeting' => ['label' => 'Campaign Targeting', 'model' => CampaignTargeting::class],
+            'package' => ['label' => 'Package', 'model' => Package::class],
+            'order' => ['label' => 'Order', 'model' => Order::class],
+            'category' => ['label' => 'Category', 'model' => Category::class],
+            'review' => ['label' => 'Review', 'model' => Review::class],
+            'testimonial' => ['label' => 'Testimonial', 'model' => Testimonial::class],
+            'case-study' => ['label' => 'Case Study', 'model' => CaseStudy::class],
+            'support-ticket' => ['label' => 'Support Ticket', 'model' => SupportTicket::class],
+            'payment' => ['label' => 'Payment', 'model' => Payment::class],
+            'payout' => ['label' => 'Payout', 'model' => Payout::class],
+            'notification' => ['label' => 'Notification', 'model' => Notification::class],
+            'role' => ['label' => 'Role', 'model' => Role::class],
+        ];
+    }
+
+    /**
+     * @return Collection<int,array<string,mixed>>
+     */
+    private function buildRecoveryItems(): Collection
+    {
+        $items = collect();
+        $limit = (int) config('settings.dashboard.max_recovery_items', 100);
+
+        foreach ($this->getRecoveryModelMap() as $type => $meta) {
+            try {
+                $records = $this->repository->getTrashedRecords($meta['model'], $limit);
+            } catch (Throwable $exception) {
+                continue;
+            }
+
+            foreach ($records as $record) {
+                $items->push([
+                    'type' => $type,
+                    'type_label' => $meta['label'],
+                    'id' => (int) $record->getKey(),
+                    'title' => $this->resolveRecoveryTitle($record),
+                    'identifier' => $this->resolveRecoveryIdentifier($record),
+                    'deleted_at' => $record->deleted_at,
+                ]);
+            }
+        }
+
+        return $items
+            ->sortByDesc(fn (array $item) => optional($item['deleted_at'])->timestamp ?? 0)
+            ->values();
+    }
+
+    /**
+     * @param array<int,int> $footerPageIds
+     * @return Collection<int,StaticPage>
+     */
+    private function getOrderedFooterPages(array $footerPageIds): Collection
+    {
+        $allPages = $this->repository->getAllStaticPages();
+
+        return $allPages
+            ->sortBy(function (StaticPage $page) use ($footerPageIds): int {
+                $position = array_search((int) $page->id, $footerPageIds, true);
+
+                return $position !== false ? $position : PHP_INT_MAX;
+            })
+            ->values();
+    }
+
+    private function resolveRecoveryTitle(Model $record): string
+    {
+        $candidates = [
+            'title',
+            'name',
+            'brand_name',
+            'display_name',
+            'subject',
+            'message',
+            'slug',
+            'id',
+        ];
+
+        foreach ($candidates as $key) {
+            $value = $record->getAttribute($key);
+            if (is_scalar($value) && trim((string) $value) !== '') {
+                return (string) $value;
+            }
+        }
+
+        return 'Record #' . $record->getKey();
+    }
+
+    private function resolveRecoveryIdentifier(Model $record): string
+    {
+        $candidates = [
+            'order_number',
+            'ticket_number',
+            'slug',
+            'email',
+            'status',
+        ];
+
+        foreach ($candidates as $key) {
+            $value = $record->getAttribute($key);
+            if (is_scalar($value) && trim((string) $value) !== '') {
+                return strtoupper(str_replace('_', ' ', $key)) . ': ' . (string) $value;
+            }
+        }
+
+        return 'ID: ' . $record->getKey();
     }
 }

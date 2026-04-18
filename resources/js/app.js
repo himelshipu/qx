@@ -20,6 +20,8 @@ import "./admin/testimonials-dashboard";
 import "./admin/users-dashboard";
 import "./admin/user-role-assignment";
 import "./admin/permission-assignment";
+import "./admin/static-page-form";
+import "./admin/static-pages-dashboard";
 
 Alpine.plugin(collapse);
 
