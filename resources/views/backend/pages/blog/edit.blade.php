@@ -24,7 +24,11 @@
                 'post' => $post,
                 'action' => route('dashboard.blogs.update', $post),
                 'method' => 'PUT',
-                'submitButtonText' => 'Save Changes'
+                'submitButtonText' => 'Save Changes',
+                'isPublished' => $post->is_published,
+                'isFeatured' => $post->is_featured,
+                'featuredImageUrl' => $post->featured_image_path ? asset('storage/' . $post->featured_image_path) : null,
+                'nextSortOrder' => $nextSortOrder ?? $post->sort_order
             ])
         </form>
     </div>

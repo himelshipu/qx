@@ -1,26 +1,29 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Backend;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Backend\Blog\StoreBlogPostRequest;
+use App\Http\Requests\Backend\Blog\UpdateBlogPostRequest;
 use App\Models\BlogPost;
+use App\Services\Admin\BlogPostService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
-use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class BlogController extends Controller
 {
-    public function __construct()
-    {
-        $this->middleware('permission:blogs.index')->only(['index']);
+    public function __construct(
+        private readonly BlogPostService $service
+    ) {
+        $this->middleware('permission:blogs.index')->only(['index', 'table']);
         $this->middleware('permission:blogs.create')->only(['create', 'store']);
         $this->middleware('permission:blogs.show')->only(['show']);
         $this->middleware('permission:blogs.edit')->only(['edit', 'update']);
-        $this->middleware('permission:blogs.toggle-status')->only(['toggleStatus']);
+        $this->middleware('permission:blogs.toggle-status')->only(['toggleStatus', 'toggleFeatured']);
         $this->middleware('permission:blogs.destroy')->only(['destroy']);
         $this->middleware('permission:blogs.restore')->only(['restore']);
     }
@@ -30,34 +33,28 @@ class BlogController extends Controller
         $search = trim((string) $request->string('q', ''));
         $status = (string) $request->string('status', 'all');
 
-        $postsQuery = BlogPost::with('author')->latest('published_at')->latest('updated_at');
+        $payload = $this->service->getListingPayload($search, $status);
+        $payload['posts']->appends([
+            'q' => $search,
+            'status' => $status,
+        ]);
 
-        if ($search !== '') {
-            $postsQuery->search($search);
-        }
+        return view('backend.pages.blog.index', $payload);
+    }
 
-        if ($status === 'published') {
-            $postsQuery->published();
-        } elseif ($status === 'draft') {
-            $postsQuery->where('is_published', false);
-        } elseif ($status === 'trashed') {
-            $postsQuery->onlyTrashed();
-        }
+    public function table(Request $request): View
+    {
+        $search = trim((string) $request->string('q', ''));
+        $status = (string) $request->string('status', 'all');
 
-        $posts = $postsQuery->paginate(12)->withQueryString();
+        $posts = $this->service->getListingPayload($search, $status)['posts'];
+        $posts->appends([
+            'q' => $search,
+            'status' => $status,
+        ]);
 
-        $stats = [
-            'total' => BlogPost::count(),
-            'published' => BlogPost::where('is_published', true)->count(),
-            'draft' => BlogPost::where('is_published', false)->count(),
-            'featured' => BlogPost::where('is_featured', true)->count(),
-            'trashed' => BlogPost::onlyTrashed()->count(),
-        ];
-
-        return view('backend.pages.blog.index', [
+        return view('backend.pages.blog._results', [
             'posts' => $posts,
-            'stats' => $stats,
-            'search' => $search,
             'status' => $status,
         ]);
     }
@@ -65,24 +62,20 @@ class BlogController extends Controller
     public function create(): View
     {
         return view('backend.pages.blog.create', [
-            'post' => new BlogPost(),
+            'post' => new BlogPost,
+            'nextSortOrder' => $this->service->getNextSortOrder(),
         ]);
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(StoreBlogPostRequest $request): RedirectResponse
     {
-        $validated = $this->validatePayload($request);
-        $validated['author_id'] = Auth::id();
-        $validated['slug'] = $this->makeSlug($validated['slug'] ?? '', $validated['title']);
-        $validated['is_published'] = $request->boolean('is_published');
-        $validated['is_featured'] = $request->boolean('is_featured');
-        $validated['published_at'] = $validated['is_published'] ? ($validated['published_at'] ?? now()) : null;
-
-        if ($request->hasFile('featured_image_file')) {
-            $validated['featured_image_path'] = $request->file('featured_image_file')->store('blog/posts', 'public');
-        }
-
-        $post = BlogPost::create($validated);
+        $post = $this->service->createBlogPost(
+            $request->validated(),
+            $request->boolean('is_published'),
+            $request->boolean('is_featured'),
+            $request->file('featured_image_file'),
+            (int) auth()->id()
+        );
 
         return redirect()
             ->route('dashboard.blogs.show', $post)
@@ -100,111 +93,75 @@ class BlogController extends Controller
     {
         return view('backend.pages.blog.edit', [
             'post' => $blogPost,
+            'nextSortOrder' => $this->service->getNextSortOrder(),
         ]);
     }
 
-    public function update(Request $request, BlogPost $blogPost): RedirectResponse
+    public function update(UpdateBlogPostRequest $request, BlogPost $blogPost): RedirectResponse
     {
-        $validated = $this->validatePayload($request, $blogPost);
-        $validated['slug'] = $this->makeSlug($validated['slug'] ?? '', $validated['title'], $blogPost->id);
-        $validated['is_published'] = $request->boolean('is_published');
-        $validated['is_featured'] = $request->boolean('is_featured');
-        $validated['published_at'] = $validated['is_published']
-            ? ($blogPost->published_at ?? now())
-            : null;
-
-        if ($request->hasFile('featured_image_file')) {
-            $this->deleteFromPublicDisk($blogPost->featured_image_path);
-            $validated['featured_image_path'] = $request->file('featured_image_file')->store('blog/posts', 'public');
-        }
-
-        $blogPost->update($validated);
+        $post = $this->service->updateBlogPost(
+            $blogPost,
+            $request->validated(),
+            $request->boolean('is_published'),
+            $request->boolean('is_featured'),
+            $request->file('featured_image_file')
+        );
 
         return redirect()
-            ->route('dashboard.blogs.show', $blogPost)
+            ->route('dashboard.blogs.show', $post)
             ->with('success', 'Blog post updated successfully.');
     }
 
     public function destroy(BlogPost $blogPost): RedirectResponse
     {
-        $blogPost->delete();
+        $title = $blogPost->title;
+        $this->service->deleteBlogPost($blogPost);
 
         return redirect()
             ->route('dashboard.blogs.index')
-            ->with('success', 'Blog post moved to trash.');
+            ->with('success', "Blog post '{$title}' moved to trash.");
     }
 
-    public function toggleStatus(BlogPost $blogPost): RedirectResponse
+    public function restore(int $id): RedirectResponse
     {
-        $blogPost->update([
-            'is_published' => ! $blogPost->is_published,
-            'published_at' => $blogPost->is_published ? null : ($blogPost->published_at ?? now()),
-        ]);
-
-        return redirect()
-            ->back()
-            ->with('success', $blogPost->is_published ? 'Blog post published.' : 'Blog post moved to draft.');
-    }
-
-    public function restore(string $slug): RedirectResponse
-    {
-        $blogPost = BlogPost::withTrashed()->where('slug', $slug)->firstOrFail();
-        $blogPost->restore();
+        $post = $this->service->restoreBlogPost($id);
 
         return redirect()
             ->route('dashboard.blogs.index', ['status' => 'trashed'])
-            ->with('success', 'Blog post restored successfully.');
+            ->with('success', "Blog post '{$post->title}' restored successfully.");
     }
 
-    private function validatePayload(Request $request, ?BlogPost $blogPost = null): array
+    public function toggleStatus(BlogPost $blogPost): JsonResponse|RedirectResponse
     {
-        return $request->validate([
-            'title' => ['required', 'string', 'max:255'],
-            'slug' => [
-                'nullable',
-                'string',
-                'max:255',
-                Rule::unique('blog_posts', 'slug')->ignore($blogPost?->id)->whereNull('deleted_at'),
-            ],
-            'excerpt' => ['nullable', 'string', 'max:1000'],
-            'content' => ['required', 'string'],
-            'featured_image_file' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
-            'meta_description' => ['nullable', 'string', 'max:500'],
-            'meta_keywords' => ['nullable', 'string', 'max:500'],
-            'is_published' => ['nullable', 'boolean'],
-            'is_featured' => ['nullable', 'boolean'],
-            'published_at' => ['nullable', 'date'],
-            'sort_order' => ['nullable', 'integer', 'min:0'],
-        ]);
+        $post = $this->service->toggleStatus($blogPost);
+
+        if (request()->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => $post->is_published ? 'Blog post published.' : 'Blog post moved to draft.',
+                'is_published' => (bool) $post->is_published,
+            ]);
+        }
+
+        return redirect()
+            ->back()
+            ->with('success', $post->is_published ? 'Blog post published.' : 'Blog post moved to draft.');
     }
 
-    private function makeSlug(?string $slug, string $title, ?int $ignoreId = null): string
+    public function toggleFeatured(BlogPost $blogPost): JsonResponse|RedirectResponse
     {
-        $base = Str::slug(trim((string) $slug) !== '' ? $slug : $title);
-        $base = $base !== '' ? $base : 'blog-post';
+        $post = $this->service->toggleFeatured($blogPost);
 
-        $candidate = $base;
-        $suffix = 1;
-
-        while (BlogPost::withTrashed()
-            ->where('slug', $candidate)
-            ->when($ignoreId !== null, fn ($query) => $query->where('id', '!=', $ignoreId))
-            ->exists()) {
-            $candidate = $base . '-' . $suffix;
-            $suffix++;
+        if (request()->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => $post->is_featured ? 'Blog post featured.' : 'Blog post unfeatured.',
+                'is_featured' => (bool) $post->is_featured,
+            ]);
         }
 
-        return $candidate;
-    }
-
-    private function deleteFromPublicDisk(?string $path): void
-    {
-        if (! $path) {
-            return;
-        }
-
-        if (Storage::disk('public')->exists($path)) {
-            Storage::disk('public')->delete($path);
-        }
+        return redirect()
+            ->back()
+            ->with('success', $post->is_featured ? 'Blog post featured.' : 'Blog post unfeatured.');
     }
 }

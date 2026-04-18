@@ -90,9 +90,9 @@ final class StaticPageService
         return $slug;
     }
 
-private function nullableString(mixed $value): ?string
+    private function nullableString(mixed $value): ?string
     {
-        if (!is_string($value)) {
+        if (! is_string($value)) {
             return null;
         }
 
@@ -104,11 +104,5 @@ private function nullableString(mixed $value): ?string
     public function getNextSortOrder(): int
     {
         return $this->staticPageRepository->getNextSortOrder();
-    }
-}
-
-        $trimmed = trim($value);
-
-        return $trimmed === '' ? null : $trimmed;
     }
 }

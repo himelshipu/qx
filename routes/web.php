@@ -1,15 +1,17 @@
 <?php
 
-declare (strict_types = 1);
+declare(strict_types=1);
 
 use App\Http\Controllers\AccountController;
+use App\Http\Controllers\Backend\BlogController;
 use App\Http\Controllers\Backend\BrandController;
+use App\Http\Controllers\Backend\BrandFeaturedController;
 use App\Http\Controllers\Backend\CampaignController;
 use App\Http\Controllers\Backend\CampaignInfluencerController;
-use App\Http\Controllers\Backend\BlogController;
 use App\Http\Controllers\Backend\CaseStudyController;
 use App\Http\Controllers\Backend\CategoryController;
 use App\Http\Controllers\Backend\CategoryFeaturedController;
+use App\Http\Controllers\Backend\CommunicationBadgeController;
 use App\Http\Controllers\Backend\DashboardController;
 use App\Http\Controllers\Backend\FaqItemController;
 use App\Http\Controllers\Backend\FaqSectionController;
@@ -18,7 +20,6 @@ use App\Http\Controllers\Backend\InfluencerController;
 use App\Http\Controllers\Backend\InfluencerPortfolioController;
 use App\Http\Controllers\Backend\KnowledgeBaseController;
 use App\Http\Controllers\Backend\MenuController;
-use App\Http\Controllers\Backend\CommunicationBadgeController;
 use App\Http\Controllers\Backend\ModeratorController;
 use App\Http\Controllers\Backend\NotificationController;
 use App\Http\Controllers\Backend\OrderController as BackendOrderController;
@@ -30,20 +31,20 @@ use App\Http\Controllers\Backend\PaymentStatementController;
 use App\Http\Controllers\Backend\PermissionController;
 use App\Http\Controllers\Backend\ReviewController as BackendReviewController;
 use App\Http\Controllers\Backend\RoleController;
-use App\Http\Controllers\Backend\SupportTicketController;
-use App\Http\Controllers\Backend\StaticPageController;
 use App\Http\Controllers\Backend\SettingsController;
+use App\Http\Controllers\Backend\StaticPageController;
+use App\Http\Controllers\Backend\SupportTicketController;
 use App\Http\Controllers\Backend\TestimonialController;
 use App\Http\Controllers\Backend\UserController;
 use App\Http\Controllers\BrandProfileController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\ConversationController;
 use App\Http\Controllers\EarningsController;
-use App\Http\Controllers\Frontend\CampaignController as FrontendCampaignController;
+use App\Http\Controllers\Frontend\AccountController as FrontendAccountController;
 use App\Http\Controllers\Frontend\BlogController as FrontendBlogController;
+use App\Http\Controllers\Frontend\CampaignController as FrontendCampaignController;
 use App\Http\Controllers\Frontend\CaseStudyController as FrontendCaseStudyController;
 use App\Http\Controllers\Frontend\ContentLibraryController;
-use App\Http\Controllers\Frontend\AccountController as FrontendAccountController;
 use App\Http\Controllers\Frontend\ConversationController as FrontendConversationController;
 use App\Http\Controllers\Frontend\HomeController;
 use App\Http\Controllers\Frontend\InfluencersController;
@@ -265,6 +266,7 @@ Route::prefix('dashboard')->name('dashboard.')->middleware(['auth', 'verified', 
     });
 
     Route::get('/brands', [BrandController::class, 'index'])->name('brands.index');
+    Route::get('/brands/table', [BrandController::class, 'table'])->name('brands.table');
     Route::get('/brands/create', [BrandController::class, 'create'])->name('brands.create');
     Route::post('/brands', [BrandController::class, 'store'])->name('brands.store');
     Route::get('/brands/details/{brand}', [BrandController::class, 'view'])->name('brands.view');
@@ -275,6 +277,15 @@ Route::prefix('dashboard')->name('dashboard.')->middleware(['auth', 'verified', 
     Route::post('/brands/reorder', [BrandController::class, 'reorder'])
         ->middleware('check-permission:brands.reorder')
         ->name('brands.reorder');
+
+    // Featured Brands Routes
+    Route::prefix('brands-featured')->name('brands-featured.')->group(function () {
+        Route::get('/', [BrandFeaturedController::class, 'getFeatured'])->name('list');
+        Route::post('/add/{brand}', [BrandFeaturedController::class, 'addFeatured'])->name('add');
+        Route::post('/remove/{brand}', [BrandFeaturedController::class, 'removeFeatured'])->name('remove');
+        Route::post('/reorder', [BrandFeaturedController::class, 'reorderFeatured'])->name('reorder');
+        Route::get('/search', [BrandFeaturedController::class, 'searchBrands'])->name('search');
+    });
 
     Route::get('/influencers', [InfluencerController::class, 'index'])->name('influencers.index');
     Route::get('/influencers/create', [InfluencerController::class, 'create'])->name('influencers.create');
@@ -515,6 +526,7 @@ Route::prefix('dashboard')->name('dashboard.')->middleware(['auth', 'verified', 
 
     // Blog routes
     Route::get('/blogs', [BlogController::class, 'index'])->name('blogs.index');
+    Route::get('/blogs/table', [BlogController::class, 'table'])->name('blogs.table');
     Route::get('/blogs/create', [BlogController::class, 'create'])->name('blogs.create');
     Route::post('/blogs', [BlogController::class, 'store'])->name('blogs.store');
     Route::get('/blogs/{blogPost}', [BlogController::class, 'show'])->name('blogs.show');
@@ -522,7 +534,8 @@ Route::prefix('dashboard')->name('dashboard.')->middleware(['auth', 'verified', 
     Route::put('/blogs/{blogPost}', [BlogController::class, 'update'])->name('blogs.update');
     Route::delete('/blogs/{blogPost}', [BlogController::class, 'destroy'])->name('blogs.destroy');
     Route::post('/blogs/{blogPost}/toggle-status', [BlogController::class, 'toggleStatus'])->name('blogs.toggle-status');
-    Route::post('/blogs/{slug}/restore', [BlogController::class, 'restore'])->name('blogs.restore');
+    Route::post('/blogs/{blogPost}/toggle-featured', [BlogController::class, 'toggleFeatured'])->name('blogs.toggle-featured');
+    Route::post('/blogs/{id}/restore', [BlogController::class, 'restore'])->name('blogs.restore');
 
     // Settings routes
     Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
@@ -561,4 +574,4 @@ Route::prefix('dashboard')->name('dashboard.')->middleware(['auth', 'verified', 
 |--------------------------------------------------------------------------
  */
 
-require __DIR__ . '/auth.php';
+require __DIR__.'/auth.php';

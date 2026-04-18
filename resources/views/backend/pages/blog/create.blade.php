@@ -23,7 +23,11 @@
                 'post' => $post,
                 'action' => route('dashboard.blogs.store'),
                 'method' => 'POST',
-                'submitButtonText' => 'Create Post'
+                'submitButtonText' => 'Create Post',
+                'isPublished' => false,
+                'isFeatured' => false,
+                'featuredImageUrl' => null,
+                'nextSortOrder' => $nextSortOrder ?? 0
             ])
         </form>
     </div>

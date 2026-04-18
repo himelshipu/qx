@@ -1,9 +1,3 @@
-@php
-    $isPublished = old('is_published', $post->is_published ?? false);
-    $isFeatured = old('is_featured', $post->is_featured ?? false);
-    $featuredImageUrl = !empty($post->featured_image_path) ? asset('storage/' . $post->featured_image_path) : null;
-@endphp
-
 <div class="grid grid-cols-1 gap-6 lg:grid-cols-3" x-data="blogImageUploader({ featuredImage: @js($featuredImageUrl) })">
     <div class="space-y-6 lg:col-span-2">
         <div class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
@@ -24,7 +18,7 @@
 
                 <div>
                     <label for="sort_order" class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Sort Order</label>
-                    <input id="sort_order" name="sort_order" type="number" min="0" value="{{ old('sort_order', $post->sort_order ?? 0) }}"
+                    <input id="sort_order" name="sort_order" type="number" min="0" value="{{ old('sort_order', $post->sort_order ?? $nextSortOrder ?? 0) }}"
                         class="h-11 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-white" />
                     @error('sort_order')<p class="mt-1 text-xs text-red-500">{{ $message }}</p>@enderror
                 </div>
@@ -72,7 +66,7 @@
                         <span class="block text-sm font-medium text-gray-900 dark:text-white">Published</span>
                         <span class="block text-xs text-gray-500 dark:text-gray-400">Make this post visible publicly</span>
                     </span>
-                    <input type="checkbox" name="is_published" value="1" {{ $isPublished ? 'checked' : '' }} class="h-5 w-5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" />
+                    <input type="checkbox" name="is_published" value="1" {{ old('is_published', $isPublished) ? 'checked' : '' }} class="h-5 w-5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" />
                 </label>
 
                 <label class="flex items-center justify-between gap-4 rounded-xl border border-gray-200 px-4 py-3 dark:border-gray-800">
@@ -80,7 +74,7 @@
                         <span class="block text-sm font-medium text-gray-900 dark:text-white">Featured</span>
                         <span class="block text-xs text-gray-500 dark:text-gray-400">Highlight on homepage or blog listing</span>
                     </span>
-                    <input type="checkbox" name="is_featured" value="1" {{ $isFeatured ? 'checked' : '' }} class="h-5 w-5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" />
+                    <input type="checkbox" name="is_featured" value="1" {{ old('is_featured', $isFeatured) ? 'checked' : '' }} class="h-5 w-5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" />
                 </label>
 
                 <div>

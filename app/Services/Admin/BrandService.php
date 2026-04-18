@@ -7,10 +7,10 @@ namespace App\Services\Admin;
 use App\Models\Category;
 use App\Models\Brand;
 use App\Repositories\Contracts\BrandRepositoryInterface;
+use App\Helpers\ImageHelper;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 
 /**
  * Class BrandService
@@ -28,10 +28,10 @@ final class BrandService
      *
      * @return array{brands:\Illuminate\Contracts\Pagination\LengthAwarePaginator,stats:array{total:int,active:int,inactive:int,verified:int},search:string,status:string}
      */
-    public function getListingPayload(string $search, string $status): array
+    public function getListingPayload(string $search, string $status, int $perPage = 12): array
     {
         return [
-            'brands' => $this->brandRepository->paginateForDashboard($search, $status),
+            'brands' => $this->brandRepository->paginateForDashboard($search, $status, $perPage),
             'stats'  => $this->brandRepository->getStats(),
             'search' => $search,
             'status' => $status
@@ -41,7 +41,7 @@ final class BrandService
     /**
      * Build detail payload for a single brand.
      *
-     * @return array{brand:Brand,onboardingData:array<string,mixed>}
+     * @return array<string,mixed>
      */
     public function getDetailPayload(Brand $brand): array
     {
@@ -52,9 +52,70 @@ final class BrandService
             'onboardingProfile.categories:id,name'
         ])->loadCount(['campaigns', 'orders', 'reviews']);
 
+        $socialLinks = $brand->socialLinks;
+
         return [
-            'brand'          => $brand,
-            'onboardingData' => $this->buildOnboardingData($brand)
+            'brand' => $brand,
+            'profileUrl' => $brand->user?->profile_image_path ? ImageHelper::url($brand->user->profile_image_path) : null,
+            'coverUrl' => $brand->user?->cover_image_path ? ImageHelper::url($brand->user->cover_image_path) : null,
+            'billingProfile' => $brand->billingProfiles->first(),
+            'socialLinks' => $socialLinks,
+            'onboardingData' => $this->buildOnboardingData($brand),
+            'socialRows' => [
+                [
+                    'label' => 'Facebook',
+                    'class' => 'text-blue-600',
+                    'url' => $socialLinks?->facebook_url,
+                ],
+                [
+                    'label' => 'Instagram',
+                    'class' => 'text-pink-600',
+                    'url' => $socialLinks?->instagram_url,
+                ],
+                [
+                    'label' => 'TikTok',
+                    'class' => 'text-gray-900 dark:text-white',
+                    'url' => $socialLinks?->tiktok_url,
+                ],
+                [
+                    'label' => 'LinkedIn',
+                    'class' => 'text-blue-700',
+                    'url' => $socialLinks?->linkedin_url,
+                ],
+                [
+                    'label' => 'X (Twitter)',
+                    'class' => 'text-gray-900 dark:text-white',
+                    'url' => $socialLinks?->x_url,
+                ],
+                [
+                    'label' => 'YouTube',
+                    'class' => 'text-red-600',
+                    'url' => $socialLinks?->youtube_url,
+                ],
+                [
+                    'label' => 'Other',
+                    'class' => 'text-violet-600',
+                    'url' => $socialLinks?->other_url,
+                ],
+            ],
+        ];
+    }
+
+    /**
+     * Build create/edit form payload for brand pages.
+     *
+     * @return array<string,mixed>
+     */
+    public function getFormPayload(?Brand $brand = null): array
+    {
+        $user = $brand?->user;
+
+        return [
+            'brand' => $brand,
+            'isEditMode' => $brand !== null,
+            'initialProfilePreview' => $user?->profile_image_path ? ImageHelper::url($user->profile_image_path) : null,
+            'initialCoverPreview' => $user?->cover_image_path ? ImageHelper::url($user->cover_image_path) : null,
+            'currentActive' => (bool) ($user?->is_active ?? true),
         ];
     }
 
@@ -152,7 +213,7 @@ final class BrandService
         ?UploadedFile $profileImageFile,
         ?UploadedFile $coverImageFile
     ): Brand {
-        return DB::transaction(function () use ($validated, $isActive, $profileImageFile, $coverImageFile): Brand {
+        $brand = DB::transaction(function () use ($validated, $isActive, $profileImageFile, $coverImageFile): Brand {
             $user = $this->brandRepository->createUser([
                 'name'              => $validated['contact_name'],
                 'email'             => $validated['email'],
@@ -178,6 +239,10 @@ final class BrandService
                 'is_verified' => (bool) ($validated['is_verified'] ?? false)
             ]);
         });
+
+        $this->brandRepository->clearStatsCache();
+
+        return $brand;
     }
 
     /**
@@ -192,7 +257,7 @@ final class BrandService
         ?UploadedFile $profileImageFile,
         ?UploadedFile $coverImageFile
     ): Brand {
-        return DB::transaction(function () use ($brand, $validated, $isActive, $profileImageFile, $coverImageFile): Brand {
+        $updatedBrand = DB::transaction(function () use ($brand, $validated, $isActive, $profileImageFile, $coverImageFile): Brand {
             $profileImagePath = $brand->user?->profile_image_path;
             if ($profileImageFile) {
                 $this->deleteStoredAsset($brand->user?->profile_image_path);
@@ -234,6 +299,10 @@ final class BrandService
                 'is_verified' => (bool) ($validated['is_verified'] ?? false)
             ]);
         });
+
+        $this->brandRepository->clearStatsCache();
+
+        return $updatedBrand;
     }
 
     /**
@@ -252,7 +321,7 @@ final class BrandService
             ];
         }
 
-        return DB::transaction(function () use ($brand): array {
+        $result = DB::transaction(function () use ($brand): array {
             $this->deleteStoredAsset($brand->user?->profile_image_path);
             $this->deleteStoredAsset($brand->user?->cover_image_path);
 
@@ -267,6 +336,10 @@ final class BrandService
                 'message' => 'Brand deleted successfully.'
             ];
         });
+
+        $this->brandRepository->clearStatsCache();
+
+        return $result;
     }
 
     /**
@@ -275,6 +348,7 @@ final class BrandService
     public function toggleStatus(Brand $brand): bool
     {
         $updatedBrand = $this->brandRepository->toggleStatus($brand);
+        $this->brandRepository->clearStatsCache();
 
         return (bool) ($updatedBrand->user?->is_active ?? false);
     }

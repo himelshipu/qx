@@ -44,6 +44,7 @@ class PermissionSeeder extends Seeder
 
             // MANAGEMENT: BRANDS
             ['name' => 'View Brands', 'slug' => 'brands.index', 'module' => 'brands'],
+            ['name' => 'View Brand Table', 'slug' => 'brands.table', 'module' => 'brands'],
             ['name' => 'Create Brand', 'slug' => 'brands.create', 'module' => 'brands'],
             ['name' => 'Store Brand', 'slug' => 'brands.store', 'module' => 'brands'],
             ['name' => 'View Brand Details', 'slug' => 'brands.view', 'module' => 'brands'],

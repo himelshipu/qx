@@ -26,10 +26,27 @@ class BrandController extends Controller
      */
     public function index(Request $request): View
     {
-        $search = trim((string) $request->string('q', ''));
-        $status = (string) $request->string('status', 'all');
+        [$search, $status] = $this->resolveFilters($request);
 
         return view('backend.pages.brands.index', $this->brandService->getListingPayload($search, $status));
+    }
+
+    /**
+     * Return only dashboard brand table HTML for faster filter updates.
+     */
+    public function table(Request $request): JsonResponse
+    {
+        [$search, $status] = $this->resolveFilters($request);
+        $payload = $this->brandService->getListingPayload($search, $status);
+
+        $html = view('backend.pages.brands._results', [
+            'brands' => $payload['brands'],
+        ])->render();
+
+        return response()->json([
+            'success' => true,
+            'html' => $html,
+        ]);
     }
 
     /**
@@ -37,7 +54,7 @@ class BrandController extends Controller
      */
     public function create(): View
     {
-        return view('backend.pages.brands.create');
+        return view('backend.pages.brands.create', $this->brandService->getFormPayload());
     }
 
     /**
@@ -70,9 +87,7 @@ class BrandController extends Controller
      */
     public function edit(Brand $brand): View
     {
-        return view('backend.pages.brands.edit', [
-            'brand' => $brand->load('user')
-        ]);
+        return view('backend.pages.brands.edit', $this->brandService->getFormPayload($brand->load('user')));
     }
 
     /**
@@ -130,5 +145,18 @@ class BrandController extends Controller
         ]);
 
         return $this->reorderItems($validated['order'], Brand::class);
+    }
+
+    /**
+     * Resolve dashboard filters from request.
+     *
+     * @return array{0:string,1:string}
+     */
+    private function resolveFilters(Request $request): array
+    {
+        $search = trim((string) $request->string('q', ''));
+        $status = (string) $request->string('status', 'all');
+
+        return [$search, $status];
     }
 }

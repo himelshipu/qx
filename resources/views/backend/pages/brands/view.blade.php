@@ -3,28 +3,6 @@
 @section('title', 'Brand Details')
 
 @section('content')
-	@php
-		$profileUrl = $brand->user?->profile_image_path 
-			? \App\Helpers\ImageHelper::url($brand->user->profile_image_path)
-			: null;
-		$coverUrl = $brand->user?->cover_image_path 
-			? \App\Helpers\ImageHelper::url($brand->user->cover_image_path)
-			: null;
-		$billingProfile = $brand->billingProfiles->first();
-		$socialLinks = $brand->socialLinks;
-		$onboarding = $onboardingData ?? [];
-
-		$socialPlatforms = [
-		    'facebook_url' => ['label' => 'Facebook', 'class' => 'text-blue-600'],
-		    'instagram_url' => ['label' => 'Instagram', 'class' => 'text-pink-600'],
-		    'tiktok_url' => ['label' => 'TikTok', 'class' => 'text-gray-900 dark:text-white'],
-		    'linkedin_url' => ['label' => 'LinkedIn', 'class' => 'text-blue-700'],
-		    'x_url' => ['label' => 'X (Twitter)', 'class' => 'text-gray-900 dark:text-white'],
-		    'youtube_url' => ['label' => 'YouTube', 'class' => 'text-red-600'],
-		    'other_url' => ['label' => 'Other', 'class' => 'text-violet-600']
-		];
-	@endphp
-
 	<x-backend.shell.breadcrumb pageTitle="Brand Details" />
 
 	<div class="space-y-6">
@@ -204,13 +182,13 @@
 			<div class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900">
 				<h3 class="text-sm font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Social Links</h3>
 				<dl class="mt-4 space-y-3 text-sm">
-					@foreach ($socialPlatforms as $field => $meta)
+					@foreach ($socialRows as $row)
 						<div class="flex justify-between gap-4">
-							<dt class="text-gray-500 dark:text-gray-400">{{ $meta['label'] }}</dt>
+							<dt class="text-gray-500 dark:text-gray-400">{{ $row['label'] }}</dt>
 							<dd class="font-medium text-gray-900 dark:text-white">
-								@if ($socialLinks?->{$field})
-									<a href="{{ $socialLinks->{$field} }}" target="_blank" rel="noopener"
-										class="underline {{ $meta['class'] }}">Open</a>
+								@if (!empty($row['url']))
+									<a href="{{ $row['url'] }}" target="_blank" rel="noopener"
+										class="underline {{ $row['class'] }}">Open</a>
 								@else
 									N/A
 								@endif
@@ -258,46 +236,46 @@
 
 			<div class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900">
 				<h3 class="text-sm font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Onboarding Profile</h3>
-				@if (!empty($onboarding['has_any_data']))
+				@if (!empty($onboardingData['has_any_data']))
 					<dl class="mt-4 space-y-3 text-sm">
 						<div class="flex justify-between gap-4">
 							<dt class="text-gray-500 dark:text-gray-400">Objective</dt>
-							<dd class="font-medium text-gray-900 dark:text-white">{{ $onboarding['objective'] ?? 'N/A' }}</dd>
+							<dd class="font-medium text-gray-900 dark:text-white">{{ $onboardingData['objective'] ?? 'N/A' }}</dd>
 						</div>
 						<div class="flex justify-between gap-4">
 							<dt class="text-gray-500 dark:text-gray-400">Budget Range</dt>
-							<dd class="font-medium text-gray-900 dark:text-white">{{ $onboarding['budget_range'] ?? 'N/A' }}</dd>
+							<dd class="font-medium text-gray-900 dark:text-white">{{ $onboardingData['budget_range'] ?? 'N/A' }}</dd>
 						</div>
 						<div class="flex justify-between gap-4">
 							<dt class="text-gray-500 dark:text-gray-400">Business Type</dt>
-							<dd class="font-medium text-gray-900 dark:text-white">{{ $onboarding['business_type'] ?? 'N/A' }}</dd>
+							<dd class="font-medium text-gray-900 dark:text-white">{{ $onboardingData['business_type'] ?? 'N/A' }}</dd>
 						</div>
 						<div class="flex justify-between gap-4">
 							<dt class="text-gray-500 dark:text-gray-400">Company Size</dt>
-							<dd class="font-medium text-gray-900 dark:text-white">{{ $onboarding['company_size'] ?? 'N/A' }}</dd>
+							<dd class="font-medium text-gray-900 dark:text-white">{{ $onboardingData['company_size'] ?? 'N/A' }}</dd>
 						</div>
 						<div class="flex justify-between gap-4">
 							<dt class="text-gray-500 dark:text-gray-400">Completed</dt>
-							<dd class="font-medium text-gray-900 dark:text-white">{{ !empty($onboarding['is_completed']) ? 'Yes' : 'No' }}</dd>
+							<dd class="font-medium text-gray-900 dark:text-white">{{ !empty($onboardingData['is_completed']) ? 'Yes' : 'No' }}</dd>
 						</div>
 						<div class="flex justify-between gap-4">
 							<dt class="text-gray-500 dark:text-gray-400">Completed At</dt>
-							<dd class="font-medium text-gray-900 dark:text-white">{{ $onboarding['completed_at']?->format('M d, Y h:i A') ?? 'N/A' }}</dd>
+							<dd class="font-medium text-gray-900 dark:text-white">{{ $onboardingData['completed_at']?->format('M d, Y h:i A') ?? 'N/A' }}</dd>
 						</div>
 					</dl>
 
 					<h4 class="mt-6 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Selected Industries</h4>
 					<div class="mt-3 flex flex-wrap gap-2">
-						@forelse (($onboarding['industries'] ?? []) as $industry)
+						@forelse (($onboardingData['industries'] ?? []) as $industry)
 							<span class="inline-flex rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-700 dark:bg-gray-800 dark:text-gray-300">{{ $industry }}</span>
 						@empty
 							<span class="text-sm text-gray-500 dark:text-gray-400">No onboarding industries selected.</span>
 						@endforelse
 					</div>
 
-					@if (!empty($onboarding['source']))
+					@if (!empty($onboardingData['source']))
 						<p class="mt-4 text-xs text-gray-400 dark:text-gray-500">
-							Source: {{ $onboarding['source'] === 'onboarding_profile' ? 'Onboarding profile table' : 'Brand setup data' }}
+							Source: {{ $onboardingData['source'] === 'onboarding_profile' ? 'Onboarding profile table' : 'Brand setup data' }}
 						</p>
 					@endif
 				@else

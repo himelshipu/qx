@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -53,6 +54,42 @@ class BlogPost extends Model
     public function scopePublished($query)
     {
         return $query->where('is_published', true);
+    }
+
+    public function scopeForDashboard($query)
+    {
+        return $query->select([
+            'id',
+            'author_id',
+            'title',
+            'slug',
+            'excerpt',
+            'featured_image_path',
+            'is_published',
+            'is_featured',
+            'sort_order',
+            'published_at',
+            'created_at',
+            'updated_at',
+            'deleted_at',
+        ]);
+    }
+
+    public function scopeDashboardStatus($query, string $status): Builder
+    {
+        return match ($status) {
+            'published' => $query->where('is_published', true),
+            'draft' => $query->where('is_published', false),
+            'trashed' => $query->onlyTrashed(),
+            default => $query,
+        };
+    }
+
+    public function scopeDashboardOrder($query)
+    {
+        return $query->orderByDesc('is_published')
+            ->orderByDesc('published_at')
+            ->orderByDesc('id');
     }
 
     public function scopeSearch($query, string $term)
