@@ -33,6 +33,7 @@ import "./admin/static-pages-dashboard";
 import "./frontend/campaigns-index";
 import "./frontend/campaigns-create";
 import "./frontend/campaigns-show";
+import "./frontend/campaigns-negotiation-modal";
 
 Alpine.plugin(collapse);
 

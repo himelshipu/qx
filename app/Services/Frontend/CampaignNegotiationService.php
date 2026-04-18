@@ -8,6 +8,8 @@ use App\Models\Campaign;
 use App\Models\CampaignApplication;
 use App\Models\CampaignInfluencer;
 use App\Models\Influencer;
+use App\Models\Order;
+use App\Models\SubOrder;
 use App\Services\Frontend\Contracts\CampaignNegotiationServiceInterface;
 
 final class CampaignNegotiationService implements CampaignNegotiationServiceInterface
@@ -77,6 +79,8 @@ final class CampaignNegotiationService implements CampaignNegotiationServiceInte
             $application->update([
                 'status' => 'countered_by_brand',
                 'brand_offer' => $offer,
+                'influencer_offer' => null, // Clear old influencer offer to avoid confusion
+                'proposed_rate' => null,
                 'last_counter_by' => 'brand',
                 'last_counter_at' => now(),
                 'agreed_rate' => null,
@@ -102,9 +106,19 @@ final class CampaignNegotiationService implements CampaignNegotiationServiceInte
             return 'Application declined.';
         }
 
-        $acceptedRate = $application->influencer_offer
-            ?? $application->proposed_rate
-            ?? $application->brand_offer;
+        // Accept: Brand can only accept the current pending offer
+        // Current state must be 'countered_by_influencer' (influencer's pending offer)
+        // Brand accepts influencer's current offer
+        if ((string) $application->status === 'countered_by_influencer') {
+            $acceptedRate = $application->influencer_offer;
+        } else {
+            // If status is 'applied', accept influencer's initial offer
+            $acceptedRate = $application->influencer_offer;
+        }
+
+        if (!$acceptedRate || (float) $acceptedRate <= 0) {
+            throw new \InvalidArgumentException('No valid influencer offer to accept');
+        }
 
         $application->update([
             'status' => 'approved',
@@ -116,6 +130,9 @@ final class CampaignNegotiationService implements CampaignNegotiationServiceInte
         ]);
 
         $this->syncCampaignInfluencerFromApplication($campaign, $application, $approvedByUserId);
+
+        // Create order on acceptance
+        $this->createCampaignOrder($campaign, $application);
 
         return 'Offer accepted and influencer approved successfully.';
     }
@@ -131,6 +148,7 @@ final class CampaignNegotiationService implements CampaignNegotiationServiceInte
                 'status' => 'countered_by_influencer',
                 'influencer_offer' => $offer,
                 'proposed_rate' => $offer,
+                'brand_offer' => null, // Clear old brand offer to avoid confusion
                 'last_counter_by' => 'influencer',
                 'last_counter_at' => now(),
                 'agreed_rate' => null,
@@ -156,9 +174,22 @@ final class CampaignNegotiationService implements CampaignNegotiationServiceInte
             return 'You declined this campaign offer.';
         }
 
+        // Accept: Influencer can only accept the current pending offer from brand
+        // Current state must be 'countered_by_brand' (brand's pending offer)
+        // Influencer accepts brand's current offer
+        if ((string) $application->status !== 'countered_by_brand') {
+            throw new \InvalidArgumentException('No valid brand offer to accept. Only accept brand counter offers.');
+        }
+
+        $acceptedRate = $application->brand_offer;
+
+        if (!$acceptedRate || (float) $acceptedRate <= 0) {
+            throw new \InvalidArgumentException('No valid brand offer to accept');
+        }
+
         $application->update([
             'status' => 'approved',
-            'agreed_rate' => round((float) $application->brand_offer, 2),
+            'agreed_rate' => round((float) $acceptedRate, 2),
             'agreed_at' => now(),
             'decided_at' => now(),
             'declined_at' => null,
@@ -166,6 +197,9 @@ final class CampaignNegotiationService implements CampaignNegotiationServiceInte
         ]);
 
         $this->syncCampaignInfluencerFromApplication($campaign, $application);
+
+        // Create order on acceptance
+        $this->createCampaignOrder($campaign, $application);
 
         return 'Offer accepted. Final agreed price has been locked.';
     }
@@ -206,5 +240,60 @@ final class CampaignNegotiationService implements CampaignNegotiationServiceInte
                 'approved_at' => now(),
             ]);
         }
+    }
+
+    private function createCampaignOrder(Campaign $campaign, CampaignApplication $application): ?Order
+    {
+        // Check if order already exists for this application
+        $existingOrder = Order::query()
+            ->where('campaign_id', $campaign->id)
+            ->whereHas('subOrders', function ($q) use ($application) {
+                $q->where('influencer_id', $application->influencer_id);
+            })
+            ->first();
+
+        if ($existingOrder) {
+            return $existingOrder;
+        }
+
+        // Get or create CampaignInfluencer assignment
+        $campaignInfluencer = CampaignInfluencer::firstOrCreate(
+            [
+                'campaign_id' => $campaign->id,
+                'influencer_id' => $application->influencer_id,
+            ],
+            [
+                'status' => 'approved',
+                'agreed_amount' => (float) $application->agreed_rate,
+                'approved_at' => now(),
+            ]
+        );
+
+        // Create parent order for campaign
+        $parentOrder = Order::create([
+            'order_number' => Order::generateOrderNumber(Order::SOURCE_CAMPAIGN),
+            'buyer_user_id' => $campaign->brand->user_id,
+            'brand_id' => $campaign->brand_id,
+            'campaign_id' => $campaign->id,
+            'status' => 'pending',
+            'placed_at' => now(),
+            'currency' => $campaign->currency ?? 'USD',
+            'subtotal' => (float) $application->agreed_rate,
+            'service_fee' => 0,
+            'tax_amount' => 0,
+            'total_amount' => (float) $application->agreed_rate,
+        ]);
+
+        // Create sub-order for influencer
+        SubOrder::create([
+            'order_id' => $parentOrder->id,
+            'campaign_influencer_id' => $campaignInfluencer->id,
+            'influencer_id' => $application->influencer_id,
+            'status' => 'pending',
+            'amount' => (float) $application->agreed_rate,
+            'currency' => $campaign->currency ?? 'USD',
+        ]);
+
+        return $parentOrder;
     }
 }

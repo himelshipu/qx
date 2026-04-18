@@ -67,7 +67,7 @@ class CampaignApplicationController extends Controller
         }
     }
 
-    public function updateApplicationStatus(Campaign $campaign, $applicationId, Request $request): RedirectResponse
+    public function updateApplicationStatus(Campaign $campaign, $applicationId, Request $request): RedirectResponse|JsonResponse
     {
         $validated = $request->validate([
             'action' => 'nullable|in:accept,counter,decline',
@@ -81,13 +81,19 @@ class CampaignApplicationController extends Controller
             ->firstOrFail();
 
         if ($application->status === 'completed') {
-            return redirect()->route('frontend.campaigns.show', $campaign)
-                ->with('error', 'Cannot modify completed applications. This influencer has already completed their work on this campaign.');
+            $message = 'Cannot modify completed applications. This influencer has already completed their work on this campaign.';
+            if ($request->expectsJson()) {
+                return response()->json(['success' => false, 'message' => $message], 422);
+            }
+            return redirect()->route('frontend.campaigns.show', $campaign)->with('error', $message);
         }
 
         if ($campaign->status === 'closed') {
-            return redirect()->route('frontend.campaigns.show', $campaign)
-                ->with('error', 'Cannot modify applications for closed campaigns. The campaign is no longer active.');
+            $message = 'Cannot modify applications for closed campaigns. The campaign is no longer active.';
+            if ($request->expectsJson()) {
+                return response()->json(['success' => false, 'message' => $message], 422);
+            }
+            return redirect()->route('frontend.campaigns.show', $campaign)->with('error', $message);
         }
 
         $action = (string) ($validated['action'] ?? '');
@@ -101,25 +107,37 @@ class CampaignApplicationController extends Controller
         }
 
         if (! in_array($action, ['accept', 'counter', 'decline'], true)) {
-            return redirect()->route('frontend.campaigns.show', $campaign)
-                ->with('error', 'Invalid negotiation action.');
+            $message = 'Invalid negotiation action.';
+            if ($request->expectsJson()) {
+                return response()->json(['success' => false, 'message' => $message], 422);
+            }
+            return redirect()->route('frontend.campaigns.show', $campaign)->with('error', $message);
         }
 
         if ($application->isTerminal()) {
-            return redirect()->route('frontend.campaigns.show', $campaign)
-                ->with('warning', 'This application is already finalized.');
+            $message = 'This application is already finalized.';
+            if ($request->expectsJson()) {
+                return response()->json(['success' => false, 'message' => $message], 422);
+            }
+            return redirect()->route('frontend.campaigns.show', $campaign)->with('warning', $message);
         }
 
         if (! $application->canNegotiate()) {
-            return redirect()->route('frontend.campaigns.show', $campaign)
-                ->with('error', 'This application cannot be negotiated in its current state.');
+            $message = 'This application cannot be negotiated in its current state.';
+            if ($request->expectsJson()) {
+                return response()->json(['success' => false, 'message' => $message], 422);
+            }
+            return redirect()->route('frontend.campaigns.show', $campaign)->with('error', $message);
         }
 
         if ($action === 'counter') {
             $offer = $validated['brand_offer'] ?? null;
             if (! is_numeric($offer) || (float) $offer <= 0) {
-                return redirect()->route('frontend.campaigns.show', $campaign)
-                    ->with('error', 'Please enter a valid counter offer amount.');
+                $message = 'Please enter a valid counter offer amount.';
+                if ($request->expectsJson()) {
+                    return response()->json(['success' => false, 'message' => $message], 422);
+                }
+                return redirect()->route('frontend.campaigns.show', $campaign)->with('error', $message);
             }
         }
 
@@ -129,8 +147,11 @@ class CampaignApplicationController extends Controller
                 ?? $application->brand_offer;
 
             if ($acceptedRate === null || (float) $acceptedRate <= 0) {
-                return redirect()->route('frontend.campaigns.show', $campaign)
-                    ->with('error', 'No valid offer is available to accept.');
+                $message = 'No valid offer is available to accept.';
+                if ($request->expectsJson()) {
+                    return response()->json(['success' => false, 'message' => $message], 422);
+                }
+                return redirect()->route('frontend.campaigns.show', $campaign)->with('error', $message);
             }
         }
 
@@ -141,6 +162,10 @@ class CampaignApplicationController extends Controller
             isset($validated['brand_offer']) ? (float) $validated['brand_offer'] : null,
             Auth::id(),
         );
+
+        if ($request->expectsJson()) {
+            return response()->json(['success' => true, 'message' => $message]);
+        }
 
         return redirect()->route('frontend.campaigns.show', $campaign)
             ->with('success', $message);

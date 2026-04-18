@@ -594,43 +594,22 @@
 													<x-icons.x class="w-3 h-3" />
 												</button>
 											@else
-												<form
-													action="{{ route('frontend.campaigns.update-application-status', [$campaign->id, $application->id]) }}"
-													method="POST" class="inline js-approve-form">
-													@csrf
-													<input type="hidden" name="action" value="accept">
-													<button type="submit"
-														class="px-2 py-1 text-xs rounded bg-emerald-100 text-emerald-700 hover:bg-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-300 dark:hover:bg-emerald-900/50 transition cursor-pointer"
-														title="Accept current influencer offer and approve">
-														<x-icons.check class="w-3 h-3" />
+												{{-- Show Negotiate button only in negotiable states --}}
+												@if (in_array($application->status, ['applied', 'countered_by_brand', 'countered_by_influencer', 'invited']))
+													<button type="button"
+														class="px-3 py-1.5 text-xs rounded-lg bg-blue-600 text-white hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-600 transition font-medium js-negotiate-btn"
+														data-app-id="{{ $application->id }}"
+														data-campaign-id="{{ $campaign->id }}"
+														data-action-url="{{ route('frontend.campaigns.update-application-status', [$campaign->id, $application->id]) }}"
+														data-status="{{ $application->status }}"
+														data-influencer-name="{{ $application->influencer->user->name }}"
+														data-influencer-offer="{{ $application->influencer_offer ?? '' }}"
+														data-brand-offer="{{ $application->brand_offer ?? '' }}"
+														data-last-counter-by="{{ $application->last_counter_by ?? '' }}"
+														title="Open negotiation modal">
+														Negotiate
 													</button>
-												</form>
-												<form
-													action="{{ route('frontend.campaigns.update-application-status', [$campaign->id, $application->id]) }}"
-													method="POST" class="inline-flex items-center gap-1">
-													@csrf
-													<input type="hidden" name="action" value="counter">
-													<input type="number" name="brand_offer" min="0.01" step="0.01"
-														value="{{ (float) ($application->brand_offer ?? $application->influencer_offer ?? $application->proposed_rate ?? 0) ?: '' }}"
-														placeholder="Offer"
-														class="w-20 rounded border border-gray-300 bg-white px-1.5 py-1 text-[11px] dark:border-gray-600 dark:bg-gray-700 dark:text-white" />
-													<button type="submit"
-														class="px-2 py-1 text-xs rounded bg-indigo-100 text-indigo-700 hover:bg-indigo-200 dark:bg-indigo-900/30 dark:text-indigo-300 dark:hover:bg-indigo-900/50 transition"
-														title="Send counter offer">
-														Counter
-													</button>
-												</form>
-												<form
-													action="{{ route('frontend.campaigns.update-application-status', [$campaign->id, $application->id]) }}"
-													method="POST" class="inline js-approve-form">
-													@csrf
-													<input type="hidden" name="action" value="decline">
-													<button type="submit"
-														class="px-2 py-1 text-xs rounded bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-300 dark:hover:bg-red-900/50 transition cursor-pointer"
-														title="Decline this application">
-														<x-icons.x class="w-3 h-3" />
-													</button>
-												</form>
+												@endif
 											@endif
 										</div>
 									</td>
@@ -842,5 +821,127 @@
 				</div>
 			</div>
 		@endif
+
+	<!-- Negotiation Modal -->
+	<div x-data="negotiationModal()"
+		x-show="open"
+		class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
+		style="display: none;"
+		@keydown.escape="closeModal()">
+		
+		<div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg max-w-md w-full" @click.stop>
+			<!-- Header -->
+			<div class="border-b border-gray-200 dark:border-gray-700 p-6">
+				<h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+					Negotiate with <span x-text="influencerName"></span>
+				</h3>
+				<p class="text-xs text-gray-500 dark:text-gray-400 mt-1" x-text="statusLabel"></p>
+			</div>
+
+			<!-- Body -->
+			<div class="p-6 space-y-4">
+				<!-- Influencer's Current Offer -->
+				<div x-show="influencerOffer">
+					<label class="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide block mb-1">
+						Influencer's Offer
+					</label>
+					<div class="px-3 py-2 rounded-lg border border-blue-300 dark:border-blue-700 bg-blue-50 dark:bg-blue-900/20">
+						<p class="text-sm font-semibold text-blue-900 dark:text-blue-100">
+							$<span x-text="parseFloat(influencerOffer).toFixed(2)"></span>
+						</p>
+					</div>
+				</div>
+
+				<!-- Brand's Current Offer -->
+				<div x-show="brandOffer">
+					<label class="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide block mb-1">
+						Your Counter Offer
+					</label>
+					<div class="px-3 py-2 rounded-lg border border-purple-300 dark:border-purple-700 bg-purple-50 dark:bg-purple-900/20">
+						<p class="text-sm font-semibold text-purple-900 dark:text-purple-100">
+							$<span x-text="parseFloat(brandOffer).toFixed(2)"></span>
+						</p>
+					</div>
+				</div>
+
+				<!-- Message when waiting for counter -->
+				<div x-show="waitingForResponse" class="p-3 rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800">
+					<p class="text-xs text-amber-800 dark:text-amber-200" x-text="waitingMessage"></p>
+				</div>
+
+				<!-- New Counter Input (only show if you can counter) -->
+				<div x-show="canCounter">
+					<label class="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide block mb-1">
+						Send New Counter Offer
+					</label>
+					<input type="number"
+						x-model.number="newCounterPrice"
+						min="0.01"
+						step="0.01"
+						placeholder="Enter your offer"
+						class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500" />
+				</div>
+			</div>
+
+			<!-- Footer -->
+			<div class="border-t border-gray-200 dark:border-gray-700 p-6 flex flex-wrap gap-2">
+				<!-- Accept Button (only when valid offer exists) -->
+				<button @click="acceptApplication()"
+					type="button"
+					x-show="canAccept"
+					class="flex-1 min-w-24 px-4 py-2 text-sm font-semibold rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 dark:hover:bg-emerald-600 transition disabled:opacity-50 disabled:cursor-not-allowed"
+					:disabled="isSubmitting"
+					:title="acceptDisabledReason">
+					<span x-show="!isSubmitting">Accept</span>
+					<span x-show="isSubmitting" class="inline-flex items-center justify-center gap-1">
+						<svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+							<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+							<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+						</svg>
+						<span>Accept</span>
+					</span>
+				</button>
+
+				<!-- Counter Button (only when you can counter) -->
+				<button @click="counterApplication()"
+					type="button"
+					x-show="canCounter"
+					class="flex-1 min-w-24 px-4 py-2 text-sm font-semibold rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 dark:hover:bg-indigo-600 transition disabled:opacity-50 disabled:cursor-not-allowed"
+					:disabled="!newCounterPrice || newCounterPrice <= 0 || isSubmitting">
+					<span x-show="!isSubmitting">Counter</span>
+					<span x-show="isSubmitting" class="inline-flex items-center justify-center gap-1">
+						<svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+							<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+							<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+						</svg>
+						<span>Counter</span>
+					</span>
+				</button>
+
+				<!-- Reject Button -->
+				<button @click="rejectApplication()"
+					type="button"
+					class="flex-1 min-w-24 px-4 py-2 text-sm font-semibold rounded-lg bg-red-600 text-white hover:bg-red-700 dark:hover:bg-red-600 transition disabled:opacity-50 disabled:cursor-not-allowed"
+					:disabled="isSubmitting">
+					<span x-show="!isSubmitting">Reject</span>
+					<span x-show="isSubmitting" class="inline-flex items-center justify-center gap-1">
+						<svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+							<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+							<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+						</svg>
+						<span>Reject</span>
+					</span>
+				</button>
+
+				<!-- Close Button -->
+				<button @click="closeModal()"
+					type="button"
+					class="min-w-24 px-4 py-2 text-sm font-semibold rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition"
+					:disabled="isSubmitting">
+					Close
+				</button>
+			</div>
+		</div>
+	</div>
 
 @endsection
