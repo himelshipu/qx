@@ -244,7 +244,7 @@ Dark mode toggle switches:
 ### Example 2: Influencers
 ```
 ┌───────────────────────────────────────┐
-│ 👥 Reorder Influencers         12 Items│
+│ 👥 Manage Featured Influencers 12 Items│
 ├───────────────────────────────────────┤
 │ ⋮ │ 1 │ Sarah Anderson       ● Active │
 │ ⋮ │ 2 │ Mike Johnson         ● Active │

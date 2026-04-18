@@ -11,6 +11,7 @@ use App\Models\FollowerRange;
 use App\Repositories\Contracts\CampaignRepositoryInterface;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
 
 /**
  * Class EloquentCampaignRepository
@@ -19,28 +20,20 @@ use Illuminate\Support\Collection;
  */
 class EloquentCampaignRepository implements CampaignRepositoryInterface
 {
+    private const STATS_CACHE_TTL_SECONDS = 60;
+
     /**
      * Get paginated campaigns for dashboard listing.
      */
     public function paginateForDashboard(string $search, string $status, string $type, ?int $brandId = null, int $perPage = 12): LengthAwarePaginator
     {
         return Campaign::query()
-            ->with(['brand:id,brand_name,user_id', 'targeting:id,campaign_id,influencer_count', 'categories:id,name,image_path'])
-            ->withCount(['categories', 'applications', 'assets', 'orders', 'orderItems', 'cartItems'])
-            ->when($brandId !== null, fn($query) => $query->where('brand_id', $brandId))
-            ->when($search !== '', function ($query) use ($search) {
-                $query->where(function ($subQuery) use ($search) {
-                    $subQuery
-                        ->where('title', 'like', '%' . $search . '%')
-                        ->orWhere('description', 'like', '%' . $search . '%')
-                        ->orWhere('instructions', 'like', '%' . $search . '%')
-                        ->orWhere('campaign_type', 'like', '%' . $search . '%')
-                        ->orWhere('status', 'like', '%' . $search . '%');
-                });
-            })
-            ->when($status !== 'all', fn($query) => $query->where('status', $status))
-            ->when($type !== 'all', fn($query) => $query->where('campaign_type', $type))
-            ->orderByDesc('updated_at')
+            ->forDashboard()
+            ->dashboardBrand($brandId)
+            ->searchDashboard($search)
+            ->dashboardStatus($status)
+            ->dashboardType($type)
+            ->dashboardOrder()
             ->paginate($perPage)
             ->withQueryString();
     }
@@ -52,15 +45,24 @@ class EloquentCampaignRepository implements CampaignRepositoryInterface
      */
     public function getStats(?int $brandId = null): array
     {
-        $baseQuery = Campaign::query()
-            ->when($brandId !== null, fn($query) => $query->where('brand_id', $brandId));
+        $cacheKey = $this->statsCacheKey($brandId);
 
-        return [
-            'total'     => (clone $baseQuery)->count(),
-            'published' => (clone $baseQuery)->where('status', 'published')->count(),
-            'draft'     => (clone $baseQuery)->where('status', 'draft')->count(),
-            'active'    => (clone $baseQuery)->where('is_active', true)->count()
-        ];
+        return Cache::remember($cacheKey, self::STATS_CACHE_TTL_SECONDS, function () use ($brandId): array {
+            $summary = Campaign::query()
+                ->dashboardBrand($brandId)
+                ->selectRaw('COUNT(*) as total')
+                ->selectRaw("SUM(CASE WHEN status = 'published' THEN 1 ELSE 0 END) as published")
+                ->selectRaw("SUM(CASE WHEN status = 'draft' THEN 1 ELSE 0 END) as draft")
+                ->selectRaw('SUM(CASE WHEN is_active = 1 THEN 1 ELSE 0 END) as active')
+                ->first();
+
+            return [
+                'total' => (int) ($summary->total ?? 0),
+                'published' => (int) ($summary->published ?? 0),
+                'draft' => (int) ($summary->draft ?? 0),
+                'active' => (int) ($summary->active ?? 0),
+            ];
+        });
     }
 
     /**
@@ -123,7 +125,10 @@ class EloquentCampaignRepository implements CampaignRepositoryInterface
      */
     public function create(array $data): Campaign
     {
-        return Campaign::create($data);
+        $campaign = Campaign::create($data);
+        $this->forgetStatsCache((int) $campaign->brand_id);
+
+        return $campaign;
     }
 
     /**
@@ -133,7 +138,10 @@ class EloquentCampaignRepository implements CampaignRepositoryInterface
      */
     public function update(Campaign $campaign, array $data): Campaign
     {
+        $oldBrandId = (int) $campaign->brand_id;
         $campaign->update($data);
+
+        $this->forgetStatsCache($oldBrandId, (int) $campaign->brand_id);
 
         return $campaign->refresh();
     }
@@ -206,7 +214,14 @@ class EloquentCampaignRepository implements CampaignRepositoryInterface
      */
     public function delete(Campaign $campaign): bool
     {
-        return (bool) $campaign->delete();
+        $brandId = (int) $campaign->brand_id;
+        $deleted = (bool) $campaign->delete();
+
+        if ($deleted) {
+            $this->forgetStatsCache($brandId);
+        }
+
+        return $deleted;
     }
 
     /**
@@ -218,5 +233,27 @@ class EloquentCampaignRepository implements CampaignRepositoryInterface
          + $campaign->orders()->count()
          + $campaign->orderItems()->count()
          + $campaign->cartItems()->count();
+    }
+
+    /**
+     * Build cache key for stats by scope.
+     */
+    private function statsCacheKey(?int $brandId): string
+    {
+        return 'dashboard.campaigns.stats.' . ($brandId === null ? 'all' : ('brand.' . $brandId));
+    }
+
+    /**
+     * Forget stats caches for global and scoped brand payloads.
+     */
+    private function forgetStatsCache(int ...$brandIds): void
+    {
+        Cache::forget($this->statsCacheKey(null));
+
+        foreach (array_unique($brandIds) as $brandId) {
+            if ($brandId > 0) {
+                Cache::forget($this->statsCacheKey($brandId));
+            }
+        }
     }
 }

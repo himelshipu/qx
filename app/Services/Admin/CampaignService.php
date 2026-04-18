@@ -229,6 +229,16 @@ final class CampaignService
     }
 
     /**
+     * Update campaign lifecycle status.
+     */
+    public function updateCampaignStatus(Campaign $campaign, string $status): Campaign
+    {
+        return $this->campaignRepository->update($campaign, [
+            'status' => $status,
+        ]);
+    }
+
+    /**
      * @param  array<string, mixed>   $validated
      * @return array<string, mixed>
      */

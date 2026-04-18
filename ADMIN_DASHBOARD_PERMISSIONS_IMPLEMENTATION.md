@@ -100,7 +100,6 @@ Layer 3: Route/Controller Enforcement
 'influencers.toggle-status'   // Status
 'influencers.toggle-featured' // Featured flag
 'influencers.destroy'         // Delete
-'influencers.reorder'         // Reorder
 ```
 
 #### Testimonials (8 permissions)
@@ -445,7 +444,6 @@ Route::middleware(['check-permission:users.destroy'])->group(function () {
 ```
 POST /dashboard/categories/reorder        → requires categories.reorder
 POST /dashboard/brands/reorder            → requires brands.reorder
-POST /dashboard/influencers/reorder       → requires influencers.reorder
 POST /dashboard/testimonials/reorder      → requires testimonials.reorder
 ```
 

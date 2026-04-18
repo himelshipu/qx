@@ -15,11 +15,10 @@ Your Rockies platform now has **enterprise-grade permission system**:
 
 ## 📋 What Was Added
 
-### New Permissions (8 total)
+### New Permissions (7 total)
 ```
 categories.reorder      → Drag-drop reorder categories
 brands.reorder         → Drag-drop reorder brands
-influencers.reorder    → Drag-drop reorder influencers
 testimonials.reorder   → Drag-drop reorder testimonials
 analytics.users        → View user analytics
 analytics.campaigns    → View campaign analytics
@@ -38,11 +37,10 @@ PermissionChecker.php → Allows controllers to check permissions
 Methods: checkPermission(), checkPermissions(), etc.
 ```
 
-### Protected Routes (4)
+### Protected Routes (3)
 ```
 POST /dashboard/categories/reorder     → requires categories.reorder
 POST /dashboard/brands/reorder         → requires brands.reorder
-POST /dashboard/influencers/reorder    → requires influencers.reorder
 POST /dashboard/testimonials/reorder   → requires testimonials.reorder
 ```
 

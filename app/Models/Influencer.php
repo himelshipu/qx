@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -23,8 +24,7 @@ class Influencer extends Model
         'brands_worked_with',
         'is_active',
         'is_featured',
-        'featured_priority',
-        'sort_order'
+        'featured_priority'
     ];
 
     protected function casts(): array
@@ -33,7 +33,6 @@ class Influencer extends Model
             'is_active'         => 'boolean',
             'is_featured'       => 'boolean',
             'featured_priority' => 'integer',
-            'sort_order'        => 'integer',
             'created_at'        => 'datetime',
             'updated_at'        => 'datetime'
         ];
@@ -161,5 +160,92 @@ class Influencer extends Model
     public function subOrders(): HasMany
     {
         return $this->hasMany(SubOrder::class);
+    }
+
+    /**
+     * Scope a query for dashboard list payload.
+     */
+    public function scopeForDashboard(Builder $query): Builder
+    {
+        return $query->select([
+            'id',
+            'user_id',
+            'display_name',
+            'title_name',
+            'audience',
+            'is_active',
+            'is_featured',
+            'featured_priority',
+            'updated_at',
+        ])->with([
+            'user:id,name,email,profile_image_path,cover_image_path',
+            'categories:id,name',
+        ])->withCount([
+            'categories',
+            'campaignApplications',
+            'orderItems',
+        ]);
+    }
+
+    /**
+     * Scope a query by dashboard search term.
+     */
+    public function scopeSearchDashboard(Builder $query, string $search): Builder
+    {
+        $term = trim($search);
+
+        if ($term === '') {
+            return $query;
+        }
+
+        return $query->where(function (Builder $subQuery) use ($term): void {
+            $subQuery
+                ->where('display_name', 'like', "%{$term}%")
+                ->orWhere('title_name', 'like', "%{$term}%")
+                ->orWhereHas('user', function (Builder $userQuery) use ($term): void {
+                    $userQuery
+                        ->where('name', 'like', "%{$term}%")
+                        ->orWhere('email', 'like', "%{$term}%")
+                        ->orWhere('city', 'like', "%{$term}%")
+                        ->orWhere('country', 'like', "%{$term}%");
+                })
+                ->orWhereHas('categories', function (Builder $categoryQuery) use ($term): void {
+                    $categoryQuery->where('name', 'like', "%{$term}%");
+                });
+        });
+    }
+
+    /**
+     * Scope a query by dashboard status filter.
+     */
+    public function scopeFilterStatus(Builder $query, string $status): Builder
+    {
+        return match ($status) {
+            'active' => $query->where('is_active', true),
+            'inactive' => $query->where('is_active', false),
+            'featured' => $query->where('is_featured', true),
+            default => $query,
+        };
+    }
+
+    /**
+     * Scope a query by featured filter.
+     */
+    public function scopeDashboardFeatured(Builder $query, string $featured): Builder
+    {
+        return match ($featured) {
+            'featured' => $query->where('is_featured', true),
+            'non-featured' => $query->where('is_featured', false),
+            default => $query,
+        };
+    }
+
+    /**
+     * Scope a query to dashboard default ordering.
+     */
+    public function scopeDashboardOrder(Builder $query): Builder
+    {
+        return $query
+            ->orderByDesc('updated_at');
     }
 }

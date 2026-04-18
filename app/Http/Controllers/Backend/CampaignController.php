@@ -8,6 +8,7 @@ use App\Models\Campaign;
 use App\Models\CampaignApplication;
 use App\Models\Influencer;
 use App\Services\Admin\CampaignService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
@@ -161,14 +162,31 @@ class CampaignController extends Controller
      */
     public function index(Request $request): View
     {
-        $search = trim((string) $request->input('q', ''));
-        $status = (string) $request->input('status', 'all');
-        $type = (string) $request->input('type', 'all');
+        [$search, $status, $type] = $this->resolveFilters($request);
 
         return view(
             'backend.pages.campaigns.index',
             $this->campaignService->getListingPayload($search, $status, $type)
         );
+    }
+
+    /**
+     * Return only dashboard campaign table HTML for realtime filter updates.
+     */
+    public function table(Request $request): JsonResponse
+    {
+        [$search, $status, $type] = $this->resolveFilters($request);
+
+        $payload = $this->campaignService->getListingPayload($search, $status, $type);
+
+        $html = view('backend.pages.campaigns._results', [
+            'campaigns' => $payload['campaigns'],
+        ])->render();
+
+        return response()->json([
+            'success' => true,
+            'html' => $html,
+        ]);
     }
 
     /**
@@ -236,7 +254,7 @@ class CampaignController extends Controller
                 'status' => 'required|in:published,paused,closed,archived',
             ]);
 
-            $campaign->update(['status' => $validated['status']]);
+            $this->campaignService->updateCampaignStatus($campaign, $validated['status']);
 
             return redirect()
                 ->back()
@@ -255,6 +273,20 @@ class CampaignController extends Controller
                 ->back()
                 ->with('error', 'Something went wrong. Please try again.');
         }
+    }
+
+    /**
+     * Resolve campaign dashboard filters from the request.
+     *
+     * @return array{0:string,1:string,2:string}
+     */
+    private function resolveFilters(Request $request): array
+    {
+        $search = trim((string) $request->string('q', ''));
+        $status = (string) $request->string('status', 'all');
+        $type = (string) $request->string('type', 'all');
+
+        return [$search, $status, $type];
     }
 
     /**

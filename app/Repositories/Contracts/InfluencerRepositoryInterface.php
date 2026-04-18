@@ -7,6 +7,7 @@ namespace App\Repositories\Contracts;
 use App\Models\Influencer;
 use App\Models\User;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Support\Collection;
 
 /**
@@ -19,12 +20,12 @@ interface InfluencerRepositoryInterface
     /**
      * Get paginated influencers for dashboard listing.
      */
-    public function paginateForDashboard(string $search, string $status, int $perPage = 12): LengthAwarePaginator;
+    public function paginateForDashboard(string $search, string $status, string $featured = 'all', int $perPage = 12): LengthAwarePaginator;
 
     /**
      * Get influencer summary stats for dashboard.
      *
-     * @return array{total:int,active:int,inactive:int,categorized:int}
+    * @return array{total:int,active:int,inactive:int,categorized:int,featured:int}
      */
     public function getStats(): array;
 
@@ -94,4 +95,69 @@ interface InfluencerRepositoryInterface
      * Toggle influencer featured status and return updated record.
      */
     public function toggleFeatured(Influencer $influencer): Influencer;
+
+    /**
+     * Get featured influencers ordered by featured_priority.
+     *
+     * @return EloquentCollection<int, Influencer>
+     */
+    public function getFeaturedInfluencers(?int $limit = null): EloquentCollection;
+
+    /**
+     * Search influencers by display name/user name for featured modal.
+     *
+     * @return EloquentCollection<int, Influencer>
+     */
+    public function searchInfluencers(string $query, int $limit = 50): EloquentCollection;
+
+    /**
+     * Count how many provided IDs are currently featured.
+     *
+     * @param array<int> $influencerIds
+     */
+    public function countFeaturedByIds(array $influencerIds): int;
+
+    /**
+     * Increment featured_priority for all featured influencers.
+     */
+    public function incrementFeaturedPriority(?int $excludeInfluencerId = null): void;
+
+    /**
+     * Mark an influencer as featured at a given priority.
+     */
+    public function markAsFeatured(Influencer $influencer, int $priority = 1): Influencer;
+
+    /**
+     * Remove featured state from an influencer.
+     */
+    public function unmarkFeatured(Influencer $influencer): Influencer;
+
+    /**
+     * Get featured influencer IDs ordered by featured_priority.
+     *
+     * @return array<int>
+     */
+    public function getFeaturedInfluencerIdsByPriority(): array;
+
+    /**
+     * Update featured priority for provided influencer IDs.
+     *
+     * @param array<int> $influencerIds
+     */
+    public function updateFeaturedPriority(array $influencerIds): void;
+
+    /**
+     * Get count of featured influencers.
+     */
+    public function getFeaturedCount(): int;
+
+    /**
+     * Get featured influencer with lowest priority.
+     */
+    public function getLowestPriorityFeatured(): ?Influencer;
+
+    /**
+     * Clear cached dashboard stats.
+     */
+    public function clearStatsCache(): void;
 }

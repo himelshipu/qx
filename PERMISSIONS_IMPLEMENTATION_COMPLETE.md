@@ -146,7 +146,6 @@ The Rockies platform now has a **comprehensive, enterprise-grade permission syst
 ```
 categories.reorder       → Drag-drop reorder categories
 brands.reorder          → Drag-drop reorder brands
-influencers.reorder     → Drag-drop reorder influencers
 testimonials.reorder    → Drag-drop reorder testimonials
 ```
 

@@ -33,6 +33,10 @@
 				'label' => 'Financial',
 				'actions' => ['refund', 'retry', 'pdf', 'mark-paid', 'undo-item', 'undo-suborder'],
 			],
+			'other' => [
+				'label' => 'Other',
+				'actions' => [],
+			],
 		];
 
 		$preferredActionOrder = [
@@ -94,6 +98,7 @@
 			foreach ($modulePermissions as $permission) {
 				$slug = (string) $permission->slug;
 				$action = str_contains($slug, '.') ? explode('.', $slug, 2)[1] : $slug;
+				$matchedBundle = false;
 
 				$moduleActionPermissionIds[$moduleName][$action] ??= [];
 				$moduleActionPermissionIds[$moduleName][$action][] = (int) $permission->id;
@@ -104,7 +109,13 @@
 					if (in_array($action, $bundleDefinition['actions'], true)) {
 						$moduleBundlePermissionIds[$moduleName][$bundleKey] ??= [];
 						$moduleBundlePermissionIds[$moduleName][$bundleKey][] = (int) $permission->id;
+						$matchedBundle = true;
 					}
+				}
+
+				if (! $matchedBundle) {
+					$moduleBundlePermissionIds[$moduleName]['other'] ??= [];
+					$moduleBundlePermissionIds[$moduleName]['other'][] = (int) $permission->id;
 				}
 			}
 
@@ -226,6 +237,7 @@
 					<span class="text-[11px] px-2 py-0.5 rounded-full bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-300">Manage: create/edit/delete/status</span>
 					<span class="text-[11px] px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300">Workflow: assign/reorder/bulk</span>
 					<span class="text-[11px] px-2 py-0.5 rounded-full bg-purple-50 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300">Financial: refund/retry/pdf/paid</span>
+					<span class="text-[11px] px-2 py-0.5 rounded-full bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300">Other: uncategorized actions</span>
 				</div>
 				<p class="mt-3 text-xs text-gray-500 dark:text-gray-400" x-show="mode === 'advanced'">
 					Advanced mode shows exact action columns generated from active permission slugs.

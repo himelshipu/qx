@@ -17,6 +17,7 @@ use App\Http\Controllers\Backend\FaqItemController;
 use App\Http\Controllers\Backend\FaqSectionController;
 use App\Http\Controllers\Backend\FeaturedCollaborationController;
 use App\Http\Controllers\Backend\InfluencerController;
+use App\Http\Controllers\Backend\InfluencerFeaturedController;
 use App\Http\Controllers\Backend\InfluencerPortfolioController;
 use App\Http\Controllers\Backend\KnowledgeBaseController;
 use App\Http\Controllers\Backend\MenuController;
@@ -288,6 +289,7 @@ Route::prefix('dashboard')->name('dashboard.')->middleware(['auth', 'verified', 
     });
 
     Route::get('/influencers', [InfluencerController::class, 'index'])->name('influencers.index');
+    Route::get('/influencers/table', [InfluencerController::class, 'table'])->name('influencers.table');
     Route::get('/influencers/create', [InfluencerController::class, 'create'])->name('influencers.create');
     Route::post('/influencers', [InfluencerController::class, 'store'])->name('influencers.store');
     Route::get('/influencers/details/{influencer}', [InfluencerController::class, 'view'])->name('influencers.view');
@@ -296,9 +298,15 @@ Route::prefix('dashboard')->name('dashboard.')->middleware(['auth', 'verified', 
     Route::delete('/influencers/{influencer}', [InfluencerController::class, 'destroy'])->name('influencers.destroy');
     Route::post('/influencers/{influencer}/toggle-status', [InfluencerController::class, 'toggleStatus'])->name('influencers.toggle-status');
     Route::post('/influencers/{influencer}/toggle-featured', [InfluencerController::class, 'toggleFeatured'])->name('influencers.toggle-featured');
-    Route::post('/influencers/reorder', [InfluencerController::class, 'reorder'])
-        ->middleware('check-permission:influencers.reorder')
-        ->name('influencers.reorder');
+
+    // Featured Influencers Routes
+    Route::prefix('influencers-featured')->name('influencers-featured.')->group(function () {
+        Route::get('/', [InfluencerFeaturedController::class, 'getFeatured'])->name('list');
+        Route::post('/add/{influencer}', [InfluencerFeaturedController::class, 'addFeatured'])->name('add');
+        Route::post('/remove/{influencer}', [InfluencerFeaturedController::class, 'removeFeatured'])->name('remove');
+        Route::post('/reorder', [InfluencerFeaturedController::class, 'reorderFeatured'])->name('reorder');
+        Route::get('/search', [InfluencerFeaturedController::class, 'searchInfluencers'])->name('search');
+    });
 
     // Influencer Portfolio Management
     Route::get('/influencers/{influencer}/portfolio', [InfluencerPortfolioController::class, 'index'])->name('influencers.portfolio.index');
@@ -312,6 +320,7 @@ Route::prefix('dashboard')->name('dashboard.')->middleware(['auth', 'verified', 
 
     // Admin campaigns
     Route::get('/campaigns/standard', [CampaignController::class, 'index'])->name('campaigns.standard');
+    Route::get('/campaigns/standard/table', [CampaignController::class, 'table'])->name('campaigns.standard.table');
     Route::get('/campaigns/standard/create', [CampaignController::class, 'create'])->name('campaigns.standard.create');
     Route::post('/campaigns', [CampaignController::class, 'store'])->name('campaigns.store');
     Route::get('/campaigns/details/{campaign}', [CampaignController::class, 'view'])->name('campaigns.view');

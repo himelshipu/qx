@@ -1,9 +1,9 @@
 import { createDashboardSortable } from "../shared/sortable";
 
-const ROOT_SELECTOR = "#brands-dashboard";
+const ROOT_SELECTOR = "#influencers-dashboard";
 
-function buildUrlFromTemplate(template, brandId) {
-    return template.replace("__ID__", String(brandId));
+function buildUrlFromTemplate(template, influencerId) {
+    return template.replace("__ID__", String(influencerId));
 }
 
 function getJsonHeaders(csrfToken) {
@@ -14,11 +14,11 @@ function getJsonHeaders(csrfToken) {
     };
 }
 
-class BrandsDashboardPage {
+class InfluencersDashboardPage {
     constructor(root) {
         this.root = root;
-        this.form = root.querySelector("#brand-filters-form");
-        this.resultsId = "brands-results";
+        this.form = root.querySelector("#influencer-filters-form");
+        this.resultsId = "influencers-results";
         this.modal = document.getElementById("feature-position-modal");
         this.featuredList = document.getElementById("featured-list");
         this.featuredCount = document.getElementById("featured-count");
@@ -56,6 +56,7 @@ class BrandsDashboardPage {
     bindFilters() {
         const searchInput = this.form.querySelector("#q");
         const statusSelect = this.form.querySelector("#status");
+        const featuredSelect = this.form.querySelector("#featured");
 
         searchInput?.addEventListener("input", () => {
             clearTimeout(this.filterDebounceTimer);
@@ -65,6 +66,7 @@ class BrandsDashboardPage {
         });
 
         statusSelect?.addEventListener("change", () => this.applyFilters());
+        featuredSelect?.addEventListener("change", () => this.applyFilters());
     }
 
     bindEvents() {
@@ -100,9 +102,9 @@ class BrandsDashboardPage {
                     return;
                 }
 
-                const brandId = Number(addFeaturedBtn.dataset.brandId);
-                if (Number.isInteger(brandId) && brandId > 0) {
-                    this.addFeaturedBrand(brandId);
+                const influencerId = Number(addFeaturedBtn.dataset.influencerId);
+                if (Number.isInteger(influencerId) && influencerId > 0) {
+                    this.addFeaturedInfluencer(influencerId);
                 }
                 return;
             }
@@ -110,9 +112,9 @@ class BrandsDashboardPage {
             const removeFeaturedBtn = event.target.closest(".js-remove-featured");
             if (removeFeaturedBtn) {
                 event.preventDefault();
-                const brandId = Number(removeFeaturedBtn.dataset.brandId);
-                if (Number.isInteger(brandId) && brandId > 0) {
-                    this.removeFeaturedBrand(brandId);
+                const influencerId = Number(removeFeaturedBtn.dataset.influencerId);
+                if (Number.isInteger(influencerId) && influencerId > 0) {
+                    this.removeFeaturedInfluencer(influencerId);
                 }
                 return;
             }
@@ -123,20 +125,21 @@ class BrandsDashboardPage {
         });
 
         document.addEventListener("change", (event) => {
-            const statusToggle = event.target.closest(".js-brand-status-toggle");
+            const statusToggle = event.target.closest(".js-influencer-status-toggle");
             if (statusToggle) {
-                const brandId = Number(statusToggle.dataset.brandId);
-                if (Number.isInteger(brandId) && brandId > 0) {
-                    this.toggleBrandStatus(brandId, statusToggle);
+                const influencerId = Number(statusToggle.dataset.influencerId);
+                if (Number.isInteger(influencerId) && influencerId > 0) {
+                    this.toggleInfluencerStatus(influencerId, statusToggle);
                 }
+
                 return;
             }
 
-            const featuredToggle = event.target.closest(".js-brand-featured-toggle");
+            const featuredToggle = event.target.closest(".js-influencer-featured-toggle");
             if (featuredToggle) {
-                const brandId = Number(featuredToggle.dataset.brandId);
-                if (Number.isInteger(brandId) && brandId > 0) {
-                    this.toggleBrandFeatured(brandId, featuredToggle);
+                const influencerId = Number(featuredToggle.dataset.influencerId);
+                if (Number.isInteger(influencerId) && influencerId > 0) {
+                    this.toggleInfluencerFeatured(influencerId, featuredToggle);
                 }
             }
         });
@@ -154,7 +157,7 @@ class BrandsDashboardPage {
                 }
 
                 this.featuredSearchDebounceTimer = setTimeout(() => {
-                    this.searchFeaturedBrands(query);
+                    this.searchFeaturedInfluencers(query);
                 }, 300);
             });
         }
@@ -164,6 +167,7 @@ class BrandsDashboardPage {
         const params = new URLSearchParams(new FormData(this.form));
         if (!params.get("q")) params.delete("q");
         if (!params.get("status") || params.get("status") === "all") params.delete("status");
+        if (!params.get("featured") || params.get("featured") === "all") params.delete("featured");
         return params.toString();
     }
 
@@ -191,12 +195,12 @@ class BrandsDashboardPage {
             });
 
             if (!response.ok) {
-                throw new Error("Failed to load brand table");
+                throw new Error("Failed to load influencer table");
             }
 
             const data = await response.json();
             if (!data.success || typeof data.html !== "string") {
-                throw new Error("Invalid brand table payload");
+                throw new Error("Invalid influencer table payload");
             }
 
             const currentResults = document.getElementById(this.resultsId);
@@ -211,7 +215,7 @@ class BrandsDashboardPage {
         }
     }
 
-    async toggleBrandStatus(brandId, checkbox) {
+    async toggleInfluencerStatus(influencerId, checkbox) {
         if (checkbox.disabled) {
             return;
         }
@@ -219,7 +223,7 @@ class BrandsDashboardPage {
         checkbox.disabled = true;
 
         try {
-            const url = buildUrlFromTemplate(this.routes.statusToggleTemplate, brandId);
+            const url = buildUrlFromTemplate(this.routes.statusToggleTemplate, influencerId);
             const response = await fetch(url, {
                 method: "POST",
                 headers: getJsonHeaders(this.csrfToken),
@@ -231,17 +235,17 @@ class BrandsDashboardPage {
 
             const data = await response.json();
             if (!data.success) {
-                throw new Error(data.message || "Failed to update brand status.");
+                throw new Error(data.message || "Failed to update influencer status.");
             }
 
             checkbox.checked = Boolean(data.is_active);
             if (window.toast) {
-                window.toast.success(data.message || "Brand status updated successfully.");
+                window.toast.success(data.message || "Influencer status updated successfully.");
             }
         } catch (error) {
             console.error(error);
             if (window.toast) {
-                window.toast.error(error?.message || "Unable to update brand status right now.");
+                window.toast.error(error?.message || "Unable to update influencer status right now.");
             }
             checkbox.checked = !checkbox.checked;
         } finally {
@@ -249,7 +253,7 @@ class BrandsDashboardPage {
         }
     }
 
-    async toggleBrandFeatured(brandId, checkbox) {
+    async toggleInfluencerFeatured(influencerId, checkbox) {
         if (checkbox.disabled) {
             return;
         }
@@ -261,7 +265,7 @@ class BrandsDashboardPage {
                 ? this.routes.featuredAddTemplate
                 : this.routes.featuredRemoveTemplate;
 
-            const url = buildUrlFromTemplate(template, brandId);
+            const url = buildUrlFromTemplate(template, influencerId);
             const response = await fetch(url, {
                 method: "POST",
                 headers: getJsonHeaders(this.csrfToken),
@@ -274,12 +278,12 @@ class BrandsDashboardPage {
             }
 
             if (window.toast) {
-                window.toast.success(data.message || "Featured status updated successfully.");
+                window.toast.success(data.message || "Influencer featured status updated successfully.");
             }
         } catch (error) {
             console.error(error);
             if (window.toast) {
-                window.toast.error(error?.message || "Failed to update featured status.");
+                window.toast.error(error?.message || "Unable to update influencer featured status right now.");
             }
             checkbox.checked = !checkbox.checked;
         } finally {
@@ -297,7 +301,7 @@ class BrandsDashboardPage {
 
         this.modal.classList.remove("hidden");
         document.body.classList.add("overflow-hidden");
-        await this.loadFeaturedBrands();
+        await this.loadFeaturedInfluencers();
     }
 
     closeFeaturedModal() {
@@ -311,7 +315,7 @@ class BrandsDashboardPage {
         this.featuredSearchInput.value = "";
     }
 
-    async loadFeaturedBrands() {
+    async loadFeaturedInfluencers() {
         this.modalLoading.classList.remove("hidden");
 
         try {
@@ -326,7 +330,7 @@ class BrandsDashboardPage {
             this.modalLoading.classList.add("hidden");
 
             if (!data.success) {
-                throw new Error(data.message || "Failed to load featured brands");
+                throw new Error(data.message || "Failed to load featured influencers");
             }
 
             if (Number.isInteger(data.data?.maxAllowed)) {
@@ -338,7 +342,7 @@ class BrandsDashboardPage {
             console.error(error);
             this.modalLoading.classList.add("hidden");
             if (window.toast) {
-                window.toast.error(error.message || "Failed to load featured brands");
+                window.toast.error(error.message || "Failed to load featured influencers");
             }
         }
     }
@@ -350,17 +354,17 @@ class BrandsDashboardPage {
         if (!featured.length) {
             this.featuredList.innerHTML = `
                 <li class="p-4 text-center text-sm text-gray-500 dark:text-gray-400">
-                    No featured brands yet. Search and add brands to get started.
+                    No featured influencers yet. Search and add influencers to get started.
                 </li>
             `;
             return;
         }
 
-        featured.forEach((brand) => {
+        featured.forEach((influencer) => {
             const li = document.createElement("li");
             li.className =
                 "flex cursor-move items-center gap-3 p-2.5 transition hover:bg-gray-100 dark:hover:bg-gray-700/50";
-            li.dataset.brandId = brand.id;
+            li.dataset.influencerId = influencer.id;
 
             li.innerHTML = `
                 <div class="shrink-0 text-gray-400" title="Drag to reorder">
@@ -370,15 +374,15 @@ class BrandsDashboardPage {
                 </div>
 
                 <div class="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-indigo-100 text-[10px] font-semibold text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300">
-                    ${brand.priority}
+                    ${influencer.priority}
                 </div>
 
                 <div class="min-w-0 flex-1">
-                    <p class="truncate text-sm font-medium text-gray-900 dark:text-white">${brand.brand_name}</p>
+                    <p class="truncate text-sm font-medium text-gray-900 dark:text-white">${influencer.display_name}</p>
                 </div>
 
                 <div class="flex shrink-0 items-center gap-2">
-                    <button type="button" class="js-remove-featured text-gray-400 transition hover:text-red-600 dark:hover:text-red-400" data-brand-id="${brand.id}" title="Remove from featured">
+                    <button type="button" class="js-remove-featured text-gray-400 transition hover:text-red-600 dark:hover:text-red-400" data-influencer-id="${influencer.id}" title="Remove from featured">
                         <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                         </svg>
@@ -396,23 +400,23 @@ class BrandsDashboardPage {
         this.featuredListSortable = createDashboardSortable(this.featuredList, {
             onEnd: async () => {
                 const rawIds = Array.from(
-                    this.featuredList.querySelectorAll("[data-brand-id]"),
-                ).map((el) => Number.parseInt(el.dataset.brandId || "0", 10));
+                    this.featuredList.querySelectorAll("[data-influencer-id]"),
+                ).map((el) => Number.parseInt(el.dataset.influencerId || "0", 10));
 
-                const brandIds = Array.from(
+                const influencerIds = Array.from(
                     new Set(rawIds.filter((id) => Number.isInteger(id) && id > 0)),
                 );
 
-                if (!brandIds.length) {
+                if (!influencerIds.length) {
                     return;
                 }
 
-                await this.updateFeaturedOrder(brandIds);
+                await this.updateFeaturedOrder(influencerIds);
             },
         });
     }
 
-    async searchFeaturedBrands(query) {
+    async searchFeaturedInfluencers(query) {
         try {
             const response = await fetch(
                 `${this.routes.featuredSearch}?q=${encodeURIComponent(query)}`,
@@ -428,26 +432,26 @@ class BrandsDashboardPage {
 
             if (!data.results || !data.results.length) {
                 this.searchResults.innerHTML =
-                    '<div class="p-3 text-center text-sm text-gray-500">No brands found</div>';
+                    '<div class="p-3 text-center text-sm text-gray-500">No influencers found</div>';
                 this.searchResults.classList.remove("hidden");
                 return;
             }
 
             this.searchResults.innerHTML = data.results
                 .map(
-                    (brand) => `
+                    (influencer) => `
                     <div class="flex items-center gap-3 border-b border-gray-100 p-3 last:border-b-0 dark:border-gray-700">
                         <div class="flex-1">
-                            <p class="text-sm font-medium text-gray-900 dark:text-white">${brand.brand_name}</p>
-                            <p class="text-xs text-gray-500 dark:text-gray-400">${brand.is_featured ? "Already featured" : "Not featured"}</p>
+                            <p class="text-sm font-medium text-gray-900 dark:text-white">${influencer.display_name}</p>
+                            <p class="text-xs text-gray-500 dark:text-gray-400">${influencer.is_featured ? "Already featured" : "Not featured"}</p>
                         </div>
                         <button
                             type="button"
                             class="js-add-featured rounded bg-indigo-600 px-3 py-1 text-xs font-medium text-white transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60"
-                            data-brand-id="${brand.id}"
-                            ${brand.is_featured ? "disabled" : ""}
+                            data-influencer-id="${influencer.id}"
+                            ${influencer.is_featured ? "disabled" : ""}
                         >
-                            ${brand.is_featured ? "Featured" : "Add"}
+                            ${influencer.is_featured ? "Featured" : "Add"}
                         </button>
                     </div>
                 `,
@@ -458,14 +462,14 @@ class BrandsDashboardPage {
         } catch (error) {
             console.error(error);
             if (window.toast) {
-                window.toast.error("Failed to search brands");
+                window.toast.error("Failed to search influencers");
             }
         }
     }
 
-    async addFeaturedBrand(brandId) {
+    async addFeaturedInfluencer(influencerId) {
         try {
-            const url = buildUrlFromTemplate(this.routes.featuredAddTemplate, brandId);
+            const url = buildUrlFromTemplate(this.routes.featuredAddTemplate, influencerId);
             const response = await fetch(url, {
                 method: "POST",
                 headers: getJsonHeaders(this.csrfToken),
@@ -474,16 +478,16 @@ class BrandsDashboardPage {
             const data = await response.json();
 
             if (!data.success) {
-                throw new Error(data.message || "Failed to add brand");
+                throw new Error(data.message || "Failed to add influencer");
             }
 
             if (window.toast) {
                 window.toast.success(data.message);
             }
 
-            if (data.removedBrand && window.toast) {
+            if (data.removedInfluencer && window.toast) {
                 window.toast.info(
-                    `Removed "${data.removedBrand.brand_name}" (max ${this.maxFeatured} featured brands)`,
+                    `Removed "${data.removedInfluencer.display_name}" (max ${this.maxFeatured} featured influencers)`,
                 );
             }
 
@@ -494,14 +498,14 @@ class BrandsDashboardPage {
         } catch (error) {
             console.error(error);
             if (window.toast) {
-                window.toast.error(error.message || "Failed to add brand to featured");
+                window.toast.error(error.message || "Failed to add influencer to featured");
             }
         }
     }
 
-    async removeFeaturedBrand(brandId) {
+    async removeFeaturedInfluencer(influencerId) {
         try {
-            const url = buildUrlFromTemplate(this.routes.featuredRemoveTemplate, brandId);
+            const url = buildUrlFromTemplate(this.routes.featuredRemoveTemplate, influencerId);
             const response = await fetch(url, {
                 method: "POST",
                 headers: getJsonHeaders(this.csrfToken),
@@ -510,7 +514,7 @@ class BrandsDashboardPage {
             const data = await response.json();
 
             if (!data.success) {
-                throw new Error(data.message || "Failed to remove brand");
+                throw new Error(data.message || "Failed to remove influencer");
             }
 
             if (window.toast) {
@@ -521,17 +525,17 @@ class BrandsDashboardPage {
         } catch (error) {
             console.error(error);
             if (window.toast) {
-                window.toast.error(error.message || "Failed to remove brand from featured");
+                window.toast.error(error.message || "Failed to remove influencer from featured");
             }
         }
     }
 
-    async updateFeaturedOrder(brandIds) {
+    async updateFeaturedOrder(influencerIds) {
         try {
             const response = await fetch(this.routes.featuredReorder, {
                 method: "POST",
                 headers: getJsonHeaders(this.csrfToken),
-                body: JSON.stringify({ order: brandIds }),
+                body: JSON.stringify({ order: influencerIds }),
             });
 
             const data = await response.json();
@@ -542,7 +546,7 @@ class BrandsDashboardPage {
 
             this.renderFeaturedList(data.featured, data.featured.length);
             if (window.toast) {
-                window.toast.success(data.message || "Featured brand positions updated successfully.");
+                window.toast.success(data.message || "Featured influencer positions updated successfully.");
             }
         } catch (error) {
             console.error(error);
@@ -550,19 +554,19 @@ class BrandsDashboardPage {
                 window.toast.error(error.message || "Failed to update featured order");
             }
 
-            this.loadFeaturedBrands();
+            this.loadFeaturedInfluencers();
         }
     }
 }
 
-function initBrandsDashboard() {
+function initInfluencersDashboard() {
     const root = document.querySelector(ROOT_SELECTOR);
     if (!root) {
         return;
     }
 
-    const page = new BrandsDashboardPage(root);
+    const page = new InfluencersDashboardPage(root);
     page.init();
 }
 
-document.addEventListener("DOMContentLoaded", initBrandsDashboard);
+document.addEventListener("DOMContentLoaded", initInfluencersDashboard);

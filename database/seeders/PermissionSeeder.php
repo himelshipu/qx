@@ -56,6 +56,7 @@ class PermissionSeeder extends Seeder
 
             // MANAGEMENT: INFLUENCERS
             ['name' => 'View Influencers', 'slug' => 'influencers.index', 'module' => 'influencers'],
+            ['name' => 'View Influencer Table', 'slug' => 'influencers.table', 'module' => 'influencers'],
             ['name' => 'Create Influencer', 'slug' => 'influencers.create', 'module' => 'influencers'],
             ['name' => 'Store Influencer', 'slug' => 'influencers.store', 'module' => 'influencers'],
             ['name' => 'View Influencer Details', 'slug' => 'influencers.view', 'module' => 'influencers'],
@@ -64,7 +65,6 @@ class PermissionSeeder extends Seeder
             ['name' => 'Delete Influencer', 'slug' => 'influencers.destroy', 'module' => 'influencers'],
             ['name' => 'Toggle Influencer Status', 'slug' => 'influencers.toggle-status', 'module' => 'influencers'],
             ['name' => 'Toggle Influencer Featured', 'slug' => 'influencers.toggle-featured', 'module' => 'influencers'],
-            ['name' => 'Reorder Influencers', 'slug' => 'influencers.reorder', 'module' => 'influencers'],
 
             // MANAGEMENT: INFLUENCER PORTFOLIO
             ['name' => 'View Portfolio Items', 'slug' => 'influencers.portfolio.index', 'module' => 'influencers'],

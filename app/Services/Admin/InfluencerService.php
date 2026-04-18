@@ -25,15 +25,16 @@ final class InfluencerService
     /**
      * Build influencer listing payload for dashboard index page.
      *
-     * @return array{influencers:\Illuminate\Contracts\Pagination\LengthAwarePaginator,stats:array{total:int,active:int,inactive:int,categorized:int},search:string,status:string}
+     * @return array{influencers:\Illuminate\Contracts\Pagination\LengthAwarePaginator,stats:array{total:int,active:int,inactive:int,categorized:int,featured:int},search:string,status:string,featured:string}
      */
-    public function getListingPayload(string $search, string $status): array
+    public function getListingPayload(string $search, string $status, string $featured = 'all', int $perPage = 12): array
     {
         return [
-            'influencers' => $this->influencerRepository->paginateForDashboard($search, $status),
+            'influencers' => $this->influencerRepository->paginateForDashboard($search, $status, $featured, $perPage),
             'stats'       => $this->influencerRepository->getStats(),
             'search'      => $search,
-            'status'      => $status
+            'status'      => $status,
+            'featured'    => $featured,
         ];
     }
 

@@ -4,21 +4,6 @@
 
 @section('content')
 	@php
-		$statusClass = match ($campaign->status) {
-		    'published' => 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
-		    'paused' => 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300',
-		    'closed' => 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300',
-		    'archived' => 'bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-300',
-		    default => 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
-		};
-		$minBudgetLabel =
-		    $campaign->budget_min !== null
-		        ? $campaign->currency . ' ' . number_format((float) $campaign->budget_min, 2)
-		        : 'N/A';
-		$maxBudgetLabel =
-		    $campaign->budget_max !== null
-		        ? $campaign->currency . ' ' . number_format((float) $campaign->budget_max, 2)
-		        : 'N/A';
 		$invitedCount = $campaign->applications->where('status', 'invited')->count();
 		$appliedCount = $campaign->applications->where('status', 'applied')->count();
 		$approvedCount = $campaign->applications->where('status', 'approved')->count();
@@ -34,6 +19,9 @@
 				<div class="flex-1">
 					<h2 class="text-2xl font-bold text-gray-900 dark:text-white">{{ $campaign->title }}</h2>
 					<p class="mt-1 text-sm text-gray-600 dark:text-gray-400">{{ $campaign->campaign_type ?? 'Standard Campaign' }} • {{ $campaign->brand?->brand_name ?? 'N/A' }}</p>
+					<span class="mt-2 inline-flex w-fit rounded-full px-2.5 py-1 text-xs font-semibold {{ $campaign->dashboard_status_badge_class }}">
+						{{ $campaign->dashboard_status_label }}
+					</span>
 				</div>
 				<div class="flex flex-col gap-2 sm:flex-row sm:items-center">
 					<!-- Status Dropdown -->
@@ -42,7 +30,7 @@
 						<div class="flex items-center gap-2">
 							<label for="status" class="text-xs font-semibold text-gray-600 dark:text-gray-400">STATUS:</label>
 							<select name="status" onchange="this.form.submit()"
-								class="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium {{ $statusClass }} cursor-pointer focus:outline-none dark:border-gray-600 dark:bg-gray-800">
+								class="cursor-pointer rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-white">
 								<option value="published" {{ $campaign->status === 'published' ? 'selected' : '' }}>Published</option>
 								<option value="paused" {{ $campaign->status === 'paused' ? 'selected' : '' }}>Paused</option>
 								<option value="closed" {{ $campaign->status === 'closed' ? 'selected' : '' }}>Closed</option>
@@ -159,11 +147,7 @@
 					<div class="flex justify-between">
 						<dt class="text-gray-600 dark:text-gray-400">Budget</dt>
 						<dd class="font-medium text-gray-900 dark:text-white">
-							@if ($campaign->budget_min === null && $campaign->budget_max === null)
-								N/A
-							@else
-								{{ $minBudgetLabel }} - {{ $maxBudgetLabel }}
-							@endif
+							{{ $campaign->budget_range_label }}
 						</dd>
 					</div>
 					<div class="flex justify-between">

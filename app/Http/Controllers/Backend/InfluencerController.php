@@ -7,7 +7,6 @@ use App\Http\Requests\Backend\Influencer\StoreInfluencerRequest;
 use App\Http\Requests\Backend\Influencer\UpdateInfluencerRequest;
 use App\Models\Influencer;
 use App\Services\Admin\InfluencerService;
-use App\Traits\Sortable;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -15,8 +14,6 @@ use Illuminate\View\View;
 
 class InfluencerController extends Controller
 {
-    use Sortable;
-
     public function __construct(
         private readonly InfluencerService $influencerService
     ) {}
@@ -26,10 +23,27 @@ class InfluencerController extends Controller
      */
     public function index(Request $request): View
     {
-        $search = trim((string) $request->string('q', ''));
-        $status = (string) $request->string('status', 'all');
+        [$search, $status, $featured] = $this->resolveFilters($request);
 
-        return view('backend.pages.influencers.index', $this->influencerService->getListingPayload($search, $status));
+        return view('backend.pages.influencers.index', $this->influencerService->getListingPayload($search, $status, $featured));
+    }
+
+    /**
+     * Return only dashboard influencer table HTML for faster filter updates.
+     */
+    public function table(Request $request): JsonResponse
+    {
+        [$search, $status, $featured] = $this->resolveFilters($request);
+        $payload = $this->influencerService->getListingPayload($search, $status, $featured);
+
+        $html = view('backend.pages.influencers._results', [
+            'influencers' => $payload['influencers'],
+        ])->render();
+
+        return response()->json([
+            'success' => true,
+            'html' => $html,
+        ]);
     }
 
     /**
@@ -139,15 +153,16 @@ class InfluencerController extends Controller
     }
 
     /**
-     * Reorder influencers via AJAX.
+     * Resolve dashboard filters from request.
+     *
+     * @return array{0:string,1:string,2:string}
      */
-    public function reorder(Request $request): JsonResponse
+    private function resolveFilters(Request $request): array
     {
-        $validated = $request->validate([
-            'order' => 'required|array',
-            'order.*' => 'exists:influencers,id',
-        ]);
+        $search = trim((string) $request->string('q', ''));
+        $status = (string) $request->string('status', 'all');
+        $featured = (string) $request->string('featured', 'all');
 
-        return $this->reorderItems($validated['order'], Influencer::class);
+        return [$search, $status, $featured];
     }
 }

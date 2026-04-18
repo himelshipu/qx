@@ -86,9 +86,8 @@ All controllers now have the `Sortable` trait + `reorder()` method:
 - ✅ Route: `POST /dashboard/categories/reorder`
 
 #### InfluencerController
-- ✅ Added trait
-- ✅ Added `reorder()` method
-- ✅ Route: `POST /dashboard/influencers/reorder`
+- ⚠️ Legacy note: list-level influencer drag reorder was removed.
+- ✅ Influencer featured positioning is now managed from the Feature Position modal.
 
 #### TestimonialController
 - ✅ Added trait
@@ -108,8 +107,8 @@ All four index pages now include the sortable component:
 - ✅ Added sortable section after stats
 
 #### Influencers
-- ✅ `resources/views/backend/pages/influencers/index.blade.php`
-- ✅ Added sortable section after stats
+- ⚠️ Legacy note: sortable list section was removed from influencer index.
+- ✅ Influencer ordering now uses featured modal priority only.
 
 #### Testimonials
 - ✅ `resources/views/backend/pages/testimonials/index.blade.php`
@@ -142,8 +141,9 @@ protected function casts(): array {
 Route::post('/categories/reorder', [CategoryController::class, 'reorder'])
     ->name('categories.reorder');
 
-Route::post('/influencers/reorder', [InfluencerController::class, 'reorder'])
-    ->name('influencers.reorder');
+// Influencer list reorder route removed.
+// Influencer featured modal reorder route:
+// POST /dashboard/influencers-featured/reorder
 
 Route::post('/testimonials/reorder', [TestimonialController::class, 'reorder'])
     ->name('testimonials.reorder');
@@ -155,7 +155,7 @@ Route::post('/brands/reorder', [BrandController::class, 'reorder'])
 ## How It Works
 
 ### User Experience
-1. **Navigate** to any list page (Categories, Influencers, Testimonials, Brands)
+1. **Navigate** to any list page (Categories, Testimonials, Brands)
 2. **Scroll down** to "Reorder [Items]" section (after stats)
 3. **Drag items** using the ⋮ handle on the left
 4. **Release** to save - changes are auto-saved via AJAX

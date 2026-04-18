@@ -17,6 +17,8 @@ import "./admin/featured-collaborations-dashboard";
 import "./admin/featured-collaboration-form";
 import "./admin/faq-items-dashboard";
 import "./admin/faq-sections-dashboard";
+import "./admin/influencers-dashboard";
+import "./admin/campaigns-dashboard";
 import "./admin/knowledge-base-dashboard";
 import "./admin/settings-dashboard";
 import "./admin/testimonials-dashboard";

@@ -9,7 +9,6 @@
 **New Permissions Added**:
 - ✅ `categories.reorder` - Reorder categories drag-drop
 - ✅ `brands.reorder` - Reorder brands drag-drop
-- ✅ `influencers.reorder` - Reorder influencers drag-drop
 - ✅ `testimonials.reorder` - Reorder testimonials drag-drop
 - ✅ `analytics.users` - View user analytics
 - ✅ `analytics.campaigns` - View campaign analytics
@@ -109,7 +108,6 @@ $middleware->alias([
 **Protected Routes**:
 - ✅ `POST /dashboard/categories/reorder` → requires `categories.reorder`
 - ✅ `POST /dashboard/brands/reorder` → requires `brands.reorder`
-- ✅ `POST /dashboard/influencers/reorder` → requires `influencers.reorder`
 - ✅ `POST /dashboard/testimonials/reorder` → requires `testimonials.reorder`
 
 **Example**:
@@ -168,7 +166,6 @@ SELECT slug FROM permissions WHERE slug LIKE '%.reorder' ORDER BY slug;
 -- Expected:
 --   categories.reorder
 --   brands.reorder
---   influencers.reorder
 --   portfolios.reorder
 --   testimonials.reorder
 
