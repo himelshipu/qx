@@ -3,7 +3,7 @@
 @section('title', 'Campaigns')
 
 @section('content')
-	<div x-data="campaignFilter()" class="mt-8 px-2">
+	<div x-data="campaignFilter({ search: @js($search ?? ''), status: @js($status ?? 'all'), type: @js($type ?? 'all'), campaigns: @js($campaignsData) })" class="mt-8 px-2">
 	
 		<!-- Header with Create Campaign Button -->
 		<div class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
@@ -80,7 +80,8 @@
 		<div class="mt-6 grid grid-cols-1 gap-6 pb-20 md:grid-cols-2 lg:grid-cols-3 lg:gap-8">
 			<template x-for="campaign in filteredCampaigns" :key="campaign.id">
 				<div
-					class="group relative aspect-[4/3] overflow-hidden rounded-[1.8rem] border border-gray-100 bg-gray-100 shadow-sm transition-all duration-500 hover:shadow-2xl dark:border-gray-800 dark:bg-gray-900">
+					class="group relative overflow-hidden rounded-[1.8rem] border border-gray-100 bg-gray-100 shadow-sm transition-all duration-500 hover:shadow-2xl dark:border-gray-800 dark:bg-gray-900"
+					style="aspect-ratio: 4 / 3;">
 					<a :href="`/campaigns/${campaign.id}`" class="absolute inset-0 z-10"
 						:aria-label="`View ${campaign.title}`"></a>
 
@@ -88,7 +89,7 @@
 						class="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
 						onerror="this.onerror=null;this.src='{{ asset('images/campaignApply.png') }}';">
 
-					<div class="absolute inset-0 z-10 bg-gradient-to-t from-black/95 via-black/30 to-transparent opacity-90"></div>
+					<div class="absolute inset-0 z-10 opacity-90" style="background: linear-gradient(to top, rgba(0, 0, 0, 0.95) 0%, rgba(0, 0, 0, 0.30) 55%, transparent 100%);"></div>
 
 					<div class="absolute left-5 top-5 z-20 flex items-center gap-2">
 						<span :class="getStatusBadgeClass(campaign.status)"
@@ -177,73 +178,6 @@
 			</div>
 		</template>
 	</div>
-
-	<script>
-		function campaignFilter() {
-			return {
-				search: '{{ $search ?? '' }}',
-				status: '{{ $status ?? 'all' }}',
-				type: '{{ $type ?? 'all' }}',
-				campaigns: @json($campaignsData),
-				filteredCampaigns: [],
-
-				init() {
-					this.filterCampaigns();
-				},
-
-				filterCampaigns() {
-					const search = this.search.toLowerCase();
-					const status = this.status;
-					const type = this.type;
-
-					this.filteredCampaigns = this.campaigns.filter(campaign => {
-						const matchesSearch = !search ||
-							campaign.title.toLowerCase().includes(search) ||
-							campaign.campaign_type.toLowerCase().includes(search);
-
-						const matchesStatus = status === 'all' || campaign.status === status;
-						const matchesType = type === 'all' || campaign.campaign_type === type;
-
-						return matchesSearch && matchesStatus && matchesType;
-					});
-				},
-
-				resetFilters() {
-					this.search = '';
-					this.status = 'all';
-					this.type = 'all';
-					this.filterCampaigns();
-				},
-
-				getStatusBadgeClass(status) {
-					const classes = {
-						'published': 'bg-emerald-500 text-white',
-						'paused': 'bg-amber-500 text-white',
-						'closed': 'bg-red-500 text-white',
-						'archived': 'bg-gray-500 text-white',
-						'draft': 'bg-pink-500 text-white',
-					};
-					return classes[status] || 'bg-pink-500 text-white';
-				},
-
-				capitalizeStatus(text) {
-					if (!text) return '';
-					return text
-						.replace(/([A-Z])/g, ' $1')
-						.replace(/^./, str => str.toUpperCase())
-						.trim();
-				},
-
-				deleteCampaign(e, campaignId) {
-					// Let the js-confirmable handler take over
-					const button = e.target.closest('button');
-					if (button && button.classList.contains('js-confirmable')) {
-						button.click();
-					}
-				}
-			}
-		}
-	</script>
 
 	<style>
 		[x-cloak] {

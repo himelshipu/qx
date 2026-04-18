@@ -61,7 +61,9 @@ class CampaignIndexQuery
      */
     public function paginate(): Paginator
     {
-        return $this->buildQuery()->paginate($this->perPage);
+        return $this->buildQuery()
+            ->paginate($this->perPage)
+            ->withQueryString();
     }
 
     /**
@@ -69,17 +71,41 @@ class CampaignIndexQuery
      */
     protected function buildQuery(): Builder
     {
-        $query = Campaign::query();
+        $query = Campaign::query()->select([
+            'id',
+            'title',
+            'campaign_type',
+            'status',
+            'is_active',
+            'currency',
+            'start_date',
+            'end_date',
+            'created_by',
+            'brand_id',
+            'created_at',
+        ]);
 
         // Role-based filtering
         if ($this->user->user_type === 'brand') {
             // Brands see campaigns they created OR campaigns assigned to them (including by admin)
+            $brandId = $this->user->brand?->id;
             $query->where(function (Builder $q) {
                 $q->where('created_by', $this->user->id)
                     ->orWhere('brand_id', $this->user->brand?->id);
             });
+
+            if ($brandId === null) {
+                $query->where('created_by', $this->user->id);
+            }
         } elseif ($this->user->user_type === 'influencer') {
             // Influencers see campaigns they've applied to
+            $influencerId = $this->user->influencer?->id;
+            if (! $influencerId) {
+                $query->whereRaw('1 = 0');
+
+                return $query;
+            }
+
             $query->whereHas('applications', function (Builder $q) {
                 $q->where('influencer_id', $this->user->influencer->id);
             });
@@ -105,8 +131,8 @@ class CampaignIndexQuery
 
         // Eager load relationships to prevent N+1 queries
         $query->with([
-            'categories' => fn($q) => $q->select('categories.id', 'categories.image_path'),
-            'targeting' => fn($q) => $q->select('id', 'campaign_id', 'influencer_count'),
+            'categories' => fn ($q) => $q->select('categories.id', 'categories.image_path'),
+            'targeting' => fn ($q) => $q->select('id', 'campaign_id', 'influencer_count'),
         ])
         ->withCount(['applications', 'categories']);
 

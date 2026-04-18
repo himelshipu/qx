@@ -30,6 +30,9 @@ import "./admin/support-tickets-dashboard";
 import "./admin/packages-dashboard";
 import "./admin/static-page-form";
 import "./admin/static-pages-dashboard";
+import "./frontend/campaigns-index";
+import "./frontend/campaigns-create";
+import "./frontend/campaigns-show";
 
 Alpine.plugin(collapse);
 

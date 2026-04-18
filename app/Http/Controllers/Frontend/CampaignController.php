@@ -9,17 +9,15 @@ use App\Actions\Frontend\Campaign\UpdateCampaignAction;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Backend\Campaign\StoreCampaignRequest;
 use App\Models\Campaign;
-use App\Models\CampaignApplication;
 use App\Models\CampaignInfluencer;
-use App\Models\SubOrder;
 use App\Queries\Frontend\Campaign\CampaignIndexQuery;
 use App\Services\Admin\CampaignService;
 use App\ViewModels\Frontend\Campaign\CampaignIndexViewModel;
+use App\ViewModels\Frontend\Campaign\CampaignShowViewModel;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
 
 class CampaignController extends Controller
@@ -151,21 +149,24 @@ class CampaignController extends Controller
             }
         }
 
-        return view('frontend.campaigns.designed-show', [
+        $showViewModel = new CampaignShowViewModel(
+            $campaign,
+            $workProgress,
+            $assignmentByInfluencer,
+            $influencerApplication,
+        );
+
+        $showPayload = $showViewModel->toArray();
+
+        return view('frontend.campaigns.designed-show', array_merge([
             'campaign'              => $campaign,
             'invitedInfluencers'    => $campaign->applications->where('status', 'invited')->values(),
-            'applicationStats'      => [
-                'invited'  => $campaign->applications->where('status', 'invited')->count(),
-                'applied'  => $campaign->applications->whereIn('status', ['applied', 'countered_by_brand', 'countered_by_influencer'])->count(),
-                'approved' => $campaign->applications->whereIn('status', ['approved', 'completed'])->count(),
-                'rejected' => $campaign->applications->whereIn('status', ['rejected', 'declined_by_brand', 'declined_by_influencer'])->count()
-            ],
-            'workProgress'          => $workProgress,
+            'workProgress'          => $showPayload['workProgressCards'],
             'progressByApplication' => $workProgress->keyBy('application_id'),
-                'assignmentByInfluencer' => $assignmentByInfluencer,
+            'assignmentByInfluencer' => $assignmentByInfluencer,
             'brandName'             => $campaign->brand?->brand_name ?? $campaign->createdBy?->name ?? 'Unknown',
             'influencerApplication' => $influencerApplication,
-        ]);
+        ], $showPayload));
     }
 
     public function edit(Campaign $campaign): View
@@ -183,7 +184,7 @@ class CampaignController extends Controller
             'target_gender'    => $campaign->targeting?->target_gender,
             'age_min'          => $campaign->targeting?->age_min,
             'age_max'          => $campaign->targeting?->age_max,
-            'targeting_notes'  => $campaign->targeting?->targeting_notes
+            'targeting_notes'  => $campaign->targeting?->notes
         ];
 
         return view('frontend.campaigns.designed-create', array_merge($payload, [
@@ -268,261 +269,13 @@ class CampaignController extends Controller
             ->with('success', "Assignment {$status} successfully.");
     }
 
-    public function updateApplicationStatus(Campaign $campaign, $applicationId, Request $request): RedirectResponse
-    {
-        Gate::authorize('update', $campaign);
-        $validated = $request->validate([
-            'action' => 'nullable|in:accept,counter,decline',
-            'status' => 'nullable|in:approved,rejected',
-            'brand_offer' => 'nullable|numeric|min:0.01',
-        ]);
-
-        $application = \App\Models\CampaignApplication::where('campaign_id', $campaign->id)
-            ->where('id', $applicationId)
-            ->firstOrFail();
-
-        if ($application->status === 'completed') {
-            return redirect()->route('frontend.campaigns.show', $campaign)
-                ->with('error', 'Cannot modify completed applications. This influencer has already completed their work on this campaign.');
-        }
-
-        if ($campaign->status === 'closed') {
-            return redirect()->route('frontend.campaigns.show', $campaign)
-                ->with('error', 'Cannot modify applications for closed campaigns. The campaign is no longer active.');
-        }
-
-        $action = (string) ($validated['action'] ?? '');
-
-        // Backward compatibility for existing approve/reject forms.
-        if ($action === '') {
-            $legacyStatus = (string) ($validated['status'] ?? '');
-            if ($legacyStatus === 'approved') {
-                $action = 'accept';
-            } elseif ($legacyStatus === 'rejected') {
-                $action = 'decline';
-            }
-        }
-
-        if (! in_array($action, ['accept', 'counter', 'decline'], true)) {
-            return redirect()->route('frontend.campaigns.show', $campaign)
-                ->with('error', 'Invalid negotiation action.');
-        }
-
-        if ($application->isTerminal()) {
-            return redirect()->route('frontend.campaigns.show', $campaign)
-                ->with('warning', 'This application is already finalized.');
-        }
-
-        if (! $application->canNegotiate()) {
-            return redirect()->route('frontend.campaigns.show', $campaign)
-                ->with('error', 'This application cannot be negotiated in its current state.');
-        }
-
-        if ($action === 'counter') {
-            $offer = $validated['brand_offer'] ?? null;
-            if (! is_numeric($offer) || (float) $offer <= 0) {
-                return redirect()->route('frontend.campaigns.show', $campaign)
-                    ->with('error', 'Please enter a valid counter offer amount.');
-            }
-
-            $application->update([
-                'status' => 'countered_by_brand',
-                'brand_offer' => round((float) $offer, 2),
-                'last_counter_by' => 'brand',
-                'last_counter_at' => now(),
-                'agreed_rate' => null,
-                'agreed_at' => null,
-                'declined_at' => null,
-                'declined_by' => null,
-                'decided_at' => null,
-            ]);
-
-            return redirect()->route('frontend.campaigns.show', $campaign)
-                ->with('success', 'Counter offer sent to influencer.');
-        }
-
-        if ($action === 'decline') {
-            $application->update([
-                'status' => 'declined_by_brand',
-                'declined_by' => 'brand',
-                'declined_at' => now(),
-                'decided_at' => now(),
-            ]);
-
-            $this->syncCampaignInfluencerFromApplication($campaign, $application, Auth::id());
-
-            return redirect()->route('frontend.campaigns.show', $campaign)
-                ->with('success', 'Application declined.');
-        }
-
-        $acceptedRate = $application->influencer_offer
-            ?? $application->proposed_rate
-            ?? $application->brand_offer;
-
-        if ($acceptedRate === null || (float) $acceptedRate <= 0) {
-            return redirect()->route('frontend.campaigns.show', $campaign)
-                ->with('error', 'No valid offer is available to accept.');
-        }
-
-        $application->update([
-            'status' => 'approved',
-            'agreed_rate' => round((float) $acceptedRate, 2),
-            'agreed_at' => now(),
-            'decided_at' => now(),
-            'declined_at' => null,
-            'declined_by' => null,
-        ]);
-
-        $this->syncCampaignInfluencerFromApplication($campaign, $application, Auth::id());
-
-        return redirect()->route('frontend.campaigns.show', $campaign)
-            ->with('success', 'Offer accepted and influencer approved successfully.');
-    }
-
-    /**
-     * Influencer responds to a brand offer with accept/counter/decline.
-     */
-    public function respondToOffer(CampaignApplication $application, Request $request): RedirectResponse
-    {
-        $user = Auth::user();
-        $influencerId = $user->influencer?->id;
-
-        if ($user->user_type !== 'influencer' || ! $influencerId || (int) $application->influencer_id !== (int) $influencerId) {
-            abort(403, 'Not authorized');
-        }
-
-        $campaign = $application->campaign;
-
-        if ($campaign->status === 'closed') {
-            return redirect()->route('frontend.campaigns.show', $campaign)
-                ->with('error', 'Campaign is closed. Negotiation is unavailable.');
-        }
-
-        if ($application->isTerminal()) {
-            return redirect()->route('frontend.campaigns.show', $campaign)
-                ->with('warning', 'This application is already finalized.');
-        }
-
-        $validated = $request->validate([
-            'action' => 'required|in:accept,counter,decline',
-            'influencer_offer' => 'nullable|numeric|min:0.01',
-        ]);
-
-        if ($validated['action'] === 'counter') {
-            $offer = $validated['influencer_offer'] ?? null;
-            if (! is_numeric($offer) || (float) $offer <= 0) {
-                return redirect()->route('frontend.campaigns.show', $campaign)
-                    ->with('error', 'Please enter a valid counter offer amount.');
-            }
-
-            $amount = round((float) $offer, 2);
-
-            $application->update([
-                'status' => 'countered_by_influencer',
-                'influencer_offer' => $amount,
-                'proposed_rate' => $amount,
-                'last_counter_by' => 'influencer',
-                'last_counter_at' => now(),
-                'agreed_rate' => null,
-                'agreed_at' => null,
-                'decided_at' => null,
-                'declined_at' => null,
-                'declined_by' => null,
-            ]);
-
-            return redirect()->route('frontend.campaigns.show', $campaign)
-                ->with('success', 'Counter offer sent to brand.');
-        }
-
-        if ($validated['action'] === 'decline') {
-            $application->update([
-                'status' => 'declined_by_influencer',
-                'declined_by' => 'influencer',
-                'declined_at' => now(),
-                'decided_at' => now(),
-            ]);
-
-            $this->syncCampaignInfluencerFromApplication($campaign, $application);
-
-            return redirect()->route('frontend.campaigns.show', $campaign)
-                ->with('success', 'You declined this campaign offer.');
-        }
-
-        $acceptedRate = $application->brand_offer;
-        if ($acceptedRate === null || (float) $acceptedRate <= 0) {
-            return redirect()->route('frontend.campaigns.show', $campaign)
-                ->with('error', 'No valid brand offer available to accept.');
-        }
-
-        $application->update([
-            'status' => 'approved',
-            'agreed_rate' => round((float) $acceptedRate, 2),
-            'agreed_at' => now(),
-            'decided_at' => now(),
-            'declined_at' => null,
-            'declined_by' => null,
-        ]);
-
-        $this->syncCampaignInfluencerFromApplication($campaign, $application);
-
-        return redirect()->route('frontend.campaigns.show', $campaign)
-            ->with('success', 'Offer accepted. Final agreed price has been locked.');
-    }
-
-    public function updateStatus(Campaign $campaign, Request $request)
-    {
-        Gate::authorize('update', $campaign);
-        
-        $validated = $request->validate([
-            'status' => 'required|in:draft,published,paused,closed,archived'
-        ]);
-
-        $newStatus = $validated['status'];
-
-        // Prevent certain transitions
-        if ($campaign->status === 'closed' && $newStatus !== 'archived') {
-            return response()->json([
-                'success' => false,
-                'message' => 'Closed campaigns can only be archived.'
-            ], 422);
-        }
-
-        try {
-            $campaign->update([
-                'status'       => $newStatus,
-                'published_at' => $newStatus === 'published' ? now() : $campaign->published_at
-            ]);
-
-            $statusLabel = match ($newStatus) {
-                'draft'     => 'Draft',
-                'published' => 'Published',
-                'paused'    => 'Paused',
-                'closed'    => 'Closed',
-                'archived'  => 'Archived',
-                default     => 'Unknown'
-            };
-
-            return response()->json([
-                'success' => true,
-                'message' => "Campaign status updated to {$statusLabel}",
-                'status'  => $newStatus,
-                'status_label' => $statusLabel
-            ]);
-        } catch (\Exception $e) {
-            Log::error('Campaign status update failed', ['error' => $e->getMessage()]);
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to update campaign status'
-            ], 500);
-        }
-    }
 
     private function getWizardStep(): int
     {
         $stepTwoFields = ['title', 'description', 'instructions', 'status', 'currency', 'budget_min', 'budget_max', 'start_date', 'end_date'];
         $requestedStep = (int) request('wizard_step', 1);
-        $errors        = session('errors') ?? new \Illuminate\Support\ViewErrorBag();
-        $hasErrors     = collect($stepTwoFields)->contains(static fn($field): bool => $errors->has($field));
+        $errors = session('errors') ?? new \Illuminate\Support\ViewErrorBag();
+        $hasErrors = collect($stepTwoFields)->contains(static fn($field): bool => $errors->has($field));
 
         return $hasErrors ? max($requestedStep, 2) : max($requestedStep, 1);
     }
@@ -533,208 +286,8 @@ class CampaignController extends Controller
             $campaign->targeting->target_gender ||
             $campaign->targeting->age_min ||
             $campaign->targeting->age_max ||
-            $campaign->targeting->targeting_notes
+            $campaign->targeting->notes
         );
-    }
-
-    /**
-     * Apply for a campaign
-     */
-    public function apply(Campaign $campaign): RedirectResponse
-    {
-        $user = Auth::user();
-
-        if ($user->user_type !== 'influencer') {
-            return redirect()->back()->with('error', 'Only influencers can apply to campaigns');
-        }
-
-        $influencer = $user->influencer;
-        if (! $influencer) {
-            return redirect()->back()->with('error', 'Influencer profile not found for this account.');
-        }
-
-        $validated = request()->validate([
-            'influencer_offer' => 'required|numeric|min:0.01',
-            'pitch_message' => 'nullable|string|max:2000',
-        ]);
-
-        // Check current + soft-deleted record to avoid unique key conflicts on re-apply.
-        $existingApplication = $campaign->applications()
-            ->withTrashed()
-            ->where('influencer_id', $influencer->id)
-            ->first();
-
-        if ($existingApplication && ! $existingApplication->trashed()) {
-            return redirect()->back()->with('warning', 'You have already applied to this campaign');
-        }
-
-        if ($existingApplication && $existingApplication->trashed()) {
-            $offer = round((float) $validated['influencer_offer'], 2);
-            $existingApplication->restore();
-            $existingApplication->update([
-                'status' => 'applied',
-                'pitch_message' => $validated['pitch_message'] ?? null,
-                'influencer_offer' => $offer,
-                'proposed_rate' => $offer,
-                'brand_offer' => null,
-                'last_counter_by' => 'influencer',
-                'last_counter_at' => now(),
-                'agreed_rate' => null,
-                'agreed_at' => null,
-                'declined_at' => null,
-                'declined_by' => null,
-                'applied_at' => now(),
-                'decided_at' => null,
-            ]);
-
-            return redirect()->route('frontend.campaigns.show', $campaign)
-                ->with('success', 'Application re-submitted successfully.');
-        }
-
-        // Create application
-        $offer = round((float) $validated['influencer_offer'], 2);
-        $campaign->applications()->create([
-            'influencer_id' => $influencer->id,
-            'status' => 'applied',
-            'pitch_message' => $validated['pitch_message'] ?? null,
-            'influencer_offer' => $offer,
-            'proposed_rate' => $offer,
-            'last_counter_by' => 'influencer',
-            'last_counter_at' => now(),
-            'applied_at' => now(),
-        ]);
-
-        return redirect()->route('frontend.campaigns.show', $campaign)
-            ->with('success', 'Application submitted! The brand will review it and get back to you soon.');
-    }
-
-    /**
-     * Withdraw application from campaign
-     */
-    public function withdrawApplication(CampaignApplication $application): RedirectResponse
-    {
-        $user = Auth::user();
-        $influencerId = $user->influencer?->id;
-
-        if ($user->user_type !== 'influencer' || ! $influencerId || (int) $application->influencer_id !== (int) $influencerId) {
-            abort(403, 'Not authorized');
-        }
-
-        // Only allow withdrawal if not approved or completed
-        if (in_array($application->status, ['approved', 'completed'])) {
-            return redirect()->back()->with('error', 'Cannot withdraw from an approved or completed application');
-        }
-
-        $campaign = $application->campaign;
-        $application->delete();
-
-        return redirect()->route('frontend.campaigns.show', $campaign)
-            ->with('success', 'Application withdrawn successfully');
-    }
-
-    /**
-     * Update work status by influencer for their approved application
-     */
-    public function updateInfluencerWorkStatus(CampaignApplication $application, Request $request): RedirectResponse
-    {
-        $user = Auth::user();
-        $influencerId = $user->influencer?->id;
-
-        // Authorize: only influencer can update their own work status
-        if ($user->user_type !== 'influencer' || ! $influencerId || (int) $application->influencer_id !== (int) $influencerId) {
-            abort(403, 'Not authorized to update this application');
-        }
-
-        // Only approved applicants can update work status
-        if ($application->status !== 'approved') {
-            return redirect()->back()->with('error', 'Only approved applications can have their work status updated');
-        }
-
-        // Handle work status update
-        $validated = $request->validate([
-            'work_status' => 'required|in:pending,accepted,in_progress,on_review,completed',
-        ]);
-
-        $subOrder = $this->resolveCampaignSubOrder($application);
-
-        $updates = ['work_status' => $validated['work_status']];
-        if ($validated['work_status'] === 'completed') {
-            $updates['status'] = 'completed';
-            $updates['decided_at'] = now();
-        }
-
-        $application->update($updates);
-
-        if ($subOrder) {
-            $subOrderUpdates = ['status' => $validated['work_status']];
-            if ($validated['work_status'] === 'accepted' && $subOrder->accepted_at === null) {
-                $subOrderUpdates['accepted_at'] = now();
-            }
-            if ($validated['work_status'] === 'completed') {
-                $subOrderUpdates['completed_at'] = now();
-            }
-            $subOrder->update($subOrderUpdates);
-        }
-
-        return redirect()->back()->with('success', 'Work status updated successfully: ' . ucfirst(str_replace('_', ' ', $validated['work_status'])));
-    }
-
-    /**
-     * Brand updates approved influencer work status.
-     */
-    public function updateBrandWorkStatus(Campaign $campaign, CampaignApplication $application, Request $request): RedirectResponse
-    {
-        $user = Auth::user();
-
-        if ($user->user_type !== 'brand' || (int) $campaign->brand_id !== (int) ($user->brand?->id ?? 0)) {
-            abort(403, 'Not authorized');
-        }
-
-        if ((int) $application->campaign_id !== (int) $campaign->id) {
-            abort(404);
-        }
-
-        if (! in_array((string) $application->status, ['approved', 'completed'], true)) {
-            return redirect()->back()->with('error', 'Work status can only be updated for approved influencers.');
-        }
-
-        $validated = $request->validate([
-            'work_status' => 'required|in:pending,accepted,in_progress,on_review,completed',
-        ]);
-
-        $subOrder = $this->resolveCampaignSubOrder($application);
-
-        $updates = ['work_status' => $validated['work_status']];
-        if ($validated['work_status'] === 'completed') {
-            $updates['status'] = 'completed';
-            $updates['decided_at'] = $application->decided_at ?? now();
-        }
-
-        $application->update($updates);
-
-        if ($subOrder) {
-            $subOrderUpdates = ['status' => $validated['work_status']];
-            if ($validated['work_status'] === 'accepted' && $subOrder->accepted_at === null) {
-                $subOrderUpdates['accepted_at'] = now();
-            }
-            if ($validated['work_status'] === 'completed') {
-                $subOrderUpdates['completed_at'] = now();
-            }
-            $subOrder->update($subOrderUpdates);
-        }
-
-        return redirect()->back()->with('success', 'Work status updated to ' . ucfirst(str_replace('_', ' ', $validated['work_status'])) . '.');
-    }
-
-    private function resolveCampaignSubOrder(CampaignApplication $application): ?SubOrder
-    {
-        return SubOrder::query()
-            ->where('influencer_id', $application->influencer_id)
-            ->whereHas('order', function ($query) use ($application) {
-                $query->where('campaign_id', $application->campaign_id);
-            })
-            ->orderByDesc('id')
-            ->first();
     }
 
     private function authorizeCampaignView($user, Campaign $campaign): void
@@ -743,43 +296,5 @@ class CampaignController extends Controller
             abort(403);
         }
         // Influencers can view all campaigns
-    }
-
-    private function syncCampaignInfluencerFromApplication(Campaign $campaign, CampaignApplication $application, ?int $approvedByUserId = null): void
-    {
-        $assignment = CampaignInfluencer::query()
-            ->where('campaign_id', $campaign->id)
-            ->where('influencer_id', $application->influencer_id)
-            ->first();
-
-        if ($application->status === 'approved') {
-            $payload = [
-                'campaign_id' => $campaign->id,
-                'influencer_id' => $application->influencer_id,
-                'status' => 'approved',
-                'agreed_amount' => (float) $application->agreed_rate,
-                'approved_by' => $approvedByUserId,
-                'approved_at' => now(),
-                'cancelled_at' => null,
-                'rejection_reason' => null,
-            ];
-
-            if ($assignment) {
-                $assignment->update($payload);
-            } else {
-                CampaignInfluencer::create($payload);
-            }
-
-            return;
-        }
-
-        if ($assignment && in_array((string) $application->status, ['declined_by_brand', 'declined_by_influencer', 'rejected'], true)) {
-            $assignment->update([
-                'status' => 'rejected',
-                'rejection_reason' => 'Negotiation declined',
-                'approved_by' => $approvedByUserId,
-                'approved_at' => now(),
-            ]);
-        }
     }
 }

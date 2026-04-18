@@ -15,6 +15,8 @@ use App\Policies\ConversationPolicy;
 use App\Policies\OrderPolicy;
 use App\Policies\PackagePolicy;
 use App\Policies\RolePolicy;
+use App\Services\Frontend\CampaignNegotiationService;
+use App\Services\Frontend\Contracts\CampaignNegotiationServiceInterface;
 use App\View\Composers\FooterComposer;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\Gate;
@@ -28,7 +30,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->bind(
+            CampaignNegotiationServiceInterface::class,
+            CampaignNegotiationService::class
+        );
     }
 
     /**

@@ -1,7 +1,10 @@
 @extends('frontend.layouts.app')
 
 @section('content')
-	<div class="min-h-screen bg-white dark:bg-gray-900 px-4 py-6 sm:px-6 lg:px-8">
+	<div class="min-h-screen bg-white dark:bg-gray-900 px-4 py-6 sm:px-6 lg:px-8"
+		data-campaign-show-root
+		data-campaign-status="{{ $campaign->status }}"
+		data-update-status-url="{{ route('frontend.campaigns.update-status', $campaign) }}">
 		<div class="max-w-full mx-auto">
 			<!-- Back Button (above first card) -->
 			<div class="mb-4">
@@ -23,6 +26,11 @@
 						<h1 class="text-xl sm:text-2xl font-semibold text-gray-900 dark:text-white mb-3">
 							{{ $campaign->title }}
 						</h1>
+						<div class="mb-3 flex flex-wrap items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+							<span class="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-1 text-xs font-semibold uppercase tracking-wide text-gray-700 dark:bg-gray-700 dark:text-gray-300">
+								Owned by {{ $brandName }}
+							</span>
+						</div>
 
 						<!-- Status Selector for Brand Owners -->
 						@if (auth()->user()->user_type === 'brand' && $campaign->brand_id === auth()->user()->brand?->id)
@@ -316,7 +324,7 @@
 
 			<!-- Influencer Work Progress -->
 			@if (($workProgress ?? collect())->count() > 0)
-				<div class="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-800 shadow-sm overflow-hidden mb-6">
+				<div id="work-progress" class="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-800 shadow-sm overflow-hidden mb-6">
 					<div class="px-5 py-4 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between gap-3">
 						<div>
 							<h2 class="text-lg font-bold text-gray-900 dark:text-white">Influencer Work Progress</h2>
@@ -329,28 +337,6 @@
 
 					<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 p-5">
 						@foreach ($workProgress as $progressItem)
-							@php
-								$progressBarClass = match ($progressItem['status_key']) {
-									'completed' => 'bg-emerald-500',
-									'on_review' => 'bg-indigo-500',
-									'in_progress' => 'bg-blue-500',
-									'accepted' => 'bg-cyan-500',
-									'pending' => 'bg-amber-500',
-									'cancelled' => 'bg-red-500',
-									default => 'bg-gray-400',
-								};
-
-								$badgeClass = match ($progressItem['status_key']) {
-									'completed' => 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300',
-									'on_review' => 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300',
-									'in_progress' => 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
-									'accepted' => 'bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-300',
-									'pending' => 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300',
-									'cancelled' => 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300',
-									default => 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300',
-								};
-							@endphp
-
 							<div class="rounded-xl border border-gray-200 dark:border-gray-700 p-4 bg-gray-50/70 dark:bg-gray-900/30">
 								<div class="flex items-start justify-between gap-3">
 									<div class="min-w-0">
@@ -362,7 +348,7 @@
 											<p class="mt-1 text-xs font-semibold text-gray-700 dark:text-gray-300">Budget: {{ $progressItem['currency'] }} {{ number_format((float) $progressItem['agreed_amount'], 2) }}</p>
 										@endif
 									</div>
-									<span class="inline-flex rounded-full px-2.5 py-1 text-xs font-semibold {{ $badgeClass }}">
+									<span class="inline-flex rounded-full px-2.5 py-1 text-xs font-semibold {{ $progressItem['status_badge_class'] }}">
 										{{ $progressItem['status_label'] }}
 									</span>
 								</div>
@@ -373,7 +359,7 @@
 										<span class="font-semibold">{{ $progressItem['progress_percent'] }}%</span>
 									</div>
 									<div class="w-full h-2 rounded-full bg-gray-200 dark:bg-gray-700 overflow-hidden">
-										<div class="h-2 rounded-full {{ $progressBarClass }}" style="width: {{ $progressItem['progress_percent'] }}%"></div>
+										<div class="h-2 rounded-full {{ $progressItem['progress_bar_class'] }}" style="width: {{ $progressItem['progress_percent'] }}%"></div>
 									</div>
 								</div>
 
@@ -506,62 +492,21 @@
 										</div>
 									</td>
 									<td class="px-4 py-3 hidden md:table-cell text-gray-700 dark:text-gray-300">
-										@php $maxFollowers = $application->influencer->platformStats()->latest('follower_count')->first()?->follower_count ?? 0; @endphp
-										{{ $maxFollowers ? number_format($maxFollowers) : 'N/A' }}
+										{{ (($applicationUi[$application->id]['max_followers'] ?? 0) > 0) ? number_format($applicationUi[$application->id]['max_followers']) : 'N/A' }}
 									</td>
 									<td class="px-4 py-3 hidden lg:table-cell text-gray-700 dark:text-gray-300">
-										@php $avgEngagement = $application->influencer->platformStats()->avg('engagement_rate') ?? 0; @endphp
-										{{ $avgEngagement ? number_format($avgEngagement, 2) . '%' : '—' }}
+										{{ (($applicationUi[$application->id]['avg_engagement'] ?? 0) > 0) ? number_format($applicationUi[$application->id]['avg_engagement'], 2) . '%' : '—' }}
 									</td>
 									<td class="px-4 py-3 text-gray-700 dark:text-gray-300 text-xs whitespace-nowrap">
 										{{ $application->applied_at?->format('M d, Y') ?? '—' }}
 									</td>
 									<td class="px-4 py-3">
-										@php
-											$statusBadge = match ($application->status) {
-												'approved' => ['Approved', 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300'],
-												'completed' => ['Completed', 'bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-300'],
-												'rejected' => ['Rejected', 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300'],
-												'declined_by_brand' => ['Declined by Brand', 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300'],
-												'declined_by_influencer' => ['Declined by Influencer', 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300'],
-												'countered_by_brand' => ['Countered by Brand', 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300'],
-												'countered_by_influencer' => ['Countered by Influencer', 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300'],
-												'applied' => ['Applied', 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300'],
-												default => ['Invited', 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300'],
-											};
-										@endphp
-										<span class="inline-flex rounded-full px-2.5 py-1 text-xs font-semibold {{ $statusBadge[1] }}">{{ $statusBadge[0] }}</span>
+										<span class="inline-flex rounded-full px-2.5 py-1 text-xs font-semibold {{ $applicationUi[$application->id]['status_class'] ?? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' }}">{{ $applicationUi[$application->id]['status_label'] ?? 'Invited' }}</span>
 									</td>
-									@php
-										$progressEntry = ($progressByApplication ?? collect())->get($application->id);
-										$workStatusKey = $progressEntry['status_key'] ?? $application->work_status;
-										if (! $workStatusKey && $application->status === 'completed') {
-											$workStatusKey = 'completed';
-										}
-										$workStatusLabelMap = [
-											'pending' => 'Order Pending',
-											'accepted' => 'Accepted',
-											'in_progress' => 'In Progress',
-											'on_review' => 'On Review',
-											'completed' => 'Completed',
-										];
-										$workStatus = $workStatusKey ? ($workStatusLabelMap[$workStatusKey] ?? ucfirst(str_replace('_', ' ', $workStatusKey))) : null;
-										$assignment = ($assignmentByInfluencer ?? collect())->get($application->influencer_id);
-										$budgetCurrency = strtoupper((string) ($campaign->currency ?? 'USD'));
-									@endphp
 									<td class="px-4 py-3 text-xs text-gray-600 dark:text-gray-400 hidden md:table-cell">
-										@if(($application->status === 'approved' || $application->status === 'completed') && $workStatus)
-											@php
-												$workStatusChipStyle = match ($workStatus) {
-													'Completed' => 'background-color: rgba(209, 250, 229, 1); color: rgb(4, 120, 87);',
-													'On Review' => 'background-color: rgba(224, 231, 255, 1); color: rgb(67, 56, 202);',
-													'In Progress' => 'background-color: rgba(219, 234, 254, 1); color: rgb(29, 78, 216);',
-													'Accepted' => 'background-color: rgba(207, 250, 254, 1); color: rgb(14, 116, 144);',
-													default => 'background-color: rgba(254, 243, 199, 1); color: rgb(180, 83, 9);',
-												};
-											@endphp
-											<span class="inline-flex rounded-full px-2 py-1 text-xs font-semibold" style="{{ $workStatusChipStyle }}">
-												{{ $workStatus }}
+										@if(($application->status === 'approved' || $application->status === 'completed') && ($applicationUi[$application->id]['work_status'] ?? null))
+											<span class="inline-flex rounded-full px-2 py-1 text-xs font-semibold" style="{{ $applicationUi[$application->id]['work_status_style'] ?? '' }}">
+												{{ $applicationUi[$application->id]['work_status'] }}
 											</span>
 										@else
 											—
@@ -570,15 +515,15 @@
 									<td class="px-4 py-3 text-xs text-gray-600 dark:text-gray-400 hidden md:table-cell whitespace-nowrap">
 										@if ($application->agreed_rate)
 											<span class="font-semibold text-emerald-700 dark:text-emerald-300">
-												{{ $budgetCurrency }} {{ number_format((float) $application->agreed_rate, 2) }}
+												{{ $applicationUi[$application->id]['currency'] ?? strtoupper((string) ($campaign->currency ?? 'USD')) }} {{ number_format((float) $application->agreed_rate, 2) }}
 											</span>
 										@else
 											<div class="space-y-0.5">
 												@if ($application->influencer_offer || $application->proposed_rate)
-													<p>Inf: {{ $budgetCurrency }} {{ number_format((float) ($application->influencer_offer ?? $application->proposed_rate), 2) }}</p>
+													<p>Inf: {{ $applicationUi[$application->id]['currency'] ?? strtoupper((string) ($campaign->currency ?? 'USD')) }} {{ number_format((float) ($application->influencer_offer ?? $application->proposed_rate), 2) }}</p>
 												@endif
 												@if ($application->brand_offer)
-													<p>Brand: {{ $budgetCurrency }} {{ number_format((float) $application->brand_offer, 2) }}</p>
+													<p>Brand: {{ $applicationUi[$application->id]['currency'] ?? strtoupper((string) ($campaign->currency ?? 'USD')) }} {{ number_format((float) $application->brand_offer, 2) }}</p>
 												@endif
 												@if (! $application->influencer_offer && ! $application->proposed_rate && ! $application->brand_offer)
 													<p class="text-gray-400">—</p>
@@ -602,29 +547,16 @@
 												<x-icons.message-square class="w-3 h-3" />
 											</a>
 											@if ($application->status === 'approved')
-												<form action="{{ route('frontend.campaigns.brand-update-work-status', [$campaign->id, $application->id]) }}" method="POST" class="inline-flex items-center gap-1">
-													@csrf
-													<select name="work_status" class="rounded border border-gray-300 bg-white px-1.5 py-1 text-[11px] dark:border-gray-600 dark:bg-gray-700 dark:text-white">
-														<option value="pending" @selected($application->work_status === 'pending')>Pending</option>
-														<option value="accepted" @selected($application->work_status === 'accepted')>Accepted</option>
-														<option value="in_progress" @selected($application->work_status === 'in_progress')>In Progress</option>
-														<option value="on_review" @selected($application->work_status === 'on_review')>On Review</option>
-														<option value="completed" @selected($application->work_status === 'completed')>Completed</option>
-													</select>
-													<button type="submit" class="px-2 py-1 text-[11px] rounded bg-indigo-100 text-indigo-700 hover:bg-indigo-200 dark:bg-indigo-900/30 dark:text-indigo-300 dark:hover:bg-indigo-900/50">Save</button>
-												</form>
-												<!-- Already approved -->
-												<button disabled
-													class="px-2 py-1 text-xs rounded bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300 cursor-not-allowed opacity-60"
-													title="This influencer is already approved">
-													<x-icons.check class="w-3 h-3" />
-												</button>
-												<button disabled
-													class="px-2 py-1 text-xs rounded bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300 cursor-not-allowed opacity-50"
-													title="Cannot decline an approved influencer"
-													onclick="window.toast?.error('Cannot decline an approved influencer. They have already been approved for this campaign.')">
-													<x-icons.x class="w-3 h-3" />
-												</button>
+												@if (($progressByApplication[$application->id] ?? null))
+													<span class="inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-semibold bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300">
+														Order: {{ $progressByApplication[$application->id]['status_label'] ?? 'Pending' }}
+													</span>
+													<a href="#work-progress" class="px-2 py-1 text-xs rounded border border-emerald-300 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:border-emerald-800 dark:bg-emerald-900/20 dark:text-emerald-300 transition">View</a>
+												@else
+													<span class="inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-semibold bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300">
+														Approved, waiting for order
+													</span>
+												@endif
 											@elseif ($application->status === 'rejected')
 												<!-- Already declined -->
 												<button disabled
@@ -645,27 +577,16 @@
 													<x-icons.x class="w-3 h-3" />
 												</button>
 											@elseif ($application->status === 'completed')
-												<form action="{{ route('frontend.campaigns.brand-update-work-status', [$campaign->id, $application->id]) }}" method="POST" class="inline-flex items-center gap-1">
-													@csrf
-													<select name="work_status" class="rounded border border-gray-300 bg-white px-1.5 py-1 text-[11px] dark:border-gray-600 dark:bg-gray-700 dark:text-white">
-														<option value="on_review" @selected($application->work_status === 'on_review')>On Review</option>
-														<option value="completed" @selected($application->work_status === 'completed')>Completed</option>
-													</select>
-													<button type="submit" class="px-2 py-1 text-[11px] rounded bg-indigo-100 text-indigo-700 hover:bg-indigo-200 dark:bg-indigo-900/30 dark:text-indigo-300 dark:hover:bg-indigo-900/50">Save</button>
-												</form>
-												<!-- Work completed - disable all actions -->
-												<button disabled
-													class="px-2 py-1 text-xs rounded bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300 cursor-not-allowed opacity-50"
-													title="Work is completed - cannot modify"
-													onclick="window.toast?.info('This application is completed. The influencer has finished their work on this campaign.')">
-													<x-icons.check class="w-3 h-3" />
-												</button>
-												<button disabled
-													class="px-2 py-1 text-xs rounded bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300 cursor-not-allowed opacity-50"
-													title="Work is completed - cannot modify"
-													onclick="window.toast?.info('This application is completed. The influencer has finished their work on this campaign.')">
-													<x-icons.x class="w-3 h-3" />
-												</button>
+												@if (($progressByApplication[$application->id] ?? null))
+													<span class="inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-semibold bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300">
+														Completed
+													</span>
+													<a href="#work-progress" class="px-2 py-1 text-xs rounded border border-emerald-300 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:border-emerald-800 dark:bg-emerald-900/20 dark:text-emerald-300 transition">View</a>
+												@else
+													<span class="inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-semibold bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300">
+														Completed
+													</span>
+												@endif
 											@elseif ($campaign->status === 'closed')
 												<button disabled
 													class="px-2 py-1 text-xs rounded bg-gray-100 text-gray-400 dark:bg-gray-700 dark:text-gray-500 cursor-not-allowed opacity-50"
@@ -742,34 +663,8 @@
 								<div class="flex items-center justify-between gap-4">
 									<div>
 										<p class="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide">Status</p>
-										@php
-											$statusColors = [
-												'invited' => 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
-												'applied' => 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300',
-												'countered_by_brand' => 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300',
-												'countered_by_influencer' => 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300',
-												'approved' => 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300',
-												'rejected' => 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300',
-												'declined_by_brand' => 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300',
-												'declined_by_influencer' => 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300',
-												'completed' => 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300',
-											];
-											$badgeClass = $statusColors[$influencerApplication->status] ?? 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300';
-											$statusLabel = match($influencerApplication->status) {
-												'invited' => 'Invited',
-												'applied' => 'Applied',
-												'countered_by_brand' => 'Countered by Brand',
-												'countered_by_influencer' => 'Counter sent',
-												'approved' => 'Approved',
-												'rejected' => 'Not Selected',
-												'declined_by_brand' => 'Declined by Brand',
-												'declined_by_influencer' => 'Declined by You',
-												'completed' => 'Work Completed',
-												 default => 'Unknown',
-											};
-										@endphp
-										<span class="inline-flex items-center rounded-full px-3 py-1 text-sm font-semibold mt-1 {{ $badgeClass }}">
-											{{ $statusLabel }}
+										<span class="inline-flex items-center rounded-full px-3 py-1 text-sm font-semibold mt-1 {{ $influencerApplicationUi['status_class'] ?? 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300' }}">
+											{{ $influencerApplicationUi['status_label'] ?? 'Unknown' }}
 										</span>
 									</div>
 									<div class="text-right">
@@ -779,7 +674,7 @@
 										</p>
 											@if ($influencerApplication->agreed_rate)
 												<p class="text-xs font-semibold text-emerald-700 dark:text-emerald-300 mt-1">
-													Agreed: {{ strtoupper((string) ($campaign->currency ?? 'USD')) }} {{ number_format((float) $influencerApplication->agreed_rate, 2) }}
+													Agreed: {{ $influencerApplicationUi['currency'] ?? strtoupper((string) ($campaign->currency ?? 'USD')) }} {{ number_format((float) $influencerApplication->agreed_rate, 2) }}
 												</p>
 											@endif
 									</div>
@@ -875,32 +770,44 @@
 								</div>
 							@endif
 
-							<!-- Work Status Update Section (for approved applications) -->
+							<!-- Work Status Update Section (only when the order exists) -->
 							@if ($influencerApplication->status === 'approved')
-								<div class="rounded-lg bg-blue-50 dark:bg-blue-900/20 p-4 border border-blue-200 dark:border-blue-900/50 mt-4">
-									<p class="text-xs font-semibold text-blue-600 dark:text-blue-300 uppercase tracking-wide mb-3">Update Work Status</p>
-									<form method="POST" action="{{ route('frontend.campaigns.update-work-status', $influencerApplication) }}" class="space-y-3">
-										@csrf
-										<div>
-											<label class="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide block mb-2">Current Status</label>
-											<select name="work_status" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg bg-white dark:bg-gray-800 dark:border-gray-600 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
-												<option value="pending" {{ $influencerApplication->work_status === 'pending' ? 'selected' : '' }}>Order Pending</option>
-												<option value="accepted" {{ $influencerApplication->work_status === 'accepted' ? 'selected' : '' }}>Accepted</option>
-												<option value="in_progress" {{ $influencerApplication->work_status === 'in_progress' ? 'selected' : '' }}>In Progress</option>
-												<option value="on_review" {{ $influencerApplication->work_status === 'on_review' ? 'selected' : '' }}>On Review</option>
-												<option value="completed" {{ $influencerApplication->work_status === 'completed' ? 'selected' : '' }}>Completed</option>
-											</select>
-										</div>
-										<button type="submit" class="w-full px-4 py-2 text-sm font-semibold rounded-lg bg-blue-600 text-white hover:bg-blue-700 dark:hover:bg-blue-600 transition">
-											Update Status
-										</button>
-									</form>
-								</div>
+								@if (($progressByApplication[$influencerApplication->id] ?? null))
+									<div class="rounded-lg bg-emerald-50 dark:bg-emerald-900/20 p-4 border border-emerald-200 dark:border-emerald-900/50">
+										<p class="text-sm font-semibold text-emerald-900 dark:text-emerald-100 mb-3">✓ You're approved and the order is live</p>
+										<p class="text-sm text-emerald-800 dark:text-emerald-200">
+											Your delivery stages are now tracked from the actual campaign order above.
+										</p>
+									</div>
+
+									<div class="rounded-lg bg-blue-50 dark:bg-blue-900/20 p-4 border border-blue-200 dark:border-blue-900/50 mt-4">
+										<p class="text-xs font-semibold text-blue-600 dark:text-blue-300 uppercase tracking-wide mb-3">Update Work Status</p>
+										<form method="POST" action="{{ route('frontend.campaigns.update-work-status', $influencerApplication) }}" class="space-y-3">
+											@csrf
+											<div>
+												<label class="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide block mb-2">Current Status</label>
+												<select name="work_status" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg bg-white dark:bg-gray-800 dark:border-gray-600 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+													<option value="pending" {{ $influencerApplication->work_status === 'pending' ? 'selected' : '' }}>Order Pending</option>
+													<option value="accepted" {{ $influencerApplication->work_status === 'accepted' ? 'selected' : '' }}>Accepted</option>
+													<option value="in_progress" {{ $influencerApplication->work_status === 'in_progress' ? 'selected' : '' }}>In Progress</option>
+													<option value="on_review" {{ $influencerApplication->work_status === 'on_review' ? 'selected' : '' }}>On Review</option>
+													<option value="completed" {{ $influencerApplication->work_status === 'completed' ? 'selected' : '' }}>Completed</option>
+												</select>
+											</div>
+											<button type="submit" class="w-full px-4 py-2 text-sm font-semibold rounded-lg bg-blue-600 text-white hover:bg-blue-700 dark:hover:bg-blue-600 transition">Update Status</button>
+										</form>
+									</div>
+								@else
+									<div class="rounded-lg bg-amber-50 dark:bg-amber-900/20 p-4 border border-amber-200 dark:border-amber-900/50">
+										<p class="text-sm font-semibold text-amber-900 dark:text-amber-100 mb-3">✓ You're approved</p>
+										<p class="text-sm text-amber-800 dark:text-amber-200">The order has not been created yet, so there is no delivery status to update.</p>
+									</div>
+								@endif
 							@endif
 
 							<!-- Action Buttons -->
 							<div class="mt-4">
-								@if (! in_array($influencerApplication->status, ['rejected', 'completed', 'approved', 'declined_by_brand', 'declined_by_influencer'], true))
+								@if ($influencerApplicationUi['can_withdraw'] ?? false)
 									<form method="POST" action="{{ route('frontend.campaigns.withdraw-application', $influencerApplication) }}">
 										@csrf
 										<button type="submit" onclick="return confirm('Are you sure you want to withdraw your application?')"
@@ -936,183 +843,4 @@
 			</div>
 		@endif
 
-	<script>
-		document.addEventListener('DOMContentLoaded', function() {
-			const table = document.getElementById('js-applications-table');
-			const tbody = table?.querySelector('tbody');
-			const rows = Array.from(tbody?.querySelectorAll('tr') || []);
-			const selectAllCheckbox = document.getElementById('js-select-all');
-			const rowCheckboxes = document.querySelectorAll('.js-row-checkbox');
-			const batchActionsContainer = document.getElementById('js-batch-actions');
-			const batchCountEl = document.getElementById('js-batch-count');
-			const batchApproveBtn = document.getElementById('js-batch-approve');
-			const batchRejectBtn = document.getElementById('js-batch-reject');
-			const batchCancelBtn = document.getElementById('js-batch-cancel');
-			const searchInput = document.getElementById('js-table-search');
-			const statusFilter = document.getElementById('js-status-filter');
-			const resetBtn = document.getElementById('js-filter-reset');
-
-			// Reset button functionality
-			resetBtn?.addEventListener('click', function() {
-				searchInput.value = '';
-				statusFilter.value = '';
-				rows.forEach(row => {
-					row.style.display = '';
-				});
-			});
-
-			// Search functionality
-			searchInput?.addEventListener('keyup', function() {
-				const searchTerm = this.value.toLowerCase();
-				rows.forEach(row => {
-					const searchData = row.dataset.search || '';
-					const matches = searchData.includes(searchTerm);
-					row.style.display = matches ? '' : 'none';
-				});
-			});
-
-			// Status filter
-			statusFilter?.addEventListener('change', function() {
-				const selectedStatus = this.value;
-				rows.forEach(row => {
-					const rowStatus = row.dataset.status || '';
-					const matches = !selectedStatus || rowStatus === selectedStatus;
-					row.style.display = matches ? '' : 'none';
-				});
-			});
-
-			// Checkbox selection
-			selectAllCheckbox?.addEventListener('change', function() {
-				rowCheckboxes.forEach(cb => {
-					const isVisible = cb.closest('tr').style.display !== 'none';
-					if (isVisible) {
-						cb.checked = this.checked;
-					}
-				});
-				updateBatchUI();
-			});
-
-			rowCheckboxes.forEach(checkbox => {
-				checkbox.addEventListener('change', updateBatchUI);
-			});
-
-			function updateBatchUI() {
-				const selectedCount = document.querySelectorAll('.js-row-checkbox:checked').length;
-				if (batchCountEl) batchCountEl.textContent = selectedCount;
-				if (batchActionsContainer) {
-					batchActionsContainer.style.display = selectedCount > 0 ? 'flex' : 'none';
-				}
-			}
-
-			batchApproveBtn?.addEventListener('click', function() {
-				const checkedCheckboxes = Array.from(document.querySelectorAll('.js-row-checkbox:checked'));
-				if (checkedCheckboxes.length === 0) return;
-				let submitted = 0;
-				checkedCheckboxes.forEach(checkbox => {
-					const row = checkbox.closest('tr');
-					const approveForm = row?.querySelector('.js-approve-form');
-					if (approveForm) {
-						submitted++;
-						approveForm.submit();
-					}
-				});
-
-				if (submitted === 0) {
-					window.toast?.warning('Declined influencers cannot be approved again.');
-				}
-			});
-
-			batchRejectBtn?.addEventListener('click', function() {
-				const checkedCheckboxes = Array.from(document.querySelectorAll('.js-row-checkbox:checked'));
-				if (checkedCheckboxes.length === 0) return;
-				let submitted = 0;
-				checkedCheckboxes.forEach(checkbox => {
-					const row = checkbox.closest('tr');
-					const rejectForm = row?.querySelector('.js-reject-form');
-					if (rejectForm) {
-						submitted++;
-						rejectForm.submit();
-					}
-				});
-
-				if (submitted === 0) {
-					window.toast?.warning('Approved influencers cannot be declined.');
-				}
-			});
-
-			batchCancelBtn?.addEventListener('click', function() {
-				rowCheckboxes.forEach(cb => cb.checked = false);
-				if (selectAllCheckbox) selectAllCheckbox.checked = false;
-				updateBatchUI();
-			});
-		});
-
-		// Campaign Status Update Handler
-		function campaignStatusForm() {
-			return {
-				selectedStatus: '{{ $campaign->status }}',
-				isLoading: false,
-				showFeedback: false,
-				feedbackText: '',
-				feedbackClass: '',
-				
-				async updateStatus() {
-					const newStatus = this.selectedStatus;
-					if (newStatus === '{{ $campaign->status }}') {
-						return;
-					}
-
-					this.isLoading = true;
-					this.showFeedback = false;
-
-					try {
-						const response = await fetch('{{ route("frontend.campaigns.update-status", $campaign) }}', {
-							method: 'PATCH',
-							headers: {
-								'Content-Type': 'application/json',
-								'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-								'Accept': 'application/json'
-							},
-							body: JSON.stringify({
-								status: newStatus
-							})
-						});
-
-						const data = await response.json();
-
-						if (data.success) {
-							this.feedbackClass = 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300';
-							this.feedbackText = data.message;
-							this.showFeedback = true;
-
-							// Show success feedback for 3 seconds
-							setTimeout(() => {
-								this.showFeedback = false;
-							}, 3000);
-
-							// Scroll to top to show the success
-							window.scrollTo({ top: 0, behavior: 'smooth' });
-						} else {
-							this.feedbackClass = 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300';
-							this.feedbackText = data.message || 'Failed to update status';
-							this.showFeedback = true;
-
-							// Revert on error
-							this.selectedStatus = '{{ $campaign->status }}';
-						}
-					} catch (error) {
-						console.error('Error updating campaign status:', error);
-						this.feedbackClass = 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300';
-						this.feedbackText = 'An error occurred. Please try again.';
-						this.showFeedback = true;
-
-						// Revert on error
-						this.selectedStatus = '{{ $campaign->status }}';
-					} finally {
-						this.isLoading = false;
-					}
-				}
-			}
-		}
-	</script>
 @endsection

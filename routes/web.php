@@ -44,6 +44,7 @@ use App\Http\Controllers\EarningsController;
 use App\Http\Controllers\Frontend\AccountController as FrontendAccountController;
 use App\Http\Controllers\Frontend\BlogController as FrontendBlogController;
 use App\Http\Controllers\Frontend\CampaignController as FrontendCampaignController;
+use App\Http\Controllers\Frontend\CampaignApplicationController as FrontendCampaignApplicationController;
 use App\Http\Controllers\Frontend\CaseStudyController as FrontendCaseStudyController;
 use App\Http\Controllers\Frontend\ContentLibraryController;
 use App\Http\Controllers\Frontend\ConversationController as FrontendConversationController;
@@ -135,12 +136,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/campaigns/{campaign}/edit', [FrontendCampaignController::class, 'edit'])->name('frontend.campaigns.edit');
     Route::put('/campaigns/{campaign}', [FrontendCampaignController::class, 'update'])->name('frontend.campaigns.update');
     Route::delete('/campaigns/{campaign}', [FrontendCampaignController::class, 'destroy'])->name('frontend.campaigns.destroy');
-    Route::patch('/campaigns/{campaign}/status', [FrontendCampaignController::class, 'updateStatus'])->name('frontend.campaigns.update-status');
-    Route::post('/campaigns/{campaign}/applications/{application}/update-status', [FrontendCampaignController::class, 'updateApplicationStatus'])->name('frontend.campaigns.update-application-status');
-    Route::post('/campaigns/{campaign}/applications/{application}/brand-update-work-status', [FrontendCampaignController::class, 'updateBrandWorkStatus'])->name('frontend.campaigns.brand-update-work-status');
-    Route::post('/campaigns/applications/{application}/respond-offer', [FrontendCampaignController::class, 'respondToOffer'])->name('frontend.campaigns.respond-offer');
-    Route::post('/campaigns/applications/{application}/withdraw', [FrontendCampaignController::class, 'withdrawApplication'])->name('frontend.campaigns.withdraw-application');
-    Route::post('/campaigns/applications/{application}/update-work-status', [FrontendCampaignController::class, 'updateInfluencerWorkStatus'])->name('frontend.campaigns.update-work-status');
+    Route::patch('/campaigns/{campaign}/status', [FrontendCampaignApplicationController::class, 'updateStatus'])->name('frontend.campaigns.update-status');
+    Route::post('/campaigns/{campaign}/applications/{application}/update-status', [FrontendCampaignApplicationController::class, 'updateApplicationStatus'])->name('frontend.campaigns.update-application-status');
+    Route::post('/campaigns/{campaign}/applications/{application}/brand-update-work-status', [FrontendCampaignApplicationController::class, 'updateBrandWorkStatus'])->name('frontend.campaigns.brand-update-work-status');
+    Route::post('/campaigns/applications/{application}/respond-offer', [FrontendCampaignApplicationController::class, 'respondToOffer'])->name('frontend.campaigns.respond-offer');
+    Route::post('/campaigns/applications/{application}/withdraw', [FrontendCampaignApplicationController::class, 'withdrawApplication'])->name('frontend.campaigns.withdraw-application');
+    Route::post('/campaigns/applications/{application}/update-work-status', [FrontendCampaignApplicationController::class, 'updateInfluencerWorkStatus'])->name('frontend.campaigns.update-work-status');
     Route::post('/campaigns/{campaign}/influencer-assignments/{assignment}/update-status', [FrontendCampaignController::class, 'updateInfluencerStatus'])->name('campaigns.update-influencer-status');
 
     // Frontend Packages (Influencer)
@@ -328,7 +329,7 @@ Route::prefix('dashboard')->name('dashboard.')->middleware(['auth', 'verified', 
     Route::get('/campaigns/{campaign}/edit', [CampaignController::class, 'edit'])->name('campaigns.edit');
     Route::put('/campaigns/{campaign}', [CampaignController::class, 'update'])->name('campaigns.update');
     Route::post('/campaigns/{campaign}/update-status', [CampaignController::class, 'updateStatus'])->name('campaigns.update-status');
-    Route::post('/campaigns/{campaign}/applications/{application}/update-status', [FrontendCampaignController::class, 'updateApplicationStatus'])->name('campaigns.update-application-status');
+    Route::post('/campaigns/{campaign}/applications/{application}/update-status', [FrontendCampaignApplicationController::class, 'updateApplicationStatus'])->name('campaigns.update-application-status');
     Route::delete('/campaigns/{campaign}', [CampaignController::class, 'destroy'])->name('campaigns.destroy');
     Route::get('/campaigns/assign', [CampaignController::class, 'assign'])->name('campaigns.assign');
     Route::post('/campaigns/assign', [CampaignController::class, 'assignStore'])->name('campaigns.assign.store');
