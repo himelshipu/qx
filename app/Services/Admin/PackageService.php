@@ -5,6 +5,7 @@ declare (strict_types = 1);
 namespace App\Services\Admin;
 
 use App\Models\Influencer;
+use App\Models\Order;
 use App\Models\Package;
 use App\Repositories\Contracts\PackageRepositoryInterface;
 use Illuminate\Support\Facades\Auth;
@@ -29,17 +30,39 @@ final class PackageService
     /**
      * Build package listing payload for dashboard index page.
      *
-     * @return array{packages:\Illuminate\Contracts\Pagination\LengthAwarePaginator,stats:array{total:int,active:int,inactive:int,in_use:int},search:string,status:string,platform:string,platformOptions:array<int, array{value:string,label:string}>}
+     * @param array<string, mixed> $filters
+     * @return array{packages:\Illuminate\Contracts\Pagination\LengthAwarePaginator,stats:array{total:int,active:int,inactive:int,in_use:int},filters:array<string,mixed>,platformOptions:array<int, array{value:string,label:string}>}
      */
-    public function getListingPayload(string $search, string $status, string $platform): array
+    public function getIndexPayload(array $filters): array
     {
+        $normalized = [
+            'q' => trim((string) ($filters['q'] ?? '')),
+            'status' => (string) ($filters['status'] ?? 'all'),
+            'platform' => (string) ($filters['platform'] ?? 'all'),
+        ];
+
         return [
-            'packages'        => $this->packageRepository->paginateForDashboard($search, $status, $platform),
+            'packages'        => $this->packageRepository->paginateForDashboard($normalized),
             'stats'           => $this->packageRepository->getStats(),
-            'search'          => $search,
-            'status'          => $status,
-            'platform'        => $platform,
+            'filters'         => $normalized,
             'platformOptions' => $this->getPlatformOptions(includeAll: true)
+        ];
+    }
+
+    /**
+     * @param array<string, mixed> $filters
+     * @return array{packages:\Illuminate\Contracts\Pagination\LengthAwarePaginator}
+     */
+    public function getTablePayload(array $filters): array
+    {
+        $normalized = [
+            'q' => trim((string) ($filters['q'] ?? '')),
+            'status' => (string) ($filters['status'] ?? 'all'),
+            'platform' => (string) ($filters['platform'] ?? 'all'),
+        ];
+
+        return [
+            'packages' => $this->packageRepository->paginateForDashboard($normalized),
         ];
     }
 
@@ -258,23 +281,26 @@ final class PackageService
     public function getPurchasePayload(): array
     {
         $packages = Package::where('is_active', true)
+            ->select(['id', 'name', 'description', 'base_price', 'currency', 'platform', 'delivery_days', 'revisions_included', 'influencer_id'])
             ->with(['influencer:id,display_name', 'influencer.user:id,email,name'])
             ->orderByDesc('created_at')
-            ->get(['id', 'name', 'description', 'base_price', 'currency', 'platform', 'delivery_days', 'revisions_included', 'influencer_id']);
+            ->get();
 
         $brands = \App\Models\Brand::with('user:id,email,name')
+            ->select(['id', 'user_id', 'brand_name'])
             ->orderBy('brand_name')
-            ->get(['id', 'user_id', 'brand_name']);
+            ->get();
 
         $activeBrandsCount   = $brands->count();
         $activePackagesCount = $packages->count();
 
         // Get latest purchased packages
         $latestPurchases = \App\Models\Order::where('status', '!=', 'cancelled')
-            ->with(['items', 'brand:id,brand_name', 'buyer:id,email,name'])
+            ->select(['id', 'order_number', 'brand_id', 'buyer_user_id', 'status', 'total_amount', 'currency', 'placed_at'])
+            ->with(['brand:id,brand_name', 'buyer:id,email,name'])
             ->orderByDesc('placed_at')
             ->limit(10)
-            ->get(['id', 'order_number', 'brand_id', 'buyer_user_id', 'status', 'total_amount', 'currency', 'placed_at']);
+            ->get();
 
         return compact('packages', 'brands', 'activeBrandsCount', 'activePackagesCount', 'latestPurchases');
     }
@@ -303,7 +329,7 @@ final class PackageService
 
                 // Create order
                 $order = \App\Models\Order::create([
-                    'order_number'  => 'ORD-' . strtoupper(uniqid()),
+                    'order_number'  => Order::generateOrderNumber(Order::SOURCE_PACKAGE),
                     'buyer_user_id' => Auth::id(),
                     'brand_id'      => $brandId,
                     'status'        => 'pending',

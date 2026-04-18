@@ -230,7 +230,7 @@
 		<div class="container">
 			<!-- Header -->
 			<div class="header">
-				<div class="logo">Qx Marketplace</div>
+				<div class="logo">Rockies</div>
 				<div class="title">Payment Statement</div>
 			</div>
 

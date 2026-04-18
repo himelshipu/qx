@@ -3,9 +3,9 @@
 @section('content')
 <div class="min-h-screen bg-white dark:bg-gray-950">
 	<!-- Hero Section -->
-	<section class="relative py-20 px-4 sm:px-6 lg:px-8">
+	<section class="relative py-4 px-4 sm:px-6 lg:px-8">
 		<div class="max-w-screen-2xl mx-auto">
-			<div class="text-center mb-16">
+			<div class="text-center mb-6">
 				<h1 class="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-4">
 					Case Studies
 				</h1>
@@ -17,7 +17,7 @@
 	</section>
 
 	<!-- Case Studies Grid -->
-	<section class="py-12 px-4 sm:px-6 lg:px-8">
+	<section class="py-6 px-4 sm:px-6 lg:px-8">
 		<div class="max-w-screen-2xl mx-auto">
 			@if ($caseStudies->count() > 0)
 				<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">

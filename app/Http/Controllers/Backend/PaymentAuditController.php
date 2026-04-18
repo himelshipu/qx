@@ -12,26 +12,36 @@ class PaymentAuditController extends Controller
     public function index(Request $request)
     {
         // Get all marked-as-paid OrderItems
-        $paidItems = OrderItem::with([
-            'order.brand',
-            'order.campaign',
-            'influencer.user',
-            'payoutMarkedBy',
-            'package'
-        ])
-            ->whereNotNull('paid_at')
-            ->orderBy('payout_marked_at', 'desc')
-            ->paginate(30);
+        $paidItems = OrderItem::query()
+            ->forPaymentDashboard()
+            ->paidForDashboard()
+            ->with([
+                'order:id,brand_id,campaign_id',
+                'order.brand:id,brand_name',
+                'order.campaign:id,title',
+                'influencer:id,user_id,display_name',
+                'influencer.user:id,name,email',
+                'payoutMarkedBy:id,name,email',
+                'package:id,name',
+            ])
+            ->orderByDesc('payout_marked_at')
+            ->paginate(30)
+            ->withQueryString();
 
         // Get all marked-as-paid SubOrders
-        $paidSubOrders = SubOrder::with([
-            'order.campaign',
-            'influencer.user',
-            'payoutMarkedBy'
-        ])
-            ->whereNotNull('paid_at')
-            ->orderBy('payout_marked_at', 'desc')
-            ->paginate(30);
+        $paidSubOrders = SubOrder::query()
+            ->forPaymentDashboard()
+            ->paidForDashboard()
+            ->with([
+                'order:id,campaign_id',
+                'order.campaign:id,title',
+                'influencer:id,user_id,display_name',
+                'influencer.user:id,name,email',
+                'payoutMarkedBy:id,name,email',
+            ])
+            ->orderByDesc('payout_marked_at')
+            ->paginate(30)
+            ->withQueryString();
 
         // Combine for timeline view
         $allPayments = collect();
@@ -70,21 +80,23 @@ class PaymentAuditController extends Controller
         $allPayments = $allPayments->sortByDesc('marked_at');
 
         // Statistics
-        $totalMarked = OrderItem::whereNotNull('paid_at')->count() + SubOrder::whereNotNull('paid_at')->count();
-        $totalAmount = OrderItem::whereNotNull('paid_at')->sum('payout_amount') + SubOrder::whereNotNull('paid_at')->sum('payout_amount');
+        $totalMarked = OrderItem::query()->paidForDashboard()->count() + SubOrder::query()->paidForDashboard()->count();
+        $totalAmount = (float) OrderItem::query()->paidForDashboard()->sum('payout_amount') + (float) SubOrder::query()->paidForDashboard()->sum('payout_amount');
 
-        $markedThisMonth = OrderItem::whereNotNull('paid_at')
+        $markedThisMonth = OrderItem::query()->paidForDashboard()
             ->where('payout_marked_at', '>=', now()->startOfMonth())
             ->sum('payout_amount');
-        $markedThisMonth += SubOrder::whereNotNull('paid_at')
+        $markedThisMonth += SubOrder::query()->paidForDashboard()
             ->where('payout_marked_at', '>=', now()->startOfMonth())
             ->sum('payout_amount');
 
         // By admin
-        $paymentsByAdmin = OrderItem::whereNotNull('payout_marked_by_user_id')
+        $paymentsByAdmin = OrderItem::query()
+            ->paidForDashboard()
+            ->whereNotNull('payout_marked_by_user_id')
             ->selectRaw('payout_marked_by_user_id, COUNT(*) as count, SUM(payout_amount) as amount')
             ->groupBy('payout_marked_by_user_id')
-            ->with('payoutMarkedBy')
+            ->with('payoutMarkedBy:id,name,email')
             ->get();
 
         return view('backend.pages.payment-audit.index', compact(

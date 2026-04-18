@@ -250,18 +250,11 @@ class AdminMenuSeeder extends Seeder
                         'module' => 'orders',
                     ],
                     [
-                        'label' => 'Payments',
+                        'label' => 'Payouts',
                         'icon' => 'payment',
                         'route' => 'dashboard.payments.index',
                         'permission' => 'payments.index',
                         'module' => 'payments',
-                    ],
-                    [
-                        'label' => 'Payouts',
-                        'icon' => 'account_balance_wallet',
-                        'route' => 'dashboard.payouts.index',
-                        'permission' => 'payouts.index',
-                        'module' => 'payouts',
                     ],
                     [
                         'label' => 'Payment Queue',

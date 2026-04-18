@@ -23,11 +23,12 @@ class PackageController extends Controller
      */
     public function index(Request $request): View
     {
-        $search = trim((string) $request->string('q', ''));
-        $status = (string) $request->string('status', 'all');
-        $platform = (string) $request->string('platform', 'all');
+        return view('backend.pages.packages.index', $this->packageService->getIndexPayload($request->only(['q', 'status', 'platform'])));
+    }
 
-        return view('backend.pages.packages.index', $this->packageService->getListingPayload($search, $status, $platform));
+    public function table(Request $request): View
+    {
+        return view('backend.pages.packages._results', $this->packageService->getTablePayload($request->only(['q', 'status', 'platform'])));
     }
 
     /**

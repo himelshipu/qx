@@ -15,8 +15,10 @@ use App\Policies\ConversationPolicy;
 use App\Policies\OrderPolicy;
 use App\Policies\PackagePolicy;
 use App\Policies\RolePolicy;
+use App\View\Composers\FooterComposer;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -63,5 +65,8 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(Conversation::class, ConversationPolicy::class);
         Gate::policy(Order::class, OrderPolicy::class);
         Gate::policy(Role::class, RolePolicy::class);
+
+        // Register view composers
+        View::composer('components.frontend.navigation.footer', FooterComposer::class);
     }
 }

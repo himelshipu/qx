@@ -27,7 +27,6 @@ use App\Http\Controllers\Backend\PaymentAuditController;
 use App\Http\Controllers\Backend\PaymentQueueController;
 use App\Http\Controllers\Backend\PaymentsController;
 use App\Http\Controllers\Backend\PaymentStatementController;
-use App\Http\Controllers\Backend\PayoutsController;
 use App\Http\Controllers\Backend\PermissionController;
 use App\Http\Controllers\Backend\ReviewController as BackendReviewController;
 use App\Http\Controllers\Backend\RoleController;
@@ -332,6 +331,7 @@ Route::prefix('dashboard')->name('dashboard.')->middleware(['auth', 'verified', 
     Route::get('/reviews/{review}', [BackendReviewController::class, 'show'])->name('reviews.show');
     Route::post('/reviews/{review}/toggle-visibility', [BackendReviewController::class, 'toggleVisibility'])->name('reviews.toggle-visibility');
     Route::get('/packages', [PackageController::class, 'index'])->name('packages.index');
+    Route::get('/packages/table', [PackageController::class, 'table'])->name('packages.table');
     Route::get('/packages/create', [PackageController::class, 'create'])->name('packages.create');
     Route::post('/packages', [PackageController::class, 'store'])->name('packages.store');
     Route::get('/packages/purchase', [PackageController::class, 'purchase'])->name('packages.purchase');
@@ -351,21 +351,18 @@ Route::prefix('dashboard')->name('dashboard.')->middleware(['auth', 'verified', 
     Route::put('/order-items/{orderItem}/status', [BackendOrderController::class, 'updateOrderItemStatus'])->name('order-items.update-status');
     Route::post('/order-items/{orderItem}/mark-paid', [BackendOrderController::class, 'markOrderItemPaid'])->name('order-items.mark-paid');
 
-    // Payments & Payouts
+    // Payments (offline payout ledger)
     Route::get('/payments', [PaymentsController::class, 'index'])->name('payments.index');
     Route::get('/payments/{payment}', [PaymentsController::class, 'show'])->name('payments.show');
     Route::post('/payments/{payment}/refund', [PaymentsController::class, 'refund'])->name('payments.refund');
     Route::post('/payments/{payment}/retry', [PaymentsController::class, 'retry'])->name('payments.retry');
 
-    Route::get('/payouts', [PayoutsController::class, 'index'])->name('payouts.index');
-    Route::post('/payouts', [PayoutsController::class, 'store'])->name('payouts.store');
-    Route::get('/payouts/{payout}', [PayoutsController::class, 'show'])->name('payouts.show');
-    Route::put('/payouts/{payout}', [PayoutsController::class, 'update'])->name('payouts.update');
-    Route::post('/payouts/{payout}/mark-paid', [PayoutsController::class, 'markAsPaid'])->name('payouts.mark-paid');
-    Route::get('/payouts/influencer/{influencer}/accounts', [PayoutsController::class, 'getInfluencerAccounts'])->name('payouts.influencer-accounts');
+    // Legacy manual payouts module retired. Keep old URL working.
+    Route::permanentRedirect('/payouts', '/dashboard/payments')->name('payouts.index');
 
     // Payment Queue, Audit & Statements
     Route::get('/payment-queue', [PaymentQueueController::class, 'index'])->name('payment-queue.index');
+    Route::post('/payment-queue/mark-paid', [PaymentQueueController::class, 'markPaid'])->name('payment-queue.mark-paid');
     Route::post('/payment-queue/bulk-mark', [PaymentQueueController::class, 'bulkMark'])->name('payment-queue.bulk-mark');
 
     Route::get('/payment-audit', [PaymentAuditController::class, 'index'])->name('payment-audit.index');

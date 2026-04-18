@@ -22,6 +22,7 @@ import "./admin/user-role-assignment";
 import "./admin/permission-assignment";
 import "./admin/communication-sidebar-badges";
 import "./admin/support-tickets-dashboard";
+import "./admin/packages-dashboard";
 import "./admin/static-page-form";
 import "./admin/static-pages-dashboard";
 

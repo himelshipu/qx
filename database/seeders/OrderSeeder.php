@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Order;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 
@@ -25,6 +26,10 @@ class OrderSeeder extends Seeder
             $campaignIds = ($campaignByBrand[$brand->id] ?? collect())->pluck('id')->all();
 
             for ($i = 0; $i < 2; $i++) {
+                $campaignId = !empty($campaignIds) && $i === 0
+                    ? $faker->randomElement($campaignIds)
+                    : null;
+                $sourceCode = $campaignId ? Order::SOURCE_CAMPAIGN : Order::SOURCE_PACKAGE;
                 $status     = $faker->randomElement($statuses);
                 $subtotal   = random_int(300, 2500);
                 $serviceFee = (float) round($subtotal * 0.08, 2);
@@ -39,11 +44,11 @@ class OrderSeeder extends Seeder
                 $cancelledAt = in_array($status, ['cancelled', 'refunded'], true) ? $placedAt->copy()->addDays(random_int(2, 7)) : null;
 
                 DB::table('orders')->updateOrInsert(
-                    ['order_number' => sprintf('ROCKIES-ORD-%06d', $counter)],
+                    ['order_number' => sprintf('ROCKIES-%s-%06d', $sourceCode, $counter)],
                     [
                         'buyer_user_id'              => $buyerUserId,
                         'brand_id'                   => $brand->id,
-                        'campaign_id'                => !empty($campaignIds) ? $faker->randomElement($campaignIds) : null,
+                        'campaign_id'                => $campaignId,
                         'status'                     => $status,
                         'accepted_by_user_id'        => $acceptedAt ? $buyerUserId : null,
                         'accepted_for_influencer_id' => $acceptedAt ? $faker->randomElement($influencers) : null,

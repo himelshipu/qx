@@ -64,6 +64,8 @@ class EnforceDashboardRoutePermission
             'faqs.items.table' => 'faqs.items.index',
             'users.table' => 'users.index',
             'support-tickets.table' => 'support-tickets.index',
+            'packages.table' => 'packages.index',
+            'packages.purchase.store' => 'packages.purchase',
             'settings.recovery.restore' => 'settings.restore',
             // Internal permission/menu helper APIs should require dashboard access.
             'api.menu' => 'dashboard.view',

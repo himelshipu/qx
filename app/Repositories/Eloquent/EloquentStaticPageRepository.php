@@ -1,6 +1,6 @@
 <?php
 
-declare (strict_types = 1);
+declare(strict_types=1);
 
 namespace App\Repositories\Eloquent;
 
@@ -64,9 +64,14 @@ final class EloquentStaticPageRepository implements StaticPageRepositoryInterfac
     public function toggleStatus(StaticPage $staticPage): StaticPage
     {
         $staticPage->update([
-            'is_active' => !$staticPage->is_active,
+            'is_active' => ! $staticPage->is_active,
         ]);
 
         return $staticPage->refresh();
+    }
+
+    public function getNextSortOrder(): int
+    {
+        return (int) StaticPage::max('sort_order') + 1;
     }
 }

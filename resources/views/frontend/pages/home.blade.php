@@ -11,8 +11,7 @@
 			<x-frontend.partials.testimonials :testimonials="$testimonials" />
 			<x-frontend.partials.search />
 			<x-frontend.partials.campaign />
-			<x-frontend.partials.categories />
-			<x-frontend.partials.faq :faqItems="$faqItems" />
+			<x-frontend.partials.categories />		<x-frontend.partials.blog />			<x-frontend.partials.faq :faqItems="$faqItems" />
 			<x-frontend.partials.trusted-reviews />
 			<x-frontend.partials.cta />
 

@@ -80,6 +80,33 @@
             class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-800">
         <label for="is_active" class="ml-2 block text-sm text-gray-900 dark:text-gray-300">Publish this page (make it visible)</label>
     </div>
+
+    <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+        <div>
+            <label for="sort_order" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Sort Order</label>
+            <input
+                type="number"
+                id="sort_order"
+                name="sort_order"
+                value="{{ old('sort_order', data_get($page, 'sort_order', $nextSortOrder ?? 0)) }}"
+                min="0"
+                class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white">
+            @error('sort_order')
+                <p class="mt-2 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+            @enderror
+        </div>
+
+        <div class="flex items-center">
+            <input
+                type="checkbox"
+                id="show_on_footer"
+                name="show_on_footer"
+                value="1"
+                {{ old('show_on_footer', data_get($page, 'show_on_footer', true)) ? 'checked' : '' }}
+                class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-800">
+            <label for="show_on_footer" class="ml-2 block text-sm text-gray-900 dark:text-gray-300">Show in footer</label>
+        </div>
+    </div>
 </div>
 
 @push('styles')

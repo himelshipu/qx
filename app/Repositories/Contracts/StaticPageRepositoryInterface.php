@@ -1,6 +1,6 @@
 <?php
 
-declare (strict_types = 1);
+declare(strict_types=1);
 
 namespace App\Repositories\Contracts;
 
@@ -17,12 +17,12 @@ interface StaticPageRepositoryInterface
     public function stats(): array;
 
     /**
-     * @param array<string,mixed> $data
+     * @param  array<string,mixed>  $data
      */
     public function create(array $data): StaticPage;
 
     /**
-     * @param array<string,mixed> $data
+     * @param  array<string,mixed>  $data
      */
     public function update(StaticPage $staticPage, array $data): StaticPage;
 
@@ -31,4 +31,6 @@ interface StaticPageRepositoryInterface
     public function hasSlug(string $slug, ?int $ignoreId = null): bool;
 
     public function toggleStatus(StaticPage $staticPage): StaticPage;
+
+    public function getNextSortOrder(): int;
 }

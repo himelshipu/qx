@@ -1,6 +1,6 @@
 <?php
 
-declare (strict_types = 1);
+declare(strict_types=1);
 
 namespace App\Http\Controllers\Backend;
 
@@ -60,7 +60,8 @@ class StaticPageController extends Controller
     public function create(): View
     {
         return view('backend.pages.static-pages.create', [
-            'page' => new StaticPage(),
+            'page' => new StaticPage,
+            'nextSortOrder' => $this->service->getNextSortOrder(),
         ]);
     }
 

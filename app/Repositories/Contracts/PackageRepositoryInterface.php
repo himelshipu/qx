@@ -16,8 +16,10 @@ interface PackageRepositoryInterface
 {
     /**
      * Get paginated packages for dashboard listing.
+     *
+     * @param array<string, mixed> $filters
      */
-    public function paginateForDashboard(string $search, string $status, string $platform, int $perPage = 12): LengthAwarePaginator;
+    public function paginateForDashboard(array $filters, int $perPage = 12): LengthAwarePaginator;
 
     /**
      * Get dashboard package summary stats.

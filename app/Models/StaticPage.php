@@ -2,10 +2,10 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Str;
 
 class StaticPage extends Model
@@ -22,6 +22,8 @@ class StaticPage extends Model
         'meta_description',
         'meta_keywords',
         'is_active',
+        'sort_order',
+        'show_on_footer',
     ];
 
     /**
@@ -29,6 +31,8 @@ class StaticPage extends Model
      */
     protected $casts = [
         'is_active' => 'boolean',
+        'sort_order' => 'integer',
+        'show_on_footer' => 'boolean',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
@@ -120,7 +124,7 @@ class StaticPage extends Model
     public function getContentSummaryAttribute(): string
     {
         return strlen($this->content) > 150
-            ? substr(strip_tags($this->content), 0, 150) . '...'
+            ? substr(strip_tags($this->content), 0, 150).'...'
             : strip_tags($this->content);
     }
 }

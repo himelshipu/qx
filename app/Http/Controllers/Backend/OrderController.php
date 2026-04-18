@@ -20,67 +20,29 @@ class OrderController extends Controller
 {
     public function index(Request $request): View
     {
-        $search = trim((string) $request->string('q', ''));
-        $status = (string) $request->string('status', 'all');
-        $type = (string) $request->string('type', 'all');
+        $filters = [
+            'q' => trim((string) $request->string('q', '')),
+            'status' => (string) $request->string('status', 'all'),
+            'type' => (string) $request->string('type', 'all'),
+        ];
 
         $orders = Order::query()
             ->whereNull('parent_order_id')
-            ->with([
-                'buyer:id,name,email,user_type',
-                'brand:id,brand_name',
-                'campaign:id,title',
-                'childOrders:id,parent_order_id,campaign_id,status,total_amount,currency',
-            ])
-            ->withCount([
-                'items as package_items_count' => fn ($query) => $query->whereNotNull('package_id'),
-                'childOrders as child_orders_count',
-                'childOrders as child_package_orders_count' => fn ($query) => $query->whereNull('campaign_id'),
-            ])
-            ->when($search !== '', function ($query) use ($search) {
-                $query->where(function ($subQuery) use ($search) {
-                    $subQuery
-                        ->where('order_number', 'like', '%'.$search.'%')
-                        ->orWhereHas('buyer', function ($buyerQuery) use ($search) {
-                            $buyerQuery
-                                ->where('name', 'like', '%'.$search.'%')
-                                ->orWhere('email', 'like', '%'.$search.'%');
-                        })
-                        ->orWhereHas('brand', function ($brandQuery) use ($search) {
-                            $brandQuery->where('brand_name', 'like', '%'.$search.'%');
-                        })
-                        ->orWhereHas('campaign', function ($campaignQuery) use ($search) {
-                            $campaignQuery->where('title', 'like', '%'.$search.'%');
-                        })
-                        ->orWhereHas('items', function ($itemQuery) use ($search) {
-                            $itemQuery->where('title', 'like', '%'.$search.'%');
-                        })
-                        ->orWhereHas('childOrders.items', function ($itemQuery) use ($search) {
-                            $itemQuery->where('title', 'like', '%'.$search.'%');
-                        });
-                });
-            })
-            ->when($status !== 'all', fn ($query) => $query->where('status', $status))
-            ->when($type === 'campaign', fn ($query) => $query->whereNotNull('campaign_id'))
-            ->when($type === 'package', function ($query) {
-                $query
-                    ->whereNull('campaign_id')
-                    ->where(function ($packageQuery) {
-                        $packageQuery
-                            ->whereHas('items', fn ($itemQuery) => $itemQuery->whereNotNull('package_id'))
-                            ->orWhereHas('childOrders.items', fn ($itemQuery) => $itemQuery->whereNotNull('package_id'));
-                    });
-            })
+            ->forDashboard()
+            ->dashboardSearch($filters['q'])
+            ->dashboardStatus($filters['status'])
+            ->dashboardType($filters['type'])
             ->orderByDesc('created_at')
             ->paginate(15)
             ->withQueryString();
 
-        $stats = [
-            'total' => Order::whereNull('parent_order_id')->count(),
-            'pending' => Order::whereNull('parent_order_id')->where('status', 'pending')->count(),
-            'completed' => Order::whereNull('parent_order_id')->where('status', 'completed')->count(),
-            'revenue' => (float) Order::whereNull('parent_order_id')->where('status', 'completed')->sum('total_amount'),
-        ];
+        $stats = Order::query()
+            ->whereNull('parent_order_id')
+            ->selectRaw('COUNT(*) as total')
+            ->selectRaw("SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pending")
+            ->selectRaw("SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed")
+            ->selectRaw("COALESCE(SUM(CASE WHEN status = 'completed' THEN total_amount ELSE 0 END), 0) as revenue")
+            ->first();
 
         if ($request->ajax()) {
             return view('backend.pages.orders._results', [
@@ -90,10 +52,15 @@ class OrderController extends Controller
 
         return view('backend.pages.orders.index', [
             'orders' => $orders,
-            'stats' => $stats,
-            'search' => $search,
-            'status' => $status,
-            'type' => $type,
+            'stats' => [
+                'total' => (int) ($stats?->total ?? 0),
+                'pending' => (int) ($stats?->pending ?? 0),
+                'completed' => (int) ($stats?->completed ?? 0),
+                'revenue' => (float) ($stats?->revenue ?? 0),
+            ],
+            'search' => $filters['q'],
+            'status' => $filters['status'],
+            'type' => $filters['type'],
         ]);
     }
 
@@ -274,7 +241,7 @@ class OrderController extends Controller
 
         $order = DB::transaction(function () use ($buyerUserId, $brand, $campaign, $pricing, $approvedInfluencers) {
             $order = Order::create([
-                'order_number' => 'ORD-'.time(),
+                'order_number' => Order::generateOrderNumber(Order::SOURCE_CAMPAIGN),
                 'buyer_user_id' => $buyerUserId,
                 'brand_id' => $brand->id,
                 'campaign_id' => $campaign->id,

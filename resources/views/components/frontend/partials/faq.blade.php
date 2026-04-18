@@ -1,7 +1,18 @@
 @props(['faqItems' => collect()])
 
 <section class="faq-section-wrapper" x-data="{ activeAccordion: null }">
-	<h2 class="text-3xl md:text-4xl font-semibold text-[#222] dark:text-white mb-6">FAQ</h2>
+	<div class="flex flex-row items-end justify-between mb-6 gap-3">
+		<div>
+			<h2 class="text-2xl font-semibold text-[#222] dark:text-white">FAQ</h2>
+			<p class="text-gray-500 dark:text-gray-400 leading-relaxed mt-1">
+				Common questions answered
+			</p>
+		</div>
+		<a href="{{ route('faq') }}"
+			class="text-sm font-medium text-[#222] dark:text-gray-400 hover:underline hover:text-purple-300 pb-1 whitespace-nowrap">
+			See All
+		</a>
+	</div>
 
 	<div class="divide-y divide-gray-200 dark:divide-gray-800 border-b border-gray-200 dark:border-gray-800">
 

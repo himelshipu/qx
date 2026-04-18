@@ -227,14 +227,6 @@ class PermissionSeeder extends Seeder
             ['name' => 'View Payment Statement Details', 'slug' => 'payment-statement.show', 'module' => 'payments'],
             ['name' => 'Export Payment Statement PDF', 'slug' => 'payment-statement.pdf', 'module' => 'payments'],
 
-            // COMMERCE: PAYOUTS
-            ['name' => 'View Payouts', 'slug' => 'payouts.index', 'module' => 'payouts'],
-            ['name' => 'Store Payout', 'slug' => 'payouts.store', 'module' => 'payouts'],
-            ['name' => 'View Payout Details', 'slug' => 'payouts.show', 'module' => 'payouts'],
-            ['name' => 'Update Payout', 'slug' => 'payouts.update', 'module' => 'payouts'],
-            ['name' => 'Mark Payout Paid', 'slug' => 'payouts.mark-paid', 'module' => 'payouts'],
-            ['name' => 'View Influencer Accounts', 'slug' => 'payouts.influencer-accounts', 'module' => 'payouts'],
-
             // ACCESS CONTROL: USERS
             ['name' => 'View Users', 'slug' => 'users.index', 'module' => 'users'],
             ['name' => 'Create User', 'slug' => 'users.create', 'module' => 'users'],

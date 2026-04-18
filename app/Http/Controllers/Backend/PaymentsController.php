@@ -3,158 +3,201 @@
 namespace App\Http\Controllers\Backend;
 
 use App\Http\Controllers\Controller;
-use App\Models\Order;
-use App\Models\Payment;
+use App\Models\OrderItem;
+use App\Models\SubOrder;
+use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Pagination\Paginator;
+use Illuminate\Support\Collection;
 use Illuminate\Http\Request;
 
 class PaymentsController extends Controller
 {
     public function index()
     {
-        // Get all payments with relationships
-        $payments = Payment::with(['order.brand', 'order.campaign', 'paymentMethod'])
-            ->orderBy('created_at', 'desc')
-            ->paginate(15);
+        $entries = $this->buildPayoutLedgerEntries();
+        $paginatedEntries = $this->paginateEntries($entries, 15);
 
-        // Payment statistics
-        $totalPayments      = Payment::count();
-        $successfulPayments = Payment::whereIn('status', ['authorized', 'captured'])->count();
-        $pendingPayments    = Payment::where('status', 'pending')->count();
-        $failedPayments     = Payment::where('status', 'failed')->count();
+        $totalPayouts = $entries->count();
+        $totalAmount = (float) $entries->sum('amount');
+        $packageAmount = (float) $entries->where('type', 'Package Work')->sum('amount');
+        $campaignAmount = (float) $entries->where('type', 'Campaign Work')->sum('amount');
+        $thisMonthAmount = (float) $entries
+            ->filter(fn (array $entry): bool => $entry['paid_at']->greaterThanOrEqualTo(now()->startOfMonth()))
+            ->sum('amount');
+        $uniqueInfluencers = $entries->pluck('influencer_id')->filter()->unique()->count();
 
-        // Payment amounts
-        $totalAmount    = Payment::sum('amount') ?? 0;
-        $capturedAmount = Payment::whereIn('status', ['authorized', 'captured'])->sum('amount') ?? 0;
-        $pendingAmount  = Payment::where('status', 'pending')->sum('amount') ?? 0;
-        $failedAmount   = Payment::where('status', 'failed')->sum('amount') ?? 0;
+        $topInfluencers = $entries
+            ->groupBy('influencer_id')
+            ->map(function (Collection $group) {
+                $first = $group->first();
 
-        // Payment status distribution
-        $paymentsByStatus = Payment::selectRaw('status, COUNT(*) as count, SUM(amount) as total')
-            ->groupBy('status')
-            ->get()
-            ->keyBy('status');
+                return [
+                    'influencer' => $first['influencer'],
+                    'count' => $group->count(),
+                    'amount' => (float) $group->sum('amount'),
+                ];
+            })
+            ->sortByDesc('amount')
+            ->values()
+            ->take(5);
 
-        // Recent payments (last 7 days)
-        $recentPayments = Payment::where('created_at', '>=', now()->subDays(7))
-            ->count();
-
-        // Payment methods breakdown
-        $paymentsByMethod = Payment::with('paymentMethod')
-            ->selectRaw('payment_method_id, COUNT(*) as count, SUM(amount) as total')
-            ->groupBy('payment_method_id')
-            ->get();
-
-        // Top brands by payment volume
-        $topBrandsByPayment = Order::join('payments', 'orders.id', '=', 'payments.order_id')
-            ->join('brands', 'orders.brand_id', '=', 'brands.id')
-            ->selectRaw('brands.id, brands.brand_name, COUNT(payments.id) as payment_count, SUM(payments.amount) as total_amount')
-            ->groupBy('brands.id', 'brands.brand_name')
-            ->orderBy('total_amount', 'desc')
-            ->limit(5)
-            ->get();
+        $recentEntries = $entries->take(8);
 
         return view('backend.pages.payments.index', compact(
-            'payments',
-            'totalPayments',
-            'successfulPayments',
-            'pendingPayments',
-            'failedPayments',
+            'paginatedEntries',
+            'totalPayouts',
             'totalAmount',
-            'capturedAmount',
-            'pendingAmount',
-            'failedAmount',
-            'paymentsByStatus',
-            'recentPayments',
-            'paymentsByMethod',
-            'topBrandsByPayment'
+            'packageAmount',
+            'campaignAmount',
+            'thisMonthAmount',
+            'uniqueInfluencers',
+            'topInfluencers',
+            'recentEntries'
         ));
     }
 
-    public function show(Payment $payment)
+    public function show(Request $request)
     {
-        $payment->load(['order.brand', 'order.campaign', 'order.items', 'paymentMethod']);
+        $type = $request->query('type');
+        $id = (int) $request->query('id');
 
-        return response()->json([
-            'payment'     => [
-                'id'                => $payment->id,
-                'order_id'          => $payment->order_id,
-                'brand'             => $payment->order?->brand->brand_name,
-                'campaign'          => $payment->order?->campaign->name ?? 'N/A',
-                'amount'            => $payment->amount,
-                'status'            => $payment->status,
-                'payment_method'    => $payment->paymentMethod?->type ?? 'Unknown',
-                'stripe_id'         => $payment->stripe_transaction_id,
-                'payment_intent_id' => $payment->payment_intent_id,
-                'created_at'        => $payment->created_at->format('M d, Y H:i'),
-                'can_retry'         => $payment->status === 'failed' || $payment->status === 'pending',
-                'can_refund'        => in_array($payment->status, ['authorized', 'captured'])
-            ],
-            'order_items' => $payment->order?->items->map(function ($item) {
-                return [
-                    'id'          => $item->id,
-                    'description' => $item->description,
-                    'amount'      => $item->amount,
-                    'status'      => $item->status
-                ];
-            })
-        ]);
-    }
+        if ($type === 'item') {
+            $entry = OrderItem::query()
+                ->forPaymentDashboard()
+                ->paidForDashboard()
+                ->with([
+                    'order:id,brand_id,campaign_id',
+                    'order.brand:id,brand_name',
+                    'order.campaign:id,title',
+                    'influencer:id,user_id,display_name',
+                    'influencer.user:id,name,email',
+                    'payoutMarkedBy:id,name,email',
+                    'package:id,name',
+                ])
+                ->findOrFail($id);
 
-    public function refund(Request $request, Payment $payment)
-    {
-        // Validate user can refund this payment
-        if (!in_array($payment->status, ['authorized', 'captured'])) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Only authorized or captured payments can be refunded'
-            ], 400);
+            return response()->json($this->formatOrderItemEntry($entry));
         }
 
-        $validated = $request->validate([
-            'amount' => 'nullable|numeric|min:0.01',
-            'reason' => 'nullable|string'
-        ]);
+        if ($type === 'sub-order') {
+            $entry = SubOrder::query()
+                ->forPaymentDashboard()
+                ->paidForDashboard()
+                ->with([
+                    'order:id,campaign_id,brand_id',
+                    'order.campaign:id,title',
+                    'order.brand:id,brand_name',
+                    'influencer:id,user_id,display_name',
+                    'influencer.user:id,name,email',
+                    'payoutMarkedBy:id,name,email',
+                ])
+                ->findOrFail($id);
 
-        $refundAmount = $validated['amount'] ?? $payment->amount;
-
-        // Update payment status
-        $payment->update([
-            'status' => $refundAmount >= $payment->amount ? 'refunded' : 'partially_refunded'
-        ]);
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Refund processed successfully',
-            'payment' => [
-                'id'     => $payment->id,
-                'status' => $payment->status,
-                'amount' => $refundAmount
-            ]
-        ]);
-    }
-
-    public function retry(Request $request, Payment $payment)
-    {
-        // Validate user can retry this payment
-        if ($payment->status !== 'failed' && $payment->status !== 'pending') {
-            return response()->json([
-                'success' => false,
-                'message' => 'Only failed or pending payments can be retried'
-            ], 400);
+            return response()->json($this->formatSubOrderEntry($entry));
         }
 
-        // Update payment status to processing
-        $payment->update([
-            'status' => 'processing'
-        ]);
+        abort(404);
+    }
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Payment retry initiated. Please wait for processing.',
-            'payment' => [
-                'id'     => $payment->id,
-                'status' => $payment->status
+    public function refund(Request $request)
+    {
+        abort(404);
+    }
+
+    public function retry(Request $request)
+    {
+        abort(404);
+    }
+
+    private function buildPayoutLedgerEntries(): Collection
+    {
+        $paidItems = OrderItem::query()
+            ->forPaymentDashboard()
+            ->paidForDashboard()
+            ->with([
+                'order:id,brand_id,campaign_id',
+                'order.brand:id,brand_name',
+                'order.campaign:id,title',
+                'influencer:id,user_id,display_name',
+                'influencer.user:id,name,email',
+                'payoutMarkedBy:id,name,email',
+                'package:id,name',
+            ])
+            ->orderByDesc('payout_marked_at')
+            ->get()
+            ->map(fn (OrderItem $item): array => $this->formatOrderItemEntry($item));
+
+        $paidSubOrders = SubOrder::query()
+            ->forPaymentDashboard()
+            ->paidForDashboard()
+            ->with([
+                'order:id,campaign_id,brand_id',
+                'order.campaign:id,title',
+                'order.brand:id,brand_name',
+                'influencer:id,user_id,display_name',
+                'influencer.user:id,name,email',
+                'payoutMarkedBy:id,name,email',
+            ])
+            ->orderByDesc('payout_marked_at')
+            ->get()
+            ->map(fn (SubOrder $subOrder): array => $this->formatSubOrderEntry($subOrder));
+
+        return $paidItems
+            ->concat($paidSubOrders)
+            ->sortByDesc('paid_at')
+            ->values();
+    }
+
+    private function formatOrderItemEntry(OrderItem $item): array
+    {
+        return [
+            'source_type' => 'item',
+            'source_id' => $item->id,
+            'type' => 'Package Work',
+            'influencer_id' => $item->influencer_id,
+            'influencer' => $item->influencer,
+            'campaign_or_brand' => $item->order?->campaign?->title ?? $item->order?->brand?->brand_name ?? 'N/A',
+            'description' => $item->description ?: ($item->title ?: 'Package work'),
+            'amount' => (float) $item->payout_amount,
+            'reference' => $item->payout_reference,
+            'note' => $item->payout_note,
+            'marked_by' => $item->payoutMarkedBy?->name ?? 'Admin',
+            'paid_at' => $item->paid_at,
+        ];
+    }
+
+    private function formatSubOrderEntry(SubOrder $subOrder): array
+    {
+        return [
+            'source_type' => 'sub-order',
+            'source_id' => $subOrder->id,
+            'type' => 'Campaign Work',
+            'influencer_id' => $subOrder->influencer_id,
+            'influencer' => $subOrder->influencer,
+            'campaign_or_brand' => $subOrder->order?->campaign?->title ?? $subOrder->order?->brand?->brand_name ?? 'N/A',
+            'description' => 'Campaign deliverable',
+            'amount' => (float) $subOrder->payout_amount,
+            'reference' => $subOrder->payout_reference,
+            'note' => $subOrder->payout_note,
+            'marked_by' => $subOrder->payoutMarkedBy?->name ?? 'Admin',
+            'paid_at' => $subOrder->paid_at,
+        ];
+    }
+
+    private function paginateEntries(Collection $entries, int $perPage = 15): LengthAwarePaginator
+    {
+        $currentPage = Paginator::resolveCurrentPage() ?: 1;
+        $items = $entries->forPage($currentPage, $perPage)->values();
+
+        return new LengthAwarePaginator(
+            $items,
+            $entries->count(),
+            $perPage,
+            $currentPage,
+            [
+                'path' => Paginator::resolveCurrentPath(),
+                'query' => request()->query(),
             ]
-        ]);
+        );
     }
 }

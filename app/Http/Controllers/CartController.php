@@ -391,7 +391,7 @@ class CartController extends Controller
 
             $parentOrder = DB::transaction(function () use ($groupedByInfluencer, $user, $checkoutPricing, &$latestConversation): Order {
                 $parent = Order::create([
-                    'order_number'  => 'ORD-' . uniqid(),
+                    'order_number'  => Order::generateOrderNumber(Order::SOURCE_PACKAGE),
                     'buyer_user_id' => $user->id,
                     'brand_id'      => $user->brand?->id,
                     'subtotal'      => $checkoutPricing['net_subtotal'],
@@ -413,7 +413,7 @@ class CartController extends Controller
                     $influencerPricing = PlatformPricing::calculateFromNet($influencerSubtotal);
 
                     $childOrder = Order::create([
-                        'order_number'  => 'ORD-' . uniqid(),
+                        'order_number'  => Order::generateOrderNumber(Order::SOURCE_PACKAGE),
                         'buyer_user_id' => $user->id,
                         'brand_id'      => $user->brand?->id,
                         'parent_order_id' => $parent->id,

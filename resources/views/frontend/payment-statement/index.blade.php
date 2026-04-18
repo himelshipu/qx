@@ -105,7 +105,7 @@
 									</p>
 								</div>
 								<div class="flex gap-2">
-									<a href="{{ route('payment-statements.pdf.monthly', ['month' => $statement['month']]) }}"
+									<a href="{{ route('payment-statements.pdf.monthly', ['month' => $statement['month_key']]) }}"
 										class="btn btn-sm btn-outline">
 										<i class="fas fa-download"></i> Download PDF
 									</a>
@@ -166,7 +166,7 @@
 				</div>
 
 				<!-- Grand Total -->
-				<div class="mt-6 pt-6 border-t bg-gradient-to-r from-green-50 to-blue-50 rounded-lg p-6">
+				<div class="mt-6 pt-6 border-t bg-linear-to-r from-green-50 to-blue-50 rounded-lg p-6">
 					<div class="flex justify-between items-center">
 						<div>
 							<p class="text-gray-600 font-medium">Grand Total (All Time)</p>

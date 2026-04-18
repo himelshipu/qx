@@ -1,11 +1,11 @@
-@extends('layouts.app')
+@extends('frontend.layouts.app')
 
 @section('title', $page->title)
 @section('meta_description', $page->meta_description)
 @section('meta_keywords', $page->meta_keywords)
 
 @section('content')
-	<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+	<div class="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
 		<!-- Breadcrumb -->
 		<div class="mb-8">
 			<nav class="flex items-center space-x-2 text-sm">

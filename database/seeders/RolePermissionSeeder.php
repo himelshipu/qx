@@ -88,8 +88,6 @@ class RolePermissionSeeder extends Seeder
             'influencers.index', 'influencers.view',
             'brands.index', 'brands.view',
 
-            // Optional payout visibility for case handling
-            'payouts.index',
         ];
 
         $this->attachPermissionsBySlug($moderator, $moderatorPermissions);
@@ -106,7 +104,7 @@ class RolePermissionSeeder extends Seeder
             'packages.index', 'packages.view',
             'influencers.index', 'influencers.view',
             'brands.index', 'brands.view',
-            'payments.index', 'payouts.index',
+            'payments.index',
             'reviews.index',
             'support-tickets.index',
         ];

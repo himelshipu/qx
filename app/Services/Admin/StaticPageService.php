@@ -1,6 +1,6 @@
 <?php
 
-declare (strict_types = 1);
+declare(strict_types=1);
 
 namespace App\Services\Admin;
 
@@ -13,8 +13,7 @@ final class StaticPageService
 {
     public function __construct(
         private readonly StaticPageRepositoryInterface $staticPageRepository
-    ) {
-    }
+    ) {}
 
     /**
      * @return array{pages:LengthAwarePaginator,stats:array{total:int,published:int,draft:int},search:string,status:string}
@@ -32,7 +31,7 @@ final class StaticPageService
     }
 
     /**
-     * @param array<string,mixed> $validated
+     * @param  array<string,mixed>  $validated
      */
     public function createStaticPage(array $validated, bool $isActive): StaticPage
     {
@@ -43,11 +42,13 @@ final class StaticPageService
             'meta_description' => $this->nullableString($validated['meta_description'] ?? null),
             'meta_keywords' => $this->nullableString($validated['meta_keywords'] ?? null),
             'is_active' => $isActive,
+            'sort_order' => $validated['sort_order'] ?? $this->getNextSortOrder(),
+            'show_on_footer' => $validated['show_on_footer'] ?? true,
         ]);
     }
 
     /**
-     * @param array<string,mixed> $validated
+     * @param  array<string,mixed>  $validated
      */
     public function updateStaticPage(StaticPage $staticPage, array $validated, bool $isActive): StaticPage
     {
@@ -58,6 +59,8 @@ final class StaticPageService
             'meta_description' => $this->nullableString($validated['meta_description'] ?? null),
             'meta_keywords' => $this->nullableString($validated['meta_keywords'] ?? null),
             'is_active' => $isActive,
+            'sort_order' => $validated['sort_order'] ?? $staticPage->sort_order,
+            'show_on_footer' => $validated['show_on_footer'] ?? $staticPage->show_on_footer,
         ]);
     }
 
@@ -80,18 +83,29 @@ final class StaticPageService
         $counter = 2;
 
         while ($this->staticPageRepository->hasSlug($slug, $ignoreId)) {
-            $slug = $base . '-' . $counter;
+            $slug = $base.'-'.$counter;
             $counter++;
         }
 
         return $slug;
     }
 
-    private function nullableString(mixed $value): ?string
+private function nullableString(mixed $value): ?string
     {
         if (!is_string($value)) {
             return null;
         }
+
+        $trimmed = trim($value);
+
+        return $trimmed === '' ? null : $trimmed;
+    }
+
+    public function getNextSortOrder(): int
+    {
+        return $this->staticPageRepository->getNextSortOrder();
+    }
+}
 
         $trimmed = trim($value);
 

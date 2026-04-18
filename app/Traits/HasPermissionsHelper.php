@@ -137,7 +137,7 @@ trait HasPermissionsHelper
         // Get key permissions for common actions
         $keyPermissions = [
             'can_view_dashboard' => $this->canDo('dashboard.view'),
-            'can_view_analytics' => $this->canDoAny(['orders.index', 'payments.index', 'payouts.index']),
+            'can_view_analytics' => $this->canDoAny(['orders.index', 'payments.index']),
             'can_manage_users' => $this->canDoAny(['users.create', 'users.edit', 'users.update', 'users.toggle-status']),
             'can_manage_roles' => $this->canDoAny(['roles.store', 'roles.update', 'roles.destroy']),
             'can_manage_permissions' => $this->canDo('permissions.assign'),

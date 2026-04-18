@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -105,5 +106,22 @@ class Payment extends Model
     public function scopeFailed($query)
     {
         return $query->where('status', 'failed');
+    }
+
+    public function scopeForDashboard(Builder $query): Builder
+    {
+        return $query
+            ->select([
+                'id',
+                'order_id',
+                'payment_method_id',
+                'payment_provider',
+                'provider_payment_id',
+                'amount',
+                'currency',
+                'status',
+                'paid_at',
+                'created_at',
+            ]);
     }
 }

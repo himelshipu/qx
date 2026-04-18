@@ -32,17 +32,10 @@
     <div class="border-t border-gray-100 dark:border-gray-800">
         <div class="max-w-7xl mx-auto px-2 py-6 flex flex-col md:flex-row items-center justify-between gap-4">
             <div class="flex flex-wrap items-center gap-4 md:gap-6 text-sm text-gray-600 dark:text-gray-400">
-                <span>© {{ \App\Models\Setting::get('branding.site_name', config('app.name', 'QX Marketplace')) }}</span>
-                @php
-                    $footerPages = \App\Models\Setting::get('footer_pages', []);
-                    $pages = \App\Models\StaticPage::whereIn('id', $footerPages)->where('is_active', true)->get();
-                @endphp
-                @forelse($pages as $page)
+                <span>© {{ $siteName }}</span>
+                @foreach($footerPages as $page)
                     <a href="{{ route('pages.show', $page->slug) }}" class="hover:text-gray-800 dark:hover:text-white">{{ $page->title }}</a>
-                @empty
-                    <a href="{{ route('pages.show', ['slug' => 'privacy-policy']) }}" class="hover:text-gray-800 dark:hover:text-white">Privacy</a>
-                    <a href="{{ route('pages.show', ['slug' => 'terms-of-service']) }}" class="hover:text-gray-800 dark:hover:text-white">Terms & Conditions</a>
-                @endforelse
+                @endforeach
             </div>
 
             <div class="flex items-center gap-4 text-gray-800 dark:text-gray-300">

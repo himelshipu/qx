@@ -96,7 +96,7 @@ These are automatically assigned to the Admin role.
 ## Example Footer Output
 
 ```
-© 2026 QX Marketplace. All rights reserved.
+© 2026 Rockies. All rights reserved.
   Privacy Policy | Terms of Use | About Us | Contact Us
 ```
 
