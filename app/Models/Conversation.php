@@ -2,10 +2,12 @@
 
 namespace App\Models;
 
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Builder;
 
 class Conversation extends Model
 {
@@ -76,7 +78,7 @@ class Conversation extends Model
     /**
      * Scope: Brand conversations ordered by most recent
      */
-    public function scopeForBrand($query, $brandUserId)
+    public function scopeForBrand(Builder $query, int $brandUserId): Builder
     {
         return $query->where('brand_user_id', $brandUserId)
             ->with([
@@ -90,7 +92,7 @@ class Conversation extends Model
     /**
      * Scope: All conversations (admin view)
      */
-    public function scopeForAdmin($query)
+    public function scopeForAdmin(Builder $query): Builder
     {
         return $query->with([
             'influencer.user',
@@ -104,7 +106,7 @@ class Conversation extends Model
     /**
      * Scope: Moderator's assigned conversations
      */
-    public function scopeForModerator($query, $moderatorId)
+    public function scopeForModerator(Builder $query, int $moderatorId): Builder
     {
         return $query->where('handled_by_user_id', $moderatorId)
             ->with([
@@ -113,5 +115,21 @@ class Conversation extends Model
                 'messages' => fn($q) => $q->orderByDesc('created_at')->limit(1)
             ])
             ->orderByDesc('updated_at');
+    }
+
+    public function scopeWithUnreadMessagesForUser(Builder $query, User $user): Builder
+    {
+        return $query->whereHas('messages', function (Builder $messageQuery) use ($user): void {
+            $messageQuery->unread()->where('sender_user_id', '!=', $user->id);
+        });
+    }
+
+    public function scopeForSidebarUnreadCount(Builder $query, User $user): Builder
+    {
+        return match ($user->user_type) {
+            'brand' => $query->where('brand_user_id', $user->id),
+            'moderator' => $query->where('handled_by_user_id', $user->id),
+            default => $query,
+        };
     }
 }

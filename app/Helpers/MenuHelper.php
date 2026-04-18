@@ -2,7 +2,10 @@
 
 namespace App\Helpers;
 
+use App\Models\User;
+use App\Services\Admin\CommunicationBadgeService;
 use Illuminate\Support\Facades\Blade;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
 class MenuHelper
@@ -205,19 +208,19 @@ class MenuHelper
                         'icon'  => 'chat',
                         'name'  => 'Conversations',
                         'route' => 'conversations.index',
-                        'count' => true
+                        'badge_key' => 'conversations'
                     ],
                     [
                         'icon'  => 'support',
                         'name'  => 'Support Tickets',
                         'route' => 'support-tickets.index',
-                        'count' => true
+                        'badge_key' => 'support_tickets'
                     ],
                     [
                         'icon'  => 'notifications',
                         'name'  => 'Notifications',
                         'route' => 'notifications.index',
-                        'count' => true
+                        'badge_key' => 'notifications'
                     ]
                 ]
             ],
@@ -253,10 +256,16 @@ class MenuHelper
 
     public static function buildSidebarMenu(string $currentRoute): array
     {
-        $user            = auth()->user();
+        /** @var User|null $user */
+        $user            = Auth::user();
         $menuItems       = self::getMainNavItems();
         $preparedItems   = [];
         $activeAccordion = null;
+        $badgeCounts     = $user ? app(CommunicationBadgeService::class)->getSidebarBadgeCounts($user) : [
+            'conversations' => 0,
+            'support_tickets' => 0,
+            'notifications' => 0,
+        ];
 
         foreach ($menuItems as $key => $item) {
             if ($key === 'dashboard') {
@@ -279,10 +288,11 @@ class MenuHelper
                 foreach ($item['items'] as $index => $subItem) {
                     $menuId      = $key . '_' . $index;
                     $hasSubItems = isset($subItem['subItems']);
+                    $badgeKey    = $subItem['badge_key'] ?? null;
                     
                     // Check if user has permission to view this menu item
                     $permission = self::getPermissionForMenuItem($key, $subItem);
-                    if ($permission && !$user->hasPermission($permission)) {
+                    if ($permission && !self::userHasPermission($user, $permission)) {
                         continue; // Skip this menu item if user doesn't have permission
                     }
 
@@ -297,7 +307,7 @@ class MenuHelper
 
                             // Check if user has permission for nested item
                             $nestedPermission = self::getPermissionForMenuItem($key, $nestedItem);
-                            if ($nestedPermission && !$user->hasPermission($nestedPermission)) {
+                            if ($nestedPermission && !self::userHasPermission($user, $nestedPermission)) {
                                 continue; // Skip if no permission
                             }
 
@@ -324,7 +334,8 @@ class MenuHelper
                             'has_sub_items' => true,
                             'sub_items'     => $nestedItems,
                             'default_url'   => $nestedItems[0]['url'] ?? '#',
-                            'active'        => $subItemActive
+                            'active'        => $subItemActive,
+                            'badge_count'   => $badgeKey ? (int) ($badgeCounts[$badgeKey] ?? 0) : null,
                         ];
 
                         $groupActive = $groupActive || $subItemActive;
@@ -341,7 +352,8 @@ class MenuHelper
                         'has_sub_items' => false,
                         'route_name'    => $routeName,
                         'url'           => $url,
-                        'active'        => $isActive
+                        'active'        => $isActive,
+                        'badge_count'   => $badgeKey ? (int) ($badgeCounts[$badgeKey] ?? 0) : null,
                     ];
                 }
 
@@ -446,6 +458,15 @@ class MenuHelper
         }
 
         return null;
+    }
+
+    private static function userHasPermission(?User $user, string $permission): bool
+    {
+        if (!$user) {
+            return false;
+        }
+
+        return $user->hasPermission($permission);
     }
 
     public static function getIconSvg($iconName)

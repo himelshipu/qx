@@ -5,6 +5,12 @@
 @section('content')
 	<x-backend.shell.breadcrumb pageTitle="Conversations" />
 
+	@php
+		$filters = request()->only(['search', 'assignment']);
+		$userType = auth()->user()->user_type;
+		$showAssignmentFilter = $userType === 'admin';
+	@endphp
+
 	<div class="space-y-6">
 		<div class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900">
 			<div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -21,6 +27,29 @@
 					</p>
 				</div>
 			</div>
+		</div>
+
+		<div class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+			<form id="conversation-filters" method="GET" action="{{ route('dashboard.conversations.index') }}" class="grid gap-4 md:grid-cols-{{ $showAssignmentFilter ? '3' : '2' }}">
+				<div>
+					<label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Search</label>
+					<input type="text" name="search" value="{{ $filters['search'] ?? '' }}" placeholder="Conversation, brand, influencer, moderator"
+						class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-800 dark:text-white">
+				</div>
+				@if ($showAssignmentFilter)
+					<div>
+						<label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Assignment</label>
+						<select name="assignment" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-800 dark:text-white">
+							<option value="">All</option>
+							<option value="assigned" @selected(($filters['assignment'] ?? '') === 'assigned')>Assigned</option>
+							<option value="unassigned" @selected(($filters['assignment'] ?? '') === 'unassigned')>Unassigned</option>
+						</select>
+					</div>
+				@endif
+				<div class="flex items-end">
+					<a href="{{ route('dashboard.conversations.index') }}" class="rounded-lg bg-gray-200 px-4 py-2 text-sm font-medium text-gray-900 hover:bg-gray-300 dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600">Reset</a>
+				</div>
+			</form>
 		</div>
 
 		<div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
@@ -73,10 +102,10 @@
 									</div>
 								</td>
 								<td class="px-6 py-4 whitespace-nowrap">
-									@if ($conversation->moderatorAssignment && $conversation->moderatorAssignment->moderator)
+									@if ($conversation->handledBy)
 										<span
 											class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300">
-											{{ $conversation->moderatorAssignment->moderator->name }}
+											{{ $conversation->handledBy->name }}
 										</span>
 									@else
 										<span
@@ -118,4 +147,24 @@
 			@endif
 		</div>
 	</div>
+
+	@push('scripts')
+		<script>
+			(() => {
+				const form = document.getElementById('conversation-filters');
+				if (!form) return;
+
+				const searchInput = form.querySelector('input[name="search"]');
+				const assignmentSelect = form.querySelector('select[name="assignment"]');
+				let searchTimer = null;
+
+				searchInput?.addEventListener('input', () => {
+					window.clearTimeout(searchTimer);
+					searchTimer = window.setTimeout(() => form.submit(), 300);
+				});
+
+				assignmentSelect?.addEventListener('change', () => form.submit());
+			})();
+		</script>
+	@endpush
 @endsection

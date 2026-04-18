@@ -1,43 +1,34 @@
 <?php
 
+declare (strict_types = 1);
+
 namespace App\Http\Controllers\Backend;
 
 use App\Http\Controllers\Controller;
 use App\Models\Notification;
+use App\Services\Admin\NotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
-class NotificationController extends Controller
+final class NotificationController extends Controller
 {
+    public function __construct(
+        private readonly NotificationService $service,
+    ) {
+    }
+
     /**
      * Display all notifications for authenticated user
      */
     public function index(Request $request)
     {
         $user = Auth::user();
+        $payload = $this->service->getIndexPayload($user, $request->only(['filter', 'type']));
 
-        $notifications = Notification::where('user_id', $user->id)
-            ->when($request->filter, function ($query, $filter) {
-                if ($filter === 'unread') {
-                    return $query->unread();
-                } elseif ($filter === 'read') {
-                    return $query->read();
-                }
-            })
-            ->when($request->type, function ($query, $type) {
-                return $query->byType($type);
-            })
-            ->orderBy('created_at', 'desc')
-            ->paginate(15);
-
-        // Count statistics
-        $stats = [
-            'total'  => Notification::where('user_id', $user->id)->count(),
-            'unread' => Notification::where('user_id', $user->id)->unread()->count(),
-            'read'   => Notification::where('user_id', $user->id)->read()->count()
-        ];
-
-        return view('backend.notifications.index', compact('notifications', 'stats'));
+        return view('backend.notifications.index', [
+            'notifications' => $payload['notifications'],
+            'stats' => $payload['stats'],
+        ]);
     }
 
     /**
@@ -47,19 +38,7 @@ class NotificationController extends Controller
     {
         $user = Auth::user();
 
-        $notifications = Notification::where('user_id', $user->id)
-            ->unread()
-            ->orderBy('created_at', 'desc')
-            ->limit(8)
-            ->get();
-
-        $unreadCount = Notification::where('user_id', $user->id)->unread()->count();
-
-        return response()->json([
-            'notifications' => $notifications,
-            'unreadCount'   => $unreadCount,
-            'hasUnread'     => $unreadCount > 0
-        ]);
+        return response()->json($this->service->getUnreadPayload($user));
     }
 
     /**
@@ -67,12 +46,11 @@ class NotificationController extends Controller
      */
     public function markAsRead(Request $request, Notification $notification)
     {
-        // Check authorization
         if ($notification->user_id !== Auth::id()) {
             return response()->json(['error' => 'Unauthorized'], 403);
         }
 
-        $notification->markAsRead();
+        $this->service->markAsRead($notification);
 
         if ($request->expectsJson()) {
             return response()->json(['success' => true]);
@@ -86,12 +64,11 @@ class NotificationController extends Controller
      */
     public function markAsUnread(Request $request, Notification $notification)
     {
-        // Check authorization
         if ($notification->user_id !== Auth::id()) {
             return response()->json(['error' => 'Unauthorized'], 403);
         }
 
-        $notification->markAsUnread();
+        $this->service->markAsUnread($notification);
 
         if ($request->expectsJson()) {
             return response()->json(['success' => true]);
@@ -105,14 +82,7 @@ class NotificationController extends Controller
      */
     public function markAllAsRead(Request $request)
     {
-        $user = Auth::user();
-
-        Notification::where('user_id', $user->id)
-            ->unread()
-            ->update([
-                'is_read' => true,
-                'read_at' => now()
-            ]);
+        $this->service->markAllAsRead(Auth::user());
 
         if ($request->expectsJson()) {
             return response()->json(['success' => true]);
@@ -126,12 +96,11 @@ class NotificationController extends Controller
      */
     public function destroy(Request $request, Notification $notification)
     {
-        // Check authorization
         if ($notification->user_id !== Auth::id()) {
             return response()->json(['error' => 'Unauthorized'], 403);
         }
 
-        $notification->delete();
+        $this->service->delete($notification);
 
         if ($request->expectsJson()) {
             return response()->json(['success' => true]);
@@ -145,9 +114,7 @@ class NotificationController extends Controller
      */
     public function clearAll(Request $request)
     {
-        $user = Auth::user();
-
-        Notification::where('user_id', $user->id)->delete();
+        $this->service->clearAll(Auth::user());
 
         if ($request->expectsJson()) {
             return response()->json(['success' => true]);
@@ -161,15 +128,11 @@ class NotificationController extends Controller
      */
     public function show(Notification $notification)
     {
-        // Check authorization
         if ($notification->user_id !== Auth::id()) {
             abort(403);
         }
 
-        // Mark as read before redirecting
-        $notification->markAsRead();
-
-        // Redirect to action URL
+        $this->service->markAsRead($notification);
 
         return redirect($notification->getActionUrl());
     }

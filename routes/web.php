@@ -18,6 +18,7 @@ use App\Http\Controllers\Backend\InfluencerController;
 use App\Http\Controllers\Backend\InfluencerPortfolioController;
 use App\Http\Controllers\Backend\KnowledgeBaseController;
 use App\Http\Controllers\Backend\MenuController;
+use App\Http\Controllers\Backend\CommunicationBadgeController;
 use App\Http\Controllers\Backend\ModeratorController;
 use App\Http\Controllers\Backend\NotificationController;
 use App\Http\Controllers\Backend\OrderController as BackendOrderController;
@@ -383,6 +384,7 @@ Route::prefix('dashboard')->name('dashboard.')->middleware(['auth', 'verified', 
 
     // Support Tickets
     Route::get('/support-tickets', [SupportTicketController::class, 'index'])->name('support-tickets.index');
+    Route::get('/support-tickets/table', [SupportTicketController::class, 'table'])->name('support-tickets.table');
     Route::get('/support-tickets/{ticket}', [SupportTicketController::class, 'show'])->name('support-tickets.show');
     Route::put('/support-tickets/{ticket}', [SupportTicketController::class, 'update'])->name('support-tickets.update');
     Route::delete('/support-tickets/{ticket}', [SupportTicketController::class, 'destroy'])->name('support-tickets.destroy');
@@ -552,6 +554,7 @@ Route::prefix('dashboard')->name('dashboard.')->middleware(['auth', 'verified', 
         Route::get('/permissions', [MenuController::class, 'getUserPermissions'])->name('permissions');
         Route::post('/check-permission', [MenuController::class, 'checkPermission'])->name('check-permission');
         Route::post('/check-action', [MenuController::class, 'checkAction'])->name('check-action');
+        Route::get('/sidebar-badges', [CommunicationBadgeController::class, 'index'])->name('sidebar-badges');
     });
 });
 

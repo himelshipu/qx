@@ -10,10 +10,12 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Package;
 use App\Support\PlatformPricing;
+use App\Services\Auth\ConversationService;
 use App\Services\Auth\PendingPostAuthActionService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Carbon;
 use Illuminate\View\View;
 
@@ -26,7 +28,7 @@ class CartController extends Controller
      */
     public function index(): View
     {
-        $user = auth()->user();
+        $user = Auth::user();
 
         // Get or create cart for user
         $cart = Cart::firstOrCreate(
@@ -53,7 +55,7 @@ class CartController extends Controller
         $returnUrl = route('influencer.profile', ['slug' => $package->influencer->user->slug]);
 
         // If not authenticated, remember the action and redirect to login
-        if (!auth()->check()) {
+        if (!Auth::check()) {
             app(PendingPostAuthActionService::class)->rememberAddToCart(
                 $package->id,
                 $returnUrl
@@ -64,7 +66,7 @@ class CartController extends Controller
                 ->with('warning', 'Please login first to add packages to your cart.');
         }
 
-        $user = auth()->user();
+        $user = Auth::user();
 
         // Only brands can add to cart
         if ($user->user_type !== 'brand') {
@@ -77,6 +79,7 @@ class CartController extends Controller
         $cart = Cart::firstOrCreate(['user_id' => $user->id]);
 
         // Check if package already in cart
+        /** @var \App\Models\CartItem|null $existingItem */
         $existingItem = $cart->items()
             ->where('package_id', $package->id)
             ->first();
@@ -126,7 +129,7 @@ class CartController extends Controller
             'package_id' => 'required|exists:packages,id'
         ]);
 
-        if (!auth()->check()) {
+        if (!Auth::check()) {
             app(PendingPostAuthActionService::class)->rememberAddToCart(
                 (int) $validated['package_id'],
                 $request->headers->get('referer')
@@ -146,7 +149,7 @@ class CartController extends Controller
                 ->with('warning', 'Please login first to add packages to your cart.');
         }
 
-        $user = auth()->user();
+        $user = Auth::user();
 
         if ($user->user_type !== 'brand') {
             $message = 'Only brand accounts can add packages to cart.';
@@ -169,6 +172,7 @@ class CartController extends Controller
         );
 
         // Check if package already in cart
+        /** @var \App\Models\CartItem|null $existingItem */
         $existingItem = $cart->items()
             ->where('package_id', $package->id)
             ->first();
@@ -238,7 +242,7 @@ class CartController extends Controller
         $cart = $cartItem->cart;
 
         // Check authorization
-        if ($cart->user_id !== auth()->id()) {
+        if ($cart->user_id !== Auth::id()) {
             abort(403);
         }
 
@@ -284,7 +288,7 @@ class CartController extends Controller
         $cart = $cartItem->cart;
 
         // Check authorization
-        if ($cart->user_id !== auth()->id()) {
+        if ($cart->user_id !== Auth::id()) {
             abort(403);
         }
 
@@ -326,7 +330,7 @@ class CartController extends Controller
      */
     public function clear(): RedirectResponse
     {
-        $user = auth()->user();
+        $user = Auth::user();
         $cart = Cart::where('user_id', $user->id)->first();
 
         if ($cart) {
@@ -343,7 +347,7 @@ class CartController extends Controller
      */
     public function checkout(): View | RedirectResponse
     {
-        $user = auth()->user();
+        $user = Auth::user();
         $cart = Cart::where('user_id', $user->id)->first();
 
         if (!$cart || $cart->items->count() === 0) {
@@ -365,7 +369,7 @@ class CartController extends Controller
      */
     public function completeCheckout(): RedirectResponse
     {
-        $user = auth()->user();
+        $user = Auth::user();
         $cart = Cart::where('user_id', $user->id)
             ->with('items.package.influencer.user')
             ->first();
@@ -460,6 +464,7 @@ class CartController extends Controller
 
                     $influencerSampleItem = $influencerCartItems->first();
                     $influencer           = $influencerSampleItem?->package?->influencer;
+                    $influencerName       = $influencer?->display_name ?: ($influencer?->user?->name ?? 'there');
 
                     $conversation = Conversation::query()
                         ->where('brand_user_id', $user->id)
@@ -468,10 +473,10 @@ class CartController extends Controller
                         ->first();
 
                     if (!$conversation) {
-                        $conversation = ConversationController::createForPackageOrder(
-                            $user->id,
+                        $conversation = ConversationService::createForPackageOrder(
+                            (int) $user->id,
                             (int) $influencerId,
-                            (int) $latestOrderId
+                            $latestOrderId ? (int) $latestOrderId : null
                         );
                     }
 
@@ -482,7 +487,6 @@ class CartController extends Controller
                         ]);
                     }
 
-                    $influencerName           = $influencer?->display_name ?: ($influencer?->user?->name ?? 'there');
                     $orderConfirmationMessage = sprintf(
                         "hello %s,i want to confirm order for this package:\n- %s",
                         $influencerName,

@@ -6,7 +6,11 @@ namespace App\Providers;
 
 use App\Repositories\Contracts\BrandRepositoryInterface;
 use App\Repositories\Contracts\CampaignRepositoryInterface;
+use App\Repositories\Contracts\CommunicationBadgeRepositoryInterface;
 use App\Repositories\Contracts\CaseStudyRepositoryInterface;
+use App\Repositories\Contracts\ConversationRepositoryInterface;
+use App\Repositories\Contracts\NotificationRepositoryInterface;
+use App\Repositories\Contracts\SupportTicketRepositoryInterface;
 use App\Repositories\Contracts\CategoryRepositoryInterface;
 use App\Repositories\Contracts\FeaturedCollaborationRepositoryInterface;
 use App\Repositories\Contracts\FaqItemRepositoryInterface;
@@ -23,7 +27,11 @@ use App\Repositories\Contracts\TestimonialRepositoryInterface;
 use App\Repositories\Contracts\UserRepositoryInterface;
 use App\Repositories\Eloquent\EloquentBrandRepository;
 use App\Repositories\Eloquent\EloquentCampaignRepository;
+use App\Repositories\Eloquent\EloquentCommunicationBadgeRepository;
 use App\Repositories\Eloquent\EloquentCaseStudyRepository;
+use App\Repositories\Eloquent\EloquentConversationRepository;
+use App\Repositories\Eloquent\EloquentNotificationRepository;
+use App\Repositories\Eloquent\EloquentSupportTicketRepository;
 use App\Repositories\Eloquent\EloquentCategoryRepository;
 use App\Repositories\Eloquent\EloquentFeaturedCollaborationRepository;
 use App\Repositories\Eloquent\EloquentFaqItemRepository;
@@ -132,6 +140,26 @@ class RepositoryServiceProvider extends ServiceProvider
         $this->app->bind(
             SettingRepositoryInterface::class,
             EloquentSettingRepository::class
+        );
+
+        $this->app->bind(
+            CommunicationBadgeRepositoryInterface::class,
+            EloquentCommunicationBadgeRepository::class
+        );
+
+        $this->app->bind(
+            ConversationRepositoryInterface::class,
+            EloquentConversationRepository::class
+        );
+
+        $this->app->bind(
+            SupportTicketRepositoryInterface::class,
+            EloquentSupportTicketRepository::class
+        );
+
+        $this->app->bind(
+            NotificationRepositoryInterface::class,
+            EloquentNotificationRepository::class
         );
 
         $this->app->bind(

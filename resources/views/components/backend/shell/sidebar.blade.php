@@ -10,6 +10,8 @@
 @endphp
 
 <aside id="sidebar"
+    data-badges-route="{{ route('dashboard.api.sidebar-badges') }}"
+    data-badges-refresh-seconds="{{ (int) config('communication.sidebar_refresh_seconds', 60) }}"
     class="fixed top-0 left-0 z-40 h-screen bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 transition-all duration-300 shadow-xl"
     x-data="{ 
         openMenu: @js($activeAccordion),
@@ -70,8 +72,8 @@
                                 {!! \App\Helpers\MenuHelper::getIconSvg($item['icon']) !!}
                             </span>
                             <span x-show="$store.sidebar.isExpanded" class="flex-1 text-sm font-semibold">{{ $item['name'] }}</span>
-                            @if(!empty($item['count']))
-                                <span x-show="$store.sidebar.isExpanded" class="ml-auto px-2 py-0.5 text-xs font-medium bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400 rounded-full">22</span>
+                            @if(isset($item['badge_count']))
+                                <span x-show="$store.sidebar.isExpanded" data-sidebar-badge-key="{{ $item['badge_key'] ?? '' }}" aria-hidden="{{ ($item['badge_count'] ?? 0) > 0 ? 'false' : 'true' }}" class="{{ ($item['badge_count'] ?? 0) > 0 ? '' : 'hidden' }} ml-auto px-2 py-0.5 text-xs font-medium bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400 rounded-full">{{ ($item['badge_count'] ?? 0) > 99 ? '99+' : ($item['badge_count'] ?? 0) }}</span>
                             @endif
                         </a>
                     </li>
@@ -138,8 +140,8 @@
                                                             {!! \App\Helpers\MenuHelper::getIconSvg($nestedItem['icon'] ?? ($subItem['icon'] ?? 'dashboard')) !!}
                                                         </span>
                                                         {{ $nestedItem['name'] }}
-                                                        @if(!empty($nestedItem['count']))
-                                                            <span class="ml-auto text-xs px-2 py-0.5 rounded-full bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400">42</span>
+                                                        @if(isset($nestedItem['badge_count']))
+                                                            <span data-sidebar-badge-key="{{ $nestedItem['badge_key'] ?? '' }}" aria-hidden="{{ ($nestedItem['badge_count'] ?? 0) > 0 ? 'false' : 'true' }}" class="{{ ($nestedItem['badge_count'] ?? 0) > 0 ? '' : 'hidden' }} ml-auto text-xs px-2 py-0.5 rounded-full bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400">{{ ($nestedItem['badge_count'] ?? 0) > 99 ? '99+' : ($nestedItem['badge_count'] ?? 0) }}</span>
                                                         @endif
                                                     </a>
                                                 </li>
@@ -162,8 +164,8 @@
                                                 {!! \App\Helpers\MenuHelper::getIconSvg($subItem['icon'] ?? 'home') !!}
                                             </span>
                                             <span x-show="$store.sidebar.isExpanded" class="flex-1 text-sm">{{ $subItem['name'] }}</span>
-                                            @if(!empty($subItem['count']))
-                                                <span x-show="$store.sidebar.isExpanded" class="ml-auto px-2 py-0.5 text-xs font-medium bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400 rounded-full">22</span>
+                                            @if(isset($subItem['badge_count']))
+                                                <span x-show="$store.sidebar.isExpanded" data-sidebar-badge-key="{{ $subItem['badge_key'] ?? '' }}" aria-hidden="{{ ($subItem['badge_count'] ?? 0) > 0 ? 'false' : 'true' }}" class="{{ ($subItem['badge_count'] ?? 0) > 0 ? '' : 'hidden' }} ml-auto px-2 py-0.5 text-xs font-medium bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400 rounded-full">{{ ($subItem['badge_count'] ?? 0) > 99 ? '99+' : ($subItem['badge_count'] ?? 0) }}</span>
                                             @endif
                                         </a>
                                     @endif
