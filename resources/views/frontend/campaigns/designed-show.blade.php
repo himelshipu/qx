@@ -191,7 +191,7 @@
 					<div>
 						<p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Pending</p>
 						<p class="text-xl font-bold text-gray-900 dark:text-white">
-							{{ $campaign->applications->whereIn('status', ['invited', 'applied'])->count() }}</p>
+							{{ $campaign->applications->whereIn('status', ['invited', 'applied', 'countered_by_brand', 'countered_by_influencer'])->count() }}</p>
 					</div>
 				</div>
 				<div
@@ -418,9 +418,13 @@
 							<option value="">All Status</option>
 							<option value="invited">Invited</option>
 							<option value="applied">Applied</option>
+							<option value="countered_by_brand">Countered By Brand</option>
+							<option value="countered_by_influencer">Countered By Influencer</option>
 							<option value="approved">Approved</option>
 							<option value="completed">Completed</option>
 							<option value="rejected">Rejected</option>
+							<option value="declined_by_brand">Declined By Brand</option>
+							<option value="declined_by_influencer">Declined By Influencer</option>
 						</select>
 						<button type="button" id="js-filter-reset"
 							class="flex-[0_0_10%] px-3 py-2 text-sm border border-gray-300 rounded-lg bg-gray-100 dark:bg-gray-700 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition font-medium">
@@ -513,22 +517,20 @@
 										{{ $application->applied_at?->format('M d, Y') ?? '—' }}
 									</td>
 									<td class="px-4 py-3">
-										@if ($application->status === 'approved')
-											<span
-												class="inline-flex rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-semibold text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300">Approved</span>
-										@elseif ($application->status === 'completed')
-											<span
-												class="inline-flex rounded-full bg-teal-100 px-2.5 py-1 text-xs font-semibold text-teal-700 dark:bg-teal-900/30 dark:text-teal-300">Completed</span>
-										@elseif ($application->status === 'rejected')
-											<span
-												class="inline-flex rounded-full bg-red-100 px-2.5 py-1 text-xs font-semibold text-red-700 dark:bg-red-900/30 dark:text-red-300">Rejected</span>
-										@elseif ($application->status === 'applied')
-											<span
-												class="inline-flex rounded-full bg-amber-100 px-2.5 py-1 text-xs font-semibold text-amber-700 dark:bg-amber-900/30 dark:text-amber-300">Applied</span>
-										@else
-											<span
-												class="inline-flex rounded-full bg-blue-100 px-2.5 py-1 text-xs font-semibold text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">Invited</span>
-										@endif
+										@php
+											$statusBadge = match ($application->status) {
+												'approved' => ['Approved', 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300'],
+												'completed' => ['Completed', 'bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-300'],
+												'rejected' => ['Rejected', 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300'],
+												'declined_by_brand' => ['Declined by Brand', 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300'],
+												'declined_by_influencer' => ['Declined by Influencer', 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300'],
+												'countered_by_brand' => ['Countered by Brand', 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300'],
+												'countered_by_influencer' => ['Countered by Influencer', 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300'],
+												'applied' => ['Applied', 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300'],
+												default => ['Invited', 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300'],
+											};
+										@endphp
+										<span class="inline-flex rounded-full px-2.5 py-1 text-xs font-semibold {{ $statusBadge[1] }}">{{ $statusBadge[0] }}</span>
 									</td>
 									@php
 										$progressEntry = ($progressByApplication ?? collect())->get($application->id);
@@ -565,6 +567,25 @@
 											—
 										@endif
 									</td>
+									<td class="px-4 py-3 text-xs text-gray-600 dark:text-gray-400 hidden md:table-cell whitespace-nowrap">
+										@if ($application->agreed_rate)
+											<span class="font-semibold text-emerald-700 dark:text-emerald-300">
+												{{ $budgetCurrency }} {{ number_format((float) $application->agreed_rate, 2) }}
+											</span>
+										@else
+											<div class="space-y-0.5">
+												@if ($application->influencer_offer || $application->proposed_rate)
+													<p>Inf: {{ $budgetCurrency }} {{ number_format((float) ($application->influencer_offer ?? $application->proposed_rate), 2) }}</p>
+												@endif
+												@if ($application->brand_offer)
+													<p>Brand: {{ $budgetCurrency }} {{ number_format((float) $application->brand_offer, 2) }}</p>
+												@endif
+												@if (! $application->influencer_offer && ! $application->proposed_rate && ! $application->brand_offer)
+													<p class="text-gray-400">—</p>
+												@endif
+											</div>
+										@endif
+									</td>
 
 									<td class="px-4 py-3 hidden sm:table-cell text-xs text-gray-600 dark:text-gray-400 whitespace-nowrap">
 										@if ($application->decided_at)
@@ -580,21 +601,7 @@
 												title="Message this influencer">
 												<x-icons.message-square class="w-3 h-3" />
 											</a>
-											@if ($campaign->status === 'closed')
-												<!-- Campaign is closed - disable all actions -->
-												<button disabled
-													class="px-2 py-1 text-xs rounded bg-gray-100 text-gray-400 dark:bg-gray-700 dark:text-gray-500 cursor-not-allowed opacity-50"
-													title="Campaign is closed - cannot approve or decline"
-													onclick="window.toast?.info('This campaign is closed. No further actions can be taken.')">
-													<x-icons.check class="w-3 h-3" />
-												</button>
-												<button disabled
-													class="px-2 py-1 text-xs rounded bg-gray-100 text-gray-400 dark:bg-gray-700 dark:text-gray-500 cursor-not-allowed opacity-50"
-													title="Campaign is closed - cannot approve or decline"
-													onclick="window.toast?.info('This campaign is closed. No further actions can be taken.')">
-													<x-icons.x class="w-3 h-3" />
-												</button>
-											@elseif ($application->status === 'approved')
+											@if ($application->status === 'approved')
 												<form action="{{ route('frontend.campaigns.brand-update-work-status', [$campaign->id, $application->id]) }}" method="POST" class="inline-flex items-center gap-1">
 													@csrf
 													<select name="work_status" class="rounded border border-gray-300 bg-white px-1.5 py-1 text-[11px] dark:border-gray-600 dark:bg-gray-700 dark:text-white">
@@ -631,6 +638,12 @@
 													title="This influencer is already declined">
 													<x-icons.x class="w-3 h-3" />
 												</button>
+											@elseif (in_array($application->status, ['declined_by_brand', 'declined_by_influencer'], true))
+												<button disabled
+													class="px-2 py-1 text-xs rounded bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400 cursor-not-allowed opacity-60"
+													title="Negotiation was declined">
+													<x-icons.x class="w-3 h-3" />
+												</button>
 											@elseif ($application->status === 'completed')
 												<form action="{{ route('frontend.campaigns.brand-update-work-status', [$campaign->id, $application->id]) }}" method="POST" class="inline-flex items-center gap-1">
 													@csrf
@@ -653,27 +666,47 @@
 													onclick="window.toast?.info('This application is completed. The influencer has finished their work on this campaign.')">
 													<x-icons.x class="w-3 h-3" />
 												</button>
+											@elseif ($campaign->status === 'closed')
+												<button disabled
+													class="px-2 py-1 text-xs rounded bg-gray-100 text-gray-400 dark:bg-gray-700 dark:text-gray-500 cursor-not-allowed opacity-50"
+													title="Campaign is closed - negotiation unavailable">
+													<x-icons.x class="w-3 h-3" />
+												</button>
 											@else
-												<!-- Pending / Applied / Invited - Actions enabled -->
 												<form
 													action="{{ route('frontend.campaigns.update-application-status', [$campaign->id, $application->id]) }}"
 													method="POST" class="inline js-approve-form">
 													@csrf
-													<input type="hidden" name="status" value="approved">
+													<input type="hidden" name="action" value="accept">
 													<button type="submit"
 														class="px-2 py-1 text-xs rounded bg-emerald-100 text-emerald-700 hover:bg-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-300 dark:hover:bg-emerald-900/50 transition cursor-pointer"
-														title="Approve this influencer">
+														title="Accept current influencer offer and approve">
 														<x-icons.check class="w-3 h-3" />
 													</button>
 												</form>
 												<form
 													action="{{ route('frontend.campaigns.update-application-status', [$campaign->id, $application->id]) }}"
-													method="POST" class="inline js-reject-form">
+													method="POST" class="inline-flex items-center gap-1">
 													@csrf
-													<input type="hidden" name="status" value="rejected">
+													<input type="hidden" name="action" value="counter">
+													<input type="number" name="brand_offer" min="0.01" step="0.01"
+														value="{{ (float) ($application->brand_offer ?? $application->influencer_offer ?? $application->proposed_rate ?? 0) ?: '' }}"
+														placeholder="Offer"
+														class="w-20 rounded border border-gray-300 bg-white px-1.5 py-1 text-[11px] dark:border-gray-600 dark:bg-gray-700 dark:text-white" />
+													<button type="submit"
+														class="px-2 py-1 text-xs rounded bg-indigo-100 text-indigo-700 hover:bg-indigo-200 dark:bg-indigo-900/30 dark:text-indigo-300 dark:hover:bg-indigo-900/50 transition"
+														title="Send counter offer">
+														Counter
+													</button>
+												</form>
+												<form
+													action="{{ route('frontend.campaigns.update-application-status', [$campaign->id, $application->id]) }}"
+													method="POST" class="inline js-approve-form">
+													@csrf
+													<input type="hidden" name="action" value="decline">
 													<button type="submit"
 														class="px-2 py-1 text-xs rounded bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-300 dark:hover:bg-red-900/50 transition cursor-pointer"
-														title="Decline this influencer">
+														title="Decline this application">
 														<x-icons.x class="w-3 h-3" />
 													</button>
 												</form>
@@ -713,16 +746,24 @@
 											$statusColors = [
 												'invited' => 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
 												'applied' => 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300',
+												'countered_by_brand' => 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300',
+												'countered_by_influencer' => 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300',
 												'approved' => 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300',
 												'rejected' => 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300',
+												'declined_by_brand' => 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300',
+												'declined_by_influencer' => 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300',
 												'completed' => 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300',
 											];
 											$badgeClass = $statusColors[$influencerApplication->status] ?? 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300';
 											$statusLabel = match($influencerApplication->status) {
 												'invited' => 'Invited',
 												'applied' => 'Applied',
+												'countered_by_brand' => 'Countered by Brand',
+												'countered_by_influencer' => 'Counter sent',
 												'approved' => 'Approved',
 												'rejected' => 'Not Selected',
+												'declined_by_brand' => 'Declined by Brand',
+												'declined_by_influencer' => 'Declined by You',
 												'completed' => 'Work Completed',
 												 default => 'Unknown',
 											};
@@ -736,6 +777,11 @@
 										<p class="text-sm font-medium text-gray-900 dark:text-white mt-1">
 											{{ $influencerApplication->applied_at?->format('M d, Y') ?? 'Pending' }}
 										</p>
+											@if ($influencerApplication->agreed_rate)
+												<p class="text-xs font-semibold text-emerald-700 dark:text-emerald-300 mt-1">
+													Agreed: {{ strtoupper((string) ($campaign->currency ?? 'USD')) }} {{ number_format((float) $influencerApplication->agreed_rate, 2) }}
+												</p>
+											@endif
 									</div>
 								</div>
 							</div>
@@ -763,6 +809,54 @@
 									<p class="text-sm text-blue-800 dark:text-blue-200">
 										The brand is reviewing your application. You'll be notified once they make a decision.
 									</p>
+									@if ($influencerApplication->influencer_offer || $influencerApplication->proposed_rate)
+										<p class="text-xs font-semibold text-blue-700 dark:text-blue-300 mt-2">
+											Your Offer: {{ strtoupper((string) ($campaign->currency ?? 'USD')) }} {{ number_format((float) ($influencerApplication->influencer_offer ?? $influencerApplication->proposed_rate), 2) }}
+										</p>
+									@endif
+								</div>
+							@elseif ($influencerApplication->status === 'countered_by_brand')
+								<div class="rounded-lg bg-indigo-50 dark:bg-indigo-900/20 p-4 border border-indigo-200 dark:border-indigo-900/50">
+									<p class="text-sm font-semibold text-indigo-900 dark:text-indigo-100 mb-2">Brand sent a counter offer</p>
+									<p class="text-sm text-indigo-800 dark:text-indigo-200">
+										Brand Offer: <span class="font-semibold">{{ strtoupper((string) ($campaign->currency ?? 'USD')) }} {{ number_format((float) ($influencerApplication->brand_offer ?? 0), 2) }}</span>
+									</p>
+									@if ($influencerApplication->influencer_offer || $influencerApplication->proposed_rate)
+										<p class="text-xs text-indigo-700 dark:text-indigo-300 mt-1">Your Last Offer: {{ strtoupper((string) ($campaign->currency ?? 'USD')) }} {{ number_format((float) ($influencerApplication->influencer_offer ?? $influencerApplication->proposed_rate), 2) }}</p>
+									@endif
+								</div>
+
+								<div class="rounded-lg bg-white dark:bg-gray-800 p-4 border border-gray-200 dark:border-gray-700">
+									<p class="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide mb-3">Respond to Offer</p>
+									<div class="flex flex-col gap-2">
+										<form method="POST" action="{{ route('frontend.campaigns.respond-offer', $influencerApplication) }}">
+											@csrf
+											<input type="hidden" name="action" value="accept" />
+											<button type="submit" class="w-full px-4 py-2 text-sm font-semibold rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 transition">Accept Brand Offer</button>
+										</form>
+										<form method="POST" action="{{ route('frontend.campaigns.respond-offer', $influencerApplication) }}" class="flex items-center gap-2">
+											@csrf
+											<input type="hidden" name="action" value="counter" />
+											<input type="number" name="influencer_offer" min="0.01" step="0.01" required
+												class="flex-1 rounded border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+												value="{{ (float) ($influencerApplication->influencer_offer ?? $influencerApplication->proposed_rate ?? 0) ?: '' }}"
+												placeholder="Your Counter Offer" />
+											<button type="submit" class="px-3 py-2 text-sm font-semibold rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 transition">Counter</button>
+										</form>
+										<form method="POST" action="{{ route('frontend.campaigns.respond-offer', $influencerApplication) }}">
+											@csrf
+											<input type="hidden" name="action" value="decline" />
+											<button type="submit" class="w-full px-4 py-2 text-sm font-semibold rounded-lg border border-red-300 text-red-700 bg-red-50 hover:bg-red-100 dark:border-red-800 dark:bg-red-900/20 dark:text-red-300 dark:hover:bg-red-900/30 transition">Decline Offer</button>
+										</form>
+									</div>
+								</div>
+							@elseif ($influencerApplication->status === 'countered_by_influencer')
+								<div class="rounded-lg bg-purple-50 dark:bg-purple-900/20 p-4 border border-purple-200 dark:border-purple-900/50">
+									<p class="text-sm font-semibold text-purple-900 dark:text-purple-100 mb-3">Counter Offer Sent</p>
+									<p class="text-sm text-purple-800 dark:text-purple-200">
+										You're waiting for the brand to respond to your counter offer of
+										<span class="font-semibold">{{ strtoupper((string) ($campaign->currency ?? 'USD')) }} {{ number_format((float) ($influencerApplication->influencer_offer ?? $influencerApplication->proposed_rate ?? 0), 2) }}</span>.
+									</p>
 								</div>
 							@elseif ($influencerApplication->status === 'completed')
 								<!-- Show completion message -->
@@ -770,6 +864,13 @@
 									<p class="text-sm font-semibold text-emerald-900 dark:text-emerald-100 mb-3">✓ Work Completed</p>
 									<p class="text-sm text-emerald-800 dark:text-emerald-200">
 										Great work! You've successfully completed this campaign. Thank you for your collaboration!
+									</p>
+								</div>
+							@elseif (in_array($influencerApplication->status, ['declined_by_brand', 'declined_by_influencer'], true))
+								<div class="rounded-lg bg-red-50 dark:bg-red-900/20 p-4 border border-red-200 dark:border-red-900/50">
+									<p class="text-sm font-semibold text-red-900 dark:text-red-100 mb-3">Negotiation Closed</p>
+									<p class="text-sm text-red-800 dark:text-red-200">
+										This pricing negotiation has been declined and is no longer active.
 									</p>
 								</div>
 							@endif
@@ -799,7 +900,7 @@
 
 							<!-- Action Buttons -->
 							<div class="mt-4">
-								@if ($influencerApplication->status !== 'rejected' && $influencerApplication->status !== 'completed')
+								@if (! in_array($influencerApplication->status, ['rejected', 'completed', 'approved', 'declined_by_brand', 'declined_by_influencer'], true))
 									<form method="POST" action="{{ route('frontend.campaigns.withdraw-application', $influencerApplication) }}">
 										@csrf
 										<button type="submit" onclick="return confirm('Are you sure you want to withdraw your application?')"
@@ -818,10 +919,13 @@
 								<p class="text-sm text-blue-800 dark:text-blue-200 mb-4">
 									Apply to show your interest and let the brand know why you'd be great for this project!
 								</p>
-								<form method="POST" action="{{ route('frontend.campaigns.apply', $campaign) }}" class="flex flex-col sm:flex-row gap-2">
+								<form method="POST" action="{{ route('frontend.campaigns.apply', $campaign) }}" class="space-y-2">
 									@csrf
-									<input type="email" name="email" placeholder="Your email" value="{{ auth()->user()->email }}" disabled class="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg bg-gray-50 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-300" />
-									<button type="submit" class="px-4 py-2 text-sm font-semibold rounded-lg bg-blue-600 text-white hover:bg-blue-700 dark:hover:bg-blue-600 transition whitespace-nowrap">
+									<input type="number" name="influencer_offer" min="0.01" step="0.01" required placeholder="Your Offer Price"
+										class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg bg-white dark:bg-gray-800 dark:border-gray-600 dark:text-white" />
+									<textarea name="pitch_message" rows="3" placeholder="Add a short pitch (optional)"
+										class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg bg-white dark:bg-gray-800 dark:border-gray-600 dark:text-white"></textarea>
+									<button type="submit" class="w-full px-4 py-2 text-sm font-semibold rounded-lg bg-blue-600 text-white hover:bg-blue-700 dark:hover:bg-blue-600 transition whitespace-nowrap">
 										Apply Now
 									</button>
 								</form>

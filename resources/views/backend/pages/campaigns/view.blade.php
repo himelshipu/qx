@@ -5,9 +5,9 @@
 @section('content')
 	@php
 		$invitedCount = $campaign->applications->where('status', 'invited')->count();
-		$appliedCount = $campaign->applications->where('status', 'applied')->count();
+		$appliedCount = $campaign->applications->whereIn('status', ['applied', 'countered_by_brand', 'countered_by_influencer'])->count();
 		$approvedCount = $campaign->applications->where('status', 'approved')->count();
-		$rejectedCount = $campaign->applications->where('status', 'rejected')->count();
+		$rejectedCount = $campaign->applications->whereIn('status', ['rejected', 'declined_by_brand', 'declined_by_influencer'])->count();
 	@endphp
 
 	<x-backend.shell.breadcrumb pageTitle="Campaign Details" />

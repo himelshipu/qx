@@ -101,7 +101,21 @@ class Influencer extends Model
     public function campaigns(): BelongsToMany
     {
         return $this->belongsToMany(Campaign::class, 'campaign_applications')
-            ->withPivot(['status', 'pitch_message', 'proposed_rate', 'agreed_rate', 'applied_at', 'decided_at'])
+            ->withPivot([
+                'status',
+                'pitch_message',
+                'influencer_offer',
+                'brand_offer',
+                'proposed_rate',
+                'agreed_rate',
+                'last_counter_by',
+                'last_counter_at',
+                'agreed_at',
+                'declined_at',
+                'declined_by',
+                'applied_at',
+                'decided_at',
+            ])
             ->withTimestamps();
     }
 
