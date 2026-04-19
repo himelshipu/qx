@@ -21,9 +21,9 @@ class OrderController extends Controller
     public function index(Request $request): View
     {
         $filters = [
-            'q' => trim((string) $request->string('q', '')),
+            'q'      => trim((string) $request->string('q', '')),
             'status' => (string) $request->string('status', 'all'),
-            'type' => (string) $request->string('type', 'all'),
+            'type'   => (string) $request->string('type', 'all')
         ];
 
         $orders = Order::query()
@@ -46,21 +46,21 @@ class OrderController extends Controller
 
         if ($request->ajax()) {
             return view('backend.pages.orders._results', [
-                'orders' => $orders,
+                'orders' => $orders
             ]);
         }
 
         return view('backend.pages.orders.index', [
             'orders' => $orders,
-            'stats' => [
-                'total' => (int) ($stats?->total ?? 0),
-                'pending' => (int) ($stats?->pending ?? 0),
+            'stats'  => [
+                'total'     => (int) ($stats?->total ?? 0),
+                'pending'   => (int) ($stats?->pending ?? 0),
                 'completed' => (int) ($stats?->completed ?? 0),
-                'revenue' => (float) ($stats?->revenue ?? 0),
+                'revenue'   => (float) ($stats?->revenue ?? 0)
             ],
             'search' => $filters['q'],
             'status' => $filters['status'],
-            'type' => $filters['type'],
+            'type'   => $filters['type']
         ]);
     }
 
@@ -78,11 +78,15 @@ class OrderController extends Controller
             'items.influencer.user:id,name',
             'items.payoutMarkedBy:id,name,email',
             'items.package:id,name,base_price,currency',
+            'items.deliverables:id,order_item_id,sub_order_id,uploaded_by_user_id,deliverable_type,file_path,external_url,notes,status,created_at',
+            'items.deliverables.uploadedBy:id,name',
             'payments:id,order_id,status,amount,currency,payment_provider,paid_at,created_at',
             'subOrders:id,order_id,campaign_influencer_id,influencer_id,status,amount,currency,accepted_at,completed_at,paid_at,payout_amount,payout_reference,payout_note,payout_marked_by_user_id,payout_marked_at',
             'subOrders.influencer:id,user_id,display_name',
             'subOrders.influencer.user:id,name,slug',
             'subOrders.payoutMarkedBy:id,name,email',
+            'subOrders.deliverables:id,order_item_id,sub_order_id,uploaded_by_user_id,deliverable_type,file_path,external_url,notes,status,created_at',
+            'subOrders.deliverables.uploadedBy:id,name',
             'childOrders:id,parent_order_id,buyer_user_id,brand_id,campaign_id,status,accepted_for_influencer_id,subtotal,service_fee,tax_amount,total_amount,currency,placed_at,created_at',
             'childOrders.acceptedForInfluencer:id,user_id,display_name',
             'childOrders.acceptedForInfluencer.user:id,name,slug',
@@ -90,19 +94,19 @@ class OrderController extends Controller
             'childOrders.items.influencer:id,user_id,display_name',
             'childOrders.items.influencer.user:id,name',
             'childOrders.items.package:id,name,base_price,currency',
-            'childOrders.items.payoutMarkedBy:id,name,email',
+            'childOrders.items.payoutMarkedBy:id,name,email'
         ]);
 
         if ($order->items->isEmpty() && $order->childOrders->isNotEmpty()) {
             $flattenedItems = $order->childOrders
-                ->flatMap(fn ($childOrder) => $childOrder->items)
+                ->flatMap(fn($childOrder) => $childOrder->items)
                 ->values();
 
             $order->setRelation('items', $flattenedItems);
         }
 
         return view('backend.pages.orders.show', [
-            'order' => $order,
+            'order' => $order
         ]);
     }
 
@@ -112,9 +116,9 @@ class OrderController extends Controller
     public function updateStatus(Request $request, Order $order): RedirectResponse
     {
         $validated = $request->validate([
-            'status' => 'required|in:pending,accepted,in-progress,in_progress,delivered,approved,completed,cancelled',
+            'status'           => 'required|in:pending,accepted,in-progress,in_progress,delivered,approved,completed,cancelled',
             'force_transition' => 'nullable|boolean',
-            'transition_note' => 'nullable|string|max:1000',
+            'transition_note'  => 'nullable|string|max:1000'
         ]);
 
         $status = $validated['status'];
@@ -131,20 +135,20 @@ class OrderController extends Controller
         }
 
         $forceTransition = (bool) ($validated['force_transition'] ?? false);
-        $transitionNote = $validated['transition_note'] ?? null;
+        $transitionNote  = $validated['transition_note'] ?? null;
 
-        if (! $forceTransition && ! $this->canTransitionOrderStatus((string) $order->status, $status)) {
+        if (!$forceTransition && !$this->canTransitionOrderStatus((string) $order->status, $status)) {
             return redirect()->back()->with('error', 'Invalid order status transition.');
         }
 
-        if ($forceTransition && ! $transitionNote) {
+        if ($forceTransition && !$transitionNote) {
             return redirect()->back()->with('error', 'Transition note is required for force transition.');
         }
 
         $oldStatus = (string) $order->status;
 
         $order->update([
-            'status' => $status,
+            'status' => $status
         ]);
 
         // Update timestamps based on status
@@ -158,13 +162,13 @@ class OrderController extends Controller
 
         if ($oldStatus !== $status) {
             OrderStatusHistory::create([
-                'order_id' => $order->id,
-                'old_status' => $oldStatus,
-                'new_status' => $status,
+                'order_id'           => $order->id,
+                'old_status'         => $oldStatus,
+                'new_status'         => $status,
                 'changed_by_user_id' => $request->user()->id,
-                'note' => $forceTransition
-                    ? ('FORCE: '.$transitionNote)
-                    : ($transitionNote ?: 'Admin updated order status'),
+                'note'               => $forceTransition
+                ? ('FORCE: ' . $transitionNote)
+                : ($transitionNote ?: 'Admin updated order status')
             ]);
         }
 
@@ -181,11 +185,11 @@ class OrderController extends Controller
     {
         $validated = $request->validate([
             'campaign_id' => 'required|exists:campaigns,id',
-            'brand_id' => 'required|exists:brands,id',
+            'brand_id'    => 'required|exists:brands,id'
         ]);
 
         $campaign = Campaign::findOrFail($validated['campaign_id']);
-        $brand = Brand::findOrFail($validated['brand_id']);
+        $brand    = Brand::findOrFail($validated['brand_id']);
 
         // Get approved influencer assignments for this campaign.
         $approvedInfluencers = $campaign->approvedInfluencers()
@@ -199,23 +203,23 @@ class OrderController extends Controller
         }
 
         $invalidAssignments = $approvedInfluencers->filter(
-            fn ($assignment) => (float) ($assignment->agreed_amount ?? 0) <= 0
+            fn($assignment) => (float) ($assignment->agreed_amount ?? 0) <= 0
         );
 
         if ($invalidAssignments->isNotEmpty()) {
             $names = $invalidAssignments
-                ->map(fn ($assignment) => $assignment->influencer?->display_name ?: $assignment->influencer?->user?->name ?: ('#'.$assignment->influencer_id))
+                ->map(fn($assignment) => $assignment->influencer?->display_name ?: $assignment->influencer?->user?->name ?: ('#' . $assignment->influencer_id))
                 ->take(3)
                 ->implode(', ');
 
             return redirect()
                 ->back()
-                ->with('error', 'Set agreed amount before creating order. Missing amount for: '.$names);
+                ->with('error', 'Set agreed amount before creating order. Missing amount for: ' . $names);
         }
 
         // Calculate totals.
         $subtotal = (float) $approvedInfluencers->sum(
-            fn ($assignment) => (float) $assignment->agreed_amount
+            fn($assignment) => (float) $assignment->agreed_amount
         );
 
         if ($campaign->budget_min === null && $campaign->budget_max === null) {
@@ -236,32 +240,32 @@ class OrderController extends Controller
                 ->with('error', 'Approved influencer total is below campaign minimum budget. Confirm budget before creating order.');
         }
 
-        $pricing = PlatformPricing::calculateFromNet($subtotal);
+        $pricing     = PlatformPricing::calculateFromNet($subtotal);
         $buyerUserId = $request->user()->id;
 
         $order = DB::transaction(function () use ($buyerUserId, $brand, $campaign, $pricing, $approvedInfluencers) {
             $order = Order::create([
-                'order_number' => Order::generateOrderNumber(Order::SOURCE_CAMPAIGN),
+                'order_number'  => Order::generateOrderNumber(Order::SOURCE_CAMPAIGN),
                 'buyer_user_id' => $buyerUserId,
-                'brand_id' => $brand->id,
-                'campaign_id' => $campaign->id,
-                'status' => 'pending',
-                'subtotal' => $pricing['net_subtotal'],
-                'service_fee' => $pricing['platform_charge'],
-                'tax_amount' => 0,
-                'total_amount' => $pricing['gross_total'],
-                'currency' => $campaign->currency ?: 'USD',
-                'placed_at' => now(),
+                'brand_id'      => $brand->id,
+                'campaign_id'   => $campaign->id,
+                'status'        => 'pending',
+                'subtotal'      => $pricing['net_subtotal'],
+                'service_fee'   => $pricing['platform_charge'],
+                'tax_amount'    => 0,
+                'total_amount'  => $pricing['gross_total'],
+                'currency'      => $campaign->currency ?: 'USD',
+                'placed_at'     => now()
             ]);
 
             foreach ($approvedInfluencers as $assignment) {
                 SubOrder::create([
-                    'order_id' => $order->id,
+                    'order_id'               => $order->id,
                     'campaign_influencer_id' => $assignment->id,
-                    'influencer_id' => $assignment->influencer_id,
-                    'status' => 'pending',
-                    'amount' => (float) $assignment->agreed_amount,
-                    'currency' => $order->currency,
+                    'influencer_id'          => $assignment->influencer_id,
+                    'status'                 => 'pending',
+                    'amount'                 => (float) $assignment->agreed_amount,
+                    'currency'               => $order->currency
                 ]);
             }
 
@@ -270,7 +274,7 @@ class OrderController extends Controller
 
         return redirect()
             ->route('dashboard.orders.show', $order)
-            ->with('success', 'Master order created with '.$approvedInfluencers->count().' sub-orders');
+            ->with('success', 'Master order created with ' . $approvedInfluencers->count() . ' sub-orders');
     }
 
     /**
@@ -279,37 +283,43 @@ class OrderController extends Controller
     public function updateSubOrderStatus(Request $request, SubOrder $subOrder): RedirectResponse
     {
         $validated = $request->validate([
-            'status' => 'required|in:pending,accepted,in_progress,on_review,completed,cancelled',
+            'status'           => 'required|in:pending,accepted,in_progress,delivered,on_review,approved,changes_requested,completed,review_pending,reviewed,cancelled',
             'force_transition' => 'nullable|boolean',
-            'transition_note' => 'nullable|string|max:1000',
+            'transition_note'  => 'nullable|string|max:1000'
         ]);
 
-        $newStatus = (string) $validated['status'];
+        $newStatus       = (string) $validated['status'];
         $forceTransition = (bool) ($validated['force_transition'] ?? false);
-        $transitionNote = $validated['transition_note'] ?? null;
+        $transitionNote  = $validated['transition_note'] ?? null;
 
-        if (! $forceTransition && ! $this->canTransitionSubOrderStatus((string) $subOrder->status, $newStatus)) {
+        if (!$forceTransition && !$this->canTransitionSubOrderStatus((string) $subOrder->status, $newStatus)) {
             return redirect()->back()->with('error', 'Invalid campaign work status transition.');
         }
 
-        if ($forceTransition && ! $transitionNote) {
+        if ($forceTransition && !$transitionNote) {
             return redirect()->back()->with('error', 'Transition note is required for force transition.');
         }
 
         $subOrder->update([
-            'status' => $newStatus,
+            'status' => $newStatus
         ]);
 
         if ($newStatus === 'accepted') {
             $subOrder->update(['accepted_at' => now()]);
+        } elseif ($newStatus === 'delivered') {
+            $subOrder->update(['delivered_at' => now()]);
+        } elseif ($newStatus === 'approved') {
+            $subOrder->update(['approved_at' => now()]);
         } elseif ($newStatus === 'completed') {
             $subOrder->update(['completed_at' => now()]);
+        } elseif ($newStatus === 'reviewed') {
+            $subOrder->update(['reviewed_at' => now()]);
         } elseif ($newStatus === 'cancelled') {
             $subOrder->update(['cancelled_at' => now()]);
         }
 
-        // Auto-complete order when all sub-orders are completed
-        $this->checkAndCompleteOrder($subOrder->order);
+        // Auto-sync order status based on all sub-orders
+        $this->syncOrderStatusFromSubOrders($subOrder->order);
 
         return redirect()
             ->back()
@@ -322,18 +332,18 @@ class OrderController extends Controller
     public function markSubOrderPaid(Request $request, SubOrder $subOrder): RedirectResponse
     {
         $validated = $request->validate([
-            'amount' => 'required|numeric|min:0.01',
+            'amount'           => 'required|numeric|min:0.01',
             'payout_reference' => 'nullable|string|max:120',
-            'payout_note' => 'nullable|string|max:1000',
+            'payout_note'      => 'nullable|string|max:1000'
         ]);
 
         $subOrder->update([
-            'paid_at' => now(),
-            'payout_amount' => round((float) $validated['amount'], 2),
-            'payout_reference' => $validated['payout_reference'] ?? null,
-            'payout_note' => $validated['payout_note'] ?? null,
+            'paid_at'                  => now(),
+            'payout_amount'            => round((float) $validated['amount'], 2),
+            'payout_reference'         => $validated['payout_reference'] ?? null,
+            'payout_note'              => $validated['payout_note'] ?? null,
             'payout_marked_by_user_id' => $request->user()->id,
-            'payout_marked_at' => now(),
+            'payout_marked_at'         => now()
         ]);
 
         return redirect()
@@ -342,30 +352,63 @@ class OrderController extends Controller
     }
 
     /**
+     * Approve/reject/request changes on deliverables
+     */
+    public function approveDeliverable(Request $request, SubOrder $subOrder): RedirectResponse
+    {
+        $validated = $request->validate([
+            'deliverable_id' => 'required|integer|exists:order_deliverables,id',
+            'status'         => 'required|in:approved,changes_requested,rejected'
+        ]);
+
+        $deliverable = \App\Models\OrderDeliverable::findOrFail($validated['deliverable_id']);
+
+        // Ensure deliverable belongs to this sub-order
+        if ($deliverable->sub_order_id !== $subOrder->id) {
+            return redirect()->back()->with('error', 'Deliverable does not belong to this order.');
+        }
+
+        $deliverable->update([
+            'status' => $validated['status']
+        ]);
+
+        $statusLabel = match ($validated['status']) {
+            'approved'          => 'Approved',
+            'changes_requested' => 'Changes requested',
+            'rejected'          => 'Rejected',
+            default             => 'Updated',
+        };
+
+        return redirect()
+            ->back()
+            ->with('success', "Deliverable {$statusLabel}");
+    }
+
+    /**
      * Update order item status
      */
     public function updateOrderItemStatus(Request $request, OrderItem $orderItem): RedirectResponse
     {
         $validated = $request->validate([
-            'status' => 'required|in:pending,accepted,in_progress,delivered,approved,rejected,cancelled,completed',
+            'status'           => 'required|in:pending,accepted,in_progress,delivered,approved,rejected,cancelled,completed',
             'force_transition' => 'nullable|boolean',
-            'transition_note' => 'nullable|string|max:1000',
+            'transition_note'  => 'nullable|string|max:1000'
         ]);
 
-        $newStatus = (string) $validated['status'];
+        $newStatus       = (string) $validated['status'];
         $forceTransition = (bool) ($validated['force_transition'] ?? false);
-        $transitionNote = $validated['transition_note'] ?? null;
+        $transitionNote  = $validated['transition_note'] ?? null;
 
-        if (! $forceTransition && ! $this->canTransitionPackageItemStatus((string) $orderItem->status, $newStatus)) {
+        if (!$forceTransition && !$this->canTransitionPackageItemStatus((string) $orderItem->status, $newStatus)) {
             return redirect()->back()->with('error', 'Invalid item status transition.');
         }
 
-        if ($forceTransition && ! $transitionNote) {
+        if ($forceTransition && !$transitionNote) {
             return redirect()->back()->with('error', 'Transition note is required for force transition.');
         }
 
         $updates = [
-            'status' => $newStatus,
+            'status' => $newStatus
         ];
 
         if ($newStatus === 'accepted' && $orderItem->accepted_at === null) {
@@ -407,18 +450,18 @@ class OrderController extends Controller
     public function markOrderItemPaid(Request $request, OrderItem $orderItem): RedirectResponse
     {
         $validated = $request->validate([
-            'amount' => 'required|numeric|min:0.01',
+            'amount'           => 'required|numeric|min:0.01',
             'payout_reference' => 'nullable|string|max:120',
-            'payout_note' => 'nullable|string|max:1000',
+            'payout_note'      => 'nullable|string|max:1000'
         ]);
 
         $orderItem->update([
-            'paid_at' => now(),
-            'payout_amount' => round((float) $validated['amount'], 2),
-            'payout_reference' => $validated['payout_reference'] ?? null,
-            'payout_note' => $validated['payout_note'] ?? null,
+            'paid_at'                  => now(),
+            'payout_amount'            => round((float) $validated['amount'], 2),
+            'payout_reference'         => $validated['payout_reference'] ?? null,
+            'payout_note'              => $validated['payout_note'] ?? null,
             'payout_marked_by_user_id' => $request->user()->id,
-            'payout_marked_at' => now(),
+            'payout_marked_at'         => now()
         ]);
 
         return redirect()
@@ -442,21 +485,79 @@ class OrderController extends Controller
         }
 
         // Check if all sub-orders are completed (not cancelled)
-        $completedCount = $subOrders->where('status', 'completed')->count();
-        $notCancelledCount = $subOrders->filter(fn ($so) => $so->status !== 'cancelled')->count();
+        $completedCount    = $subOrders->where('status', 'completed')->count();
+        $notCancelledCount = $subOrders->filter(fn($so) => $so->status !== 'cancelled')->count();
 
         // If all non-cancelled sub-orders are completed, auto-complete the order
         if ($completedCount === $notCancelledCount && $notCancelledCount > 0) {
             $order->update([
-                'status' => 'completed',
-                'completed_at' => now(),
+                'status'       => 'completed',
+                'completed_at' => now()
             ]);
         }
     }
 
+    /**
+     * Sync campaign order status based on all sub-orders
+     * Similar to syncOrderStatusFromItems but for campaign orders
+     */
+    private function syncOrderStatusFromSubOrders(?Order $order): void
+    {
+        if (!$order || !$order->campaign_id) {
+            return;
+        }
+
+        $subOrders = $order->subOrders()->get();
+        if ($subOrders->isEmpty()) {
+            return;
+        }
+
+        $statuses = $subOrders->pluck('status');
+
+        // All suborders are pending
+        if ($statuses->every(fn($s) => $s === 'pending')) {
+            $this->applyOrderStatus($order, 'pending', [
+                'status'       => 'pending',
+                'accepted_at'  => null,
+                'completed_at' => null
+            ], 'Auto-sync: all influencers pending');
+
+            return;
+        }
+
+        // All suborders are accepted
+        if ($statuses->every(fn($s) => $s === 'accepted')) {
+            $this->applyOrderStatus($order, 'accepted', [
+                'status'       => 'accepted',
+                'accepted_at'  => $order->accepted_at ?? now(),
+                'completed_at' => null
+            ], 'Auto-sync: all influencers accepted');
+
+            return;
+        }
+
+        // All non-cancelled are completed or reviewed (final states)
+        $nonCancelledStatuses = $statuses->filter(fn($s) => $s !== 'cancelled');
+        if ($nonCancelledStatuses->isNotEmpty() &&
+            $nonCancelledStatuses->every(fn($s) => in_array($s, ['completed', 'reviewed'], true))) {
+            $this->applyOrderStatus($order, 'completed', [
+                'status'       => 'completed',
+                'completed_at' => now()
+            ], 'Auto-sync: all influencers completed');
+
+            return;
+        }
+
+        // Otherwise: in_progress (any mix of other states)
+        $this->applyOrderStatus($order, 'in_progress', [
+            'status'       => 'in_progress',
+            'completed_at' => null
+        ], 'Auto-sync: campaign in progress');
+    }
+
     private function syncOrderStatusFromItems(?Order $order): void
     {
-        if (! $order) {
+        if (!$order) {
             return;
         }
 
@@ -465,38 +566,38 @@ class OrderController extends Controller
             return;
         }
 
-        if ($statuses->every(fn ($status) => $status === 'pending')) {
+        if ($statuses->every(fn($status) => $status === 'pending')) {
             $this->applyOrderStatus($order, 'pending', [
-                'status' => 'pending',
-                'accepted_at' => null,
-                'completed_at' => null,
+                'status'       => 'pending',
+                'accepted_at'  => null,
+                'completed_at' => null
             ], 'Admin sync from item statuses');
 
             return;
         }
 
-        if ($statuses->every(fn ($status) => $status === 'accepted')) {
+        if ($statuses->every(fn($status) => $status === 'accepted')) {
             $this->applyOrderStatus($order, 'accepted', [
-                'status' => 'accepted',
-                'accepted_at' => $order->accepted_at ?? now(),
-                'completed_at' => null,
+                'status'       => 'accepted',
+                'accepted_at'  => $order->accepted_at ?? now(),
+                'completed_at' => null
             ], 'Admin sync from item statuses');
 
             return;
         }
 
-        if ($statuses->every(fn ($status) => in_array($status, ['delivered', 'approved', 'completed'], true))) {
+        if ($statuses->every(fn($status) => in_array($status, ['delivered', 'approved', 'completed'], true))) {
             $this->applyOrderStatus($order, 'delivered', [
-                'status' => 'delivered',
-                'completed_at' => null,
+                'status'       => 'delivered',
+                'completed_at' => null
             ], 'Admin sync from item statuses');
 
             return;
         }
 
         $this->applyOrderStatus($order, 'in_progress', [
-            'status' => 'in_progress',
-            'completed_at' => null,
+            'status'       => 'in_progress',
+            'completed_at' => null
         ], 'Admin sync from item statuses');
     }
 
@@ -507,14 +608,14 @@ class OrderController extends Controller
         }
 
         $allowed = [
-            'pending' => ['accepted', 'cancelled'],
-            'accepted' => ['in_progress', 'cancelled'],
+            'pending'     => ['accepted', 'cancelled'],
+            'accepted'    => ['in_progress', 'cancelled'],
             'in_progress' => ['delivered', 'cancelled'],
-            'delivered' => ['approved', 'rejected'],
-            'rejected' => ['delivered', 'cancelled'],
-            'approved' => ['completed'],
-            'completed' => [],
-            'cancelled' => [],
+            'delivered'   => ['approved', 'rejected'],
+            'rejected'    => ['delivered', 'cancelled'],
+            'approved'    => ['completed'],
+            'completed'   => [],
+            'cancelled'   => []
         ];
 
         return in_array($to, $allowed[$from] ?? [], true);
@@ -527,12 +628,26 @@ class OrderController extends Controller
         }
 
         $allowed = [
-            'pending' => ['accepted', 'cancelled'],
-            'accepted' => ['in_progress', 'cancelled'],
-            'in_progress' => ['on_review', 'cancelled'],
-            'on_review' => ['completed', 'cancelled'],
-            'completed' => [],
-            'cancelled' => [],
+            // Influencer can: accept, start work, mark delivered, resubmit after changes
+            'pending'           => ['accepted', 'cancelled'],
+            'accepted'          => ['in_progress', 'cancelled'],
+            'in_progress'       => ['delivered', 'cancelled'],
+            'changes_requested' => ['delivered', 'in_progress', 'cancelled'], // Can resubmit as delivered
+
+            // Admin/Brand review & approve
+            'delivered'         => ['on_review', 'cancelled'],
+            'on_review'         => ['approved', 'changes_requested', 'cancelled'],
+
+            // Approvals lead to completion
+            'approved'          => ['completed', 'cancelled'],
+
+            // Post-completion review phase
+            'completed'         => ['review_pending', 'cancelled'],
+            'review_pending'    => ['reviewed', 'cancelled'],
+
+            // Terminal states
+            'reviewed'          => [],
+            'cancelled'         => []
         ];
 
         return in_array($to, $allowed[$from] ?? [], true);
@@ -545,13 +660,13 @@ class OrderController extends Controller
         }
 
         $allowed = [
-            'pending' => ['accepted', 'cancelled'],
-            'accepted' => ['in_progress', 'cancelled'],
+            'pending'     => ['accepted', 'cancelled'],
+            'accepted'    => ['in_progress', 'cancelled'],
             'in_progress' => ['delivered', 'cancelled'],
-            'delivered' => ['completed', 'cancelled'],
-            'approved' => ['completed', 'cancelled'],
-            'completed' => [],
-            'cancelled' => [],
+            'delivered'   => ['completed', 'cancelled'],
+            'approved'    => ['completed', 'cancelled'],
+            'completed'   => [],
+            'cancelled'   => []
         ];
 
         return in_array($to, $allowed[$from] ?? [], true);
@@ -564,11 +679,11 @@ class OrderController extends Controller
 
         if ($oldStatus !== $newStatus) {
             OrderStatusHistory::create([
-                'order_id' => $order->id,
-                'old_status' => $oldStatus,
-                'new_status' => $newStatus,
+                'order_id'           => $order->id,
+                'old_status'         => $oldStatus,
+                'new_status'         => $newStatus,
                 'changed_by_user_id' => Auth::id(),
-                'note' => $note,
+                'note'               => $note
             ]);
         }
     }

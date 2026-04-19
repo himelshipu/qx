@@ -11,8 +11,7 @@ class OrderDeliverable extends Model
     use HasFactory;
 
     protected $fillable = [
-        'order_item_id',
-        'uploaded_by_user_id',
+        'order_item_id', 'sub_order_id', 'uploaded_by_user_id',
         'deliverable_type',
         'file_path',
         'external_url',
@@ -31,6 +30,11 @@ class OrderDeliverable extends Model
     public function orderItem(): BelongsTo
     {
         return $this->belongsTo(OrderItem::class);
+    }
+
+    public function subOrder(): BelongsTo
+    {
+        return $this->belongsTo(SubOrder::class);
     }
 
     public function uploadedBy(): BelongsTo

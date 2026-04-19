@@ -88,56 +88,62 @@ class CampaignController extends Controller
 
         $campaign = $this->getCampaignsAction->forDisplay($campaign);
 
-        $latestSubOrdersByInfluencer = $campaign->orders()
-            ->with('subOrders')
-            ->get()
-            ->flatMap(static fn($order) => $order->subOrders)
-            ->sortByDesc(static fn($subOrder) => $subOrder->updated_at ?? $subOrder->created_at)
+        // Load fresh SubOrder data from database to sync with admin dashboard updates
+        // Don't use campaign relationship to avoid any caching
+        $campaignOrders = \App\Models\Order::where('campaign_id', $campaign->id)
+            ->with([
+                'subOrders' => fn($q) => $q->select('id', 'order_id', 'campaign_influencer_id', 'influencer_id', 'status', 'amount', 'currency', 'accepted_at', 'completed_at', 'paid_at', 'created_at', 'updated_at'),
+                'subOrders.deliverables:id,sub_order_id,uploaded_by_user_id,deliverable_type,file_path,external_url,notes,status,created_at',
+                'subOrders.deliverables.uploadedBy:id,name'
+            ])
+            ->get();
+
+        $latestSubOrdersByInfluencer = $campaignOrders
+            ->flatMap(fn($order) => $order->subOrders)
+            ->sortByDesc(fn($subOrder) => $subOrder->updated_at ?? $subOrder->created_at)
             ->unique('influencer_id')
             ->keyBy('influencer_id');
 
-            $assignmentByInfluencer = CampaignInfluencer::query()
-                ->where('campaign_id', $campaign->id)
-                ->get()
-                ->keyBy('influencer_id');
+        $assignmentByInfluencer = CampaignInfluencer::query()
+            ->where('campaign_id', $campaign->id)
+            ->get()
+            ->keyBy('influencer_id');
 
         $progressConfig = [
-            'pending' => ['label' => 'Order Pending', 'percent' => 15],
-            'accepted' => ['label' => 'Accepted', 'percent' => 35],
+            'pending'     => ['label' => 'Order Pending', 'percent' => 15],
+            'accepted'    => ['label' => 'Accepted', 'percent' => 35],
             'in_progress' => ['label' => 'In Progress', 'percent' => 60],
-            'on_review' => ['label' => 'On Review', 'percent' => 80],
-            'completed' => ['label' => 'Completed', 'percent' => 100],
-            'cancelled' => ['label' => 'Cancelled', 'percent' => 0],
+            'on_review'   => ['label' => 'On Review', 'percent' => 80],
+            'completed'   => ['label' => 'Completed', 'percent' => 100],
+            'cancelled'   => ['label' => 'Cancelled', 'percent' => 0]
         ];
 
         $workProgress = $campaign->applications
             ->whereIn('status', ['approved', 'completed'])
             ->values()
-                ->map(function ($application) use ($latestSubOrdersByInfluencer, $progressConfig, $assignmentByInfluencer, $campaign) {
-                $subOrder = $latestSubOrdersByInfluencer->get($application->influencer_id);
-                    $assignment = $assignmentByInfluencer->get($application->influencer_id);
+            ->map(function ($application) use ($latestSubOrdersByInfluencer, $progressConfig, $assignmentByInfluencer, $campaign) {
+                $subOrder   = $latestSubOrdersByInfluencer->get($application->influencer_id);
+                $assignment = $assignmentByInfluencer->get($application->influencer_id);
 
                 // Sub-order is the canonical work record for campaign fulfillment.
                 $statusKey = (string) ($subOrder?->status ?? 'pending');
 
                 $status = $progressConfig[$statusKey] ?? $progressConfig['pending'];
 
-                    $agreedAmount = $assignment?->agreed_amount
-                        ?? $application->agreed_rate
-                        ?? $application->proposed_rate;
+                $agreedAmount = $assignment?->agreed_amount ?? $application->agreed_rate ?? $application->proposed_rate;
 
                 return [
-                    'application_id' => $application->id,
-                        'influencer_id' => $application->influencer_id,
-                    'influencer_name' => $application->influencer->user->name ?? 'Unknown Influencer',
+                    'application_id'    => $application->id,
+                    'influencer_id'     => $application->influencer_id,
+                    'influencer_name'   => $application->influencer->user->name ?? 'Unknown Influencer',
                     'influencer_handle' => $application->influencer->display_name ?? null,
-                    'status_key' => $statusKey,
-                    'status_label' => $status['label'],
-                    'progress_percent' => $status['percent'],
-                    'updated_at' => $subOrder?->updated_at,
-                    'decided_at' => $application->decided_at,
-                        'agreed_amount' => $agreedAmount,
-                        'currency' => strtoupper((string) ($subOrder?->currency ?? $campaign->currency ?? 'USD')),
+                    'status_key'        => $statusKey,
+                    'status_label'      => $status['label'],
+                    'progress_percent'  => $status['percent'],
+                    'updated_at'        => $subOrder?->updated_at,
+                    'decided_at'        => $application->decided_at,
+                    'agreed_amount'     => $agreedAmount,
+                    'currency'          => strtoupper((string) ($subOrder?->currency ?? $campaign->currency ?? 'USD'))
                 ];
             });
 
@@ -159,13 +165,14 @@ class CampaignController extends Controller
         $showPayload = $showViewModel->toArray();
 
         return view('frontend.campaigns.designed-show', array_merge([
-            'campaign'              => $campaign,
-            'invitedInfluencers'    => $campaign->applications->where('status', 'invited')->values(),
-            'workProgress'          => $showPayload['workProgressCards'],
-            'progressByApplication' => $workProgress->keyBy('application_id'),
-            'assignmentByInfluencer' => $assignmentByInfluencer,
-            'brandName'             => $campaign->brand?->brand_name ?? $campaign->createdBy?->name ?? 'Unknown',
-            'influencerApplication' => $influencerApplication,
+            'campaign'                    => $campaign,
+            'invitedInfluencers'          => $campaign->applications->where('status', 'invited')->values(),
+            'workProgress'                => $showPayload['workProgressCards'],
+            'progressByApplication'       => $workProgress->keyBy('application_id'),
+            'assignmentByInfluencer'      => $assignmentByInfluencer,
+            'latestSubOrdersByInfluencer' => $latestSubOrdersByInfluencer,
+            'brandName'                   => $campaign->brand?->brand_name ?? $campaign->createdBy?->name ?? 'Unknown',
+            'influencerApplication'       => $influencerApplication
         ], $showPayload));
     }
 
@@ -269,13 +276,12 @@ class CampaignController extends Controller
             ->with('success', "Assignment {$status} successfully.");
     }
 
-
     private function getWizardStep(): int
     {
         $stepTwoFields = ['title', 'description', 'instructions', 'status', 'currency', 'budget_min', 'budget_max', 'start_date', 'end_date'];
         $requestedStep = (int) request('wizard_step', 1);
-        $errors = session('errors') ?? new \Illuminate\Support\ViewErrorBag();
-        $hasErrors = collect($stepTwoFields)->contains(static fn($field): bool => $errors->has($field));
+        $errors        = session('errors') ?? new \Illuminate\Support\ViewErrorBag();
+        $hasErrors     = collect($stepTwoFields)->contains(static fn($field): bool => $errors->has($field));
 
         return $hasErrors ? max($requestedStep, 2) : max($requestedStep, 1);
     }

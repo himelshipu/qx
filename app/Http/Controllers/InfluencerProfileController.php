@@ -38,7 +38,7 @@ class InfluencerProfileController extends Controller
                 'platformStats' => fn($query) => $query
                     ->where('is_active', true)
                     ->orderByDesc('follower_count'),
-                'badges' => fn($query) => $query
+                'badges'        => fn($query)        => $query
                     ->wherePivot('is_active', true)
                     ->select('badge_definitions.id', 'badge_definitions.code', 'badge_definitions.name', 'badge_definitions.description')
             ])
@@ -85,9 +85,12 @@ class InfluencerProfileController extends Controller
                 'orderItem:id,order_id,title,package_id',
                 'orderItem.order:id,order_number',
                 'orderItem.package:id,name',
+                'subOrder:id,order_id',
+                'subOrder.order:id,order_number,campaign_id',
+                'subOrder.order.campaign:id,title'
             ])
             ->orderByDesc('created_at')
-            ->simplePaginate(8, ['id', 'order_item_id', 'brand_id', 'rating', 'title', 'comment', 'created_at'], 'reviews_page')
+            ->simplePaginate(8, ['id', 'order_item_id', 'sub_order_id', 'brand_id', 'rating', 'title', 'comment', 'created_at'], 'reviews_page')
             ->withQueryString();
 
         $packages = Package::query()
@@ -236,7 +239,7 @@ class InfluencerProfileController extends Controller
                     }
                     $path                     = $request->file('profile_image')->store('creators/profile', 'public');
                     $user->profile_image_path = $path;
-                    $saved = $user->save();
+                    $saved                    = $user->save();
                 } catch (\Exception $e) {
                     Log::error('Profile image upload error: ' . $e->getMessage());
 
@@ -251,7 +254,7 @@ class InfluencerProfileController extends Controller
                     }
                     $path                   = $request->file('cover_image')->store('creators/cover', 'public');
                     $user->cover_image_path = $path;
-                    $saved = $user->save();
+                    $saved                  = $user->save();
                 } catch (\Exception $e) {
                     Log::error('Cover image upload error: ' . $e->getMessage());
 
@@ -292,7 +295,7 @@ class InfluencerProfileController extends Controller
                 'message'       => $message,
                 'active_tab'    => $activeTab,
                 'profile_image' => ImageHelper::url($user->profile_image_path),
-                'cover_image'   => ImageHelper::url($user->cover_image_path),
+                'cover_image'   => ImageHelper::url($user->cover_image_path)
             ]);
         }
 

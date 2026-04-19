@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class SubOrder extends Model
 {
@@ -20,6 +22,7 @@ class SubOrder extends Model
         'amount',
         'currency',
         'accepted_at',
+        'approved_at',
         'completed_at',
         'cancelled_at',
         'paid_at',
@@ -27,19 +30,20 @@ class SubOrder extends Model
         'payout_reference',
         'payout_note',
         'payout_marked_by_user_id',
-        'payout_marked_at',
+        'payout_marked_at'
     ];
 
     protected function casts(): array
     {
         return [
-            'amount' => 'decimal:2',
-            'accepted_at' => 'datetime',
-            'completed_at' => 'datetime',
-            'cancelled_at' => 'datetime',
-            'paid_at' => 'datetime',
-            'payout_amount' => 'decimal:2',
-            'payout_marked_at' => 'datetime',
+            'amount'           => 'decimal:2',
+            'accepted_at'      => 'datetime',
+            'approved_at'      => 'datetime',
+            'completed_at'     => 'datetime',
+            'cancelled_at'     => 'datetime',
+            'paid_at'          => 'datetime',
+            'payout_amount'    => 'decimal:2',
+            'payout_marked_at' => 'datetime'
         ];
     }
 
@@ -72,6 +76,22 @@ class SubOrder extends Model
         return $this->belongsTo(User::class, 'payout_marked_by_user_id');
     }
 
+    /**
+     * Get the deliverables submitted for this sub-order (campaign order)
+     */
+    public function deliverables(): HasMany
+    {
+        return $this->hasMany(OrderDeliverable::class);
+    }
+
+    /**
+     * Get the review submitted for this campaign order
+     */
+    public function review(): HasOne
+    {
+        return $this->hasOne(Review::class, 'sub_order_id', 'id');
+    }
+
     public function scopeForPaymentDashboard(Builder $query): Builder
     {
         return $query->select([
@@ -91,7 +111,7 @@ class SubOrder extends Model
             'payout_note',
             'payout_marked_by_user_id',
             'payout_marked_at',
-            'created_at',
+            'created_at'
         ]);
     }
 

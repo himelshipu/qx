@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types=1);
+declare (strict_types = 1);
 
 namespace App\Http\Controllers\Frontend;
 
@@ -24,7 +24,7 @@ class CampaignApplicationController extends Controller
     public function updateStatus(Campaign $campaign, Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'status' => 'required|in:draft,published,paused,closed,archived',
+            'status' => 'required|in:draft,published,paused,closed,archived'
         ]);
 
         $newStatus = $validated['status'];
@@ -32,47 +32,47 @@ class CampaignApplicationController extends Controller
         if ($campaign->status === 'closed' && $newStatus !== 'archived') {
             return response()->json([
                 'success' => false,
-                'message' => 'Closed campaigns can only be archived.',
+                'message' => 'Closed campaigns can only be archived.'
             ], 422);
         }
 
         try {
             $campaign->update([
-                'status' => $newStatus,
-                'published_at' => $newStatus === 'published' ? now() : $campaign->published_at,
+                'status'       => $newStatus,
+                'published_at' => $newStatus === 'published' ? now() : $campaign->published_at
             ]);
 
             $statusLabel = match ($newStatus) {
-                'draft' => 'Draft',
+                'draft'     => 'Draft',
                 'published' => 'Published',
-                'paused' => 'Paused',
-                'closed' => 'Closed',
-                'archived' => 'Archived',
-                default => 'Unknown',
+                'paused'    => 'Paused',
+                'closed'    => 'Closed',
+                'archived'  => 'Archived',
+                default     => 'Unknown',
             };
 
             return response()->json([
                 'success' => true,
                 'message' => "Campaign status updated to {$statusLabel}",
-                'status' => $newStatus,
-                'status_label' => $statusLabel,
+                'status'       => $newStatus,
+                'status_label' => $statusLabel
             ]);
         } catch (\Exception $e) {
             Log::error('Campaign status update failed', ['error' => $e->getMessage()]);
 
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to update campaign status',
+                'message' => 'Failed to update campaign status'
             ], 500);
         }
     }
 
-    public function updateApplicationStatus(Campaign $campaign, $applicationId, Request $request): RedirectResponse|JsonResponse
+    public function updateApplicationStatus(Campaign $campaign, $applicationId, Request $request): RedirectResponse | JsonResponse
     {
         $validated = $request->validate([
-            'action' => 'nullable|in:accept,counter,decline',
-            'status' => 'nullable|in:approved,rejected',
-            'brand_offer' => 'nullable|numeric|min:0.01',
+            'action'      => 'nullable|in:accept,counter,decline',
+            'status'      => 'nullable|in:approved,rejected',
+            'brand_offer' => 'nullable|numeric|min:0.01'
         ]);
 
         $application = CampaignApplication::query()
@@ -85,6 +85,7 @@ class CampaignApplicationController extends Controller
             if ($request->expectsJson()) {
                 return response()->json(['success' => false, 'message' => $message], 422);
             }
+
             return redirect()->route('frontend.campaigns.show', $campaign)->with('error', $message);
         }
 
@@ -93,6 +94,7 @@ class CampaignApplicationController extends Controller
             if ($request->expectsJson()) {
                 return response()->json(['success' => false, 'message' => $message], 422);
             }
+
             return redirect()->route('frontend.campaigns.show', $campaign)->with('error', $message);
         }
 
@@ -106,11 +108,12 @@ class CampaignApplicationController extends Controller
             }
         }
 
-        if (! in_array($action, ['accept', 'counter', 'decline'], true)) {
+        if (!in_array($action, ['accept', 'counter', 'decline'], true)) {
             $message = 'Invalid negotiation action.';
             if ($request->expectsJson()) {
                 return response()->json(['success' => false, 'message' => $message], 422);
             }
+
             return redirect()->route('frontend.campaigns.show', $campaign)->with('error', $message);
         }
 
@@ -119,38 +122,40 @@ class CampaignApplicationController extends Controller
             if ($request->expectsJson()) {
                 return response()->json(['success' => false, 'message' => $message], 422);
             }
+
             return redirect()->route('frontend.campaigns.show', $campaign)->with('warning', $message);
         }
 
-        if (! $application->canNegotiate()) {
+        if (!$application->canNegotiate()) {
             $message = 'This application cannot be negotiated in its current state.';
             if ($request->expectsJson()) {
                 return response()->json(['success' => false, 'message' => $message], 422);
             }
+
             return redirect()->route('frontend.campaigns.show', $campaign)->with('error', $message);
         }
 
         if ($action === 'counter') {
             $offer = $validated['brand_offer'] ?? null;
-            if (! is_numeric($offer) || (float) $offer <= 0) {
+            if (!is_numeric($offer) || (float) $offer <= 0) {
                 $message = 'Please enter a valid counter offer amount.';
                 if ($request->expectsJson()) {
                     return response()->json(['success' => false, 'message' => $message], 422);
                 }
+
                 return redirect()->route('frontend.campaigns.show', $campaign)->with('error', $message);
             }
         }
 
         if ($action === 'accept') {
-            $acceptedRate = $application->influencer_offer
-                ?? $application->proposed_rate
-                ?? $application->brand_offer;
+            $acceptedRate = $application->influencer_offer ?? $application->proposed_rate ?? $application->brand_offer;
 
             if ($acceptedRate === null || (float) $acceptedRate <= 0) {
                 $message = 'No valid offer is available to accept.';
                 if ($request->expectsJson()) {
                     return response()->json(['success' => false, 'message' => $message], 422);
                 }
+
                 return redirect()->route('frontend.campaigns.show', $campaign)->with('error', $message);
             }
         }
@@ -173,10 +178,10 @@ class CampaignApplicationController extends Controller
 
     public function respondToOffer(CampaignApplication $application, Request $request): RedirectResponse
     {
-        $user = Auth::user();
+        $user         = Auth::user();
         $influencerId = $user->influencer?->id;
 
-        if ($user->user_type !== 'influencer' || ! $influencerId || (int) $application->influencer_id !== (int) $influencerId) {
+        if ($user->user_type !== 'influencer' || !$influencerId || (int) $application->influencer_id !== (int) $influencerId) {
             abort(403, 'Not authorized');
         }
 
@@ -193,13 +198,13 @@ class CampaignApplicationController extends Controller
         }
 
         $validated = $request->validate([
-            'action' => 'required|in:accept,counter,decline',
-            'influencer_offer' => 'nullable|numeric|min:0.01',
+            'action'           => 'required|in:accept,counter,decline',
+            'influencer_offer' => 'nullable|numeric|min:0.01'
         ]);
 
         if ($validated['action'] === 'counter') {
             $offer = $validated['influencer_offer'] ?? null;
-            if (! is_numeric($offer) || (float) $offer <= 0) {
+            if (!is_numeric($offer) || (float) $offer <= 0) {
                 return redirect()->route('frontend.campaigns.show', $campaign)
                     ->with('error', 'Please enter a valid counter offer amount.');
             }
@@ -232,13 +237,13 @@ class CampaignApplicationController extends Controller
         }
 
         $influencer = $user->influencer;
-        if (! $influencer) {
+        if (!$influencer) {
             return redirect()->back()->with('error', 'Influencer profile not found for this account.');
         }
 
         $validated = request()->validate([
             'influencer_offer' => 'required|numeric|min:0.01',
-            'pitch_message' => 'nullable|string|max:2000',
+            'pitch_message'    => 'nullable|string|max:2000'
         ]);
 
         $result = $this->campaignNegotiationService->apply(
@@ -256,10 +261,10 @@ class CampaignApplicationController extends Controller
 
     public function withdrawApplication(CampaignApplication $application): RedirectResponse
     {
-        $user = Auth::user();
+        $user         = Auth::user();
         $influencerId = $user->influencer?->id;
 
-        if ($user->user_type !== 'influencer' || ! $influencerId || (int) $application->influencer_id !== (int) $influencerId) {
+        if ($user->user_type !== 'influencer' || !$influencerId || (int) $application->influencer_id !== (int) $influencerId) {
             abort(403, 'Not authorized');
         }
 
@@ -276,10 +281,10 @@ class CampaignApplicationController extends Controller
 
     public function updateInfluencerWorkStatus(CampaignApplication $application, Request $request): RedirectResponse
     {
-        $user = Auth::user();
+        $user         = Auth::user();
         $influencerId = $user->influencer?->id;
 
-        if ($user->user_type !== 'influencer' || ! $influencerId || (int) $application->influencer_id !== (int) $influencerId) {
+        if ($user->user_type !== 'influencer' || !$influencerId || (int) $application->influencer_id !== (int) $influencerId) {
             abort(403, 'Not authorized to update this application');
         }
 
@@ -288,18 +293,18 @@ class CampaignApplicationController extends Controller
         }
 
         $validated = $request->validate([
-            'work_status' => 'required|in:pending,accepted,in_progress,on_review,completed',
+            'work_status' => 'required|in:pending,accepted,in_progress,on_review,completed'
         ]);
 
         $subOrder = $this->resolveCampaignSubOrder($application);
 
-        if (! $subOrder) {
+        if (!$subOrder) {
             return redirect()->back()->with('error', 'This campaign order has not been created yet. Work status can be updated once the order exists.');
         }
 
         $updates = ['work_status' => $validated['work_status']];
         if ($validated['work_status'] === 'completed') {
-            $updates['status'] = 'completed';
+            $updates['status']     = 'completed';
             $updates['decided_at'] = now();
         }
 
@@ -331,23 +336,23 @@ class CampaignApplicationController extends Controller
             abort(404);
         }
 
-        if (! in_array((string) $application->status, ['approved', 'completed'], true)) {
+        if (!in_array((string) $application->status, ['approved', 'completed'], true)) {
             return redirect()->back()->with('error', 'Work status can only be updated for approved influencers.');
         }
 
         $validated = $request->validate([
-            'work_status' => 'required|in:pending,accepted,in_progress,on_review,completed',
+            'work_status' => 'required|in:pending,accepted,in_progress,on_review,completed'
         ]);
 
         $subOrder = $this->resolveCampaignSubOrder($application);
 
-        if (! $subOrder) {
+        if (!$subOrder) {
             return redirect()->back()->with('error', 'This campaign order has not been created yet. Work status can be updated once the order exists.');
         }
 
         $updates = ['work_status' => $validated['work_status']];
         if ($validated['work_status'] === 'completed') {
-            $updates['status'] = 'completed';
+            $updates['status']     = 'completed';
             $updates['decided_at'] = $application->decided_at ?? now();
         }
 

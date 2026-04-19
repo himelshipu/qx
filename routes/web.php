@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types=1);
+declare (strict_types = 1);
 
 use App\Http\Controllers\AccountController;
 use App\Http\Controllers\Backend\BlogController;
@@ -43,8 +43,8 @@ use App\Http\Controllers\ConversationController;
 use App\Http\Controllers\EarningsController;
 use App\Http\Controllers\Frontend\AccountController as FrontendAccountController;
 use App\Http\Controllers\Frontend\BlogController as FrontendBlogController;
-use App\Http\Controllers\Frontend\CampaignController as FrontendCampaignController;
 use App\Http\Controllers\Frontend\CampaignApplicationController as FrontendCampaignApplicationController;
+use App\Http\Controllers\Frontend\CampaignController as FrontendCampaignController;
 use App\Http\Controllers\Frontend\CaseStudyController as FrontendCaseStudyController;
 use App\Http\Controllers\Frontend\ContentLibraryController;
 use App\Http\Controllers\Frontend\ConversationController as FrontendConversationController;
@@ -168,6 +168,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::put('/orders/{order}/items/{item}/status', [FrontendOrderController::class, 'updateItemStatus'])->name('frontend.orders.items.update-status');
     Route::put('/orders/{order}/items/{item}/decision', [FrontendOrderController::class, 'updateBrandItemDecision'])->name('frontend.orders.items.update-decision');
     Route::post('/orders/{order}/items/{item}/review', [FrontendOrderController::class, 'storeBrandTaskReview'])->name('frontend.orders.items.reviews.store');
+    Route::post('/orders/{order}/items/{item}/deliverable', [FrontendOrderController::class, 'submitDeliverable'])->name('frontend.orders.items.submit-deliverable');
     Route::put('/orders/{order}/complete', [FrontendOrderController::class, 'completeOrder'])->name('frontend.orders.complete');
     Route::post('/orders/{order}/reviews', [FrontendOrderController::class, 'storeReview'])->name('frontend.orders.reviews.store');
 
@@ -370,6 +371,7 @@ Route::prefix('dashboard')->name('dashboard.')->middleware(['auth', 'verified', 
     Route::post('/orders/create-from-campaign', [BackendOrderController::class, 'createFromCampaign'])->name('orders.create-from-campaign');
     Route::put('/sub-orders/{subOrder}/status', [BackendOrderController::class, 'updateSubOrderStatus'])->name('sub-orders.update-status');
     Route::post('/sub-orders/{subOrder}/mark-paid', [BackendOrderController::class, 'markSubOrderPaid'])->name('sub-orders.mark-paid');
+    Route::post('/sub-orders/{subOrder}/approve-deliverable', [BackendOrderController::class, 'approveDeliverable'])->name('sub-orders.approve-deliverable');
     Route::put('/order-items/{orderItem}/status', [BackendOrderController::class, 'updateOrderItemStatus'])->name('order-items.update-status');
     Route::post('/order-items/{orderItem}/mark-paid', [BackendOrderController::class, 'markOrderItemPaid'])->name('order-items.mark-paid');
 
@@ -585,4 +587,4 @@ Route::prefix('dashboard')->name('dashboard.')->middleware(['auth', 'verified', 
 |--------------------------------------------------------------------------
  */
 
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';

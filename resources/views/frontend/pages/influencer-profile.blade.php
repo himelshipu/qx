@@ -267,7 +267,9 @@
 									<x-icons.star class="h-4 w-4 text-amber-400" />
 									{{ $ratingLabel }}
 									<span class="text-gray-400">·</span>
-									<a href="#reviews-holder" class="underline decoration-gray-400 underline-offset-2 hover:text-gray-900 dark:hover:text-white">{{ number_format($reviewsTotal) }} Reviews</a>
+									<a href="#reviews-holder"
+										class="underline decoration-gray-400 underline-offset-2 hover:text-gray-900 dark:hover:text-white">{{ number_format($reviewsTotal) }}
+										Reviews</a>
 								</span>
 							</div>
 							<p class="text-sm text-gray-500 font-medium mb-4">{{ $locationText }}</p>
@@ -291,7 +293,7 @@
 						</div>
 					</div>
 
-					
+
 
 					<!-- BADGES SYSTEM -->
 					<div class="space-y-3">
@@ -299,16 +301,20 @@
 							<div class="w-10 h-10 shrink-0 rounded-lg flex items-center justify-center transition-colors"
 								:class="@js($hasTopInfluencer) ? 'bg-amber-100 text-amber-600' : 'bg-gray-100 text-gray-400'">
 								<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
-									<path d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
+									<path
+										d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
 								</svg>
 							</div>
 							<div class="flex-1">
 								<div class="flex items-center gap-2 mb-1">
 									<h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100">Top Influencer</h3>
 									@if ($hasTopInfluencer)
-										<span class="px-2 py-0.5 bg-amber-100 text-amber-700 rounded-full text-[9px] font-bold uppercase tracking-widest">Earned</span>
+										<span
+											class="px-2 py-0.5 bg-amber-100 text-amber-700 rounded-full text-[9px] font-bold uppercase tracking-widest">Earned</span>
 									@else
-										<span class="px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full text-[9px] font-bold uppercase tracking-widest">Not Earned</span>
+										<span
+											class="px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full text-[9px] font-bold uppercase tracking-widest">Not
+											Earned</span>
 									@endif
 								</div>
 								<p class="text-xs text-gray-600 dark:text-gray-400">Complete multiple orders with high brand ratings</p>
@@ -326,9 +332,12 @@
 								<div class="flex items-center gap-2 mb-1">
 									<h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100">Responds Fast</h3>
 									@if ($hasResponsesFast)
-										<span class="px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full text-[9px] font-bold uppercase tracking-widest">Earned</span>
+										<span
+											class="px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full text-[9px] font-bold uppercase tracking-widest">Earned</span>
 									@else
-										<span class="px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full text-[9px] font-bold uppercase tracking-widest">Not Earned</span>
+										<span
+											class="px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full text-[9px] font-bold uppercase tracking-widest">Not
+											Earned</span>
 									@endif
 								</div>
 								<p class="text-xs text-gray-600 dark:text-gray-400">Consistently respond to requests within 12 hours</p>
@@ -440,7 +449,7 @@
 							</button>
 							<div x-show="openDropdown" x-cloak @click.away="openDropdown = false"
 								class="absolute top-full left-0 z-50 mt-2 max-h-96 w-full overflow-y-auto rounded-xl border border-gray-200 bg-white shadow-xl dark:border-gray-700 dark:bg-gray-800">
-								
+
 								<template x-for="p in packages" :key="p.key">
 									<div @click="selectPackage(p.key)" class="px-6 py-4 cursor-pointer text-sm font-medium transition-colors"
 										:class="selectedPackageKey === p.key ? 'bg-gray-100 text-gray-800' :
@@ -470,11 +479,12 @@
 								<div class="h-px flex-1 bg-gray-300 dark:bg-gray-700"></div>
 							</div>
 
-							<button @click="negotiatePackage()" type="button" class="w-full text-center text-base font-bold text-gray-800 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white transition">
+							<button @click="negotiatePackage()" type="button"
+								class="w-full text-center text-base font-bold text-gray-800 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white transition">
 								Negotiate a Package
 							</button>
 
-							
+
 						</div>
 					</div>
 				</div>
@@ -486,7 +496,8 @@
 			<section id="portfolio-gallery" class="py-4 px-4 sm:px-6 lg:px-8 max-w-screen-2xl mx-auto scroll-mt-24">
 				<div class="mb-12">
 					<h2 class="text-3xl font-bold text-gray-900 dark:text-white mb-2">Portfolio</h2>
-					<p class="text-gray-600 dark:text-gray-400">Showing {{ $portfolioPage->count() }} of {{ number_format($portfolioTotalCount) }} media items</p>
+					<p class="text-gray-600 dark:text-gray-400">Showing {{ $portfolioPage->count() }} of
+						{{ number_format($portfolioTotalCount) }} media items</p>
 				</div>
 
 				<!-- Portfolio Grid -->
@@ -620,7 +631,8 @@
 						<div class="flex items-center gap-2 mt-2">
 							<div class="flex items-center gap-1">
 								@for ($star = 1; $star <= 5; $star++)
-									<x-icons.star class="h-5 w-5 {{ $avgRating !== null && $star <= floor($avgRating) ? 'text-amber-400' : 'text-gray-300 dark:text-gray-600' }}" />
+									<x-icons.star
+										class="h-5 w-5 {{ $avgRating !== null && $star <= floor($avgRating) ? 'text-amber-400' : 'text-gray-300 dark:text-gray-600' }}" />
 								@endfor
 							</div>
 							<span class="text-2xl font-bold text-amber-400">{{ $ratingLabel }}</span>
@@ -631,8 +643,10 @@
 				<!-- Rating Categories -->
 				<div class="grid grid-cols-3 gap-4 mb-8">
 					<div class="flex items-start gap-3">
-						<svg class="h-6 w-6 text-gray-800 dark:text-gray-200 shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M8 10h.01M12 10h.01M16 10h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+						<svg class="h-6 w-6 text-gray-800 dark:text-gray-200 shrink-0 mt-1" fill="none" stroke="currentColor"
+							viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
+								d="M8 10h.01M12 10h.01M16 10h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
 						</svg>
 						<div>
 							<p class="text-2xl font-bold text-gray-900 dark:text-white">{{ $ratingLabel }}</p>
@@ -640,8 +654,10 @@
 						</div>
 					</div>
 					<div class="flex items-start gap-3">
-						<svg class="h-6 w-6 text-gray-800 dark:text-gray-200 shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+						<svg class="h-6 w-6 text-gray-800 dark:text-gray-200 shrink-0 mt-1" fill="none" stroke="currentColor"
+							viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
+								d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
 						</svg>
 						<div>
 							<p class="text-2xl font-bold text-gray-900 dark:text-white">{{ $ratingLabel }}</p>
@@ -649,8 +665,10 @@
 						</div>
 					</div>
 					<div class="flex items-start gap-3">
-						<svg class="h-6 w-6 text-gray-800 dark:text-gray-200 shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 12l2 2 4-4m5 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+						<svg class="h-6 w-6 text-gray-800 dark:text-gray-200 shrink-0 mt-1" fill="none" stroke="currentColor"
+							viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
+								d="M9 12l2 2 4-4m5 2a9 9 0 11-18 0 9 9 0 0118 0z" />
 						</svg>
 						<div>
 							<p class="text-2xl font-bold text-gray-900 dark:text-white">{{ $ratingLabel }}</p>
@@ -664,24 +682,33 @@
 				<div class="border-t border-gray-200 dark:border-gray-800 pt-8 space-y-6">
 					@foreach ($reviewsPage as $review)
 						@php
-							$reviewTitle = $review->orderItem?->package?->name ?: $review->orderItem?->title;
-							$orderNumber = $review->orderItem?->order?->order_number;
+							// Determine if this is a campaign or package review
+							$isCampaignReview = !empty($review->sub_order_id);
+
+							if ($isCampaignReview) {
+							    $reviewTitle = $review->subOrder?->order?->campaign?->title ?? 'Campaign';
+							    $orderDetail = $review->subOrder?->order?->order_number ?? 'Order';
+							} else {
+							    $reviewTitle = $review->orderItem?->package?->name ?: $review->orderItem?->title;
+							    $orderDetail = $review->orderItem?->order?->order_number ?? 'Order';
+							}
 						@endphp
 						<div class="pb-6 border-b border-gray-100 dark:border-gray-800 last:border-b-0">
 							<!-- Review Header -->
 							<div class="flex items-center justify-between mb-3">
 								<div class="flex items-center gap-3">
-									<div class="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-purple-100 to-pink-100 text-sm font-bold text-gray-700 dark:from-purple-900 dark:to-pink-900 dark:text-gray-100">
+									<div
+										class="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-purple-100 to-pink-100 text-sm font-bold text-gray-700 dark:from-purple-900 dark:to-pink-900 dark:text-gray-100">
 										{{ \Illuminate\Support\Str::substr($review->brand?->brand_name ?? 'B', 0, 1) }}
 									</div>
 									<div>
-										<p class="font-semibold text-gray-900 dark:text-white text-sm">From {{ $review->brand?->brand_name ?? 'Brand' }}</p>
+										<p class="font-semibold text-gray-900 dark:text-white text-sm">From
+											{{ $review->brand?->brand_name ?? 'Brand' }}</p>
 										@if ($reviewTitle)
-											<p class="text-xs text-gray-500 dark:text-gray-400">Task: {{ $reviewTitle }}</p>
+											<p class="text-xs text-gray-500 dark:text-gray-400">{{ $isCampaignReview ? 'Campaign' : 'Task' }}:
+												{{ $reviewTitle }}</p>
 										@endif
-										@if ($orderNumber)
-											<p class="text-xs text-gray-500 dark:text-gray-400">Order: {{ $orderNumber }}</p>
-										@endif
+										<p class="text-xs text-gray-500 dark:text-gray-400">Order #{{ $orderDetail }}</p>
 									</div>
 								</div>
 								<div class="text-right">
@@ -704,13 +731,15 @@
 
 				@if ($reviewsPage->hasMorePages())
 					<div class="mt-8">
-						<a href="{{ $reviewsPage->nextPageUrl() }}" class="inline-flex items-center rounded-xl border border-gray-300 dark:border-gray-700 px-6 py-3 text-sm font-semibold text-gray-900 dark:text-gray-100 transition hover:bg-gray-50 dark:hover:bg-gray-800">
+						<a href="{{ $reviewsPage->nextPageUrl() }}"
+							class="inline-flex items-center rounded-xl border border-gray-300 dark:border-gray-700 px-6 py-3 text-sm font-semibold text-gray-900 dark:text-gray-100 transition hover:bg-gray-50 dark:hover:bg-gray-800">
 							Show all reviews
 						</a>
 					</div>
 				@endif
 			@else
-				<div class="rounded-2xl border border-dashed border-gray-300 bg-gray-50 px-6 py-10 text-center text-sm text-gray-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-400">
+				<div
+					class="rounded-2xl border border-dashed border-gray-300 bg-gray-50 px-6 py-10 text-center text-sm text-gray-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-400">
 					No reviews available yet.
 				</div>
 			@endif
@@ -737,8 +766,8 @@
 						return @js(route('cart.start-add-to-cart', ['package' => ':id'])).replace(':id', packageId);
 					},
 					portfolioItems: @js(
-	$portfolioPage
-		->getCollection()
+    $portfolioPage
+        ->getCollection()
         ->map(
             fn($p) => [
                 'id' => $p->id,

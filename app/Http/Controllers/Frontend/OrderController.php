@@ -5,9 +5,11 @@ namespace App\Http\Controllers\Frontend;
 use App\Http\Controllers\Controller;
 use App\Models\Influencer;
 use App\Models\Order;
+use App\Models\OrderDeliverable;
 use App\Models\OrderItem;
 use App\Models\OrderStatusHistory;
 use App\Models\Review;
+use App\Models\SubOrder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -22,7 +24,7 @@ class OrderController extends Controller
      */
     public function index(Request $request): View
     {
-        $user = Auth::user();
+        $user   = Auth::user();
         $search = trim((string) $request->input('q', ''));
         $status = (string) $request->input('status', 'all');
 
@@ -37,10 +39,10 @@ class OrderController extends Controller
                     'items.influencer.user',
                     'childOrders.items.package',
                     'childOrders.items.influencer.user',
-                    'acceptedBy',
+                    'acceptedBy'
                 ])
-                ->when($search !== '', fn ($q) => $q->where('order_number', 'like', "%{$search}%"))
-                ->when($status !== 'all', fn ($q) => $q->where('status', $status))
+                ->when($search !== '', fn($q) => $q->where('order_number', 'like', "%{$search}%"))
+                ->when($status !== 'all', fn($q) => $q->where('status', $status))
                 ->orderByDesc('created_at')
                 ->paginate(15);
 
@@ -50,11 +52,11 @@ class OrderController extends Controller
             $orders = Order::where(function ($query) use ($user) {
                 $query
                     ->where('accepted_for_influencer_id', $user->influencer->id)
-                    ->orWhereHas('items', fn ($itemQuery) => $itemQuery->where('influencer_id', $user->influencer->id));
+                    ->orWhereHas('items', fn($itemQuery) => $itemQuery->where('influencer_id', $user->influencer->id));
             })
                 ->with(['buyer.brand', 'items.package', 'items.influencer.user'])
-                ->when($search !== '', fn ($q) => $q->where('order_number', 'like', "%{$search}%"))
-                ->when($status !== 'all', fn ($q) => $q->where('status', $status))
+                ->when($search !== '', fn($q) => $q->where('order_number', 'like', "%{$search}%"))
+                ->when($status !== 'all', fn($q) => $q->where('status', $status))
                 ->orderByDesc('created_at')
                 ->paginate(15);
 
@@ -79,14 +81,26 @@ class OrderController extends Controller
             'items:id,order_id,influencer_id,package_id,title,description,quantity,unit_price,line_total,status,due_date,paid_at,accepted_at,delivered_at,created_at,updated_at',
             'items.influencer:id,user_id,display_name',
             'items.influencer.user:id,name,slug',
+            'items.deliverables:id,order_item_id,sub_order_id,uploaded_by_user_id,deliverable_type,file_path,external_url,notes,status,created_at',
+            'items.deliverables.uploadedBy:id,name',
             'items.brandToInfluencerReview:id,order_item_id,influencer_id,brand_id,reviewer_type,reviewee_type,rating,title,comment,created_at',
             'items.influencerToBrandReview:id,order_item_id,influencer_id,brand_id,reviewer_type,reviewee_type,rating,title,comment,created_at',
             'childOrders:id,parent_order_id,buyer_user_id,brand_id,status,accepted_for_influencer_id,subtotal,service_fee,tax_amount,total_amount,currency,placed_at,created_at',
             'childOrders.items:id,order_id,influencer_id,package_id,title,description,quantity,unit_price,line_total,status,due_date,paid_at,accepted_at,delivered_at,created_at,updated_at',
             'childOrders.items.influencer:id,user_id,display_name',
             'childOrders.items.influencer.user:id,name,slug',
+            'childOrders.items.deliverables:id,order_item_id,sub_order_id,uploaded_by_user_id,deliverable_type,file_path,external_url,notes,status,created_at',
+            'childOrders.items.deliverables.uploadedBy:id,name',
             'childOrders.items.brandToInfluencerReview:id,order_item_id,influencer_id,brand_id,reviewer_type,reviewee_type,rating,title,comment,created_at',
             'childOrders.items.influencerToBrandReview:id,order_item_id,influencer_id,brand_id,reviewer_type,reviewee_type,rating,title,comment,created_at',
+            'subOrders:id,order_id,campaign_influencer_id,influencer_id,status,amount,currency,accepted_at,completed_at,paid_at,created_at',
+            'subOrders.order:id,campaign_id',
+            'subOrders.order.campaign:id,title,description',
+            'subOrders.influencer:id,user_id,display_name',
+            'subOrders.influencer.user:id,name,slug',
+            'subOrders.deliverables:id,order_item_id,sub_order_id,uploaded_by_user_id,deliverable_type,file_path,external_url,notes,status,created_at',
+            'subOrders.deliverables.uploadedBy:id,name',
+            'subOrders.review:id,sub_order_id,influencer_id,brand_id,reviewer_type,reviewee_type,rating,title,comment,created_at',
             'parentOrder:id,order_number,parent_order_id,buyer_user_id,brand_id,status,accepted_for_influencer_id,subtotal,service_fee,tax_amount,total_amount,currency,placed_at,created_at',
             'parentOrder.buyer:id,name,email',
             'acceptedForInfluencer:id,user_id,display_name',
@@ -96,13 +110,13 @@ class OrderController extends Controller
             'conversations.influencer.user:id,name,slug',
             'conversations.brandUser:id,name',
             'conversations.handledBy:id,name',
-            'conversations.messages:id,conversation_id,sender_user_id,message,created_at',
+            'conversations.messages:id,conversation_id,sender_user_id,message,created_at'
         ]);
 
         // Parent package orders keep items in child orders; flatten for page rendering.
         if ($order->items->isEmpty() && $order->childOrders->isNotEmpty()) {
             $flattenedItems = $order->childOrders
-                ->flatMap(fn ($childOrder) => $childOrder->items)
+                ->flatMap(fn($childOrder) => $childOrder->items)
                 ->values();
 
             $order->setRelation('items', $flattenedItems);
@@ -112,36 +126,36 @@ class OrderController extends Controller
         $timeline->push([
             'label' => 'Order placed',
             'value' => $order->placed_at?->format('M d g:iA') ?? 'Pending',
-            'state' => 'done',
+            'state' => 'done'
         ]);
 
         $timeline->push([
             'label' => $order->parent_order_id ? 'Child order created' : 'Parent order created',
             'value' => $order->created_at?->format('M d g:iA') ?? 'Pending',
-            'state' => $order->created_at ? 'done' : 'pending',
+            'state' => $order->created_at ? 'done' : 'pending'
         ]);
 
         $timeline->push([
             'label' => 'Accepted',
             'value' => $order->accepted_at?->format('M d g:iA') ?? 'Waiting',
-            'state' => $order->accepted_at ? 'done' : 'pending',
+            'state' => $order->accepted_at ? 'done' : 'pending'
         ]);
 
         $timeline->push([
             'label' => 'Completed',
             'value' => $order->completed_at?->format('M d g:iA') ?? 'Not completed',
-            'state' => $order->completed_at ? 'done' : 'pending',
+            'state' => $order->completed_at ? 'done' : 'pending'
         ]);
 
         $orderContext = [
-            'is_parent' => $order->parent_order_id === null,
-            'parent_order' => $order->parentOrder,
-            'child_orders_count' => $order->childOrders->count(),
-            'conversations' => $order->conversations->sortByDesc('updated_at')->values(),
+            'is_parent'                  => $order->parent_order_id === null,
+            'parent_order'               => $order->parentOrder,
+            'child_orders_count'         => $order->childOrders->count(),
+            'conversations'              => $order->conversations->sortByDesc('updated_at')->values(),
             'conversation_by_influencer' => $order->conversations
                 ->sortByDesc('updated_at')
                 ->groupBy('influencer_id')
-                ->map(fn ($list) => $list->first()),
+                ->map(fn($list) => $list->first())
         ];
 
         $influencerIds = $order->items
@@ -173,33 +187,33 @@ class OrderController extends Controller
             ->orderByDesc('created_at')
             ->get()
             ->groupBy('influencer_id')
-            ->map(fn ($reviews) => $reviews->take(3));
+            ->map(fn($reviews) => $reviews->take(3));
 
         $orderInfluencers = $order->items
             ->groupBy('influencer_id')
             ->map(function ($items, $influencerId) use ($influencers, $ratingSummary, $recentPublicReviews) {
                 $influencer = $influencers->get($influencerId);
-                $summary = $ratingSummary->get($influencerId);
+                $summary    = $ratingSummary->get($influencerId);
 
                 return [
-                    'influencer' => $influencer,
-                    'has_order_review' => $items->contains(fn ($item) => $item->influencerToBrandReview !== null),
-                    'avg_rating' => $summary && $summary->avg_rating !== null ? round((float) $summary->avg_rating, 1) : null,
-                    'reviews_count' => (int) ($summary->reviews_count ?? 0),
-                    'recent_reviews' => $recentPublicReviews->get($influencerId, collect()),
+                    'influencer'       => $influencer,
+                    'has_order_review' => $items->contains(fn($item) => $item->influencerToBrandReview !== null),
+                    'avg_rating'       => $summary && $summary->avg_rating !== null ? round((float) $summary->avg_rating, 1) : null,
+                    'reviews_count'    => (int) ($summary->reviews_count ?? 0),
+                    'recent_reviews'   => $recentPublicReviews->get($influencerId, collect())
                 ];
             })
-            ->filter(fn ($entry) => $entry['influencer'] !== null)
+            ->filter(fn($entry) => $entry['influencer'] !== null)
             ->values();
 
         $hasSubmittedReview = false;
         if ($user->user_type === 'influencer' && $user->influencer) {
             $hasSubmittedReview = $order->items
                 ->where('influencer_id', $user->influencer->id)
-                ->contains(fn ($item) => $item->influencerToBrandReview !== null);
+                ->contains(fn($item) => $item->influencerToBrandReview !== null);
         }
 
-        $canLeaveReview = $user->user_type === 'influencer' && $this->isReviewUnlocked($order) && ! $hasSubmittedReview;
+        $canLeaveReview = $user->user_type === 'influencer' && $this->isReviewUnlocked($order) && !$hasSubmittedReview;
 
         return view('frontend.orders.show', compact('order', 'orderInfluencers', 'canLeaveReview', 'hasSubmittedReview', 'timeline', 'orderContext'));
     }
@@ -211,18 +225,18 @@ class OrderController extends Controller
     {
         $user = Auth::user();
 
-        if ($user->user_type !== 'influencer' || ! $user->influencer) {
+        if ($user->user_type !== 'influencer' || !$user->influencer) {
             abort(403, 'Unauthorized');
         }
 
-        if (! $this->isReviewUnlocked($order)) {
+        if (!$this->isReviewUnlocked($order)) {
             return back()->with('error', 'You can only review the brand after the order is completed.');
         }
 
         $validated = $request->validate([
-            'rating' => ['required', 'integer', 'min:1', 'max:5'],
-            'title' => ['nullable', 'string', 'max:120'],
-            'comment' => ['nullable', 'string', 'max:1200'],
+            'rating'  => ['required', 'integer', 'min:1', 'max:5'],
+            'title'   => ['nullable', 'string', 'max:120'],
+            'comment' => ['nullable', 'string', 'max:1200']
         ]);
 
         $orderItems = $order->items()
@@ -235,7 +249,7 @@ class OrderController extends Controller
             return back()->with('error', 'No items were assigned to your influencer account for this order.');
         }
 
-        if ($orderItems->contains(fn ($item) => $item->influencerToBrandReview !== null)) {
+        if ($orderItems->contains(fn($item) => $item->influencerToBrandReview !== null)) {
             return back()->with('error', 'You have already reviewed this brand for this order.');
         }
 
@@ -243,14 +257,14 @@ class OrderController extends Controller
 
         Review::create([
             'order_item_id' => $reviewableItem->id,
-            'brand_id' => (int) $order->brand_id,
+            'brand_id'      => (int) $order->brand_id,
             'influencer_id' => (int) $user->influencer->id,
             'reviewer_type' => 'influencer',
             'reviewee_type' => 'brand',
-            'rating' => (int) $validated['rating'],
-            'title' => $validated['title'] ?? null,
-            'comment' => $validated['comment'] ?? null,
-            'is_public' => true,
+            'rating'        => (int) $validated['rating'],
+            'title'         => $validated['title'] ?? null,
+            'comment'       => $validated['comment'] ?? null,
+            'is_public'     => true
         ]);
 
         return back()->with('success', 'Review submitted successfully.');
@@ -267,7 +281,7 @@ class OrderController extends Controller
             abort(403, 'Unauthorized');
         }
 
-        if (! $order->isParentOrder()) {
+        if (!$order->isParentOrder()) {
             return back()->with('error', 'Only the parent checkout can be completed here.');
         }
 
@@ -277,13 +291,13 @@ class OrderController extends Controller
             return in_array($item->status, ['approved', 'completed'], true);
         });
 
-        if (! $readyToComplete) {
+        if (!$readyToComplete) {
             return back()->with('error', 'All child items must be approved before completing the order.');
         }
 
         $this->applyOrderStatus($order, 'completed', [
-            'status' => 'completed',
-            'completed_at' => now(),
+            'status'       => 'completed',
+            'completed_at' => now()
         ], 'Brand completed parent order after all tasks approved');
 
         return back()->with('success', 'Order completed successfully.');
@@ -306,17 +320,17 @@ class OrderController extends Controller
         }
 
         $influencerId = $user->influencer?->id;
-        if (! $influencerId || (int) $item->influencer_id !== (int) $influencerId) {
+        if (!$influencerId || (int) $item->influencer_id !== (int) $influencerId) {
             abort(403, 'Unauthorized');
         }
 
         $validated = $request->validate([
-            'status' => 'required|in:pending,accepted,in_progress,delivered',
+            'status' => 'required|in:pending,accepted,in_progress,delivered'
         ]);
 
         $newStatus = (string) $validated['status'];
 
-        if (! $this->canTransitionPackageItemStatus($item->status, $newStatus)) {
+        if (!$this->canTransitionPackageItemStatus($item->status, $newStatus)) {
             return back()->with('error', 'Invalid task status transition.');
         }
 
@@ -342,7 +356,7 @@ class OrderController extends Controller
     /**
      * Brand approves or rejects an influencer-delivered item from a parent checkout.
      */
-    public function updateBrandItemDecision(Order $order, OrderItem $item, Request $request): RedirectResponse
+    public function updateBrandItemDecision(Order $order, $item, Request $request): RedirectResponse
     {
         $user = Auth::user();
 
@@ -350,42 +364,68 @@ class OrderController extends Controller
             abort(403, 'Unauthorized');
         }
 
-        if (! $order->isParentOrder()) {
-            return back()->with('error', 'Use the parent checkout to review item decisions.');
+        // Resolve the item - try SubOrder first, then OrderItem
+        $itemId = is_numeric($item) ? (int) $item : (int) $item->id;
+
+        $subOrder  = SubOrder::where('id', $itemId)->where('order_id', $order->id)->first();
+        $orderItem = null;
+
+        if (!$subOrder) {
+            $orderItem = OrderItem::where('id', $itemId)->first();
+            if (!$orderItem) {
+                abort(404);
+            }
+            $item       = $orderItem;
+            $isSubOrder = false;
+        } else {
+            $item       = $subOrder;
+            $isSubOrder = true;
         }
 
-        $allowedOrderIds = $order->childOrders()->pluck('id')->push($order->id)->all();
-        if (! in_array((int) $item->order_id, $allowedOrderIds, true)) {
-            abort(404);
+        // For OrderItem (package orders), verify more strictly
+        if (!$isSubOrder) {
+            if (!$order->isParentOrder()) {
+                return back()->with('error', 'Use the parent checkout to review item decisions.');
+            }
+
+            $allowedOrderIds = $order->childOrders()->pluck('id')->push($order->id)->all();
+            if (!in_array((int) $item->order_id, $allowedOrderIds, true)) {
+                abort(404);
+            }
         }
 
         $validated = $request->validate([
-            'status' => 'required|in:approved,rejected',
+            'status' => 'required|in:approved,rejected'
         ]);
 
         $decision = (string) $validated['status'];
 
-        if (! $this->canTransitionPackageItemStatus($item->status, $decision)) {
+        // Check if status transition is valid
+        if (!$this->canTransitionPackageItemStatus($item->status, $decision)) {
             return back()->with('error', 'Invalid review decision transition.');
         }
 
         $updates = [
-            'status' => $decision,
-            'approved_at' => $decision === 'approved' ? now() : null,
+            'status'      => $decision,
+            'approved_at' => $decision === 'approved' ? now() : null
         ];
 
         $item->update($updates);
 
-        $childOrder = $item->order;
-        if ($childOrder) {
-            $this->syncOrderStatusFromItems($childOrder);
+        // Only sync child order status for OrderItem
+        if (!$isSubOrder) {
+            $childOrder = $item->order;
+            if ($childOrder) {
+                $this->syncOrderStatusFromItems($childOrder);
+            }
         }
 
+        // Sync parent order status
         $this->syncOrderStatusFromItems($order);
 
         $successMessage = $decision === 'approved'
-            ? 'Task approved successfully. You can now submit a review.'
-            : 'Task rejected. The influencer has been notified and can resubmit their work.';
+        ? 'Work approved successfully. You can now submit a review.'
+        : 'Work rejected. The influencer has been notified and can resubmit their work.';
 
         return back()->with('success', $successMessage);
     }
@@ -393,7 +433,7 @@ class OrderController extends Controller
     /**
      * Brand leaves a review for an influencer for a specific approved task.
      */
-    public function storeBrandTaskReview(Order $order, OrderItem $item, Request $request): RedirectResponse
+    public function storeBrandTaskReview(Order $order, $item, Request $request): RedirectResponse
     {
         $user = Auth::user();
 
@@ -401,47 +441,127 @@ class OrderController extends Controller
             abort(403, 'Unauthorized');
         }
 
-        if (! $order->isParentOrder()) {
-            return back()->with('error', 'Use the parent checkout to submit task reviews.');
+        // Resolve the item - try SubOrder first, then OrderItem
+        $itemId = is_numeric($item) ? (int) $item : (int) $item->id;
+
+        $subOrder  = SubOrder::where('id', $itemId)->where('order_id', $order->id)->first();
+        $orderItem = null;
+
+        if (!$subOrder) {
+            $orderItem = OrderItem::where('id', $itemId)->first();
+            if (!$orderItem) {
+                abort(404);
+            }
+            $item       = $orderItem;
+            $isSubOrder = false;
+        } else {
+            $item       = $subOrder;
+            $isSubOrder = true;
         }
 
-        $allowedOrderIds = $order->childOrders()->pluck('id')->push($order->id)->all();
-        if (! in_array((int) $item->order_id, $allowedOrderIds, true)) {
-            abort(404);
+        // For OrderItem (package orders), verify more strictly
+        if (!$isSubOrder) {
+            if (!$order->isParentOrder()) {
+                return back()->with('error', 'Use the parent checkout to submit task reviews.');
+            }
+
+            $allowedOrderIds = $order->childOrders()->pluck('id')->push($order->id)->all();
+            if (!in_array((int) $item->order_id, $allowedOrderIds, true)) {
+                abort(404);
+            }
+
+            // Check if already reviewed (only for OrderItem)
+            if ($item->brandToInfluencerReview()->exists()) {
+                return back()->with('error', 'This task already has a review.');
+            }
         }
 
-        if (! in_array((string) $item->status, ['approved', 'completed'], true)) {
-            return back()->with('error', 'Only approved tasks can be reviewed.');
-        }
-
-        if ($item->brandToInfluencerReview()->exists()) {
-            return back()->with('error', 'This task already has a review.');
+        if (!in_array((string) $item->status, ['approved', 'completed'], true)) {
+            return back()->with('error', 'Only approved work can be reviewed.');
         }
 
         $validated = $request->validate([
-            'rating' => ['required', 'integer', 'min:1', 'max:5'],
-            'title' => ['nullable', 'string', 'max:120'],
-            'comment' => ['nullable', 'string', 'max:1200'],
+            'rating'  => ['required', 'integer', 'min:1', 'max:5'],
+            'title'   => ['nullable', 'string', 'max:120'],
+            'comment' => ['nullable', 'string', 'max:1200']
         ]);
 
+        // Create review record
         Review::create([
-            'order_item_id' => (int) $item->id,
-            'brand_id' => (int) $order->brand_id,
+            'order_item_id' => !$isSubOrder ? (int) $item->id : null,
+            'sub_order_id'  => $isSubOrder ? (int) $item->id : null,
+            'brand_id'      => (int) $order->brand_id,
             'influencer_id' => (int) $item->influencer_id,
             'reviewer_type' => 'brand',
             'reviewee_type' => 'influencer',
-            'rating' => (int) $validated['rating'],
-            'title' => $validated['title'] ?? null,
-            'comment' => $validated['comment'] ?? null,
-            'is_public' => true,
+            'rating'        => (int) $validated['rating'],
+            'title'         => $validated['title'] ?? null,
+            'comment'       => $validated['comment'] ?? null,
+            'is_public'     => true
         ]);
 
-        return back()->with('success', 'Task review submitted successfully.');
+        // Mark as completed
+        $item->update(['status' => 'completed']);
+
+        return back()->with('success', 'Review submitted successfully.');
+    }
+
+    /**
+     * Submit deliverables for an order item
+     */
+    public function submitDeliverable(Order $order, OrderItem $item, Request $request): RedirectResponse
+    {
+        $user = Auth::user();
+
+        // Only influencers can submit deliverables
+        if ($user->user_type !== 'influencer') {
+            abort(403, 'Only influencers can submit deliverables.');
+        }
+
+        // Verify the influencer owns this item
+        if ($item->influencer_id !== $user->influencer?->id) {
+            abort(403, 'Unauthorized');
+        }
+
+        // Verify the item is in the order
+        $allowedOrderIds = $order->childOrders()->pluck('id')->push($order->id)->all();
+        if (!in_array((int) $item->order_id, $allowedOrderIds, true)) {
+            abort(404);
+        }
+
+        $validated = $request->validate([
+            'deliverable_type' => 'required|in:image,video,document,link,other',
+            'file_path'        => 'nullable|file|max:50000',
+            'external_url'     => 'nullable|url|max:500',
+            'notes'            => 'nullable|string|max:1000'
+        ]);
+
+        // Either file or URL must be provided
+        if (!$validated['file_path'] && !$validated['external_url']) {
+            return back()->with('error', 'Please provide either a file upload or a URL.');
+        }
+
+        $filePath = null;
+        if ($validated['file_path']) {
+            $filePath = $validated['file_path']->store('deliverables', 'public');
+        }
+
+        OrderDeliverable::create([
+            'order_item_id'       => (int) $item->id,
+            'uploaded_by_user_id' => (int) $user->id,
+            'deliverable_type'    => $validated['deliverable_type'],
+            'file_path'           => $filePath,
+            'external_url'        => $validated['external_url'] ?? null,
+            'notes'               => $validated['notes'] ?? null,
+            'status'              => 'submitted'
+        ]);
+
+        return back()->with('success', 'Deliverable submitted successfully.');
     }
 
     private function authorizeOrderAccess(Order $order, mixed $user): void
     {
-        if (! in_array($user->user_type, ['brand', 'influencer'])) {
+        if (!in_array($user->user_type, ['brand', 'influencer'])) {
             abort(403, 'Unauthorized');
         }
 
@@ -451,9 +571,9 @@ class OrderController extends Controller
 
         if ($user->user_type === 'influencer') {
             $assignedToInfluencer = $order->accepted_for_influencer_id === $user->influencer->id;
-            $legacyHasItems = $order->items()->where('influencer_id', $user->influencer->id)->exists();
+            $legacyHasItems       = $order->items()->where('influencer_id', $user->influencer->id)->exists();
 
-            if (! $assignedToInfluencer && ! $legacyHasItems) {
+            if (!$assignedToInfluencer && !$legacyHasItems) {
                 abort(403, 'Unauthorized');
             }
         }
@@ -481,47 +601,47 @@ class OrderController extends Controller
             return;
         }
 
-        if ($statuses->every(fn ($status) => $status === 'pending')) {
+        if ($statuses->every(fn($status) => $status === 'pending')) {
             $this->applyOrderStatus($order, 'pending', [
-                'status' => 'pending',
-                'accepted_at' => null,
-                'completed_at' => null,
+                'status'       => 'pending',
+                'accepted_at'  => null,
+                'completed_at' => null
             ], 'Synced from task statuses');
 
             return;
         }
 
-        if ($statuses->every(fn ($status) => $status === 'accepted')) {
+        if ($statuses->every(fn($status) => $status === 'accepted')) {
             $this->applyOrderStatus($order, 'accepted', [
-                'status' => 'accepted',
-                'accepted_at' => $order->accepted_at ?? now(),
-                'completed_at' => null,
+                'status'       => 'accepted',
+                'accepted_at'  => $order->accepted_at ?? now(),
+                'completed_at' => null
             ], 'Synced from task statuses');
 
             return;
         }
 
-        if ($statuses->every(fn ($status) => in_array($status, ['approved', 'completed'], true))) {
+        if ($statuses->every(fn($status) => in_array($status, ['approved', 'completed'], true))) {
             $this->applyOrderStatus($order, 'delivered', [
-                'status' => 'delivered',
-                'completed_at' => null,
+                'status'       => 'delivered',
+                'completed_at' => null
             ], 'Synced from task statuses');
 
             return;
         }
 
-        if ($statuses->every(fn ($status) => in_array($status, ['delivered', 'approved', 'completed'], true))) {
+        if ($statuses->every(fn($status) => in_array($status, ['delivered', 'approved', 'completed'], true))) {
             $this->applyOrderStatus($order, 'delivered', [
-                'status' => 'delivered',
-                'completed_at' => null,
+                'status'       => 'delivered',
+                'completed_at' => null
             ], 'Synced from task statuses');
 
             return;
         }
 
         $this->applyOrderStatus($order, 'in_progress', [
-            'status' => 'in_progress',
-            'completed_at' => null,
+            'status'       => 'in_progress',
+            'completed_at' => null
         ], 'Synced from task statuses');
     }
 
@@ -532,14 +652,14 @@ class OrderController extends Controller
         }
 
         $allowed = [
-            'pending' => ['accepted', 'cancelled'],
-            'accepted' => ['in_progress', 'cancelled'],
+            'pending'     => ['accepted', 'cancelled'],
+            'accepted'    => ['in_progress', 'cancelled'],
             'in_progress' => ['delivered', 'cancelled'],
-            'delivered' => ['approved', 'rejected'],
-            'rejected' => ['delivered', 'cancelled'],
-            'approved' => ['completed'],
-            'completed' => [],
-            'cancelled' => [],
+            'delivered'   => ['approved', 'rejected'],
+            'rejected'    => ['delivered', 'cancelled'],
+            'approved'    => ['completed'],
+            'completed'   => [],
+            'cancelled'   => []
         ];
 
         return in_array($to, $allowed[$from] ?? [], true);
@@ -552,11 +672,11 @@ class OrderController extends Controller
 
         if ($oldStatus !== $newStatus) {
             OrderStatusHistory::create([
-                'order_id' => $order->id,
-                'old_status' => $oldStatus,
-                'new_status' => $newStatus,
+                'order_id'           => $order->id,
+                'old_status'         => $oldStatus,
+                'new_status'         => $newStatus,
                 'changed_by_user_id' => Auth::id(),
-                'note' => $note,
+                'note'               => $note
             ]);
         }
     }
@@ -576,4 +696,8 @@ class OrderController extends Controller
 
         return $items;
     }
+
+    /**
+     * Update campaign order status (approve/reject)
+     */
 }
