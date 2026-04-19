@@ -25,46 +25,40 @@
 @endphp
 
 <div x-data="{
-	    countryDropdownOpen: false,
-	    selectedCountryCodes: {{ json_encode($selectedCountryCodes) }},
-	    countryOptions: {{ json_encode(collect($countryOptions)->map(fn($c) => ['code' => $c['code'], 'name' => $c['name']])->values()) }},
-	    isCountrySelected(code) {
-	        return this.selectedCountryCodes.includes(code.toUpperCase());
-	    },
-	    toggleCountry(code) {
-	        const upperCode = code.toUpperCase();
-	        if (this.isCountrySelected(upperCode)) {
-	            this.selectedCountryCodes = this.selectedCountryCodes.filter(c => c !== upperCode);
-	        } else {
-	            this.selectedCountryCodes = [...this.selectedCountryCodes, upperCode];
+			<div>
+				<x-form.date-picker
+					id="start_date"
+					name="start_date"
+					label="Start Date"
+					placeholder="Select start date"
+					:default-date="old('start_date', $campaign?->start_date?->format('Y-m-d'))"
+				/>
 	        }
 	    },
 	    getCountryName(code) {
 	        const option = this.countryOptions.find(c => c.code.toUpperCase() === code.toUpperCase());
 	        return option ? option.name : code;
-	    }
-	}" class="grid grid-cols-1 gap-6 lg:grid-cols-3">
-	<div class="space-y-5 lg:col-span-2">
-		@if (($canSelectBrand ?? false) === true)
 			<div>
-				<label for="brand_id" class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
-					Creating For <span class="text-red-500">*</span>
-				</label>
-				<select id="brand_id" name="brand_id" required
-					class="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-3 text-sm text-gray-900 focus:border-gray-500 focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-white">
-					<option value="">Select a brand</option>
-					@foreach (($brandOptions ?? collect()) as $brandOption)
+				<x-form.date-picker
+					id="end_date"
+					name="end_date"
+					label="End Date"
+					placeholder="Select end date"
+					:default-date="old('end_date', $campaign?->end_date?->format('Y-m-d'))"
+				/>
 						<option value="{{ $brandOption['id'] }}" {{ $selectedBrandId === (int) $brandOption['id'] ? 'selected' : '' }}>
 							{{ $brandOption['name'] }}
 						</option>
 					@endforeach
 				</select>
-				@error('brand_id')
-					<p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
-				@enderror
-			</div>
-		@else
-			<input type="hidden" name="brand_id" value="{{ $selectedBrandId > 0 ? $selectedBrandId : (int) ($defaultBrandId ?? 0) }}">
+			<div class="rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 dark:border-gray-800 dark:bg-gray-900">
+				<label class="flex min-h-11 cursor-pointer items-center justify-between gap-3">
+					<span class="text-sm font-medium text-gray-700 dark:text-gray-300">Active Status</span>
+					<span class="flex h-11 items-center">
+						<input type="checkbox" name="is_active" value="1" {{ old('is_active', isset($campaign) ? $campaign->is_active : true) ? 'checked' : '' }}
+							class="h-4 w-4 rounded border-gray-300 text-gray-900 focus:ring-gray-500 dark:border-gray-600 dark:bg-gray-800">
+					</span>
+				</label>
 		@endif
 
 		<div>
@@ -172,34 +166,26 @@
 			</div>
 
 			<div>
-				<label for="start_date" class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Start Date</label>
-				<div class="relative">
-					<input id="start_date" name="start_date" type="date"
-						value="{{ old('start_date', $campaign?->start_date?->format('Y-m-d')) }}"
-						class="flatpickr h-11 w-full rounded-lg border border-gray-300 bg-transparent px-3 pl-10 text-sm text-gray-900 focus:border-gray-500 focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-white">
-					<span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
-						<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" fill="none" class="size-5">
-							<path fill-rule="evenodd" clip-rule="evenodd" d="M8 2C8.41421 2 8.75 2.33579 8.75 2.75V3.75H15.25V2.75C15.25 2.33579 15.5858 2 16 2C16.4142 2 16.75 2.33579 16.75 2.75V3.75H18.5C19.7426 3.75 20.75 4.75736 20.75 6V9V19C20.75 20.2426 19.7426 21.25 18.5 21.25H5.5C4.25736 21.25 3.25 20.2426 3.25 19V9V6C3.25 4.75736 4.25736 3.75 5.5 3.75H7.25V2.75C7.25 2.33579 7.58579 2 8 2ZM8 5.25H5.5C5.08579 5.25 4.75 5.58579 4.75 6V8.25H19.25V6C19.25 5.58579 18.9142 5.25 18.5 5.25H16H8ZM19.25 9.75H4.75V19C4.75 19.4142 5.08579 19.75 5.5 19.75H18.5C18.9142 19.75 19.25 19.4142 19.25 19V9.75Z" fill="currentColor"></path>
-						</svg>
-					</span>
-				</div>
+				<x-form.date-picker
+					id="start_date"
+					name="start_date"
+					label="Start Date"
+					placeholder="Select start date"
+					:default-date="old('start_date', $campaign?->start_date?->format('Y-m-d'))"
+				/>
 				@error('start_date')
 					<p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
 				@enderror
 			</div>
 
 			<div>
-				<label for="end_date" class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">End Date</label>
-				<div class="relative">
-					<input id="end_date" name="end_date" type="date"
-						value="{{ old('end_date', $campaign?->end_date?->format('Y-m-d')) }}"
-						class="flatpickr h-11 w-full rounded-lg border border-gray-300 bg-transparent px-3 pl-10 text-sm text-gray-900 focus:border-gray-500 focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-white">
-					<span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
-						<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" fill="none" class="size-5">
-							<path fill-rule="evenodd" clip-rule="evenodd" d="M8 2C8.41421 2 8.75 2.33579 8.75 2.75V3.75H15.25V2.75C15.25 2.33579 15.5858 2 16 2C16.4142 2 16.75 2.33579 16.75 2.75V3.75H18.5C19.7426 3.75 20.75 4.75736 20.75 6V9V19C20.75 20.2426 19.7426 21.25 18.5 21.25H5.5C4.25736 21.25 3.25 20.2426 3.25 19V9V6C3.25 4.75736 4.25736 3.75 5.5 3.75H7.25V2.75C7.25 2.33579 7.58579 2 8 2ZM8 5.25H5.5C5.08579 5.25 4.75 5.58579 4.75 6V8.25H19.25V6C19.25 5.58579 18.9142 5.25 18.5 5.25H16H8ZM19.25 9.75H4.75V19C4.75 19.4142 5.08579 19.75 5.5 19.75H18.5C18.9142 19.75 19.25 19.4142 19.25 19V9.75Z" fill="currentColor"></path>
-						</svg>
-					</span>
-				</div>
+				<x-form.date-picker
+					id="end_date"
+					name="end_date"
+					label="End Date"
+					placeholder="Select end date"
+					:default-date="old('end_date', $campaign?->end_date?->format('Y-m-d'))"
+				/>
 				@error('end_date')
 					<p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
 				@enderror
@@ -255,7 +241,7 @@
 				Target Countries <span class="text-gray-400 font-normal text-sm">(optional)</span>
 			</label>
 			<div @click="countryDropdownOpen = !countryDropdownOpen"
-				class="flex min-h-[46px] w-full cursor-pointer flex-wrap gap-2 rounded-lg border border-gray-300 bg-transparent px-4 py-2 text-sm text-gray-800 shadow-theme-xs transition focus-within:border-pink-50 focus-within:ring-1 focus-within:ring-gray-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
+				class="flex min-h-11.5 w-full cursor-pointer flex-wrap gap-2 rounded-lg border border-gray-300 bg-transparent px-4 py-2 text-sm text-gray-800 shadow-theme-xs transition focus-within:border-pink-50 focus-within:ring-1 focus-within:ring-gray-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
 				<template x-if="selectedCountryCodes.length === 0">
 					<span class="py-1 text-sm text-gray-400">Select countries...</span>
 				</template>
@@ -366,11 +352,13 @@
 
 		<div class="rounded-lg border border-gray-200 bg-white px-3 py-3 dark:border-gray-700 dark:bg-gray-900">
 			<input type="hidden" name="is_active" value="0">
-			<label for="is_active" class="flex cursor-pointer items-center justify-between gap-3">
+			<label for="is_active" class="flex min-h-11 cursor-pointer items-center justify-between gap-3">
 				<span class="text-sm font-medium text-gray-700 dark:text-gray-300">Active Status</span>
-				<input id="is_active" name="is_active" type="checkbox" value="1"
-					{{ old('is_active', $campaign?->is_active ?? true) ? 'checked' : '' }}
-					class="h-4 w-4 rounded border-gray-300 text-gray-900 focus:ring-gray-500 dark:border-gray-600 dark:bg-gray-800">
+				<span class="flex h-11 items-center">
+					<input id="is_active" name="is_active" type="checkbox" value="1"
+						{{ old('is_active', $campaign?->is_active ?? true) ? 'checked' : '' }}
+						class="h-4 w-4 rounded border-gray-300 text-gray-900 focus:ring-gray-500 dark:border-gray-600 dark:bg-gray-800">
+				</span>
 			</label>
 			@error('is_active')
 				<p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>

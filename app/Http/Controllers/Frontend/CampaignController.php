@@ -93,8 +93,6 @@ class CampaignController extends Controller
         $campaignOrders = \App\Models\Order::where('campaign_id', $campaign->id)
             ->with([
                 'subOrders' => fn($q) => $q->select('id', 'order_id', 'campaign_influencer_id', 'influencer_id', 'status', 'amount', 'currency', 'accepted_at', 'completed_at', 'paid_at', 'created_at', 'updated_at'),
-                'subOrders.deliverables:id,sub_order_id,uploaded_by_user_id,deliverable_type,file_path,external_url,notes,status,created_at',
-                'subOrders.deliverables.uploadedBy:id,name'
             ])
             ->get();
 
@@ -111,10 +109,10 @@ class CampaignController extends Controller
 
         $progressConfig = [
             'pending'     => ['label' => 'Order Pending', 'percent' => 15],
-            'accepted'    => ['label' => 'Accepted', 'percent' => 35],
-            'in_progress' => ['label' => 'In Progress', 'percent' => 60],
-            'on_review'   => ['label' => 'On Review', 'percent' => 80],
-            'completed'   => ['label' => 'Completed', 'percent' => 100],
+            'in_progress' => ['label' => 'In Progress', 'percent' => 50],
+            'delivered'   => ['label' => 'Delivered', 'percent' => 75],
+            'approved'    => ['label' => 'Approved', 'percent' => 100],
+            'rejected'    => ['label' => 'Rejected', 'percent' => 60],
             'cancelled'   => ['label' => 'Cancelled', 'percent' => 0]
         ];
 
@@ -126,7 +124,13 @@ class CampaignController extends Controller
                 $assignment = $assignmentByInfluencer->get($application->influencer_id);
 
                 // Sub-order is the canonical work record for campaign fulfillment.
-                $statusKey = (string) ($subOrder?->status ?? 'pending');
+                $rawStatus = (string) ($subOrder?->status ?? 'pending');
+                $statusKey = match ($rawStatus) {
+                    'accepted' => 'in_progress',
+                    'on_review' => 'delivered',
+                    'completed' => 'approved',
+                    default => $rawStatus,
+                };
 
                 $status = $progressConfig[$statusKey] ?? $progressConfig['pending'];
 

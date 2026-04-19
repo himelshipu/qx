@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Frontend;
 use App\Http\Controllers\Controller;
 use App\Models\Influencer;
 use App\Models\Order;
-use App\Models\OrderDeliverable;
 use App\Models\OrderItem;
 use App\Models\OrderStatusHistory;
 use App\Models\Review;
@@ -81,16 +80,12 @@ class OrderController extends Controller
             'items:id,order_id,influencer_id,package_id,title,description,quantity,unit_price,line_total,status,due_date,paid_at,accepted_at,delivered_at,created_at,updated_at',
             'items.influencer:id,user_id,display_name',
             'items.influencer.user:id,name,slug',
-            'items.deliverables:id,order_item_id,sub_order_id,uploaded_by_user_id,deliverable_type,file_path,external_url,notes,status,created_at',
-            'items.deliverables.uploadedBy:id,name',
             'items.brandToInfluencerReview:id,order_item_id,influencer_id,brand_id,reviewer_type,reviewee_type,rating,title,comment,created_at',
             'items.influencerToBrandReview:id,order_item_id,influencer_id,brand_id,reviewer_type,reviewee_type,rating,title,comment,created_at',
             'childOrders:id,parent_order_id,buyer_user_id,brand_id,status,accepted_for_influencer_id,subtotal,service_fee,tax_amount,total_amount,currency,placed_at,created_at',
             'childOrders.items:id,order_id,influencer_id,package_id,title,description,quantity,unit_price,line_total,status,due_date,paid_at,accepted_at,delivered_at,created_at,updated_at',
             'childOrders.items.influencer:id,user_id,display_name',
             'childOrders.items.influencer.user:id,name,slug',
-            'childOrders.items.deliverables:id,order_item_id,sub_order_id,uploaded_by_user_id,deliverable_type,file_path,external_url,notes,status,created_at',
-            'childOrders.items.deliverables.uploadedBy:id,name',
             'childOrders.items.brandToInfluencerReview:id,order_item_id,influencer_id,brand_id,reviewer_type,reviewee_type,rating,title,comment,created_at',
             'childOrders.items.influencerToBrandReview:id,order_item_id,influencer_id,brand_id,reviewer_type,reviewee_type,rating,title,comment,created_at',
             'subOrders:id,order_id,campaign_influencer_id,influencer_id,status,amount,currency,accepted_at,completed_at,paid_at,created_at',
@@ -98,8 +93,6 @@ class OrderController extends Controller
             'subOrders.order.campaign:id,title,description',
             'subOrders.influencer:id,user_id,display_name',
             'subOrders.influencer.user:id,name,slug',
-            'subOrders.deliverables:id,order_item_id,sub_order_id,uploaded_by_user_id,deliverable_type,file_path,external_url,notes,status,created_at',
-            'subOrders.deliverables.uploadedBy:id,name',
             'subOrders.review:id,sub_order_id,influencer_id,brand_id,reviewer_type,reviewee_type,rating,title,comment,created_at',
             'parentOrder:id,order_number,parent_order_id,buyer_user_id,brand_id,status,accepted_for_influencer_id,subtotal,service_fee,tax_amount,total_amount,currency,placed_at,created_at',
             'parentOrder.buyer:id,name,email',
@@ -328,14 +321,19 @@ class OrderController extends Controller
             'status' => 'required|in:pending,accepted,in_progress,delivered'
         ]);
 
-        $newStatus = (string) $validated['status'];
+        $newStatus = $this->normalizeTaskStatus((string) $validated['status'], false);
+        $currentStatus = $this->normalizeTaskStatus((string) $item->status, false);
 
-        if (!$this->canTransitionPackageItemStatus($item->status, $newStatus)) {
+        if (!$this->canTransitionTaskStatus($currentStatus, $newStatus)) {
             return back()->with('error', 'Invalid task status transition.');
         }
 
+        if (!$this->canInfluencerSetTaskStatus($newStatus)) {
+            return back()->with('error', 'You can only move work forward to In Progress or Delivered.');
+        }
+
         $updates = ['status' => $newStatus];
-        if ($newStatus === 'accepted' && $item->accepted_at === null) {
+        if ($newStatus === 'in_progress' && $item->accepted_at === null) {
             $updates['accepted_at'] = now();
         }
         if ($newStatus === 'delivered') {
@@ -398,10 +396,11 @@ class OrderController extends Controller
             'status' => 'required|in:approved,rejected'
         ]);
 
-        $decision = (string) $validated['status'];
+        $decision = $this->normalizeTaskStatus((string) $validated['status'], $isSubOrder);
+        $currentStatus = $this->normalizeTaskStatus((string) $item->status, $isSubOrder);
 
         // Check if status transition is valid
-        if (!$this->canTransitionPackageItemStatus($item->status, $decision)) {
+        if (!$this->canTransitionTaskStatus($currentStatus, $decision)) {
             return back()->with('error', 'Invalid review decision transition.');
         }
 
@@ -418,10 +417,14 @@ class OrderController extends Controller
             if ($childOrder) {
                 $this->syncOrderStatusFromItems($childOrder);
             }
+        } else {
+            $this->syncOrderStatusFromSubOrders($order);
         }
 
         // Sync parent order status
-        $this->syncOrderStatusFromItems($order);
+        if (!$isSubOrder) {
+            $this->syncOrderStatusFromItems($order);
+        }
 
         $successMessage = $decision === 'approved'
         ? 'Work approved successfully. You can now submit a review.'
@@ -506,59 +509,6 @@ class OrderController extends Controller
         return back()->with('success', 'Review submitted successfully.');
     }
 
-    /**
-     * Submit deliverables for an order item
-     */
-    public function submitDeliverable(Order $order, OrderItem $item, Request $request): RedirectResponse
-    {
-        $user = Auth::user();
-
-        // Only influencers can submit deliverables
-        if ($user->user_type !== 'influencer') {
-            abort(403, 'Only influencers can submit deliverables.');
-        }
-
-        // Verify the influencer owns this item
-        if ($item->influencer_id !== $user->influencer?->id) {
-            abort(403, 'Unauthorized');
-        }
-
-        // Verify the item is in the order
-        $allowedOrderIds = $order->childOrders()->pluck('id')->push($order->id)->all();
-        if (!in_array((int) $item->order_id, $allowedOrderIds, true)) {
-            abort(404);
-        }
-
-        $validated = $request->validate([
-            'deliverable_type' => 'required|in:image,video,document,link,other',
-            'file_path'        => 'nullable|file|max:50000',
-            'external_url'     => 'nullable|url|max:500',
-            'notes'            => 'nullable|string|max:1000'
-        ]);
-
-        // Either file or URL must be provided
-        if (!$validated['file_path'] && !$validated['external_url']) {
-            return back()->with('error', 'Please provide either a file upload or a URL.');
-        }
-
-        $filePath = null;
-        if ($validated['file_path']) {
-            $filePath = $validated['file_path']->store('deliverables', 'public');
-        }
-
-        OrderDeliverable::create([
-            'order_item_id'       => (int) $item->id,
-            'uploaded_by_user_id' => (int) $user->id,
-            'deliverable_type'    => $validated['deliverable_type'],
-            'file_path'           => $filePath,
-            'external_url'        => $validated['external_url'] ?? null,
-            'notes'               => $validated['notes'] ?? null,
-            'status'              => 'submitted'
-        ]);
-
-        return back()->with('success', 'Deliverable submitted successfully.');
-    }
-
     private function authorizeOrderAccess(Order $order, mixed $user): void
     {
         if (!in_array($user->user_type, ['brand', 'influencer'])) {
@@ -601,7 +551,9 @@ class OrderController extends Controller
             return;
         }
 
-        if ($statuses->every(fn($status) => $status === 'pending')) {
+        $normalized = $statuses->map(fn($status) => $this->normalizeTaskStatus((string) $status, false));
+
+        if ($normalized->every(fn($status) => $status === 'pending')) {
             $this->applyOrderStatus($order, 'pending', [
                 'status'       => 'pending',
                 'accepted_at'  => null,
@@ -611,17 +563,7 @@ class OrderController extends Controller
             return;
         }
 
-        if ($statuses->every(fn($status) => $status === 'accepted')) {
-            $this->applyOrderStatus($order, 'accepted', [
-                'status'       => 'accepted',
-                'accepted_at'  => $order->accepted_at ?? now(),
-                'completed_at' => null
-            ], 'Synced from task statuses');
-
-            return;
-        }
-
-        if ($statuses->every(fn($status) => in_array($status, ['approved', 'completed'], true))) {
+        if ($normalized->every(fn($status) => in_array($status, ['approved', 'completed'], true))) {
             $this->applyOrderStatus($order, 'delivered', [
                 'status'       => 'delivered',
                 'completed_at' => null
@@ -630,7 +572,7 @@ class OrderController extends Controller
             return;
         }
 
-        if ($statuses->every(fn($status) => in_array($status, ['delivered', 'approved', 'completed'], true))) {
+        if ($normalized->every(fn($status) => in_array($status, ['delivered', 'approved', 'completed'], true))) {
             $this->applyOrderStatus($order, 'delivered', [
                 'status'       => 'delivered',
                 'completed_at' => null
@@ -645,18 +587,81 @@ class OrderController extends Controller
         ], 'Synced from task statuses');
     }
 
-    private function canTransitionPackageItemStatus(string $from, string $to): bool
+    private function syncOrderStatusFromSubOrders(Order $order): void
+    {
+        $subOrders = $order->subOrders()->get(['status']);
+
+        if ($subOrders->isEmpty()) {
+            return;
+        }
+
+        $normalized = $subOrders->pluck('status')->map(fn($status) => $this->normalizeTaskStatus((string) $status, true));
+
+        if ($normalized->every(fn($status) => $status === 'pending')) {
+            $this->applyOrderStatus($order, 'pending', [
+                'status'       => 'pending',
+                'accepted_at'  => null,
+                'completed_at' => null,
+            ], 'Synced from campaign task statuses');
+
+            return;
+        }
+
+        if ($normalized->every(fn($status) => in_array($status, ['approved', 'completed'], true))) {
+            $this->applyOrderStatus($order, 'delivered', [
+                'status'       => 'delivered',
+                'completed_at' => null,
+            ], 'Synced from campaign task statuses');
+
+            return;
+        }
+
+        if ($normalized->every(fn($status) => in_array($status, ['delivered', 'approved', 'completed'], true))) {
+            $this->applyOrderStatus($order, 'delivered', [
+                'status'       => 'delivered',
+                'completed_at' => null,
+            ], 'Synced from campaign task statuses');
+
+            return;
+        }
+
+        $this->applyOrderStatus($order, 'in_progress', [
+            'status'       => 'in_progress',
+            'completed_at' => null,
+        ], 'Synced from campaign task statuses');
+    }
+
+    private function normalizeTaskStatus(string $status, bool $isSubOrder): string
+    {
+        $normalized = trim($status);
+
+        if ($normalized === 'accepted') {
+            return 'in_progress';
+        }
+
+        if ($isSubOrder && $normalized === 'on_review') {
+            return 'delivered';
+        }
+
+        return $normalized;
+    }
+
+    private function canInfluencerSetTaskStatus(string $status): bool
+    {
+        return in_array($status, ['in_progress', 'delivered'], true);
+    }
+
+    private function canTransitionTaskStatus(string $from, string $to): bool
     {
         if ($from === $to) {
             return true;
         }
 
         $allowed = [
-            'pending'     => ['accepted', 'cancelled'],
-            'accepted'    => ['in_progress', 'cancelled'],
-            'in_progress' => ['delivered', 'cancelled'],
+            'pending'     => ['in_progress'],
+            'in_progress' => ['delivered'],
             'delivered'   => ['approved', 'rejected'],
-            'rejected'    => ['delivered', 'cancelled'],
+            'rejected'    => ['in_progress'],
             'approved'    => ['completed'],
             'completed'   => [],
             'cancelled'   => []

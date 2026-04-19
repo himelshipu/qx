@@ -40,23 +40,31 @@ class CampaignShowViewModel
     private function workProgressCards(): Collection
     {
         return $this->workProgress->map(function (array $item): array {
-            $statusKey = (string) ($item['status_key'] ?? 'pending');
+            $rawStatusKey = (string) ($item['status_key'] ?? 'pending');
+            $statusKey = match ($rawStatusKey) {
+                'accepted' => 'in_progress',
+                'on_review' => 'delivered',
+                'completed' => 'approved',
+                default => $rawStatusKey,
+            };
+
+            $item['status_key'] = $statusKey;
 
             $item['progress_bar_class'] = match ($statusKey) {
-                'completed' => 'bg-emerald-500',
-                'on_review' => 'bg-indigo-500',
+                'approved' => 'bg-emerald-500',
+                'delivered' => 'bg-indigo-500',
                 'in_progress' => 'bg-blue-500',
-                'accepted' => 'bg-cyan-500',
+                'rejected' => 'bg-rose-500',
                 'pending' => 'bg-amber-500',
                 'cancelled' => 'bg-red-500',
                 default => 'bg-gray-400',
             };
 
             $item['status_badge_class'] = match ($statusKey) {
-                'completed' => 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300',
-                'on_review' => 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300',
+                'approved' => 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300',
+                'delivered' => 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300',
                 'in_progress' => 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
-                'accepted' => 'bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-300',
+                'rejected' => 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-300',
                 'pending' => 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300',
                 'cancelled' => 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300',
                 default => 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300',
@@ -73,18 +81,24 @@ class CampaignShowViewModel
         return $this->campaign->applications
             ->mapWithKeys(function (CampaignApplication $application) use ($progressByApplication): array {
                 $progressEntry = $progressByApplication->get($application->id, []);
-                $workStatusKey = (string) ($progressEntry['status_key'] ?? $application->work_status ?? '');
+                $rawWorkStatusKey = (string) ($progressEntry['status_key'] ?? $application->work_status ?? '');
+                $workStatusKey = match ($rawWorkStatusKey) {
+                    'accepted' => 'in_progress',
+                    'on_review' => 'delivered',
+                    'completed' => 'approved',
+                    default => $rawWorkStatusKey,
+                };
 
                 if ($workStatusKey === '' && $application->status === 'completed') {
-                    $workStatusKey = 'completed';
+                    $workStatusKey = 'approved';
                 }
 
                 $workStatusLabelMap = [
                     'pending' => 'Order Pending',
-                    'accepted' => 'Accepted',
                     'in_progress' => 'In Progress',
-                    'on_review' => 'On Review',
-                    'completed' => 'Completed',
+                    'delivered' => 'Delivered',
+                    'approved' => 'Approved',
+                    'rejected' => 'Rejected',
                 ];
 
                 $workStatus = $workStatusKey !== ''
@@ -92,10 +106,10 @@ class CampaignShowViewModel
                     : null;
 
                 $workStatusStyle = match ($workStatus) {
-                    'Completed' => 'background-color: rgba(209, 250, 229, 1); color: rgb(4, 120, 87);',
-                    'On Review' => 'background-color: rgba(224, 231, 255, 1); color: rgb(67, 56, 202);',
+                    'Approved' => 'background-color: rgba(209, 250, 229, 1); color: rgb(4, 120, 87);',
+                    'Delivered' => 'background-color: rgba(224, 231, 255, 1); color: rgb(67, 56, 202);',
                     'In Progress' => 'background-color: rgba(219, 234, 254, 1); color: rgb(29, 78, 216);',
-                    'Accepted' => 'background-color: rgba(207, 250, 254, 1); color: rgb(14, 116, 144);',
+                    'Rejected' => 'background-color: rgba(254, 226, 226, 1); color: rgb(185, 28, 28);',
                     default => 'background-color: rgba(254, 243, 199, 1); color: rgb(180, 83, 9);',
                 };
 

@@ -4,6 +4,29 @@
 
 @section('content')
 	@php
+		$normalizeWorkflowStatus = static function (?string $status): string {
+			$normalized = (string) $status;
+
+			return match ($normalized) {
+				'accepted', 'in-progress' => 'in_progress',
+				'on_review' => 'delivered',
+				'completed' => 'approved',
+				default => $normalized,
+			};
+		};
+
+		$workflowLabel = static function (?string $status) use ($normalizeWorkflowStatus): string {
+			return match ($normalizeWorkflowStatus($status)) {
+				'pending' => 'Pending',
+				'in_progress' => 'In Progress',
+				'delivered' => 'Delivered',
+				'approved' => 'Approved',
+				'rejected' => 'Rejected',
+				'cancelled' => 'Cancelled',
+				default => 'Unknown',
+			};
+		};
+
 		$statusStyles = [
 		    'pending' => ['badge' => 'bg-amber-100 text-amber-700', 'dot' => 'bg-amber-500'],
 		    'accepted' => ['badge' => 'bg-sky-100 text-sky-700', 'dot' => 'bg-sky-500'],
@@ -29,12 +52,12 @@
 		}
 
 		$displayOrderStatus = $order->status;
-		$displayStatuses = $displayItems->pluck('status');
+		$displayStatuses = $displayItems->pluck('status')->map(fn($status) => $normalizeWorkflowStatus((string) $status));
 		if ($displayStatuses->isNotEmpty()) {
 		    if ($displayStatuses->every(fn($status) => $status === 'pending')) {
 		        $displayOrderStatus = 'pending';
-		    } elseif ($displayStatuses->every(fn($status) => $status === 'accepted')) {
-		        $displayOrderStatus = 'accepted';
+		    } elseif ($displayStatuses->every(fn($status) => $status === 'in_progress')) {
+		        $displayOrderStatus = 'in_progress';
 		    } elseif ($displayStatuses->every(fn($status) => in_array($status, ['approved', 'completed'], true))) {
 		        $displayOrderStatus = 'approved';
 		    } elseif (
@@ -75,7 +98,7 @@
 							<span
 								class="inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold {{ $currentStatus['badge'] }}">
 								<span class="h-2 w-2 rounded-full {{ $currentStatus['dot'] }}"></span>
-								{{ ucfirst(str_replace(['-', '_'], ' ', $displayOrderStatus)) }}
+								{{ $workflowLabel($displayOrderStatus) }}
 							</span>
 							<span
 								class="inline-flex items-center rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold text-gray-700 dark:bg-gray-800 dark:text-gray-300">
@@ -233,8 +256,8 @@
 										if ($childItemStatuses->isNotEmpty()) {
 										    if ($childItemStatuses->every(fn($status) => $status === 'pending')) {
 										        $computedChildStatus = 'pending';
-										    } elseif ($childItemStatuses->every(fn($status) => $status === 'accepted')) {
-										        $computedChildStatus = 'accepted';
+										    } elseif ($childItemStatuses->every(fn($status) => in_array($status, ['accepted', 'in_progress', 'in-progress'], true))) {
+										        $computedChildStatus = 'in_progress';
 										    } elseif ($childItemStatuses->every(fn($status) => in_array($status, ['approved', 'completed'], true))) {
 										        $computedChildStatus = 'approved';
 										    } elseif (
@@ -259,11 +282,11 @@
 										$timelineSteps = [
 										    ['label' => 'Placed', 'value' => $childOrder->placed_at?->format('M d g:iA') ?? '—', 'done' => true],
 										    [
-										        'label' => 'Accepted',
+										        'label' => 'In Progress',
 										        'value' => $childOrder->accepted_at?->format('M d g:iA') ?? 'Waiting',
 										        'done' =>
 										            (bool) $childOrder->accepted_at ||
-										            in_array($computedChildStatus, ['accepted', 'in_progress', 'delivered', 'completed'], true),
+										            in_array($computedChildStatus, ['in_progress', 'delivered', 'approved', 'completed'], true),
 										    ],
 										    [
 										        'label' => 'Delivered',
@@ -291,7 +314,7 @@
 													<span
 														class="inline-flex items-center gap-2 rounded-full px-2.5 py-0.5 text-xs font-semibold {{ $childStatus['badge'] }}">
 														<span class="h-2 w-2 rounded-full {{ $childStatus['dot'] }}"></span>
-														{{ ucfirst(str_replace('_', ' ', $computedChildStatus)) }}
+														{{ $workflowLabel($computedChildStatus) }}
 													</span>
 												</div>
 												<p class="mt-1 text-xs text-gray-500 dark:text-gray-400">{{ $childOrder->order_number }} •
@@ -353,13 +376,13 @@
 														$itemTimeline = [
 														    ['label' => 'Placed', 'value' => $item->created_at?->format('M d g:iA') ?? '—', 'done' => true],
 														    [
-														        'label' => 'Accepted',
+														        'label' => 'In Progress',
 														        'value' => $item->accepted_at?->format('M d g:iA') ?? 'Waiting',
 														        'done' =>
 														            (bool) $item->accepted_at ||
 														            in_array(
 														                $item->status,
-														                ['accepted', 'in_progress', 'in-progress', 'delivered', 'approved'],
+														                ['accepted', 'in_progress', 'in-progress', 'delivered', 'approved', 'completed'],
 														                true,
 														            ),
 														    ],
@@ -379,7 +402,7 @@
 															<span
 																class="inline-flex items-center gap-2 rounded-full px-2 py-0.5 text-[11px] font-semibold {{ $itemStatus['badge'] }}">
 																<span class="h-1.5 w-1.5 rounded-full {{ $itemStatus['dot'] }}"></span>
-																{{ ucfirst(str_replace('_', ' ', $item->status)) }}
+																{{ $workflowLabel((string) $item->status) }}
 															</span>
 														</div>
 														<p class="mt-2 text-xs text-gray-500 dark:text-gray-400">Qty {{ $item->quantity }} • Due
@@ -549,7 +572,12 @@
 													<span
 														class="inline-flex items-center gap-2 rounded-full px-2.5 py-0.5 text-xs font-semibold {{ $campaignStatus['badge'] }}">
 														<span class="h-2 w-2 rounded-full {{ $campaignStatus['dot'] }}"></span>
-														{{ ucfirst(str_replace('_', ' ', $subOrder->status)) }}
+														{{ match ((string) $subOrder->status) {
+															'accepted' => 'In Progress',
+															'on_review' => 'Delivered',
+															'completed' => 'Approved',
+															default => $workflowLabel((string) $subOrder->status),
+														} }}
 													</span>
 												</div>
 												<p class="mt-1 text-xs text-gray-500 dark:text-gray-400">{{ $campaign->title ?? 'Campaign' }} • 1 item •
@@ -766,13 +794,13 @@
 										$itemTimeline = [
 										    ['label' => 'Placed', 'value' => $item->created_at?->format('M d g:iA') ?? '—', 'done' => true],
 										    [
-										        'label' => 'Accepted',
+										        'label' => 'In Progress',
 										        'value' => $item->accepted_at?->format('M d g:iA') ?? 'Waiting',
 										        'done' =>
 										            (bool) $item->accepted_at ||
 										            in_array(
 										                $item->status,
-										                ['accepted', 'in_progress', 'in-progress', 'delivered', 'approved'],
+										                ['accepted', 'in_progress', 'in-progress', 'delivered', 'approved', 'completed'],
 										                true,
 										            ),
 										    ],
@@ -782,6 +810,16 @@
 										        'done' => in_array($item->status, ['delivered', 'approved'], true) || (bool) $item->delivered_at,
 										    ],
 										];
+										$normalizedItemStatus = match ((string) $item->status) {
+										    'accepted', 'in-progress' => 'in_progress',
+										    default => (string) $item->status,
+										};
+										$nextStatusOptions = match ($normalizedItemStatus) {
+										    'pending' => [['value' => 'in_progress', 'label' => 'Start Work (In Progress)']],
+										    'in_progress' => [['value' => 'delivered', 'label' => 'Mark Delivered (For Review)']],
+										    'rejected' => [['value' => 'in_progress', 'label' => 'Resume Work (After Rejection)']],
+										    default => [],
+										};
 										$isInfluencerStatusLocked = in_array($item->status, ['approved', 'completed', 'cancelled'], true);
 									@endphp
 									<div class="rounded-xl border border-gray-200 p-4 dark:border-gray-800">
@@ -792,7 +830,7 @@
 													<span
 														class="inline-flex items-center gap-2 rounded-full px-2.5 py-0.5 text-xs font-semibold {{ $itemStatus['badge'] }}">
 														<span class="h-2 w-2 rounded-full {{ $itemStatus['dot'] }}"></span>
-														{{ ucfirst(str_replace('_', ' ', $item->status)) }}
+															{{ $workflowLabel((string) $item->status) }}
 													</span>
 												</div>
 												<p class="mt-1 text-sm text-gray-600 dark:text-gray-400">Package: <span
@@ -848,15 +886,18 @@
 													<label class="mb-1 block text-xs font-semibold text-gray-600 dark:text-gray-300">Update task status</label>
 													<select name="status"
 														class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-800 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
-														required>
-														<option value="pending" @selected($item->status === 'pending')>Pending</option>
-														<option value="accepted" @selected($item->status === 'accepted')>Accepted</option>
-														<option value="in_progress" @selected(in_array($item->status, ['in_progress', 'in-progress'], true))>In Progress</option>
-														<option value="delivered" @selected(in_array($item->status, ['delivered', 'rejected'], true))>Delivered (Awaiting approval)</option>
+														required @disabled(empty($nextStatusOptions))>
+														@foreach ($nextStatusOptions as $option)
+															<option value="{{ $option['value'] }}">{{ $option['label'] }}</option>
+														@endforeach
 													</select>
-													<button type="submit"
-														class="mt-2 inline-flex w-full items-center justify-center rounded-lg bg-indigo-600 px-3 py-2 text-sm font-semibold text-white hover:bg-indigo-500">Save
-														status</button>
+													@if (!empty($nextStatusOptions))
+														<button type="submit"
+															class="mt-2 inline-flex w-full items-center justify-center rounded-lg bg-indigo-600 px-3 py-2 text-sm font-semibold text-white hover:bg-indigo-500">Save
+															status</button>
+													@else
+														<p class="mt-2 text-xs text-gray-500 dark:text-gray-400">No action available at this stage.</p>
+													@endif
 												</form>
 											@endif
 										</div>

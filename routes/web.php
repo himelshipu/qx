@@ -168,7 +168,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::put('/orders/{order}/items/{item}/status', [FrontendOrderController::class, 'updateItemStatus'])->name('frontend.orders.items.update-status');
     Route::put('/orders/{order}/items/{item}/decision', [FrontendOrderController::class, 'updateBrandItemDecision'])->name('frontend.orders.items.update-decision');
     Route::post('/orders/{order}/items/{item}/review', [FrontendOrderController::class, 'storeBrandTaskReview'])->name('frontend.orders.items.reviews.store');
-    Route::post('/orders/{order}/items/{item}/deliverable', [FrontendOrderController::class, 'submitDeliverable'])->name('frontend.orders.items.submit-deliverable');
     Route::put('/orders/{order}/complete', [FrontendOrderController::class, 'completeOrder'])->name('frontend.orders.complete');
     Route::post('/orders/{order}/reviews', [FrontendOrderController::class, 'storeReview'])->name('frontend.orders.reviews.store');
 

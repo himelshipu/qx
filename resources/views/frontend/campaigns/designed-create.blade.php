@@ -75,57 +75,55 @@
 							@enderror
 						</div>
 
-						<div>
-							<label class="mb-1.5 block text-base font-medium text-gray-800 dark:text-gray-400">How many influencers do you want to hire for this campaign?
-								<span class="text-sm font-normal text-gray-400">(optional)</span>
-							</label>
-							<input type="number" min="1" name="influencer_count" x-model="influencerCount"
-								class="dark:bg-dark-900 shadow-theme-xs focus:border-pink-50 focus:ring-gray-500/10 dark:focus:border-gray-800 h-12 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 focus:ring-1 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
-							@error('influencer_count')
-								<p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
-							@enderror
-						</div>
+									<div class="relative" @click.away="showCategoryDropdown = false">
+										<label class="mb-1.5 block text-base font-medium text-gray-800 dark:text-gray-400">
+											What niches do you want to target?
+											<span class="text-sm font-normal text-gray-400">(optional)</span>
+										</label>
 
-						<div class="relative" @click.away="showCategoryDropdown = false">
-							<label class="mb-1.5 block text-base font-medium text-gray-800 dark:text-gray-400">What niches do you want to target?
-								<span class="text-sm font-normal text-gray-400">(optional)</span>
-							</label>
-							<div @click="showCategoryDropdown = !showCategoryDropdown"
-								class="flex min-h-12 w-full flex-wrap gap-2 rounded-lg border border-gray-300 bg-transparent px-4 py-2 text-sm text-gray-800 shadow-theme-xs focus-within:border-pink-50 focus-within:ring-1 focus-within:ring-gray-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 cursor-pointer">
-								<template x-if="selectedCategoryIds.length === 0">
-									<span class="py-1 text-sm text-gray-400">Select niches...</span>
-								</template>
-								<template x-for="categoryId in selectedCategoryIds" :key="`category-${categoryId}`">
-									<span class="flex items-center gap-4 rounded-md bg-purple-400 px-3 py-1 text-sm font-normal text-white dark:text-gray-800">
-										<span x-text="getCategoryName(categoryId)"></span>
-										<svg @click.stop="toggleSelection('selectedCategoryIds', categoryId)" class="h-3 w-3 cursor-pointer" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12" /></svg>
-									</span>
-								</template>
-							</div>
+										<div @click="showCategoryDropdown = !showCategoryDropdown"
+											class="flex min-h-11.5 w-full cursor-pointer flex-wrap gap-2 rounded-lg border border-gray-300 bg-transparent px-4 py-2 text-sm text-gray-800 shadow-theme-xs focus-within:border-pink-50 focus-within:ring-1 focus-within:ring-gray-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
+											<template x-if="selectedCategoryIds.length === 0">
+												<span class="py-1 text-sm text-gray-400">Select categories...</span>
+											</template>
+											<template x-for="categoryId in selectedCategoryIds" :key="`category-${categoryId}`">
+												<span class="flex items-center gap-3 rounded-md bg-purple-400 px-3 py-1 text-sm font-normal text-white dark:text-gray-800">
+													<span x-text="getCategoryName(categoryId)"></span>
+													<svg @click.stop="toggleSelection('selectedCategoryIds', categoryId)" class="h-3 w-3 cursor-pointer" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12" /></svg>
+												</span>
+											</template>
+											<div class="ml-auto flex items-center text-gray-500 dark:text-gray-400">
+												<svg class="h-4 w-4 transition-transform" :class="showCategoryDropdown ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+													<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m19 9-7 7-7-7" />
+												</svg>
+											</div>
+										</div>
 
-							<div x-show="showCategoryDropdown" x-cloak
-								class="custom-scrollbar absolute top-full z-50 mt-2 max-h-32 w-full overflow-y-auto rounded-lg border border-purple-100 bg-white shadow-md dark:border-gray-800 dark:bg-gray-900">
-								<div class="flex flex-wrap gap-4 p-4">
-									<template x-for="option in categoryOptions" :key="`option-category-${option.id}`">
-										<button type="button" @click="toggleSelection('selectedCategoryIds', option.id)"
-											:class="selectedCategoryIds.includes(Number(option.id)) ? 'bg-black text-white dark:bg-purple-400 dark:text-gray-800' : 'bg-gray-50 text-gray-700 hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700'"
-											class="rounded-md px-2 py-2 text-center text-sm font-medium leading-tight transition-all">
-											<span x-text="option.name"></span>
-										</button>
-									</template>
-								</div>
-							</div>
+										<div x-show="showCategoryDropdown" x-cloak
+											class="custom-scrollbar absolute left-0 top-full z-50 mt-2 max-h-40 w-full overflow-y-auto rounded-lg border border-purple-100 bg-white shadow-md dark:border-gray-800 dark:bg-gray-900">
+											<div class="flex flex-wrap gap-3 p-4">
+												<template x-for="option in categoryOptions" :key="`category-option-${option.id}`">
+													<button type="button" class="rounded-md px-3 py-2 text-sm font-medium leading-tight transition-all"
+														@click="toggleSelection('selectedCategoryIds', option.id)"
+														:class="selectedCategoryIds.includes(Number(option.id)) ? 'bg-black text-white dark:bg-purple-400 dark:text-gray-800' : 'bg-gray-50 text-gray-700 hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700'">
+														<span x-text="option.name"></span>
+													</button>
+												</template>
+											</div>
+										</div>
 
-							<template x-for="categoryId in selectedCategoryIds" :key="`category-input-${categoryId}`">
-								<input type="hidden" name="categories[]" :value="categoryId">
-							</template>
-							@error('categories')
-								<p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
-							@enderror
-							@error('categories.*')
-								<p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
-							@enderror
-						</div>
+										<template x-for="categoryId in selectedCategoryIds" :key="`category-input-${categoryId}`">
+											<input type="hidden" name="categories[]" :value="categoryId">
+										</template>
+
+										<p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Pick one or multiple categories with chips.</p>
+										@if ($errors->has('categories'))
+											<p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $errors->first('categories') }}</p>
+										@endif
+										@if ($errors->has('categories.*'))
+											<p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $errors->first('categories.*') }}</p>
+										@endif
+									</div>
 
 						<div class="relative" @click.away="showFollowerDropdown = false">
 							<label class="mb-1.5 block text-base font-medium text-gray-800 dark:text-gray-400">What follower ranges do you want to target?
@@ -322,7 +320,7 @@
 
 					<div>
 						<label class="mb-1.5 block text-base font-medium text-gray-800 dark:text-gray-400">Product Instructions</label>
-						<textarea name="instructions" rows="6" placeholder="Describe what you want influencers to do, key messages, and deliverables..."
+							<textarea name="instructions" rows="6" placeholder="Describe what you want influencers to do and key campaign requirements..."
 							class="dark:bg-dark-900 shadow-theme-xs focus:border-pink-50 focus:ring-gray-500/10 dark:focus:border-gray-800 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 focus:ring-1 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">{{ old('instructions', isset($campaign) ? $campaign->instructions : '') }}</textarea>
 						@error('instructions')
 							<p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
@@ -364,10 +362,12 @@
 						</div>
 
 						<div class="rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 dark:border-gray-800 dark:bg-gray-900">
-							<label class="flex cursor-pointer items-center justify-between gap-3">
+							<label class="flex min-h-11 cursor-pointer items-center justify-between gap-3">
 								<span class="text-sm font-medium text-gray-700 dark:text-gray-300">Active Status</span>
-								<input type="checkbox" name="is_active" value="1" {{ old('is_active', isset($campaign) ? $campaign->is_active : true) ? 'checked' : '' }}
-									class="h-4 w-4 rounded border-gray-300 text-gray-900 focus:ring-gray-500 dark:border-gray-600 dark:bg-gray-800">
+								<span class="flex h-11 items-center">
+									<input type="checkbox" name="is_active" value="1" {{ old('is_active', isset($campaign) ? $campaign->is_active : true) ? 'checked' : '' }}
+										class="h-4 w-4 rounded border-gray-300 text-gray-900 focus:ring-gray-500 dark:border-gray-600 dark:bg-gray-800">
+								</span>
 							</label>
 						</div>
 					</div>
@@ -392,32 +392,26 @@
 						</div>
 
 						<div>
-							<label class="mb-1.5 block text-base font-medium text-gray-800 dark:text-gray-400">Start Date</label>
-							<div class="relative">
-								<input type="date" name="start_date" value="{{ old('start_date', isset($campaign) ? $campaign->start_date?->format('Y-m-d') : '') }}"
-									class="dark:bg-dark-900 shadow-theme-xs focus:border-pink-50 focus:ring-gray-500/10 dark:focus:border-gray-800 h-12 w-full rounded-lg border border-gray-300 bg-transparent px-4 pl-10 py-2.5 text-sm text-gray-800 focus:ring-1 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
-								<span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
-									<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" fill="none" class="size-5">
-										<path fill-rule="evenodd" clip-rule="evenodd" d="M8 2C8.41421 2 8.75 2.33579 8.75 2.75V3.75H15.25V2.75C15.25 2.33579 15.5858 2 16 2C16.4142 2 16.75 2.33579 16.75 2.75V3.75H18.5C19.7426 3.75 20.75 4.75736 20.75 6V9V19C20.75 20.2426 19.7426 21.25 18.5 21.25H5.5C4.25736 21.25 3.25 20.2426 3.25 19V9V6C3.25 4.75736 4.25736 3.75 5.5 3.75H7.25V2.75C7.25 2.33579 7.58579 2 8 2ZM8 5.25H5.5C5.08579 5.25 4.75 5.58579 4.75 6V8.25H19.25V6C19.25 5.58579 18.9142 5.25 18.5 5.25H16H8ZM19.25 9.75H4.75V19C4.75 19.4142 5.08579 19.75 5.5 19.75H18.5C18.9142 19.75 19.25 19.4142 19.25 19V9.75Z" fill="currentColor"></path>
-									</svg>
-								</span>
-							</div>
+							<x-form.date-picker
+								id="start_date"
+								name="start_date"
+								label="Start Date"
+								placeholder="Select start date"
+								:default-date="old('start_date', isset($campaign) ? $campaign->start_date?->format('Y-m-d') : '')"
+							/>
 							@error('start_date')
 								<p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
 							@enderror
 						</div>
 
 						<div>
-							<label class="mb-1.5 block text-base font-medium text-gray-800 dark:text-gray-400">End Date</label>
-							<div class="relative">
-								<input type="date" name="end_date" value="{{ old('end_date', isset($campaign) ? $campaign->end_date?->format('Y-m-d') : '') }}"
-									class="dark:bg-dark-900 shadow-theme-xs focus:border-pink-50 focus:ring-gray-500/10 dark:focus:border-gray-800 h-12 w-full rounded-lg border border-gray-300 bg-transparent px-4 pl-10 py-2.5 text-sm text-gray-800 focus:ring-1 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
-								<span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
-									<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" fill="none" class="size-5">
-										<path fill-rule="evenodd" clip-rule="evenodd" d="M8 2C8.41421 2 8.75 2.33579 8.75 2.75V3.75H15.25V2.75C15.25 2.33579 15.5858 2 16 2C16.4142 2 16.75 2.33579 16.75 2.75V3.75H18.5C19.7426 3.75 20.75 4.75736 20.75 6V9V19C20.75 20.2426 19.7426 21.25 18.5 21.25H5.5C4.25736 21.25 3.25 20.2426 3.25 19V9V6C3.25 4.75736 4.25736 3.75 5.5 3.75H7.25V2.75C7.25 2.33579 7.58579 2 8 2ZM8 5.25H5.5C5.08579 5.25 4.75 5.58579 4.75 6V8.25H19.25V6C19.25 5.58579 18.9142 5.25 18.5 5.25H16H8ZM19.25 9.75H4.75V19C4.75 19.4142 5.08579 19.75 5.5 19.75H18.5C18.9142 19.75 19.25 19.4142 19.25 19V9.75Z" fill="currentColor"></path>
-									</svg>
-								</span>
-							</div>
+							<x-form.date-picker
+								id="end_date"
+								name="end_date"
+								label="End Date"
+								placeholder="Select end date"
+								:default-date="old('end_date', isset($campaign) ? $campaign->end_date?->format('Y-m-d') : '')"
+							/>
 							@error('end_date')
 								<p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
 							@enderror

@@ -159,7 +159,7 @@ class PaymentStatementController extends Controller
                     ?? $item->order?->brand?->brand_name
                     ?? $item->order?->order_number
                     ?? 'N/A',
-                'description' => $item->description ?: ($item->title ?: ($item->package?->name ?: 'Package deliverable')),
+                        'description' => $item->description ?: ($item->title ?: ($item->package?->name ?: 'Package task')),
                 'amount' => (float) ($item->payout_amount ?? $item->line_total ?? 0),
                 'reference' => $item->payout_reference,
                 'marked_by' => $item->payoutMarkedBy?->name ?? 'Admin',
@@ -174,7 +174,7 @@ class PaymentStatementController extends Controller
                     ?? $subOrder->order?->brand?->brand_name
                     ?? $subOrder->order?->order_number
                     ?? 'N/A',
-                'description' => 'Campaign deliverable',
+                        'description' => 'Campaign task',
                 'amount' => (float) ($subOrder->payout_amount ?? $subOrder->amount ?? 0),
                 'reference' => $subOrder->payout_reference,
                 'marked_by' => $subOrder->payoutMarkedBy?->name ?? 'Admin',

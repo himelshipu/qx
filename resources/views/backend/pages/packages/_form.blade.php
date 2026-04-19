@@ -130,11 +130,13 @@
 
 		<div class="rounded-lg border border-gray-200 bg-white px-3 py-3 dark:border-gray-700 dark:bg-gray-900">
 			<input type="hidden" name="is_active" value="0">
-			<label for="is_active" class="flex cursor-pointer items-center justify-between gap-3">
+			<label for="is_active" class="flex min-h-11 cursor-pointer items-center justify-between gap-3">
 				<span class="text-sm font-medium text-gray-700 dark:text-gray-300">Active Status</span>
-				<input id="is_active" name="is_active" type="checkbox" value="1"
-					{{ old('is_active', $package?->is_active ?? true) ? 'checked' : '' }}
-					class="h-4 w-4 rounded border-gray-300 text-gray-900 focus:ring-gray-500 dark:border-gray-600 dark:bg-gray-800">
+				<span class="flex h-11 items-center">
+					<input id="is_active" name="is_active" type="checkbox" value="1"
+						{{ old('is_active', $package?->is_active ?? true) ? 'checked' : '' }}
+						class="h-4 w-4 rounded border-gray-300 text-gray-900 focus:ring-gray-500 dark:border-gray-600 dark:bg-gray-800">
+				</span>
 			</label>
 			@error('is_active')
 				<p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>

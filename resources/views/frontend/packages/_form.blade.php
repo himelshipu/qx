@@ -77,13 +77,13 @@
 		</div>
 	</div>
 
-	<div class="flex items-start">
-		<div class="flex h-5 items-center">
+	<div class="flex items-center">
+		<div class="flex h-11 items-center">
 			<input id="is_active" name="is_active" type="checkbox" value="1"
 				{{ old('is_active', isset($package) && $package->is_active) ? 'checked' : '' }}
 				class="h-4 w-4 rounded border-gray-300 text-purple-600 focus:ring-purple-500">
 		</div>
-		<div class="ml-3 text-sm">
+		<div class="ml-3 text-sm leading-5">
 			<label for="is_active" class="font-medium text-gray-700 dark:text-gray-300">Publish Package</label>
 			<p class="text-gray-500 dark:text-gray-400">Make this package visible to brands on the marketplace.</p>
 		</div>

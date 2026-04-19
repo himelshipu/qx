@@ -405,101 +405,6 @@
 				</div>
 			@endif
 
-			<!-- Deliverables Checklist: ONLY FOR BRAND OWNERS -->
-			@if (auth()->user()->user_type === 'brand' && $campaign->brand_id === auth()->user()->brand?->id)
-				@php
-					$allDeliverables = collect();
-					foreach ($workProgress as $progress) {
-					    $subOrder = $latestSubOrdersByInfluencer->get($progress['influencer_id']);
-					    if ($subOrder && $subOrder->deliverables) {
-					        foreach ($subOrder->deliverables as $deliverable) {
-					            $allDeliverables->push([
-					                'deliverable' => $deliverable,
-					                'influencer_name' => $progress['influencer_name'],
-					                'influencer_id' => $progress['influencer_id'],
-					                'subOrder' => $subOrder,
-					            ]);
-					        }
-					    }
-					}
-				@endphp
-
-				@if ($allDeliverables->count() > 0)
-					<div
-						class="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-800 shadow-sm overflow-hidden mb-6">
-						<div class="px-5 py-4 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between gap-3">
-							<div>
-								<h2 class="text-lg font-bold text-gray-900 dark:text-white">Deliverables Checklist</h2>
-								<p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Review and approve work submitted by influencers.</p>
-							</div>
-							@php
-								$approvedCount = $allDeliverables->where('deliverable.status', 'approved')->count();
-								$totalCount = $allDeliverables->count();
-							@endphp
-							<span
-								class="inline-flex rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-semibold text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300">
-								{{ $approvedCount }}/{{ $totalCount }} Approved
-							</span>
-						</div>
-
-						<div class="divide-y divide-gray-200 dark:divide-gray-800">
-							@foreach ($allDeliverables as $item)
-								@php
-									$deliverable = $item['deliverable'];
-									$statusClass = match ($deliverable->status) {
-									    'submitted' => 'bg-yellow-50 border-l-4 border-yellow-500 dark:bg-yellow-900/20',
-									    'approved' => 'bg-green-50 border-l-4 border-green-500 dark:bg-green-900/20',
-									    'changes_requested' => 'bg-amber-50 border-l-4 border-amber-500 dark:bg-amber-900/20',
-									    'rejected' => 'bg-red-50 border-l-4 border-red-500 dark:bg-red-900/20',
-									    default => 'bg-gray-50 border-l-4 border-gray-400 dark:bg-gray-900/20',
-									};
-									$statusBadgeClass = match ($deliverable->status) {
-									    'submitted' => 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300',
-									    'approved' => 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300',
-									    'changes_requested' => 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300',
-									    'rejected' => 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300',
-									    default => 'bg-gray-100 text-gray-700 dark:bg-gray-900/40 dark:text-gray-300',
-									};
-								@endphp
-								<div class="p-4 {{ $statusClass }}">
-									<div class="flex items-start justify-between gap-4 flex-wrap">
-										<div class="flex-1 min-w-0">
-											<div class="flex items-center gap-2 mb-1">
-												<svg class="w-4 h-4 text-gray-600 dark:text-gray-400 flex-shrink-0" fill="currentColor"
-													viewBox="0 0 20 20">
-													<path
-														d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" />
-												</svg>
-												<span class="font-semibold text-gray-900 dark:text-white text-sm">{{ $item['influencer_name'] }} -
-													{{ ucfirst($deliverable->deliverable_type) }}</span>
-											</div>
-											@if ($deliverable->notes)
-												<p class="text-xs text-gray-600 dark:text-gray-400 mb-2">{{ $deliverable->notes }}</p>
-											@endif
-											@if ($deliverable->file_path || $deliverable->external_url)
-												<p class="text-xs text-blue-600 dark:text-blue-400 mb-2">
-													@if ($deliverable->file_path)
-														<a href="#" class="hover:underline">{{ basename($deliverable->file_path) }}</a>
-													@elseif ($deliverable->external_url)
-														<a href="{{ $deliverable->external_url }}" target="_blank" rel="noopener" class="hover:underline">View
-															Link ↗</a>
-													@endif
-												</p>
-											@endif
-											<div class="text-xs text-gray-500 dark:text-gray-400">Submitted
-												{{ $deliverable->created_at?->format('M d, Y') ?: 'Recently' }}</div>
-										</div>
-										<span class="inline-flex rounded-full px-3 py-1 text-xs font-semibold {{ $statusBadgeClass }} flex-shrink-0">
-											{{ str_replace('_', ' ', ucfirst($deliverable->status)) }}
-										</span>
-									</div>
-								</div>
-							@endforeach
-						</div>
-					</div>
-				@endif
-			@endif
-
 			<!-- Applications Section: ONLY FOR BRAND OWNERS -->
 			@if (auth()->user()->user_type === 'brand' && $campaign->brand_id === auth()->user()->brand?->id)
 				<!-- Influencer Applications Section (Full Width) -->
@@ -806,8 +711,7 @@
 										<p class="text-sm font-semibold text-emerald-900 dark:text-emerald-100 mb-3">✓ You're approved for this
 											campaign!</p>
 										<p class="text-sm text-emerald-800 dark:text-emerald-200">
-											You can now see your work progress and deliverables above. Let the brand know if you have any questions about
-											the requirements.
+											You can now see your work progress above. Let the brand know if you have any questions about the requirements.
 										</p>
 									</div>
 								@elseif ($influencerApplication->status === 'rejected')
@@ -924,6 +828,20 @@
 											class="rounded-lg bg-blue-50 dark:bg-blue-900/20 p-4 border border-blue-200 dark:border-blue-900/50 mt-4">
 											<p class="text-xs font-semibold text-blue-600 dark:text-blue-300 uppercase tracking-wide mb-3">Update Work
 												Status</p>
+											@php
+												$normalizedWorkStatus = match ((string) ($influencerApplication->work_status ?? 'pending')) {
+												    'accepted' => 'in_progress',
+												    'on_review' => 'delivered',
+												    'completed' => 'approved',
+												    default => (string) ($influencerApplication->work_status ?? 'pending'),
+												};
+												$nextWorkOptions = match ($normalizedWorkStatus) {
+												    'pending' => [['value' => 'in_progress', 'label' => 'Start Work (In Progress)']],
+												    'in_progress' => [['value' => 'delivered', 'label' => 'Mark Delivered (For Review)']],
+												    'rejected' => [['value' => 'in_progress', 'label' => 'Resume Work (After Rejection)']],
+												    default => [],
+												};
+											@endphp
 											<form method="POST" action="{{ route('frontend.campaigns.update-work-status', $influencerApplication) }}"
 												class="space-y-3">
 												@csrf
@@ -933,21 +851,18 @@
 														Status</label>
 													<select name="work_status"
 														class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg bg-white dark:bg-gray-800 dark:border-gray-600 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
-														<option value="pending" {{ $influencerApplication->work_status === 'pending' ? 'selected' : '' }}>Order
-															Pending</option>
-														<option value="accepted" {{ $influencerApplication->work_status === 'accepted' ? 'selected' : '' }}>
-															Accepted</option>
-														<option value="in_progress"
-															{{ $influencerApplication->work_status === 'in_progress' ? 'selected' : '' }}>In Progress</option>
-														<option value="on_review" {{ $influencerApplication->work_status === 'on_review' ? 'selected' : '' }}>On
-															Review</option>
-														<option value="completed" {{ $influencerApplication->work_status === 'completed' ? 'selected' : '' }}>
-															Completed</option>
+														@foreach ($nextWorkOptions as $option)
+															<option value="{{ $option['value'] }}">{{ $option['label'] }}</option>
+														@endforeach
 													</select>
 												</div>
-												<button type="submit"
-													class="w-full px-4 py-2 text-sm font-semibold rounded-lg bg-blue-600 text-white hover:bg-blue-700 dark:hover:bg-blue-600 transition">Update
-													Status</button>
+												@if (!empty($nextWorkOptions))
+													<button type="submit"
+														class="w-full px-4 py-2 text-sm font-semibold rounded-lg bg-blue-600 text-white hover:bg-blue-700 dark:hover:bg-blue-600 transition">Update
+														Status</button>
+												@else
+													<p class="text-xs text-gray-600 dark:text-gray-300">No influencer action required right now. Wait for brand review.</p>
+												@endif
 											</form>
 										</div>
 									@else

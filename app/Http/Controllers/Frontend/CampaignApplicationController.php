@@ -293,7 +293,7 @@ class CampaignApplicationController extends Controller
         }
 
         $validated = $request->validate([
-            'work_status' => 'required|in:pending,accepted,in_progress,on_review,completed'
+            'work_status' => 'required|in:pending,accepted,in_progress,delivered,on_review,approved,rejected,completed'
         ]);
 
         $subOrder = $this->resolveCampaignSubOrder($application);
@@ -302,26 +302,31 @@ class CampaignApplicationController extends Controller
             return redirect()->back()->with('error', 'This campaign order has not been created yet. Work status can be updated once the order exists.');
         }
 
-        $updates = ['work_status' => $validated['work_status']];
-        if ($validated['work_status'] === 'completed') {
-            $updates['status']     = 'completed';
-            $updates['decided_at'] = now();
+        $currentStatus = $this->normalizeCampaignTaskStatus((string) $subOrder->status);
+        $nextStatus    = $this->normalizeCampaignTaskStatus((string) $validated['work_status']);
+
+        if (!$this->canTransitionCampaignTask($currentStatus, $nextStatus)) {
+            return redirect()->back()->with('error', 'Invalid task status transition.');
         }
 
-        $application->update($updates);
-
-        if ($subOrder) {
-            $subOrderUpdates = ['status' => $validated['work_status']];
-            if ($validated['work_status'] === 'accepted' && $subOrder->accepted_at === null) {
-                $subOrderUpdates['accepted_at'] = now();
-            }
-            if ($validated['work_status'] === 'completed') {
-                $subOrderUpdates['completed_at'] = now();
-            }
-            $subOrder->update($subOrderUpdates);
+        if (!$this->canInfluencerSetCampaignTaskStatus($nextStatus)) {
+            return redirect()->back()->with('error', 'Influencer can only move work to In Progress or Delivered.');
         }
 
-        return redirect()->back()->with('success', 'Work status updated successfully: ' . ucfirst(str_replace('_', ' ', $validated['work_status'])));
+        $application->update([
+            'work_status' => $this->persistApplicationWorkStatus($nextStatus),
+        ]);
+
+        $subOrderUpdates = ['status' => $this->persistSubOrderStatus($nextStatus)];
+        if ($nextStatus === 'in_progress' && $subOrder->accepted_at === null) {
+            $subOrderUpdates['accepted_at'] = now();
+        }
+        if ($nextStatus === 'delivered') {
+            $subOrderUpdates['delivered_at'] = now();
+        }
+        $subOrder->update($subOrderUpdates);
+
+        return redirect()->back()->with('success', 'Work status updated successfully: ' . ucfirst(str_replace('_', ' ', $nextStatus)));
     }
 
     public function updateBrandWorkStatus(Campaign $campaign, CampaignApplication $application, Request $request): RedirectResponse
@@ -341,7 +346,7 @@ class CampaignApplicationController extends Controller
         }
 
         $validated = $request->validate([
-            'work_status' => 'required|in:pending,accepted,in_progress,on_review,completed'
+            'work_status' => 'required|in:pending,accepted,in_progress,delivered,on_review,approved,rejected,completed'
         ]);
 
         $subOrder = $this->resolveCampaignSubOrder($application);
@@ -350,26 +355,89 @@ class CampaignApplicationController extends Controller
             return redirect()->back()->with('error', 'This campaign order has not been created yet. Work status can be updated once the order exists.');
         }
 
-        $updates = ['work_status' => $validated['work_status']];
-        if ($validated['work_status'] === 'completed') {
-            $updates['status']     = 'completed';
-            $updates['decided_at'] = $application->decided_at ?? now();
+        $currentStatus = $this->normalizeCampaignTaskStatus((string) $subOrder->status);
+        $nextStatus    = $this->normalizeCampaignTaskStatus((string) $validated['work_status']);
+
+        if (!$this->canTransitionCampaignTask($currentStatus, $nextStatus)) {
+            return redirect()->back()->with('error', 'Invalid task status transition.');
         }
 
-        $application->update($updates);
-
-        if ($subOrder) {
-            $subOrderUpdates = ['status' => $validated['work_status']];
-            if ($validated['work_status'] === 'accepted' && $subOrder->accepted_at === null) {
-                $subOrderUpdates['accepted_at'] = now();
-            }
-            if ($validated['work_status'] === 'completed') {
-                $subOrderUpdates['completed_at'] = now();
-            }
-            $subOrder->update($subOrderUpdates);
+        if (!$this->canBrandSetCampaignTaskStatus($nextStatus)) {
+            return redirect()->back()->with('error', 'Brand can only approve or reject delivered work.');
         }
 
-        return redirect()->back()->with('success', 'Work status updated to ' . ucfirst(str_replace('_', ' ', $validated['work_status'])) . '.');
+        $applicationUpdates = [
+            'work_status' => $this->persistApplicationWorkStatus($nextStatus),
+        ];
+
+        if ($nextStatus === 'approved') {
+            $applicationUpdates['status'] = 'completed';
+            $applicationUpdates['decided_at'] = $application->decided_at ?? now();
+        }
+
+        $application->update($applicationUpdates);
+
+        $subOrderUpdates = ['status' => $this->persistSubOrderStatus($nextStatus)];
+        if ($nextStatus === 'approved') {
+            $subOrderUpdates['approved_at'] = now();
+        }
+        $subOrder->update($subOrderUpdates);
+
+        return redirect()->back()->with('success', 'Work status updated to ' . ucfirst(str_replace('_', ' ', $nextStatus)) . '.');
+    }
+
+    private function normalizeCampaignTaskStatus(string $status): string
+    {
+        $normalized = trim($status);
+
+        return match ($normalized) {
+            'accepted' => 'in_progress',
+            'on_review' => 'delivered',
+            'completed' => 'approved',
+            default => $normalized,
+        };
+    }
+
+    private function canTransitionCampaignTask(string $from, string $to): bool
+    {
+        if ($from === $to) {
+            return true;
+        }
+
+        $allowed = [
+            'pending' => ['in_progress'],
+            'in_progress' => ['delivered'],
+            'delivered' => ['approved', 'rejected'],
+            'rejected' => ['in_progress'],
+            'approved' => [],
+        ];
+
+        return in_array($to, $allowed[$from] ?? [], true);
+    }
+
+    private function canInfluencerSetCampaignTaskStatus(string $status): bool
+    {
+        return in_array($status, ['in_progress', 'delivered'], true);
+    }
+
+    private function canBrandSetCampaignTaskStatus(string $status): bool
+    {
+        return in_array($status, ['approved', 'rejected'], true);
+    }
+
+    private function persistSubOrderStatus(string $normalizedStatus): string
+    {
+        return $normalizedStatus === 'delivered' ? 'on_review' : $normalizedStatus;
+    }
+
+    private function persistApplicationWorkStatus(string $normalizedStatus): string
+    {
+        return match ($normalizedStatus) {
+            'delivered' => 'on_review',
+            'approved' => 'completed',
+            'rejected' => 'in_progress',
+            default => $normalizedStatus,
+        };
     }
 
     private function resolveCampaignSubOrder(CampaignApplication $application): ?SubOrder
