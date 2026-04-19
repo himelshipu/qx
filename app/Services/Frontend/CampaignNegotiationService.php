@@ -71,7 +71,7 @@ final class CampaignNegotiationService implements CampaignNegotiationServiceInte
         ];
     }
 
-    public function brandRespond(Campaign $campaign, CampaignApplication $application, string $action, ?float $brandOffer = null, ?int $approvedByUserId = null): string
+    public function brandRespond(Campaign $campaign, CampaignApplication $application, string $action, ?float $brandOffer = null, ?int $approvedByUserId = null, bool $allowMissingOffer = false): string
     {
         if ($action === 'counter') {
             $offer = round((float) $brandOffer, 2);
@@ -114,6 +114,15 @@ final class CampaignNegotiationService implements CampaignNegotiationServiceInte
         } else {
             // If status is 'applied', accept influencer's initial offer
             $acceptedRate = $application->influencer_offer;
+        }
+
+        if ((!$acceptedRate || (float) $acceptedRate <= 0) && $allowMissingOffer) {
+            $acceptedRate = $application->agreed_rate
+                ?? $application->brand_offer
+                ?? $application->proposed_rate
+                ?? $application->influencer_offer
+                ?? $campaign->budget_min
+                ?? 0;
         }
 
         if (!$acceptedRate || (float) $acceptedRate <= 0) {

@@ -15,7 +15,7 @@ interface CampaignNegotiationServiceInterface
      */
     public function apply(Campaign $campaign, Influencer $influencer, float $offer, ?string $pitchMessage = null): array;
 
-    public function brandRespond(Campaign $campaign, CampaignApplication $application, string $action, ?float $brandOffer = null, ?int $approvedByUserId = null): string;
+    public function brandRespond(Campaign $campaign, CampaignApplication $application, string $action, ?float $brandOffer = null, ?int $approvedByUserId = null, bool $allowMissingOffer = false): string;
 
     public function influencerRespond(CampaignApplication $application, string $action, ?float $influencerOffer = null): string;
 }

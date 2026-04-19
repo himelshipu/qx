@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Frontend;
 use App\Http\Controllers\Controller;
 use App\Models\Campaign;
 use App\Models\CampaignApplication;
+use App\Models\Review;
 use App\Models\SubOrder;
 use App\Services\Frontend\Contracts\CampaignNegotiationServiceInterface;
 use Illuminate\Http\JsonResponse;
@@ -147,7 +148,9 @@ class CampaignApplicationController extends Controller
             }
         }
 
-        if ($action === 'accept') {
+        $allowMissingOffer = $request->routeIs('dashboard.campaigns.update-application-status', 'campaigns.update-application-status');
+
+        if ($action === 'accept' && ! $allowMissingOffer) {
             $acceptedRate = $application->influencer_offer ?? $application->proposed_rate ?? $application->brand_offer;
 
             if ($acceptedRate === null || (float) $acceptedRate <= 0) {
@@ -166,6 +169,7 @@ class CampaignApplicationController extends Controller
             $action,
             isset($validated['brand_offer']) ? (float) $validated['brand_offer'] : null,
             Auth::id(),
+            $allowMissingOffer,
         );
 
         if ($request->expectsJson()) {
@@ -327,6 +331,62 @@ class CampaignApplicationController extends Controller
         $subOrder->update($subOrderUpdates);
 
         return redirect()->back()->with('success', 'Work status updated successfully: ' . ucfirst(str_replace('_', ' ', $nextStatus)));
+    }
+
+    public function storeInfluencerBrandReview(CampaignApplication $application, Request $request): RedirectResponse
+    {
+        $user         = Auth::user();
+        $influencerId = $user->influencer?->id;
+
+        if ($user->user_type !== 'influencer' || !$influencerId || (int) $application->influencer_id !== (int) $influencerId) {
+            abort(403, 'Not authorized');
+        }
+
+        if (!in_array((string) $application->status, ['approved', 'completed'], true)) {
+            return redirect()->back()->with('error', 'You can review the brand only after your work is approved.');
+        }
+
+        $subOrder = $this->resolveCampaignSubOrder($application);
+
+        if (!$subOrder) {
+            return redirect()->back()->with('error', 'Campaign order is not ready for review yet.');
+        }
+
+        $normalizedStatus = $this->normalizeCampaignTaskStatus((string) $subOrder->status);
+        if (!in_array($normalizedStatus, ['approved', 'completed'], true)) {
+            return redirect()->back()->with('error', 'You can review the brand once your work is approved.');
+        }
+
+        $alreadyReviewed = Review::query()
+            ->where('sub_order_id', $subOrder->id)
+            ->where('reviewer_type', 'influencer')
+            ->where('reviewee_type', 'brand')
+            ->exists();
+
+        if ($alreadyReviewed) {
+            return redirect()->back()->with('error', 'You have already reviewed this brand for this campaign task.');
+        }
+
+        $validated = $request->validate([
+            'rating'  => ['required', 'integer', 'min:1', 'max:5'],
+            'title'   => ['nullable', 'string', 'max:120'],
+            'comment' => ['nullable', 'string', 'max:1200']
+        ]);
+
+        Review::create([
+            'order_item_id' => null,
+            'sub_order_id'  => (int) $subOrder->id,
+            'brand_id'      => (int) $application->campaign->brand_id,
+            'influencer_id' => (int) $influencerId,
+            'reviewer_type' => 'influencer',
+            'reviewee_type' => 'brand',
+            'rating'        => (int) $validated['rating'],
+            'title'         => $validated['title'] ?? null,
+            'comment'       => $validated['comment'] ?? null,
+            'is_public'     => true
+        ]);
+
+        return redirect()->back()->with('success', 'Your rating has been submitted successfully.');
     }
 
     public function updateBrandWorkStatus(Campaign $campaign, CampaignApplication $application, Request $request): RedirectResponse

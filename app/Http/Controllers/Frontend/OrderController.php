@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Frontend;
 
 use App\Http\Controllers\Controller;
+use App\Helpers\OrderStatusHelper;
 use App\Models\Influencer;
 use App\Models\Order;
 use App\Models\OrderItem;
@@ -115,6 +116,56 @@ class OrderController extends Controller
             $order->setRelation('items', $flattenedItems);
         }
 
+        $unifiedTasks = collect()
+            ->merge($order->items->map(function (OrderItem $item) use ($order) {
+                $normalizedStatus = OrderStatusHelper::normalizeStatus((string) $item->status);
+
+                return [
+                    'kind' => 'package',
+                    'id' => $item->id,
+                    'order_id' => $item->order_id,
+                    'title' => $item->title,
+                    'subtitle' => $item->package?->name ?? 'Package task',
+                    'influencer_name' => $item->influencer?->display_name ?: $item->influencer?->user?->name ?: 'Influencer',
+                    'influencer_slug' => $item->influencer?->user?->slug,
+                    'status' => $normalizedStatus,
+                    'status_label' => OrderStatusHelper::labelForStatus($normalizedStatus),
+                    'status_classes' => OrderStatusHelper::getStatusClasses($normalizedStatus),
+                    'created_at' => $item->created_at,
+                    'accepted_at' => $item->accepted_at,
+                    'delivered_at' => $item->delivered_at,
+                    'approved_at' => $item->approved_at,
+                    'due_date' => $item->due_date ?: ($item->package?->delivery_days !== null && $order->placed_at ? $order->placed_at->copy()->addDays((int) $item->package->delivery_days) : null),
+                    'amount' => (float) $item->line_total,
+                    'review' => $item->brandToInfluencerReview,
+                ];
+            }))
+            ->merge($order->subOrders->map(function (SubOrder $subOrder) {
+                $normalizedStatus = OrderStatusHelper::normalizeStatus((string) $subOrder->status);
+
+                return [
+                    'kind' => 'campaign',
+                    'id' => $subOrder->id,
+                    'order_id' => $subOrder->order_id,
+                    'title' => $subOrder->order?->campaign?->title ?? 'Campaign task',
+                    'subtitle' => 'Campaign order',
+                    'influencer_name' => $subOrder->influencer?->display_name ?: $subOrder->influencer?->user?->name ?: 'Influencer',
+                    'influencer_slug' => $subOrder->influencer?->user?->slug,
+                    'status' => $normalizedStatus,
+                    'status_label' => OrderStatusHelper::labelForStatus($normalizedStatus),
+                    'status_classes' => OrderStatusHelper::getStatusClasses($normalizedStatus),
+                    'created_at' => $subOrder->created_at,
+                    'accepted_at' => $subOrder->accepted_at,
+                    'delivered_at' => $subOrder->delivered_at,
+                    'approved_at' => $subOrder->approved_at,
+                    'due_date' => null,
+                    'amount' => (float) $subOrder->amount,
+                    'review' => $subOrder->review,
+                ];
+            }))
+            ->sortByDesc(fn(array $task) => $task['created_at']?->timestamp ?? 0)
+            ->values();
+
         $timeline = collect();
         $timeline->push([
             'label' => 'Order placed',
@@ -208,7 +259,7 @@ class OrderController extends Controller
 
         $canLeaveReview = $user->user_type === 'influencer' && $this->isReviewUnlocked($order) && !$hasSubmittedReview;
 
-        return view('frontend.orders.show', compact('order', 'orderInfluencers', 'canLeaveReview', 'hasSubmittedReview', 'timeline', 'orderContext'));
+        return view('frontend.orders.show', compact('order', 'orderInfluencers', 'canLeaveReview', 'hasSubmittedReview', 'timeline', 'orderContext', 'unifiedTasks'));
     }
 
     /**

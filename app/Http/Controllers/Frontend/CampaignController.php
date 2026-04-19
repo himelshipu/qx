@@ -10,6 +10,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Backend\Campaign\StoreCampaignRequest;
 use App\Models\Campaign;
 use App\Models\CampaignInfluencer;
+use App\Models\Review;
 use App\Queries\Frontend\Campaign\CampaignIndexQuery;
 use App\Services\Admin\CampaignService;
 use App\ViewModels\Frontend\Campaign\CampaignIndexViewModel;
@@ -152,10 +153,36 @@ class CampaignController extends Controller
             });
 
         $influencerApplication = null;
+        $influencerBrandReview = null;
+        $canReviewBrand = false;
         if ($user->user_type === 'influencer') {
             $influencerId = $user->influencer?->id;
             if ($influencerId) {
                 $influencerApplication = $campaign->applications->firstWhere('influencer_id', $influencerId);
+                $workProgress = $workProgress
+                    ->where('influencer_id', $influencerId)
+                    ->values();
+
+                if ($influencerApplication && in_array((string) $influencerApplication->status, ['approved', 'completed'], true)) {
+                    $influencerSubOrder = $latestSubOrdersByInfluencer->get($influencerId);
+
+                    if ($influencerSubOrder) {
+                        $influencerBrandReview = Review::query()
+                            ->where('sub_order_id', (int) $influencerSubOrder->id)
+                            ->where('reviewer_type', 'influencer')
+                            ->where('reviewee_type', 'brand')
+                            ->first();
+
+                        $normalizedSubOrderStatus = match ((string) $influencerSubOrder->status) {
+                            'accepted' => 'in_progress',
+                            'on_review' => 'delivered',
+                            'completed' => 'approved',
+                            default => (string) $influencerSubOrder->status,
+                        };
+
+                        $canReviewBrand = $influencerBrandReview === null && in_array($normalizedSubOrderStatus, ['approved', 'completed'], true);
+                    }
+                }
             }
         }
 
@@ -176,7 +203,9 @@ class CampaignController extends Controller
             'assignmentByInfluencer'      => $assignmentByInfluencer,
             'latestSubOrdersByInfluencer' => $latestSubOrdersByInfluencer,
             'brandName'                   => $campaign->brand?->brand_name ?? $campaign->createdBy?->name ?? 'Unknown',
-            'influencerApplication'       => $influencerApplication
+            'influencerApplication'       => $influencerApplication,
+            'influencerBrandReview'       => $influencerBrandReview,
+            'canReviewBrand'              => $canReviewBrand,
         ], $showPayload));
     }
 

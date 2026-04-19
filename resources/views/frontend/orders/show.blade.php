@@ -175,9 +175,71 @@
 				</div>
 			</div>
 
+			<div class="rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
+				<div class="border-b border-gray-200 px-5 py-4 dark:border-gray-800 sm:px-6">
+					<div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+						<div>
+							<h2 class="text-lg font-semibold text-gray-900 dark:text-white">Unified Tasks</h2>
+							<p class="mt-1 text-sm text-gray-600 dark:text-gray-400">All package and campaign work items follow the same task flow here.</p>
+						</div>
+						<div class="rounded-xl bg-gray-100 px-4 py-2 text-sm font-semibold text-gray-700 dark:bg-gray-800 dark:text-gray-300">
+							{{ $unifiedTasks->count() }} task{{ $unifiedTasks->count() === 1 ? '' : 's' }}
+						</div>
+					</div>
+				</div>
+				<div class="space-y-3 p-4 sm:p-6">
+					@forelse ($unifiedTasks as $task)
+						@php
+							$taskDueDate = $task['due_date'] ?? null;
+							$taskTimeline = [
+								['label' => 'Pending', 'done' => true],
+								['label' => 'In Progress', 'done' => in_array($task['status'], ['in_progress', 'delivered', 'approved'], true)],
+								['label' => 'Delivered', 'done' => in_array($task['status'], ['delivered', 'approved'], true)],
+								['label' => 'Reviewed', 'done' => in_array($task['status'], ['approved'], true)],
+							];
+						@endphp
+						<div class="rounded-xl border border-gray-200 bg-gray-50/80 p-4 dark:border-gray-800 dark:bg-gray-900/50">
+							<div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+								<div class="min-w-0">
+									<div class="flex flex-wrap items-center gap-2">
+										<h3 class="truncate text-sm font-semibold text-gray-900 dark:text-white">{{ $task['title'] }}</h3>
+										<span class="rounded-full px-2.5 py-0.5 text-xs font-semibold {{ $task['status_classes'] }}">{{ $task['status_label'] }}</span>
+										<span class="rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-semibold text-gray-700 dark:bg-gray-800 dark:text-gray-300">{{ $task['kind'] === 'package' ? 'Package Task' : 'Campaign Task' }}</span>
+									</div>
+									<p class="mt-1 text-sm text-gray-600 dark:text-gray-400">{{ $task['subtitle'] }} • Influencer: <span class="font-medium text-gray-900 dark:text-white">{{ $task['influencer_name'] }}</span></p>
+									<p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Amount: ${{ number_format($task['amount'], 2) }}{{ $taskDueDate ? ' • Due '. $taskDueDate->format('M d, Y') : '' }}</p>
+								</div>
+								<div class="w-full max-w-xl">
+									<div class="flex items-stretch gap-2 overflow-x-auto pb-1">
+										@foreach ($taskTimeline as $timelineStep)
+											<div class="flex items-center gap-2 shrink-0">
+												<div class="rounded-lg border px-2.5 py-2 {{ $timelineStep['done'] ? 'border-emerald-200 bg-emerald-50' : 'border-gray-200 bg-white' }}">
+													<div class="flex items-center gap-1 text-[11px] font-semibold {{ $timelineStep['done'] ? 'text-emerald-700' : 'text-gray-500' }}">
+														<span class="h-1.5 w-1.5 rounded-full {{ $timelineStep['done'] ? 'bg-emerald-500' : 'bg-gray-400' }}"></span>
+														{{ $timelineStep['label'] }}
+													</div>
+												</div>
+												@if (!$loop->last)
+													<svg class="h-4 w-4 shrink-0 self-center text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+														<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7M5 12h14"></path>
+													</svg>
+												@endif
+											</div>
+										@endforeach
+									</div>
+								</div>
+							</div>
+						</div>
+					@empty
+						<div class="rounded-xl border border-dashed border-gray-300 px-4 py-8 text-center text-sm text-gray-500 dark:border-gray-700 dark:text-gray-400">No tasks found for this order.</div>
+					@endforelse
+				</div>
+			</div>
+
 			@if ($isBrand)
 				<div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
 					<div class="space-y-6 lg:col-span-2">
+						@if (! $order->campaign_id)
 						<div class="rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
 							<div class="border-b border-gray-200 px-5 py-4 dark:border-gray-800 sm:px-6">
 								<div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
@@ -508,6 +570,7 @@
 								@endforelse
 							</div>
 						</div>
+						@endif
 
 						<!-- Campaign Orders Section -->
 						<div class="rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">

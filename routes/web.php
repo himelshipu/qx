@@ -142,6 +142,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/campaigns/applications/{application}/respond-offer', [FrontendCampaignApplicationController::class, 'respondToOffer'])->name('frontend.campaigns.respond-offer');
     Route::post('/campaigns/applications/{application}/withdraw', [FrontendCampaignApplicationController::class, 'withdrawApplication'])->name('frontend.campaigns.withdraw-application');
     Route::post('/campaigns/applications/{application}/update-work-status', [FrontendCampaignApplicationController::class, 'updateInfluencerWorkStatus'])->name('frontend.campaigns.update-work-status');
+    Route::post('/campaigns/applications/{application}/review-brand', [FrontendCampaignApplicationController::class, 'storeInfluencerBrandReview'])->name('frontend.campaigns.reviews.store');
     Route::post('/campaigns/{campaign}/influencer-assignments/{assignment}/update-status', [FrontendCampaignController::class, 'updateInfluencerStatus'])->name('campaigns.update-influencer-status');
 
     // Frontend Packages (Influencer)

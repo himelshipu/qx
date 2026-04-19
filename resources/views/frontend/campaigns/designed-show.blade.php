@@ -392,14 +392,62 @@
 									Last update:
 									{{ $progressItem['updated_at']?->format('M d, Y h:i A') ?? ($progressItem['decided_at']?->format('M d, Y h:i A') ?? 'Pending order kickoff') }}
 								</p>
-								<div class="mt-3 flex items-center gap-2">
-									<a href="{{ route('frontend.conversations.open-order', ['influencer' => $progressItem['influencer_id']]) }}"
-										class="inline-flex items-center gap-1 rounded-lg border border-gray-300 bg-white px-2.5 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700">
-										<x-icons.message-square class="h-3.5 w-3.5" />
-										Message
-									</a>
-								</div>
+								@if (auth()->user()->user_type === 'brand')
+									<div class="mt-3 flex items-center gap-2">
+										<a href="{{ route('frontend.conversations.open-order', ['influencer' => $progressItem['influencer_id']]) }}"
+											class="inline-flex items-center gap-1 rounded-lg border border-gray-300 bg-white px-2.5 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700">
+											<x-icons.message-square class="h-3.5 w-3.5" />
+											Message
+										</a>
+									</div>
+								@endif
 							</div>
+
+							@if (
+								auth()->user()->user_type === 'influencer' &&
+								$influencerApplication &&
+								$progressItem['application_id'] === $influencerApplication->id &&
+								in_array((string) $influencerApplication->status, ['approved', 'completed'], true)
+							)
+								<div class="rounded-xl border border-gray-200 dark:border-gray-700 p-4 bg-white dark:bg-gray-900/30 md:col-span-1">
+									@if ($influencerBrandReview)
+										<div class="rounded-lg border border-teal-200 bg-teal-50 px-3 py-3 text-xs text-teal-800">
+											<p class="font-semibold">Brand review submitted</p>
+											<p class="mt-1">Rating: {{ $influencerBrandReview->rating }}/5</p>
+											@if ($influencerBrandReview->title)
+												<p class="mt-1 font-medium">{{ $influencerBrandReview->title }}</p>
+											@endif
+											@if ($influencerBrandReview->comment)
+												<p class="mt-1">{{ $influencerBrandReview->comment }}</p>
+											@endif
+										</div>
+									@elseif ($canReviewBrand)
+										<form method="POST"
+											action="{{ route('frontend.campaigns.reviews.store', $influencerApplication) }}"
+											class="space-y-2 rounded-lg border border-gray-200 bg-gray-50 p-3 dark:border-gray-700 dark:bg-gray-800/50">
+											@csrf
+											<p class="text-xs font-semibold text-gray-700 dark:text-gray-200">Review this brand</p>
+											<div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+												<select name="rating"
+													class="rounded-lg border border-gray-300 bg-white px-2 py-2 text-xs text-gray-900 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100"
+													required>
+													<option value="">Rating</option>
+													@for ($r = 5; $r >= 1; $r--)
+														<option value="{{ $r }}">{{ $r }} star{{ $r === 1 ? '' : 's' }}</option>
+													@endfor
+												</select>
+												<input type="text" name="title" maxlength="120" placeholder="Title (optional)"
+													class="rounded-lg border border-gray-300 bg-white px-2 py-2 text-xs text-gray-900 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100">
+											</div>
+											<textarea name="comment" rows="2" maxlength="1200" placeholder="Comment (optional)"
+											 class="w-full rounded-lg border border-gray-300 bg-white px-2 py-2 text-xs text-gray-900 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100"></textarea>
+											<button type="submit"
+												class="w-full rounded-lg bg-indigo-600 px-3 py-2 text-xs font-semibold text-white hover:bg-indigo-500">Submit
+												Brand Review</button>
+										</form>
+									@endif
+								</div>
+							@endif
 						@endforeach
 					</div>
 				</div>
@@ -583,21 +631,7 @@
 													title="Message this influencer">
 													<x-icons.message-square class="w-3 h-3" />
 												</a>
-												@if ($application->status === 'approved')
-													@if ($progressByApplication[$application->id] ?? null)
-														<span
-															class="inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-semibold bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300">
-															Order: {{ $progressByApplication[$application->id]['status_label'] ?? 'Pending' }}
-														</span>
-														<a href="#work-progress"
-															class="px-2 py-1 text-xs rounded border border-emerald-300 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:border-emerald-800 dark:bg-emerald-900/20 dark:text-emerald-300 transition">View</a>
-													@else
-														<span
-															class="inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-semibold bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300">
-															Approved, waiting for order
-														</span>
-													@endif
-												@elseif ($application->status === 'rejected')
+												@if ($application->status === 'rejected')
 													<!-- Already declined -->
 													<button disabled
 														class="px-2 py-1 text-xs rounded bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300 cursor-not-allowed opacity-50"
@@ -616,20 +650,6 @@
 														title="Negotiation was declined">
 														<x-icons.x class="w-3 h-3" />
 													</button>
-												@elseif ($application->status === 'completed')
-													@if ($progressByApplication[$application->id] ?? null)
-														<span
-															class="inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-semibold bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300">
-															Completed
-														</span>
-														<a href="#work-progress"
-															class="px-2 py-1 text-xs rounded border border-emerald-300 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:border-emerald-800 dark:bg-emerald-900/20 dark:text-emerald-300 transition">View</a>
-													@else
-														<span
-															class="inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-semibold bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300">
-															Completed
-														</span>
-													@endif
 												@elseif ($campaign->status === 'closed')
 													<button disabled
 														class="px-2 py-1 text-xs rounded bg-gray-100 text-gray-400 dark:bg-gray-700 dark:text-gray-500 cursor-not-allowed opacity-50"
@@ -812,67 +832,12 @@
 									</div>
 								@endif
 
-								<!-- Work Status Update Section (only when the order exists) -->
-								@if ($influencerApplication->status === 'approved')
-									@if ($progressByApplication[$influencerApplication->id] ?? null)
-										<div
-											class="rounded-lg bg-emerald-50 dark:bg-emerald-900/20 p-4 border border-emerald-200 dark:border-emerald-900/50">
-											<p class="text-sm font-semibold text-emerald-900 dark:text-emerald-100 mb-3">✓ You're approved and the order
-												is live</p>
-											<p class="text-sm text-emerald-800 dark:text-emerald-200">
-												Your delivery stages are now tracked from the actual campaign order above.
-											</p>
-										</div>
-
-										<div
-											class="rounded-lg bg-blue-50 dark:bg-blue-900/20 p-4 border border-blue-200 dark:border-blue-900/50 mt-4">
-											<p class="text-xs font-semibold text-blue-600 dark:text-blue-300 uppercase tracking-wide mb-3">Update Work
-												Status</p>
-											@php
-												$normalizedWorkStatus = match ((string) ($influencerApplication->work_status ?? 'pending')) {
-												    'accepted' => 'in_progress',
-												    'on_review' => 'delivered',
-												    'completed' => 'approved',
-												    default => (string) ($influencerApplication->work_status ?? 'pending'),
-												};
-												$nextWorkOptions = match ($normalizedWorkStatus) {
-												    'pending' => [['value' => 'in_progress', 'label' => 'Start Work (In Progress)']],
-												    'in_progress' => [['value' => 'delivered', 'label' => 'Mark Delivered (For Review)']],
-												    'rejected' => [['value' => 'in_progress', 'label' => 'Resume Work (After Rejection)']],
-												    default => [],
-												};
-											@endphp
-											<form method="POST" action="{{ route('frontend.campaigns.update-work-status', $influencerApplication) }}"
-												class="space-y-3">
-												@csrf
-												<div>
-													<label
-														class="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide block mb-2">Current
-														Status</label>
-													<select name="work_status"
-														class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg bg-white dark:bg-gray-800 dark:border-gray-600 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
-														@foreach ($nextWorkOptions as $option)
-															<option value="{{ $option['value'] }}">{{ $option['label'] }}</option>
-														@endforeach
-													</select>
-												</div>
-												@if (!empty($nextWorkOptions))
-													<button type="submit"
-														class="w-full px-4 py-2 text-sm font-semibold rounded-lg bg-blue-600 text-white hover:bg-blue-700 dark:hover:bg-blue-600 transition">Update
-														Status</button>
-												@else
-													<p class="text-xs text-gray-600 dark:text-gray-300">No influencer action required right now. Wait for brand review.</p>
-												@endif
-											</form>
-										</div>
-									@else
-										<div class="rounded-lg bg-amber-50 dark:bg-amber-900/20 p-4 border border-amber-200 dark:border-amber-900/50">
-											<p class="text-sm font-semibold text-amber-900 dark:text-amber-100 mb-3">✓ You're approved</p>
-											<p class="text-sm text-amber-800 dark:text-amber-200">The order has not been created yet, so there is no
-												delivery status to update.</p>
-										</div>
-									@endif
-								@endif
+								<div class="rounded-lg bg-blue-50 dark:bg-blue-900/20 p-4 border border-blue-200 dark:border-blue-900/50">
+									<p class="text-sm font-semibold text-blue-900 dark:text-blue-100 mb-2">Work updates now live in the task cards above</p>
+									<p class="text-sm text-blue-800 dark:text-blue-200">
+										When you finish, use the task card in <a href="#work-progress" class="font-semibold underline">Influencer Work Progress</a> to mark it delivered for brand review.
+									</p>
+								</div>
 
 								<!-- Action Buttons -->
 								<div class="mt-4">
