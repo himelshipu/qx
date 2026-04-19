@@ -83,12 +83,25 @@
 			<div class="flex items-center justify-between gap-3 sm:gap-5 w-full sm:w-auto">
 
 				@if ($isBrandUser)
+					<a href="{{ route('frontend.conversations.index') }}"
+						class="relative flex items-center justify-center w-11 h-11 text-gray-500 bg-white border border-gray-200 rounded-full hover:bg-gray-50 hover:text-gray-700 dark:bg-gray-900 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white transition-colors duration-200"
+						title="Conversations">
+						@if (($frontendUnreadMessages ?? 0) > 0)
+							<span class="absolute top-1 right-1 min-w-4 h-4 px-1 rounded-full bg-red-500 text-white text-[10px] font-bold leading-4 text-center">
+								{{ ($frontendUnreadMessages ?? 0) > 99 ? '99+' : $frontendUnreadMessages }}
+							</span>
+						@endif
+						<x-icons.message-square class="w-5 h-5" />
+					</a>
+				@endif
+
+				@if ($isBrandUser)
 					<!-- Shopping Cart Icon (Brand only) -->
 					<div @click="isCartOpen = true" class="relative cursor-pointer hover:opacity-70 transition-opacity p-2">
 						<x-icons.shopping-cart class="w-5 h-5 " />
 
 						<span x-show="totalItemCount > 0" x-cloak
-							class="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-purple-600 text-white text-[10px] font-bold leading-[18px] text-center"
+							class="absolute -top-1 -right-1 min-w-4.5 h-4.5 px-1 rounded-full bg-purple-600 text-white text-[10px] font-bold leading-4.5 text-center"
 							x-text="totalItemCount"></span>
 
 						<div class="absolute bottom-1.5 left-1/2 -translate-x-1/2 flex items-center gap-0.5">
@@ -152,7 +165,7 @@
 										class="px-7 py-3.5 text-[15px] font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors flex items-center justify-between">
 										<span><i class="fas fa-shopping-cart mr-2"></i>Cart</span>
 										<span x-show="totalItemCount > 0" x-cloak
-											class="min-w-[20px] px-2 py-1 rounded-full bg-purple-600 text-white text-[11px] font-bold text-center"
+											class="min-w-5 px-2 py-1 rounded-full bg-purple-600 text-white text-[11px] font-bold text-center"
 											x-text="totalItemCount"></span>
 									</a>
 
@@ -241,7 +254,7 @@
 
 
 		<!-- ========================= CART SIDEBAR MODAL ========================= -->
-		<div x-show="isCartOpen" x-cloak class="fixed inset-0 z-[200] overflow-hidden" role="dialog" aria-modal="true">
+		<div x-show="isCartOpen" x-cloak class="fixed inset-0 z-200 overflow-hidden" role="dialog" aria-modal="true">
 
 			<!-- Backdrop Blur -->
 			<div x-show="isCartOpen" x-transition.opacity @click="isCartOpen = false"
@@ -365,7 +378,7 @@
 									</path>
 								</svg>
 								<h3 class="text-2xl font-bold text-gray-900 mb-2">Your cart is empty</h3>
-								<p class="text-gray-400 max-w-[240px]">Start adding influencers by clicking the button below</p>
+								<p class="text-gray-400 max-w-60">Start adding influencers by clicking the button below</p>
 							</div>
 						</div>
 

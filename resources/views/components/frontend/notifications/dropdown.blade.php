@@ -1,5 +1,5 @@
 <!-- Frontend Notification Dropdown Component -->
-<div x-data='frontendNotificationDropdown()' x-init="init()" class="relative">
+<div x-data='frontendNotificationDropdown({ unreadCount: @js($frontendUnreadNotifications ?? 0) })' x-init="init()" class="relative">
 	<!-- Bell Icon Button -->
 	<button @click="isOpen = !isOpen"
 		class="relative p-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 transition-colors"
@@ -23,7 +23,7 @@
 		class="absolute right-0 top-full mt-2 w-96 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 z-50 overflow-hidden">
 
 		<!-- Header -->
-		<div class="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-4">
+		<div class="bg-linear-to-r from-blue-600 to-blue-700 text-white px-6 py-4">
 			<div class="flex items-center justify-between">
 				<div>
 					<h3 class="font-semibold">Notifications</h3>
@@ -48,7 +48,7 @@
 					class="border-b border-gray-100 dark:border-gray-700 p-4 hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer transition-colors">
 					<div class="flex items-start gap-3">
 						<!-- Icon -->
-						<div class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 text-sm"
+						<div class="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 text-sm"
 							:style="`background-color: ${getColorBg(notification.color)}; color: ${getColorText(notification.color)};`">
 							<span x-html="notification.icon"></span>
 						</div>
@@ -61,7 +61,7 @@
 						</div>
 
 						<!-- Unread Indicator -->
-						<div x-show="notification.is_read === false" class="w-2 h-2 bg-blue-600 rounded-full flex-shrink-0 mt-1.5"></div>
+						<div x-show="notification.is_read === false" class="w-2 h-2 bg-blue-600 rounded-full shrink-0 mt-1.5"></div>
 					</div>
 				</div>
 			</template>
@@ -89,12 +89,12 @@
 </div>
 
 <script>
-	function frontendNotificationDropdown() {
+	function frontendNotificationDropdown(initialState = {}) {
 		return {
 			isOpen: false,
 			isLoading: false,
 			notifications: [],
-			unreadCount: 0,
+			unreadCount: initialState.unreadCount ?? 0,
 
 			async init() {
 		// Only load if user is authenticated by checking for CSRF token

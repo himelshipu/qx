@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Backend;
 use App\Http\Controllers\Controller;
 use App\Models\Brand;
 use App\Models\Campaign;
+use App\Models\Notification;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\OrderStatusHistory;
@@ -170,6 +171,23 @@ class OrderController extends Controller
                 ? ('FORCE: ' . $transitionNote)
                 : ($transitionNote ?: 'Admin updated order status')
             ]);
+
+            if ((int) $order->buyer_user_id > 0) {
+                Notification::create([
+                    'user_id' => (int) $order->buyer_user_id,
+                    'type' => 'order',
+                    'title' => 'Order status updated by admin',
+                    'body' => sprintf('Order %s moved from %s to %s.', $order->order_number, ucfirst(str_replace('_', ' ', $oldStatus)), ucfirst(str_replace('_', ' ', $status))),
+                    'data_json' => [
+                        'action_url' => route('frontend.orders.show', $order),
+                        'order_id' => $order->id,
+                        'status' => $status,
+                    ],
+                    'notifiable_type' => Order::class,
+                    'notifiable_id' => $order->id,
+                    'is_read' => false,
+                ]);
+            }
         }
 
         return redirect()
@@ -304,6 +322,45 @@ class OrderController extends Controller
             'status' => $newStatus
         ]);
 
+        $subOrder->loadMissing(['influencer.user', 'order']);
+        $influencerUserId = (int) ($subOrder->influencer?->user_id ?? 0);
+        if ($influencerUserId > 0) {
+            Notification::create([
+                'user_id' => $influencerUserId,
+                'type' => 'order',
+                'title' => 'Campaign task updated by admin',
+                'body' => sprintf('Your campaign task status is now %s.', ucfirst(str_replace('_', ' ', $newStatus))),
+                'data_json' => [
+                    'action_url' => route('frontend.orders.show', $subOrder->order_id),
+                    'order_id' => $subOrder->order_id,
+                    'sub_order_id' => $subOrder->id,
+                    'status' => $newStatus,
+                ],
+                'notifiable_type' => SubOrder::class,
+                'notifiable_id' => $subOrder->id,
+                'is_read' => false,
+            ]);
+        }
+
+        $brandUserId = (int) ($subOrder->order?->buyer_user_id ?? 0);
+        if ($brandUserId > 0) {
+            Notification::create([
+                'user_id' => $brandUserId,
+                'type' => 'order',
+                'title' => 'Campaign order task updated',
+                'body' => sprintf('Admin changed a campaign sub-order to %s.', ucfirst(str_replace('_', ' ', $newStatus))),
+                'data_json' => [
+                    'action_url' => route('frontend.orders.show', $subOrder->order_id),
+                    'order_id' => $subOrder->order_id,
+                    'sub_order_id' => $subOrder->id,
+                    'status' => $newStatus,
+                ],
+                'notifiable_type' => SubOrder::class,
+                'notifiable_id' => $subOrder->id,
+                'is_read' => false,
+            ]);
+        }
+
         if ($newStatus === 'accepted') {
             $subOrder->update(['accepted_at' => now()]);
         } elseif ($newStatus === 'delivered') {
@@ -345,6 +402,25 @@ class OrderController extends Controller
             'payout_marked_by_user_id' => $request->user()->id,
             'payout_marked_at'         => now()
         ]);
+
+        $influencerUserId = (int) ($subOrder->influencer?->user_id ?? 0);
+        if ($influencerUserId > 0) {
+            Notification::create([
+                'user_id' => $influencerUserId,
+                'type' => 'payment',
+                'title' => 'Campaign payout recorded',
+                'body' => sprintf('A payout of %s %.2f was recorded for your campaign task.', (string) $subOrder->currency, (float) $validated['amount']),
+                'data_json' => [
+                    'action_url' => route('frontend.orders.show', $subOrder->order_id),
+                    'order_id' => $subOrder->order_id,
+                    'sub_order_id' => $subOrder->id,
+                    'payout_amount' => (float) $validated['amount'],
+                ],
+                'notifiable_type' => SubOrder::class,
+                'notifiable_id' => $subOrder->id,
+                'is_read' => false,
+            ]);
+        }
 
         return redirect()
             ->back()
@@ -437,6 +513,45 @@ class OrderController extends Controller
 
         $orderItem->update($updates);
 
+        $orderItem->loadMissing(['influencer.user', 'order']);
+        $influencerUserId = (int) ($orderItem->influencer?->user_id ?? 0);
+        if ($influencerUserId > 0) {
+            Notification::create([
+                'user_id' => $influencerUserId,
+                'type' => 'order',
+                'title' => 'Package task updated by admin',
+                'body' => sprintf('Your package task "%s" is now %s.', (string) ($orderItem->title ?? 'Task'), ucfirst(str_replace('_', ' ', $newStatus))),
+                'data_json' => [
+                    'action_url' => route('frontend.orders.show', $orderItem->order_id),
+                    'order_id' => $orderItem->order_id,
+                    'order_item_id' => $orderItem->id,
+                    'status' => $newStatus,
+                ],
+                'notifiable_type' => OrderItem::class,
+                'notifiable_id' => $orderItem->id,
+                'is_read' => false,
+            ]);
+        }
+
+        $brandUserId = (int) ($orderItem->order?->buyer_user_id ?? 0);
+        if ($brandUserId > 0) {
+            Notification::create([
+                'user_id' => $brandUserId,
+                'type' => 'order',
+                'title' => 'Package item updated',
+                'body' => sprintf('Admin changed package item "%s" to %s.', (string) ($orderItem->title ?? 'Task'), ucfirst(str_replace('_', ' ', $newStatus))),
+                'data_json' => [
+                    'action_url' => route('frontend.orders.show', $orderItem->order_id),
+                    'order_id' => $orderItem->order_id,
+                    'order_item_id' => $orderItem->id,
+                    'status' => $newStatus,
+                ],
+                'notifiable_type' => OrderItem::class,
+                'notifiable_id' => $orderItem->id,
+                'is_read' => false,
+            ]);
+        }
+
         $this->syncOrderStatusFromItems($orderItem->order);
 
         return redirect()
@@ -463,6 +578,26 @@ class OrderController extends Controller
             'payout_marked_by_user_id' => $request->user()->id,
             'payout_marked_at'         => now()
         ]);
+
+        $orderItem->loadMissing(['influencer.user']);
+        $influencerUserId = (int) ($orderItem->influencer?->user_id ?? 0);
+        if ($influencerUserId > 0) {
+            Notification::create([
+                'user_id' => $influencerUserId,
+                'type' => 'payment',
+                'title' => 'Package payout recorded',
+                'body' => sprintf('A payout of %.2f was recorded for package task "%s".', (float) $validated['amount'], (string) ($orderItem->title ?? 'Task')),
+                'data_json' => [
+                    'action_url' => route('frontend.orders.show', $orderItem->order_id),
+                    'order_id' => $orderItem->order_id,
+                    'order_item_id' => $orderItem->id,
+                    'payout_amount' => (float) $validated['amount'],
+                ],
+                'notifiable_type' => OrderItem::class,
+                'notifiable_id' => $orderItem->id,
+                'is_read' => false,
+            ]);
+        }
 
         return redirect()
             ->back()

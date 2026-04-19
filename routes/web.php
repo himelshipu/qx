@@ -251,6 +251,7 @@ Route::prefix('dashboard')->name('dashboard.')->middleware(['auth', 'verified', 
 
     // Dashboard
     Route::get('/', [DashboardController::class, 'index'])->name('index');
+    Route::get('/api/sidebar-badges', [DashboardController::class, 'sidebarBadges'])->name('api.sidebar-badges');
     Route::get('/categories', [CategoryController::class, 'index'])->name('categories.index');
     Route::get('/categories/table', [CategoryController::class, 'table'])->name('categories.table');
     Route::get('/categories/create', [CategoryController::class, 'create'])->name('categories.create');

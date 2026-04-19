@@ -94,6 +94,8 @@ class CampaignController extends Controller
         $campaignOrders = \App\Models\Order::where('campaign_id', $campaign->id)
             ->with([
                 'subOrders' => fn($q) => $q->select('id', 'order_id', 'campaign_influencer_id', 'influencer_id', 'status', 'amount', 'currency', 'accepted_at', 'completed_at', 'paid_at', 'created_at', 'updated_at'),
+                'subOrders.brandToInfluencerReview',
+                'subOrders.influencerToBrandReview',
             ])
             ->get();
 
@@ -102,6 +104,13 @@ class CampaignController extends Controller
             ->sortByDesc(fn($subOrder) => $subOrder->updated_at ?? $subOrder->created_at)
             ->unique('influencer_id')
             ->keyBy('influencer_id');
+
+        $brandTaskReviewsBySubOrder = Review::query()
+            ->whereIn('sub_order_id', $latestSubOrdersByInfluencer->pluck('id')->filter()->all())
+            ->where('reviewer_type', 'brand')
+            ->where('reviewee_type', 'influencer')
+            ->get()
+            ->keyBy('sub_order_id');
 
         $assignmentByInfluencer = CampaignInfluencer::query()
             ->where('campaign_id', $campaign->id)
@@ -140,6 +149,7 @@ class CampaignController extends Controller
                 return [
                     'application_id'    => $application->id,
                     'influencer_id'     => $application->influencer_id,
+                    'sub_order_id'      => $subOrder?->id,
                     'influencer_name'   => $application->influencer->user->name ?? 'Unknown Influencer',
                     'influencer_handle' => $application->influencer->display_name ?? null,
                     'status_key'        => $statusKey,
@@ -151,6 +161,13 @@ class CampaignController extends Controller
                     'currency'          => strtoupper((string) ($subOrder?->currency ?? $campaign->currency ?? 'USD'))
                 ];
             });
+
+        $brandTaskReviewsBySubOrder = Review::query()
+            ->whereIn('sub_order_id', $latestSubOrdersByInfluencer->pluck('id')->filter()->all())
+            ->where('reviewer_type', 'brand')
+            ->where('reviewee_type', 'influencer')
+            ->get()
+            ->keyBy('sub_order_id');
 
         $influencerApplication = null;
         $influencerBrandReview = null;
@@ -202,6 +219,7 @@ class CampaignController extends Controller
             'progressByApplication'       => $workProgress->keyBy('application_id'),
             'assignmentByInfluencer'      => $assignmentByInfluencer,
             'latestSubOrdersByInfluencer' => $latestSubOrdersByInfluencer,
+            'brandTaskReviewsBySubOrder'  => $brandTaskReviewsBySubOrder,
             'brandName'                   => $campaign->brand?->brand_name ?? $campaign->createdBy?->name ?? 'Unknown',
             'influencerApplication'       => $influencerApplication,
             'influencerBrandReview'       => $influencerBrandReview,

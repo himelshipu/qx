@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Frontend;
 use App\Http\Controllers\Controller;
 use App\Models\Campaign;
 use App\Models\CampaignApplication;
+use App\Models\Notification;
 use App\Models\Review;
 use App\Models\SubOrder;
 use App\Services\Frontend\Contracts\CampaignNegotiationServiceInterface;
@@ -172,6 +173,36 @@ class CampaignApplicationController extends Controller
             $allowMissingOffer,
         );
 
+        $influencerUserId = (int) ($application->influencer?->user_id ?? 0);
+        if ($influencerUserId > 0) {
+            $title = match ($action) {
+                'accept' => 'Campaign offer accepted',
+                'counter' => 'New counter offer from brand',
+                default => 'Campaign offer declined',
+            };
+            $body = match ($action) {
+                'accept' => sprintf('Your application for "%s" was accepted.', $campaign->title),
+                'counter' => sprintf('Brand sent a counter offer for "%s".', $campaign->title),
+                default => sprintf('Brand declined your application for "%s".', $campaign->title),
+            };
+
+            Notification::create([
+                'user_id' => $influencerUserId,
+                'type' => 'campaign',
+                'title' => $title,
+                'body' => $body,
+                'data_json' => [
+                    'action_url' => route('frontend.campaigns.show', $campaign),
+                    'campaign_id' => $campaign->id,
+                    'application_id' => $application->id,
+                    'action' => $action,
+                ],
+                'notifiable_type' => CampaignApplication::class,
+                'notifiable_id' => $application->id,
+                'is_read' => false,
+            ]);
+        }
+
         if ($request->expectsJson()) {
             return response()->json(['success' => true, 'message' => $message]);
         }
@@ -228,6 +259,36 @@ class CampaignApplicationController extends Controller
             isset($validated['influencer_offer']) ? (float) $validated['influencer_offer'] : null,
         );
 
+        $brandUserId = (int) ($campaign->brand?->user_id ?? 0);
+        if ($brandUserId > 0) {
+            $title = match ((string) $validated['action']) {
+                'accept' => 'Influencer accepted your offer',
+                'counter' => 'Influencer sent a counter offer',
+                default => 'Influencer declined your offer',
+            };
+            $body = match ((string) $validated['action']) {
+                'accept' => sprintf('%s accepted your campaign offer for "%s".', $user->name, $campaign->title),
+                'counter' => sprintf('%s sent a counter offer for "%s".', $user->name, $campaign->title),
+                default => sprintf('%s declined your campaign offer for "%s".', $user->name, $campaign->title),
+            };
+
+            Notification::create([
+                'user_id' => $brandUserId,
+                'type' => 'campaign',
+                'title' => $title,
+                'body' => $body,
+                'data_json' => [
+                    'action_url' => route('frontend.campaigns.show', $campaign),
+                    'campaign_id' => $campaign->id,
+                    'application_id' => $application->id,
+                    'action' => (string) $validated['action'],
+                ],
+                'notifiable_type' => CampaignApplication::class,
+                'notifiable_id' => $application->id,
+                'is_read' => false,
+            ]);
+        }
+
         return redirect()->route('frontend.campaigns.show', $campaign)
             ->with('success', $message);
     }
@@ -257,6 +318,24 @@ class CampaignApplicationController extends Controller
             $validated['pitch_message'] ?? null,
         );
 
+        $brandUserId = (int) ($campaign->brand?->user_id ?? 0);
+        if ($brandUserId > 0) {
+            Notification::create([
+                'user_id' => $brandUserId,
+                'type' => 'campaign',
+                'title' => 'New campaign application',
+                'body' => sprintf('%s applied to "%s".', $user->name, $campaign->title),
+                'data_json' => [
+                    'action_url' => route('frontend.campaigns.show', $campaign),
+                    'campaign_id' => $campaign->id,
+                    'influencer_id' => $influencer->id,
+                ],
+                'notifiable_type' => Campaign::class,
+                'notifiable_id' => $campaign->id,
+                'is_read' => false,
+            ]);
+        }
+
         $flashType = str_contains($result['message'], 'already applied') ? 'warning' : 'success';
 
         return redirect()->route('frontend.campaigns.show', $campaign)
@@ -277,6 +356,25 @@ class CampaignApplicationController extends Controller
         }
 
         $campaign = $application->campaign;
+
+        $brandUserId = (int) ($campaign->brand?->user_id ?? 0);
+        if ($brandUserId > 0) {
+            Notification::create([
+                'user_id' => $brandUserId,
+                'type' => 'campaign',
+                'title' => 'Campaign application withdrawn',
+                'body' => sprintf('%s withdrew from "%s".', $user->name, $campaign->title),
+                'data_json' => [
+                    'action_url' => route('frontend.campaigns.show', $campaign),
+                    'campaign_id' => $campaign->id,
+                    'application_id' => $application->id,
+                ],
+                'notifiable_type' => CampaignApplication::class,
+                'notifiable_id' => $application->id,
+                'is_read' => false,
+            ]);
+        }
+
         $application->delete();
 
         return redirect()->route('frontend.campaigns.show', $campaign)
@@ -287,6 +385,7 @@ class CampaignApplicationController extends Controller
     {
         $user         = Auth::user();
         $influencerId = $user->influencer?->id;
+        $campaign     = $application->campaign;
 
         if ($user->user_type !== 'influencer' || !$influencerId || (int) $application->influencer_id !== (int) $influencerId) {
             abort(403, 'Not authorized to update this application');
@@ -297,7 +396,7 @@ class CampaignApplicationController extends Controller
         }
 
         $validated = $request->validate([
-            'work_status' => 'required|in:pending,accepted,in_progress,delivered,on_review,approved,rejected,completed'
+            'work_status' => 'required|in:pending,accepted,in_progress,delivered,on_review,approved,rejected,completed',
         ]);
 
         $subOrder = $this->resolveCampaignSubOrder($application);
@@ -329,6 +428,36 @@ class CampaignApplicationController extends Controller
             $subOrderUpdates['delivered_at'] = now();
         }
         $subOrder->update($subOrderUpdates);
+
+        $brandUserId = (int) ($campaign->brand?->user_id ?? 0);
+        if ($brandUserId > 0) {
+            $statusLabel = ucfirst(str_replace('_', ' ', $nextStatus));
+
+            Notification::create([
+                'user_id' => $brandUserId,
+                'type' => 'campaign',
+                'title' => 'Campaign work updated',
+                'body' => sprintf(
+                    '%s updated the task status to %s for "%s".',
+                    $user->name,
+                    $statusLabel,
+                    $campaign->title,
+                ),
+                'data_json' => [
+                    'action_url' => route('frontend.campaigns.show', $campaign),
+                    'campaign_id' => $campaign->id,
+                    'application_id' => $application->id,
+                    'influencer_id' => $influencerId,
+                    'status' => $nextStatus,
+                    'status_label' => $statusLabel,
+                    'icon_class' => 'blue',
+                    'color_class' => 'blue',
+                ],
+                'notifiable_type' => CampaignApplication::class,
+                'notifiable_id' => $application->id,
+                'is_read' => false,
+            ]);
+        }
 
         return redirect()->back()->with('success', 'Work status updated successfully: ' . ucfirst(str_replace('_', ' ', $nextStatus)));
     }
@@ -386,6 +515,24 @@ class CampaignApplicationController extends Controller
             'is_public'     => true
         ]);
 
+        $brandUserId = (int) ($application->campaign->brand?->user_id ?? 0);
+        if ($brandUserId > 0) {
+            Notification::create([
+                'user_id' => $brandUserId,
+                'type' => 'review',
+                'title' => 'New brand review received',
+                'body' => sprintf('%s submitted a review after campaign completion.', $user->name),
+                'data_json' => [
+                    'action_url' => route('frontend.campaigns.show', $application->campaign),
+                    'campaign_id' => $application->campaign_id,
+                    'application_id' => $application->id,
+                ],
+                'notifiable_type' => CampaignApplication::class,
+                'notifiable_id' => $application->id,
+                'is_read' => false,
+            ]);
+        }
+
         return redirect()->back()->with('success', 'Your rating has been submitted successfully.');
     }
 
@@ -406,7 +553,10 @@ class CampaignApplicationController extends Controller
         }
 
         $validated = $request->validate([
-            'work_status' => 'required|in:pending,accepted,in_progress,delivered,on_review,approved,rejected,completed'
+            'work_status' => 'required|in:pending,accepted,in_progress,delivered,on_review,approved,rejected,completed',
+            'rating'      => 'nullable|integer|min:1|max:5',
+            'title'       => 'nullable|string|max:120',
+            'comment'     => 'nullable|string|max:1200',
         ]);
 
         $subOrder = $this->resolveCampaignSubOrder($application);
@@ -426,6 +576,10 @@ class CampaignApplicationController extends Controller
             return redirect()->back()->with('error', 'Brand can only approve or reject delivered work.');
         }
 
+        if ($currentStatus === 'delivered' && $request->filled('rating')) {
+            return redirect()->back()->with('error', 'Approve work first. After acceptance, submit the review.');
+        }
+
         $applicationUpdates = [
             'work_status' => $this->persistApplicationWorkStatus($nextStatus),
         ];
@@ -443,7 +597,62 @@ class CampaignApplicationController extends Controller
         }
         $subOrder->update($subOrderUpdates);
 
-        return redirect()->back()->with('success', 'Work status updated to ' . ucfirst(str_replace('_', ' ', $nextStatus)) . '.');
+        $influencerUserId = (int) ($application->influencer?->user_id ?? 0);
+        if ($influencerUserId > 0) {
+            Notification::create([
+                'user_id' => $influencerUserId,
+                'type' => 'campaign',
+                'title' => 'Campaign task reviewed by brand',
+                'body' => sprintf(
+                    'Brand marked your task as %s for "%s".',
+                    ucfirst(str_replace('_', ' ', $nextStatus)),
+                    $campaign->title,
+                ),
+                'data_json' => [
+                    'action_url' => route('frontend.campaigns.show', $campaign),
+                    'campaign_id' => $campaign->id,
+                    'application_id' => $application->id,
+                    'status' => $nextStatus,
+                ],
+                'notifiable_type' => CampaignApplication::class,
+                'notifiable_id' => $application->id,
+                'is_read' => false,
+            ]);
+        }
+
+        $brandReview = null;
+        if ($nextStatus === 'approved' && $request->filled('rating')) {
+            $brandReview = Review::query()
+                ->where('sub_order_id', (int) $subOrder->id)
+                ->where('reviewer_type', 'brand')
+                ->where('reviewee_type', 'influencer')
+                ->first();
+
+            if (! $brandReview) {
+                $brandReview = Review::create([
+                    'order_item_id' => null,
+                    'sub_order_id'  => (int) $subOrder->id,
+                    'brand_id'      => (int) $campaign->brand_id,
+                    'influencer_id' => (int) $application->influencer_id,
+                    'reviewer_type' => 'brand',
+                    'reviewee_type' => 'influencer',
+                    'rating'        => (int) $validated['rating'],
+                    'title'         => $validated['title'] ?? null,
+                    'comment'       => $validated['comment'] ?? null,
+                    'is_public'     => true,
+                ]);
+            }
+        }
+
+        if ($brandReview && $brandReview->exists) {
+            $message = 'Work approved and review submitted successfully.';
+        } elseif ($nextStatus === 'approved') {
+            $message = 'Work approved successfully. You can now leave a review.';
+        } else {
+            $message = 'Work status updated to ' . ucfirst(str_replace('_', ' ', $nextStatus)) . '.';
+        }
+
+        return redirect()->back()->with('success', $message);
     }
 
     private function normalizeCampaignTaskStatus(string $status): string

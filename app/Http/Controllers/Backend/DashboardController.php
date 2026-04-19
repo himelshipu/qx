@@ -10,10 +10,18 @@ use App\Models\Order;
 use App\Models\Package;
 use App\Models\Review;
 use App\Models\User;
+use App\Services\Admin\CommunicationBadgeService;
 use Carbon\Carbon;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Auth;
 
 class DashboardController extends Controller
 {
+    public function sidebarBadges(): JsonResponse
+    {
+        return response()->json(app(CommunicationBadgeService::class)->getSidebarBadgeCounts(Auth::user()));
+    }
+
     public function index()
     {
         // ============= KEY PERFORMANCE INDICATORS =============

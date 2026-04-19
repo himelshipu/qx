@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Frontend;
 use App\Http\Controllers\Controller;
 use App\Helpers\OrderStatusHelper;
 use App\Models\Influencer;
+use App\Models\Notification;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\OrderStatusHistory;
@@ -311,6 +312,23 @@ class OrderController extends Controller
             'is_public'     => true
         ]);
 
+        $brandUserId = (int) $order->buyer_user_id;
+        if ($brandUserId > 0) {
+            Notification::create([
+                'user_id' => $brandUserId,
+                'type' => 'review',
+                'title' => 'New brand review received',
+                'body' => sprintf('%s reviewed your brand for order %s.', $user->name, $order->order_number),
+                'data_json' => [
+                    'action_url' => route('frontend.orders.show', $order),
+                    'order_id' => $order->id,
+                ],
+                'notifiable_type' => Order::class,
+                'notifiable_id' => $order->id,
+                'is_read' => false,
+            ]);
+        }
+
         return back()->with('success', 'Review submitted successfully.');
     }
 
@@ -393,6 +411,30 @@ class OrderController extends Controller
 
         $item->update($updates);
 
+        $brandUserId = (int) $order->buyer_user_id;
+        if ($brandUserId > 0) {
+            Notification::create([
+                'user_id' => $brandUserId,
+                'type' => 'order',
+                'title' => 'Task status updated',
+                'body' => sprintf(
+                    '%s moved task "%s" to %s.',
+                    $user->name,
+                    (string) ($item->title ?? 'Order task'),
+                    ucfirst(str_replace('_', ' ', $newStatus))
+                ),
+                'data_json' => [
+                    'action_url' => route('frontend.orders.show', $order),
+                    'order_id' => $order->id,
+                    'item_id' => $item->id,
+                    'status' => $newStatus,
+                ],
+                'notifiable_type' => OrderItem::class,
+                'notifiable_id' => $item->id,
+                'is_read' => false,
+            ]);
+        }
+
         $this->syncOrderStatusFromItems($order);
 
         if ($order->parentOrder) {
@@ -461,6 +503,33 @@ class OrderController extends Controller
         ];
 
         $item->update($updates);
+
+        $influencerUserId = null;
+        if ($isSubOrder) {
+            $item->loadMissing('influencer.user');
+            $influencerUserId = (int) ($item->influencer?->user_id ?? 0);
+        } else {
+            $item->loadMissing('influencer.user');
+            $influencerUserId = (int) ($item->influencer?->user_id ?? 0);
+        }
+
+        if ($influencerUserId > 0) {
+            Notification::create([
+                'user_id' => $influencerUserId,
+                'type' => 'order',
+                'title' => 'Task decision received',
+                'body' => sprintf('Brand marked your work as %s.', ucfirst(str_replace('_', ' ', $decision))),
+                'data_json' => [
+                    'action_url' => route('frontend.orders.show', $order),
+                    'order_id' => $order->id,
+                    'item_id' => (int) $item->id,
+                    'status' => $decision,
+                ],
+                'notifiable_type' => $isSubOrder ? SubOrder::class : OrderItem::class,
+                'notifiable_id' => (int) $item->id,
+                'is_read' => false,
+            ]);
+        }
 
         // Only sync child order status for OrderItem
         if (!$isSubOrder) {
@@ -553,6 +622,24 @@ class OrderController extends Controller
             'comment'       => $validated['comment'] ?? null,
             'is_public'     => true
         ]);
+
+        $influencerUserId = (int) (Influencer::query()->where('id', (int) $item->influencer_id)->value('user_id') ?? 0);
+        if ($influencerUserId > 0) {
+            Notification::create([
+                'user_id' => $influencerUserId,
+                'type' => 'review',
+                'title' => 'New task review received',
+                'body' => 'Brand submitted a review for your completed task.',
+                'data_json' => [
+                    'action_url' => route('frontend.orders.show', $order),
+                    'order_id' => $order->id,
+                    'item_id' => (int) $item->id,
+                ],
+                'notifiable_type' => $isSubOrder ? SubOrder::class : OrderItem::class,
+                'notifiable_id' => (int) $item->id,
+                'is_read' => false,
+            ]);
+        }
 
         // Mark as completed
         $item->update(['status' => 'completed']);

@@ -7,6 +7,7 @@ use App\Http\Requests\Backend\Campaign\StoreCampaignRequest;
 use App\Models\Campaign;
 use App\Models\CampaignApplication;
 use App\Models\Influencer;
+use App\Models\Notification;
 use App\Services\Admin\CampaignService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -67,9 +68,11 @@ class CampaignController extends Controller
 
         $campaignId = $validated['campaign_id'];
         $influencerIds = $validated['influencer_ids'];
+        $campaign = Campaign::with(['brand.user'])->findOrFail($campaignId);
 
         $now = now();
         $created = 0;
+        $createdInfluencerIds = [];
 
         foreach ($influencerIds as $influencerId) {
             $exists = CampaignApplication::where('campaign_id', $campaignId)
@@ -84,6 +87,51 @@ class CampaignController extends Controller
                     'applied_at' => $now,
                 ]);
                 $created++;
+                $createdInfluencerIds[] = (int) $influencerId;
+            }
+        }
+
+        if ($created > 0) {
+            $brandUserId = (int) ($campaign->brand?->user_id ?? 0);
+            if ($brandUserId > 0) {
+                Notification::create([
+                    'user_id' => $brandUserId,
+                    'type' => 'campaign',
+                    'title' => 'Influencers assigned to your campaign',
+                    'body' => sprintf('%d influencer(s) were assigned to "%s" by admin.', $created, $campaign->title),
+                    'data_json' => [
+                        'action_url' => route('frontend.campaigns.show', $campaign),
+                        'campaign_id' => $campaign->id,
+                        'count' => $created,
+                    ],
+                    'notifiable_type' => Campaign::class,
+                    'notifiable_id' => $campaign->id,
+                    'is_read' => false,
+                ]);
+            }
+
+            $influencerUsers = Influencer::query()
+                ->whereIn('id', $createdInfluencerIds)
+                ->pluck('user_id')
+                ->filter()
+                ->map(fn($id) => (int) $id)
+                ->unique()
+                ->values();
+
+            foreach ($influencerUsers as $userId) {
+                Notification::create([
+                    'user_id' => $userId,
+                    'type' => 'campaign',
+                    'title' => 'You were invited to a campaign',
+                    'body' => sprintf('You have been invited to "%s".', $campaign->title),
+                    'data_json' => [
+                        'action_url' => route('frontend.campaigns.show', $campaign),
+                        'campaign_id' => $campaign->id,
+                    ],
+                    'notifiable_type' => Campaign::class,
+                    'notifiable_id' => $campaign->id,
+                    'is_read' => false,
+                ]);
             }
         }
 

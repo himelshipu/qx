@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Backend;
 
 use App\Http\Controllers\Controller;
 use App\Models\Role;
+use App\Models\Notification;
 use App\Traits\LogsRbacChanges;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -176,6 +177,24 @@ class RoleController extends Controller
             }
 
             $role->update(['is_active' => !$role->is_active]);
+
+            $role->loadMissing('users');
+            foreach ($role->users as $user) {
+                Notification::create([
+                    'user_id' => $user->id,
+                    'type' => 'role',
+                    'title' => 'Role status changed',
+                    'body' => sprintf('The %s role is now %s.', $role->name, $role->is_active ? 'active' : 'inactive'),
+                    'data_json' => [
+                        'role_id' => $role->id,
+                        'role_name' => $role->name,
+                        'is_active' => $role->is_active,
+                    ],
+                    'notifiable_type' => Role::class,
+                    'notifiable_id' => $role->id,
+                    'is_read' => false,
+                ]);
+            }
 
             return response()->json([
                 'success'   => true,

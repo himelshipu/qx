@@ -13,6 +13,9 @@
                 'brandUser',
                 'messages' => fn($query) => $query->latest()->limit(1),
             ])
+            ->withCount([
+                'messages as unread_messages_count' => fn($query) => $query->whereNull('read_at')->where('sender_user_id', '!=', $user->id),
+            ])
             ->orderByDesc('updated_at')
             ->get();
 
@@ -66,14 +69,20 @@
                                         <span>{{ $getInitials($partyName) }}</span>
                                     @endif
                                 </div>
-                                <span class="absolute bottom-0 right-0 block h-3 w-3 rounded-full bg-green-500 ring-2 ring-white dark:ring-gray-900"></span>
+                                @if (($item->unread_messages_count ?? 0) > 0)
+                                    <span class="absolute -top-1 -right-1 min-w-4 h-4 px-1 rounded-full bg-red-500 text-white text-[10px] font-bold leading-4 text-center">
+                                        {{ $item->unread_messages_count > 99 ? '99+' : $item->unread_messages_count }}
+                                    </span>
+                                @else
+                                    <span class="absolute bottom-0 right-0 block h-3 w-3 rounded-full bg-green-500 ring-2 ring-white dark:ring-gray-900"></span>
+                                @endif
                             </div>
                             <div class="min-w-0 flex-1">
                                 <div class="flex items-center justify-between gap-2">
                                     <h3 class="truncate text-sm font-semibold text-gray-900 dark:text-white">{{ $partyName }}</h3>
                                     <span class="text-[11px] font-medium text-gray-400 dark:text-gray-500">{{ $item->updated_at->diffForHumans() }}</span>
                                 </div>
-                                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400 line-clamp-1">
+                                <p class="mt-1 text-xs line-clamp-1 {{ ($item->unread_messages_count ?? 0) > 0 ? 'font-semibold text-gray-800 dark:text-gray-100' : 'text-gray-500 dark:text-gray-400' }}">
                                     {{ $latestMessage?->message ? \Illuminate\Support\Str::limit($latestMessage->message, 50) : '✨ No messages yet' }}
                                 </p>
                             </div>

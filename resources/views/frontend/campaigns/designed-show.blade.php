@@ -392,13 +392,95 @@
 									Last update:
 									{{ $progressItem['updated_at']?->format('M d, Y h:i A') ?? ($progressItem['decided_at']?->format('M d, Y h:i A') ?? 'Pending order kickoff') }}
 								</p>
+								@if (
+									auth()->user()->user_type === 'influencer' &&
+									$influencerApplication &&
+									$progressItem['application_id'] === $influencerApplication->id &&
+									in_array((string) $influencerApplication->status, ['approved', 'completed'], true)
+								)
+									<div class="mt-3 rounded-lg border border-gray-200 bg-white p-3 dark:border-gray-700 dark:bg-gray-900/40">
+										<p class="text-xs font-semibold text-gray-700 dark:text-gray-200">Update your work progress</p>
+										@if (in_array($progressItem['status_key'], ['pending', 'accepted'], true))
+											<form method="POST" action="{{ route('frontend.campaigns.update-work-status', $influencerApplication) }}" class="mt-2">
+												@csrf
+												<input type="hidden" name="work_status" value="in_progress">
+												<button type="submit"
+													class="inline-flex w-full items-center justify-center gap-1 rounded-lg bg-blue-600 px-3 py-2 text-xs font-semibold text-white hover:bg-blue-500 transition-colors">
+													Start Work
+												</button>
+											</form>
+										@elseif ($progressItem['status_key'] === 'in_progress')
+											<form method="POST" action="{{ route('frontend.campaigns.update-work-status', $influencerApplication) }}" class="mt-2">
+												@csrf
+												<input type="hidden" name="work_status" value="delivered">
+												<button type="submit"
+													class="inline-flex w-full items-center justify-center gap-1 rounded-lg bg-emerald-600 px-3 py-2 text-xs font-semibold text-white hover:bg-emerald-500 transition-colors">
+													Mark Delivered
+												</button>
+											</form>
+										@elseif ($progressItem['status_key'] === 'delivered')
+											<p class="mt-2 text-xs text-emerald-700 dark:text-emerald-300">Delivered. Waiting for brand review.</p>
+										@endif
+									</div>
+								@endif
 								@if (auth()->user()->user_type === 'brand')
-									<div class="mt-3 flex items-center gap-2">
-										<a href="{{ route('frontend.conversations.open-order', ['influencer' => $progressItem['influencer_id']]) }}"
-											class="inline-flex items-center gap-1 rounded-lg border border-gray-300 bg-white px-2.5 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700">
-											<x-icons.message-square class="h-3.5 w-3.5" />
-											Message
-										</a>
+									@php
+										$brandTaskReview = $brandTaskReviewsBySubOrder->get($progressItem['sub_order_id'] ?? null);
+									@endphp
+									<div class="mt-4 rounded-lg border border-gray-200 bg-white p-3 dark:border-gray-700 dark:bg-gray-900/40">
+										<div class="flex items-center justify-between gap-2">
+											<p class="text-xs font-semibold text-gray-700 dark:text-gray-200">Brand actions</p>
+											<a href="{{ route('frontend.conversations.open-order', ['influencer' => $progressItem['influencer_id']]) }}"
+												class="inline-flex items-center gap-1 rounded-lg border border-gray-300 bg-white px-2.5 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700">
+												<x-icons.message-square class="h-3.5 w-3.5" />
+												Message
+											</a>
+										</div>
+
+										@if ($progressItem['status_key'] === 'delivered')
+											<div class="mt-3 grid grid-cols-2 gap-2">
+												<form method="POST" action="{{ route('frontend.campaigns.brand-update-work-status', ['campaign' => $campaign, 'application' => $progressItem['application_id']]) }}">
+													@csrf
+													<input type="hidden" name="work_status" value="approved">
+													<button type="submit" class="w-full rounded-lg bg-emerald-600 px-3 py-2 text-xs font-semibold text-white hover:bg-emerald-500">Approve Work</button>
+												</form>
+												<form method="POST" action="{{ route('frontend.campaigns.brand-update-work-status', ['campaign' => $campaign, 'application' => $progressItem['application_id']]) }}">
+													@csrf
+													<input type="hidden" name="work_status" value="rejected">
+													<button type="submit" class="w-full rounded-lg bg-rose-600 px-3 py-2 text-xs font-semibold text-white hover:bg-rose-500">Reject Work</button>
+												</form>
+											</div>
+										@elseif (in_array($progressItem['status_key'], ['approved', 'completed'], true))
+											@if ($brandTaskReview)
+												<div class="mt-3 rounded-lg border border-teal-200 bg-teal-50 px-3 py-3 text-xs text-teal-800">
+													<p class="font-semibold">Task review submitted</p>
+													<p class="mt-1">Rating: {{ $brandTaskReview->rating }}/5</p>
+													@if ($brandTaskReview->title)
+														<p class="mt-1 font-medium">{{ $brandTaskReview->title }}</p>
+													@endif
+													@if ($brandTaskReview->comment)
+														<p class="mt-1">{{ $brandTaskReview->comment }}</p>
+													@endif
+												</div>
+											@else
+												<form method="POST" action="{{ route('frontend.campaigns.brand-update-work-status', ['campaign' => $campaign, 'application' => $progressItem['application_id']]) }}" class="mt-3 space-y-2 rounded-lg border border-gray-200 bg-gray-50 p-3 dark:border-gray-700 dark:bg-gray-800/50">
+													@csrf
+													<input type="hidden" name="work_status" value="approved">
+													<p class="text-xs font-semibold text-gray-700 dark:text-gray-200">Review this influencer task</p>
+													<div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+														<select name="rating" class="rounded-lg border border-gray-300 bg-white px-2 py-2 text-xs text-gray-900 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100" required>
+															<option value="">Rating</option>
+															@for ($r = 5; $r >= 1; $r--)
+																<option value="{{ $r }}">{{ $r }} star{{ $r === 1 ? '' : 's' }}</option>
+															@endfor
+														</select>
+														<input type="text" name="title" maxlength="120" placeholder="Title (optional)" class="rounded-lg border border-gray-300 bg-white px-2 py-2 text-xs text-gray-900 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100">
+													</div>
+													<textarea name="comment" rows="2" maxlength="1200" placeholder="Comment (optional)" class="w-full rounded-lg border border-gray-300 bg-white px-2 py-2 text-xs text-gray-900 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100"></textarea>
+													<button type="submit" class="w-full rounded-lg bg-indigo-600 px-3 py-2 text-xs font-semibold text-white hover:bg-indigo-500">Submit Review</button>
+												</form>
+											@endif
+										@endif
 									</div>
 								@endif
 							</div>

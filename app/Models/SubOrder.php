@@ -92,6 +92,20 @@ class SubOrder extends Model
         return $this->hasOne(Review::class, 'sub_order_id', 'id');
     }
 
+    public function brandToInfluencerReview(): HasOne
+    {
+        return $this->hasOne(Review::class, 'sub_order_id', 'id')
+            ->where('reviewer_type', 'brand')
+            ->where('reviewee_type', 'influencer');
+    }
+
+    public function influencerToBrandReview(): HasOne
+    {
+        return $this->hasOne(Review::class, 'sub_order_id', 'id')
+            ->where('reviewer_type', 'influencer')
+            ->where('reviewee_type', 'brand');
+    }
+
     public function scopeForPaymentDashboard(Builder $query): Builder
     {
         return $query->select([

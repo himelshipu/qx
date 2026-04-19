@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services\Admin;
 
+use App\Models\Notification;
 use App\Models\User;
 use App\Repositories\Contracts\RoleRepositoryInterface;
 use App\Repositories\Contracts\UserRepositoryInterface;
@@ -42,7 +43,23 @@ final class UserService
 
     public function toggleStatus(User $user): bool
     {
-        return $this->userRepository->toggleStatus($user)->is_active;
+        $updated = $this->userRepository->toggleStatus($user);
+
+        Notification::create([
+            'user_id' => $updated->id,
+            'type' => 'account',
+            'title' => 'Account status updated',
+            'body' => sprintf('Your account is now %s.', $updated->is_active ? 'active' : 'inactive'),
+            'data_json' => [
+                'user_id' => $updated->id,
+                'is_active' => $updated->is_active,
+            ],
+            'notifiable_type' => User::class,
+            'notifiable_id' => $updated->id,
+            'is_read' => false,
+        ]);
+
+        return $updated->is_active;
     }
 
     /**
@@ -100,6 +117,8 @@ final class UserService
                 $this->userRepository->update($user, ['user_type' => strtolower((string) $primaryRole->name)]);
             }
 
+            $this->notifyRoleChange($user, $roles->pluck('name')->all(), 'Your roles were updated by an administrator.');
+
             return [
                 'user' => $user->fresh('roles'),
                 'message' => 'Roles assigned to user successfully.',
@@ -107,6 +126,8 @@ final class UserService
         }
 
         $this->userRepository->syncRoles($user, []);
+
+        $this->notifyRoleChange($user, [], 'All of your dashboard roles were removed by an administrator.');
 
         return [
             'user' => $user->fresh('roles'),
@@ -147,6 +168,8 @@ final class UserService
         ]);
 
         $this->userRepository->syncRoles($user, [(int) $role->id]);
+
+        $this->notifyRoleChange($user, [$role->name], 'Your account was created with an assigned role.');
 
         return $user->fresh('roles');
     }
@@ -193,6 +216,8 @@ final class UserService
 
             $this->userRepository->syncRoles($user, [(int) $role->id]);
             $this->userRepository->update($user, ['user_type' => strtolower((string) $role->name)]);
+
+            $this->notifyRoleChange($user, [$role->name], 'Your role was updated by an administrator.');
         }
 
         return $user->fresh('roles');
@@ -205,5 +230,21 @@ final class UserService
         }
 
         return $file->store($directory, 'public');
+    }
+
+    private function notifyRoleChange(User $user, array $roleNames, string $body): void
+    {
+        Notification::create([
+            'user_id' => $user->id,
+            'type' => 'role',
+            'title' => 'Account access updated',
+            'body' => $body,
+            'data_json' => [
+                'roles' => array_values($roleNames),
+            ],
+            'notifiable_type' => User::class,
+            'notifiable_id' => $user->id,
+            'is_read' => false,
+        ]);
     }
 }

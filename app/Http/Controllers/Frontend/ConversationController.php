@@ -6,7 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Models\Conversation;
 use App\Models\Influencer;
 use App\Models\Message;
+use App\Models\Notification;
 use App\Models\Order;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -25,7 +27,14 @@ class ConversationController extends Controller
 
         if ($user->user_type === 'brand') {
             // Brands see their conversations with influencers
-            $conversations = Conversation::forBrand($user->id)->paginate(15);
+            $conversations = Conversation::forBrand($user->id)
+                ->withCount([
+                    'messages as unread_messages_count' => function ($query) use ($user) {
+                        $query->whereNull('read_at')
+                            ->where('sender_user_id', '!=', $user->id);
+                    },
+                ])
+                ->paginate(15);
 
             return view('frontend.conversations.index', compact('conversations'));
         } else {
@@ -47,6 +56,8 @@ class ConversationController extends Controller
         }
 
         $conversation->load(['influencer.user', 'handledBy', 'brandUser', 'order']);
+
+        $this->markConversationMessagesAsRead($conversation, $user);
 
         $messages = Message::forConversation($conversation->id);
 
@@ -77,6 +88,39 @@ class ConversationController extends Controller
             'message'         => $validated['message'],
             'read_at'         => null
         ]);
+
+        $recipients = collect();
+        if ($conversation->handled_by_user_id) {
+            $recipients->push((int) $conversation->handled_by_user_id);
+        } else {
+            $recipients = User::query()
+                ->whereIn('user_type', ['admin', 'moderator'])
+                ->pluck('id')
+                ->map(fn($id) => (int) $id);
+        }
+
+        $notificationBody = sprintf(
+            '%s sent a new message in conversation #%s.',
+            $user->name,
+            $conversation->public_id,
+        );
+
+        foreach ($recipients->unique()->filter()->values() as $recipientId) {
+            Notification::create([
+                'user_id' => $recipientId,
+                'type' => 'message',
+                'title' => 'New conversation message',
+                'body' => $notificationBody,
+                'data_json' => [
+                    'action_url' => route('dashboard.conversations.show', $conversation->public_id),
+                    'conversation_id' => $conversation->id,
+                    'public_id' => $conversation->public_id,
+                ],
+                'notifiable_type' => Conversation::class,
+                'notifiable_id' => $conversation->id,
+                'is_read' => false,
+            ]);
+        }
 
         // Update conversation timestamp
         $conversation->touch();
@@ -137,5 +181,14 @@ class ConversationController extends Controller
         }
 
         return redirect()->route('frontend.conversations.show', $conversation->public_id);
+    }
+
+    private function markConversationMessagesAsRead(Conversation $conversation, $user): void
+    {
+        Message::query()
+            ->where('conversation_id', $conversation->id)
+            ->whereNull('read_at')
+            ->where('sender_user_id', '!=', $user->id)
+            ->update(['read_at' => now()]);
     }
 }

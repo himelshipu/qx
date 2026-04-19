@@ -15,6 +15,7 @@ use App\Policies\PackagePolicy;
 use App\Policies\RolePolicy;
 use App\Services\Frontend\CampaignNegotiationService;
 use App\Services\Frontend\Contracts\CampaignNegotiationServiceInterface;
+use App\View\Composers\CommunicationBadgeComposer;
 use App\View\Composers\FooterComposer;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\Gate;
@@ -77,5 +78,11 @@ class AppServiceProvider extends ServiceProvider
 
         // Register view composers
         View::composer('components.frontend.navigation.footer', FooterComposer::class);
+        View::composer([
+            'components.backend.shell.header',
+            'components.backend.dropdowns.notification',
+            'components.frontend.navigation.auth-header',
+            'components.frontend.notifications.dropdown',
+        ], CommunicationBadgeComposer::class);
     }
 }

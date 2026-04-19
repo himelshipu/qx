@@ -5,6 +5,8 @@ declare (strict_types = 1);
 namespace App\Services\Admin;
 
 use App\Models\Influencer;
+use App\Models\Brand;
+use App\Models\Notification;
 use App\Models\Order;
 use App\Models\Package;
 use App\Repositories\Contracts\PackageRepositoryInterface;
@@ -106,7 +108,7 @@ final class PackageService
             $influencerId = (int) $validated['created_for'];
         }
 
-        return $this->packageRepository->create([
+        $package = $this->packageRepository->create([
             'platform'           => $validated['platform'],
             'name'               => $validated['name'],
             'description'        => $this->nullableString($validated['description'] ?? null),
@@ -118,6 +120,10 @@ final class PackageService
             'created_by'         => $createdByUserId,
             'is_active'          => $isActive
         ]);
+
+        $this->notifyPackageOwner($package, 'Package created', sprintf('Your package "%s" was created in the dashboard.', $package->name));
+
+        return $package;
     }
 
     /**
@@ -144,7 +150,11 @@ final class PackageService
             $updateData['influencer_id'] = (int) $validated['created_for'];
         }
 
-        return $this->packageRepository->update($package, $updateData);
+        $updated = $this->packageRepository->update($package, $updateData);
+
+        $this->notifyPackageOwner($updated, 'Package updated', sprintf('Your package "%s" was updated in the dashboard.', $updated->name));
+
+        return $updated;
     }
 
     /**
@@ -165,6 +175,22 @@ final class PackageService
 
         $this->packageRepository->delete($package);
 
+        $ownerUserId = (int) ($package->influencer?->user_id ?? 0);
+        if ($ownerUserId > 0) {
+            Notification::create([
+                'user_id' => $ownerUserId,
+                'type' => 'package',
+                'title' => 'Package deleted',
+                'body' => sprintf('Your package "%s" was removed from the dashboard.', $package->name),
+                'data_json' => [
+                    'package_id' => $package->id,
+                ],
+                'notifiable_type' => Package::class,
+                'notifiable_id' => $package->id,
+                'is_read' => false,
+            ]);
+        }
+
         return [
             'deleted' => true,
             'message' => 'Package deleted successfully.'
@@ -176,7 +202,15 @@ final class PackageService
      */
     public function toggleStatus(Package $package): bool
     {
-        return $this->packageRepository->toggleStatus($package)->is_active;
+        $updated = $this->packageRepository->toggleStatus($package);
+
+        $this->notifyPackageOwner(
+            $updated,
+            'Package status changed',
+            sprintf('Your package "%s" is now %s.', $updated->name, $updated->is_active ? 'active' : 'inactive')
+        );
+
+        return $updated->is_active;
     }
 
     /**
@@ -312,6 +346,7 @@ final class PackageService
     {
         $package   = Package::findOrFail($packageId);
         $purchased = 0;
+        $packageOwnerUserId = (int) ($package->influencer?->user_id ?? 0);
 
         foreach ($brandIds as $brandId) {
             // Check if order already exists
@@ -355,10 +390,69 @@ final class PackageService
                     'due_date'      => $package->delivery_days ? now()->addDays($package->delivery_days)->toDateString() : null
                 ]);
 
+                $brandUserId = (int) (Brand::query()->where('id', $brandId)->value('user_id') ?? 0);
+                if ($brandUserId > 0) {
+                    Notification::create([
+                        'user_id' => $brandUserId,
+                        'type' => 'package',
+                        'title' => 'Package purchase recorded',
+                        'body' => sprintf('You purchased package "%s".', $package->name),
+                        'data_json' => [
+                            'action_url' => route('frontend.orders.show', $order),
+                            'order_id' => $order->id,
+                            'package_id' => $package->id,
+                        ],
+                        'notifiable_type' => Order::class,
+                        'notifiable_id' => $order->id,
+                        'is_read' => false,
+                    ]);
+                }
+
+                if ($packageOwnerUserId > 0) {
+                    Notification::create([
+                        'user_id' => $packageOwnerUserId,
+                        'type' => 'package',
+                        'title' => 'Your package was purchased',
+                        'body' => sprintf('Your package "%s" was purchased by a brand.', $package->name),
+                        'data_json' => [
+                            'action_url' => route('frontend.packages.show', $package),
+                            'package_id' => $package->id,
+                            'order_id' => $order->id,
+                            'brand_id' => $brandId,
+                        ],
+                        'notifiable_type' => Package::class,
+                        'notifiable_id' => $package->id,
+                        'is_read' => false,
+                    ]);
+                }
+
                 $purchased++;
             }
         }
 
         return $purchased;
+    }
+
+    private function notifyPackageOwner(Package $package, string $title, string $body): void
+    {
+        $ownerUserId = (int) ($package->influencer?->user_id ?? 0);
+
+        if ($ownerUserId <= 0) {
+            return;
+        }
+
+        Notification::create([
+            'user_id' => $ownerUserId,
+            'type' => 'package',
+            'title' => $title,
+            'body' => $body,
+            'data_json' => [
+                'action_url' => route('frontend.packages.show', $package),
+                'package_id' => $package->id,
+            ],
+            'notifiable_type' => Package::class,
+            'notifiable_id' => $package->id,
+            'is_read' => false,
+        ]);
     }
 }

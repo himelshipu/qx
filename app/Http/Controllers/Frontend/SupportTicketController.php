@@ -3,9 +3,13 @@
 namespace App\Http\Controllers\Frontend;
 
 use App\Http\Controllers\Controller;
+use App\Models\Notification;
 use App\Models\SupportCategory;
 use App\Models\SupportTicket;
+use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 
 class SupportTicketController extends Controller
 {
@@ -25,7 +29,7 @@ class SupportTicketController extends Controller
     public function store(Request $request)
     {
         // Require authentication
-        if (!auth()->check()) {
+        if (!Auth::check()) {
             return response()->json([
                 'success' => false,
                 'message' => 'Please login to submit a support ticket.'
@@ -49,7 +53,7 @@ class SupportTicketController extends Controller
         }
 
         $ticket = SupportTicket::create([
-            'requester_user_id'   => auth()->id(),
+            'requester_user_id'   => Auth::id(),
             'support_category_id' => $category->id,
             'subject'             => $validated['subject'],
             'description'         => $validated['description'],
@@ -57,6 +61,30 @@ class SupportTicketController extends Controller
             'priority'            => 'medium',
             'source'              => 'web'
         ]);
+
+        $adminAndModeratorIds = User::query()
+            ->whereIn('user_type', ['admin', 'moderator'])
+            ->pluck('id')
+            ->map(fn($id) => (int) $id)
+            ->unique()
+            ->values();
+
+        foreach ($adminAndModeratorIds as $recipientId) {
+            Notification::create([
+                'user_id' => $recipientId,
+                'type' => 'support',
+                'title' => 'New support ticket submitted',
+                'body' => sprintf('Ticket %s: %s', $ticket->ticket_number, $ticket->subject),
+                'data_json' => [
+                    'action_url' => route('dashboard.support-tickets.show', $ticket),
+                    'ticket_id' => $ticket->id,
+                    'ticket_number' => $ticket->ticket_number,
+                ],
+                'notifiable_type' => SupportTicket::class,
+                'notifiable_id' => $ticket->id,
+                'is_read' => false,
+            ]);
+        }
 
         return response()->json([
             'success'   => true,

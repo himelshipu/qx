@@ -1,4 +1,4 @@
-<div class="relative" x-data="notificationDropdown()" @click.away="open = false">
+<div class="relative" x-data="notificationDropdown({ unreadCount: @js($dashboardUnreadNotifications ?? 0) })" @click.away="open = false">
 	<button @click="open = !open; loadNotifications()"
 		class="relative flex items-center justify-center w-11 h-11 text-gray-500 bg-white border border-gray-200 rounded-full hover:bg-gray-50 hover:text-gray-700 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white transition-colors duration-200">
 		<span x-show="unreadCount > 0" class="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full ring-2 ring-white dark:ring-gray-900">
@@ -8,10 +8,10 @@
 	</button>
 
 	<div x-show="open" x-transition
-		class="absolute right-0 mt-2 w-[360px] bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-100 dark:border-gray-700 z-50 overflow-hidden"
+		class="absolute right-0 mt-2 w-90 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-100 dark:border-gray-700 z-50 overflow-hidden"
 		style="display: none;">
 		<!-- Header -->
-		<div class="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-gray-700 bg-gradient-to-r from-gray-50 to-white dark:from-gray-800 dark:to-gray-750">
+		<div class="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-gray-700 bg-linear-to-r from-gray-50 to-white dark:from-gray-800 dark:to-gray-750">
 			<div>
 				<h5 class="text-base font-semibold text-gray-900 dark:text-white">Notifications</h5>
 				<p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5" x-text="`${unreadCount} new`"></p>
@@ -30,7 +30,7 @@
 		</div>
 
 		<!-- Notifications List -->
-		<ul class="overflow-y-auto max-h-[420px] divide-y divide-gray-100 dark:divide-gray-700" x-show="!loading">
+		<ul class="overflow-y-auto max-h-105 divide-y divide-gray-100 dark:divide-gray-700" x-show="!loading">
 			<template x-for="notification in notifications" :key="notification.id">
 				<li>
 					<div
@@ -39,7 +39,7 @@
 						:class="!notification.is_read ? 'bg-blue-50 dark:bg-blue-900/10' : ''"
 						>
 						<!-- Icon Container -->
-						<div class="flex-shrink-0 w-11 h-11 rounded-lg flex items-center justify-center ring-1 ring-transparent group-hover:ring-gray-200 dark:group-hover:ring-gray-600 transition-all"
+						<div class="shrink-0 w-11 h-11 rounded-lg flex items-center justify-center ring-1 ring-transparent group-hover:ring-gray-200 dark:group-hover:ring-gray-600 transition-all"
 							:class="getIconClassForType(notification.type)">
 							<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
 								<template x-if="notification.type === 'order'">
@@ -71,7 +71,7 @@
 						<div class="flex-1 min-w-0 flex flex-col justify-between">
 							<div class="flex items-start justify-between gap-2 mb-2">
 								<p class="text-sm font-semibold text-gray-900 dark:text-white line-clamp-1" x-text="notification.title"></p>
-								<span class="inline-block px-2.5 py-1 text-xs font-medium rounded-md flex-shrink-0 whitespace-nowrap"
+								<span class="inline-block px-2.5 py-1 text-xs font-medium rounded-md shrink-0 whitespace-nowrap"
 									:class="getBadgeClass(notification.type)"
 									x-text="notification.type.charAt(0).toUpperCase() + notification.type.slice(1)"></span>
 							</div>
@@ -81,7 +81,7 @@
 
 						<!-- Unread Indicator -->
 						<div class="flex flex-col items-center justify-center" x-show="!notification.is_read">
-							<div class="w-2.5 h-2.5 rounded-full bg-blue-500 dark:bg-blue-400 flex-shrink-0"></div>
+							<div class="w-2.5 h-2.5 rounded-full bg-blue-500 dark:bg-blue-400 shrink-0"></div>
 						</div>
 					</div>
 				</li>
@@ -99,7 +99,7 @@
 		</ul>
 
 		<!-- Footer Action -->
-		<div class="border-t border-gray-100 dark:border-gray-700 bg-gradient-to-r from-gray-50 to-white dark:from-gray-800 dark:to-gray-750 p-3">
+		<div class="border-t border-gray-100 dark:border-gray-700 bg-linear-to-r from-gray-50 to-white dark:from-gray-800 dark:to-gray-750 p-3">
 			<a href="{{ route('dashboard.notifications.index') }}"
 				class="flex items-center justify-center gap-2 w-full py-2.5 px-4 text-sm font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/40 rounded-lg transition-colors"
 				@click="open = false">
@@ -113,12 +113,12 @@
 </div>
 
 <script>
-	function notificationDropdown() {
+	function notificationDropdown(initialState = {}) {
 		return {
 			open: false,
 			loading: false,
 			notifications: [],
-			unreadCount: 0,
+			unreadCount: initialState.unreadCount ?? 0,
 
 			loadNotifications() {
 			// Check if user is authenticated by verifying CSRF token presence
