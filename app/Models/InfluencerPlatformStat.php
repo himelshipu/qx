@@ -16,8 +16,6 @@ class InfluencerPlatformStat extends Model
         'handle',
         'profile_url',
         'follower_count',
-        'avg_views',
-        'engagement_rate',
         'is_active'
     ];
 
@@ -25,8 +23,6 @@ class InfluencerPlatformStat extends Model
     {
         return [
             'follower_count'  => 'integer',
-            'avg_views'       => 'integer',
-            'engagement_rate' => 'decimal:2',
             'is_active'       => 'boolean'
         ];
     }

@@ -240,8 +240,6 @@ COLUMN DEFINITIONS:
   - handle (string)
   - profile_url (string)
   - follower_count (unsignedBigInteger)
-  - avg_views (unsignedBigInteger)
-  - engagement_rate (decimal)
   - is_active (boolean)
   - creator_id (unique)
 

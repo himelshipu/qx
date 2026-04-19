@@ -278,7 +278,6 @@ final class InfluencerService
                     'platform_slug' => $platformMeta['slug'],
                     'handle' => $this->resolveHandle($stat->handle, $influencer->user->slug),
                     'followers_label' => $this->formatFollowers($stat->follower_count),
-                    'engagement_label' => $this->formatPercentage($stat->engagement_rate),
                     'rating_label' => $averageRating !== null ? number_format($averageRating, 1) : 'N/A',
                     'reviews_count' => $reviewSummary ? (int) $reviewSummary->reviews_count : 0,
                 ];
@@ -327,7 +326,6 @@ final class InfluencerService
             'platform_slug' => $platformMeta['slug'],
             'handle' => $this->resolveHandle($stat?->handle, $influencer->user->slug),
             'followers_label' => $this->formatFollowers($stat?->follower_count),
-            'engagement_label' => $this->formatPercentage($stat?->engagement_rate),
             'rating_label' => $averageRating !== null ? number_format($averageRating, 1) : 'N/A',
             'reviews_count' => $reviewSummary ? (int) $reviewSummary->reviews_count : 0,
         ];
@@ -441,9 +439,7 @@ final class InfluencerService
     {
         match ($sort) {
             'followers_asc' => $query->orderBy('follower_count'),
-            'engagement_desc' => $query->orderByDesc('engagement_rate')->orderByDesc('follower_count'),
-            'engagement_asc' => $query->orderBy('engagement_rate')->orderByDesc('follower_count'),
-            'recent' => $query->orderByDesc('created_at'),
+           'recent' => $query->orderByDesc('created_at'),
             default => $query->orderByDesc('follower_count')
         };
     }

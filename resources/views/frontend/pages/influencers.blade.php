@@ -49,11 +49,7 @@
 											<x-icons.heart-badge class="w-4 h-4 text-purple-400" />
 											{{ $influencer['platform_label'] }} Influencer
 										</span>
-										<span
-											class="bg-black/80 backdrop-blur-sm text-white text-[10px] font-normal px-2 py-1 rounded-md border border-white/20 flex items-center gap-1">
-											<x-icons.checkmark class="w-4 h-4 text-green-500" />
-											{{ $influencer['engagement_label'] }} ER
-										</span>
+										
 									</div>
 
 									<div class="absolute bottom-3 left-3 right-3">

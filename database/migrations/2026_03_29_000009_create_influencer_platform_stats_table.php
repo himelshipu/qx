@@ -15,9 +15,7 @@ return new class extends Migration
             $table->string('handle')->nullable();
             $table->string('profile_url', 500)->nullable();
             $table->unsignedBigInteger('follower_count')->nullable();
-            $table->unsignedBigInteger('avg_views')->nullable();
-            $table->decimal('engagement_rate', 5, 2)->nullable();
-            $table->boolean('is_active')->default(true);
+           $table->boolean('is_active')->default(true);
             $table->timestamps();
 
             $table->unique(['influencer_id', 'platform']);

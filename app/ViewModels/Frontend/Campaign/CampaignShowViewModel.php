@@ -126,7 +126,6 @@ class CampaignShowViewModel
                 };
 
                 $maxFollowers = (int) ($application->influencer?->platformStats?->max('follower_count') ?? 0);
-                $avgEngagement = (float) ($application->influencer?->platformStats?->avg('engagement_rate') ?? 0);
                 $currency = strtoupper((string) ($this->campaign->currency ?? 'USD'));
 
                 return [
@@ -134,7 +133,6 @@ class CampaignShowViewModel
                         'status_label' => $statusLabel,
                         'status_class' => $statusClass,
                         'max_followers' => $maxFollowers,
-                        'avg_engagement' => round($avgEngagement, 2),
                         'work_status' => $workStatus,
                         'work_status_style' => $workStatusStyle,
                         'currency' => $currency,

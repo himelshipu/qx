@@ -68,12 +68,7 @@
 									<span class="text-gray-500 dark:text-gray-400">Followers</span>
 								</div>
 							@endif
-							@if ($package->influencer->engagement_rate)
-								<div>
-									<span class="font-semibold text-gray-900 dark:text-white">{{ number_format($package->influencer->engagement_rate, 2) }}%</span>
-									<span class="text-gray-500 dark:text-gray-400">Engagement</span>
-								</div>
-							@endif
+							
 						</div>
 					</div>
 				</div>

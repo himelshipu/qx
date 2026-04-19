@@ -40,9 +40,7 @@
 					<span class="bg-black/80 backdrop-blur-sm text-white text-[10px] font-normal px-2 py-1 rounded-md border border-white/20 flex items-center gap-1">
 						<x-icons.heart-badge class="w-4 h-4 text-purple-400" /> Featured Influencer
 					</span>
-						<span class="bg-black/80 backdrop-blur-sm text-white text-[10px] font-normal px-2 py-1 rounded-md border border-white/20 flex items-center gap-1">
-							<x-icons.checkmark class="w-4 h-4 text-green-500" /> {{ $influencer['engagement_label'] }} ER
-						</span>
+						
 					</div>
 
 					<div class="absolute bottom-3 left-3 right-3">
@@ -66,9 +64,10 @@
 						</div>
 						<div class="flex items-center gap-1 text-white drop-shadow-md">
 							<span class="font-bold text-sm">{{ $influencer['name'] }}</span>
-							<span class="flex items-center text-xs gap-0.5">
-								<x-icons.star class="w-4 h-4 text-yellow-400" /> {{ $influencer['rating_label'] }}
+							<span class="text-xs">
+								<x-icons.star class="w-3 h-3 text-yellow-400" /> 
 							</span>
+							<span class="text-xs mt-1">{{ $influencer['rating_label'] }}</span>
 						</div>
 					</div>
 				</div>

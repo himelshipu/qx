@@ -20,9 +20,7 @@ class InfluencerPlatformStatSeeder extends Seeder
 
             foreach ($platforms as $platform) {
                 $followers  = random_int(5000, 850000);
-                $avgViews   = (int) max(500, floor($followers * random_int(4, 45) / 100));
-                $engagement = round(random_int(80, 950) / 100, 2);
-
+               
                 $profileUrl = match ($platform) {
                     'tiktok'    => sprintf('https://www.tiktok.com/@%s', $handleBase),
                     'x'         => sprintf('https://x.com/%s', $handleBase),
@@ -37,8 +35,6 @@ class InfluencerPlatformStatSeeder extends Seeder
                     'handle'          => $handleBase,
                     'profile_url'     => $profileUrl,
                     'follower_count'  => $followers,
-                    'avg_views'       => $avgViews,
-                    'engagement_rate' => $engagement,
                     'is_active'       => true,
                     'created_at'      => now(),
                     'updated_at'      => now()

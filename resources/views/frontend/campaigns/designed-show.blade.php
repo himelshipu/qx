@@ -612,8 +612,7 @@
 									<th class="px-4 py-3 text-left font-semibold text-gray-700 dark:text-gray-300">Influencer</th>
 									<th class="px-4 py-3 text-left font-semibold text-gray-700 dark:text-gray-300 hidden md:table-cell">Followers
 									</th>
-									<th class="px-4 py-3 text-left font-semibold text-gray-700 dark:text-gray-300 hidden lg:table-cell">Engagement
-									</th>
+									
 									<th class="px-4 py-3 text-left font-semibold text-gray-700 dark:text-gray-300">Applied</th>
 									<th class="px-4 py-3 text-left font-semibold text-gray-700 dark:text-gray-300">Status</th>
 									<th class="px-4 py-3 text-left font-semibold text-gray-700 dark:text-gray-300 hidden md:table-cell">Work Status
@@ -652,9 +651,7 @@
 										<td class="px-4 py-3 hidden md:table-cell text-gray-700 dark:text-gray-300">
 											{{ ($applicationUi[$application->id]['max_followers'] ?? 0) > 0 ? number_format($applicationUi[$application->id]['max_followers']) : 'N/A' }}
 										</td>
-										<td class="px-4 py-3 hidden lg:table-cell text-gray-700 dark:text-gray-300">
-											{{ ($applicationUi[$application->id]['avg_engagement'] ?? 0) > 0 ? number_format($applicationUi[$application->id]['avg_engagement'], 2) . '%' : '—' }}
-										</td>
+										
 										<td class="px-4 py-3 text-gray-700 dark:text-gray-300 text-xs whitespace-nowrap">
 											{{ $application->applied_at?->format('M d, Y') ?? '—' }}
 										</td>

@@ -144,7 +144,6 @@ final class HomeService
                             'platform_label'   => $this->humanizePlatform($platform),
                             'handle'           => $this->resolveHandle($stat->handle, $influencer->user->slug),
                             'followers_label'  => $this->formatFollowers($stat->follower_count),
-                            'engagement_label' => $this->formatPercentage($stat->engagement_rate),
                             'rating_label'     => $averageRating !== null ? number_format($averageRating, 1) : 'N/A',
                             'reviews_count'    => $reviewSummary ? (int) $reviewSummary->reviews_count : 0
                         ];

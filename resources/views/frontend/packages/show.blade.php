@@ -193,12 +193,7 @@
 									{{ \App\Helpers\NumberHelper::format($package->influencer->platformStats->sum('follower_count')) }}
 								</p>
 							</div>
-							<div>
-								<p class="text-xs text-gray-500">Avg. Engagement</p>
-								<p class="font-bold text-gray-900 dark:text-white">
-									{{ number_format($package->influencer->platformStats->avg('engagement_rate'), 2) }}%
-								</p>
-							</div>
+							
 						</div>
 						<a href="{{ route('influencer.profile', $package->influencer->user->slug) }}"
 							class="mt-4 block text-center w-full px-4 py-2 text-sm font-medium text-purple-600 bg-purple-50 rounded-lg hover:bg-purple-100 dark:bg-purple-900/20 dark:text-purple-300 dark:hover:bg-purple-800/30 transition">
