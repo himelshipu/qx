@@ -18,11 +18,11 @@
 
 			<nav class="flex flex-wrap items-center justify-center gap-4 md:gap-6 lg:gap-10 text-sm font-medium">
 
-				<a href="{{ route('frontend.blogs.index') }}" class="nav-link">Blog</a>
 				<a href="{{ route('influencers') }}" class="nav-link">Search</a>
 				<a href="{{ route('faq') }}" class="nav-link">Faq</a>
 				<a href="#how-it-works" class="nav-link">How it Works</a>
 				<a href="{{ route('support') }}" class="nav-link">Support</a>
+				<a href="{{ route('frontend.blogs.index') }}" class="nav-link">Blog</a>
 				@auth
 					<a href="{{ route('dashboard.index') }}" class="nav-link">Dashboard</a>
 				@else

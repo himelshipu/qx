@@ -74,10 +74,10 @@
 										</div>
 										<div class="flex items-center gap-1 text-white drop-shadow-md">
 											<span class="font-bold text-sm">{{ $influencer['name'] }}</span>
-											<span class="flex items-center text-xs gap-0.5">
+											<span class="text-xs">
 												<x-icons.star class="w-4 h-4 text-yellow-400" />
-												{{ $influencer['rating_label'] }}
 											</span>
+											<span class="text-xs mt-1">{{ $influencer['rating_label'] }}</span>
 										</div>
 									</div>
 								</div>
