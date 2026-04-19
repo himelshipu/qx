@@ -43,7 +43,7 @@
 									data-end="{{ $campaign->end_date?->format('M d, Y') ?? 'N/A' }}"
 									data-budget-min="{{ $campaign->budget_min ?? '0' }}" data-budget-max="{{ $campaign->budget_max ?? '0' }}"
 									data-currency="{{ $campaign->currency ?? 'USD' }}">
-									{{ $campaign->title }}
+									{{ $campaign->brand?->brand_name ?? 'Unknown' }} - {{ $campaign->title }}
 								</option>
 							@endforeach
 						</select>

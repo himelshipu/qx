@@ -47,7 +47,7 @@
 									data-revisions="{{ $package->revisions_included ?? 0 }}"
 									data-influencer="{{ $package->influencer?->display_name ?? 'Unknown' }}"
 									data-influencer-email="{{ $package->influencer?->user?->email ?? 'N/A' }}">
-									{{ $package->name }} - {{ $package->currency }} {{ number_format((float) $package->base_price, 2) }}
+									{{ $package->influencer?->display_name ?? 'Unknown' }} - {{ $package->name }} - {{ $package->currency }} {{ number_format((float) $package->base_price, 2) }}
 								</option>
 							@endforeach
 						</select>

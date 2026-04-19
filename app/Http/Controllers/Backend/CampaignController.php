@@ -30,8 +30,9 @@ class CampaignController extends Controller
     public function assign(): View
     {
         // Get ALL campaigns (including inactive for assignment purposes) - dashboard sees all
-        $campaigns = Campaign::orderByDesc('created_at')
-            ->get(['id', 'title', 'description', 'campaign_type', 'status', 'start_date', 'end_date', 'budget_min', 'budget_max', 'currency']);
+        $campaigns = Campaign::with('brand:id,brand_name')
+            ->orderByDesc('created_at')
+            ->get(['id', 'brand_id', 'title', 'description', 'campaign_type', 'status', 'start_date', 'end_date', 'budget_min', 'budget_max', 'currency']);
 
         // Get all influencers - dashboard sees all
         $influencers = Influencer::with('user:id,email,name,phone')
@@ -43,10 +44,11 @@ class CampaignController extends Controller
         $activeCampaignsCount = $campaigns->count();
 
         // Get latest campaigns for display purposes (latest 10)
-        $latestCampaigns = Campaign::withCount(['applications', 'orders', 'orderItems', 'cartItems'])
+        $latestCampaigns = Campaign::with(['brand:id,brand_name', 'applications', 'orders', 'orderItems', 'cartItems'])
+            ->withCount(['applications', 'orders', 'orderItems', 'cartItems'])
             ->orderByDesc('created_at')
             ->limit(10)
-            ->get(['id', 'title', 'description', 'start_date', 'end_date', 'status', 'is_active']);
+            ->get(['id', 'brand_id', 'title', 'description', 'start_date', 'end_date', 'status', 'is_active']);
 
         return view('backend.pages.campaigns.assign', compact('campaigns', 'influencers', 'latestCampaigns', 'activeInfluencersCount', 'activeCampaignsCount'));
     }
@@ -114,7 +116,7 @@ class CampaignController extends Controller
                 ->whereIn('id', $createdInfluencerIds)
                 ->pluck('user_id')
                 ->filter()
-                ->map(fn($id) => (int) $id)
+                ->map(fn ($id) => (int) $id)
                 ->unique()
                 ->values();
 
