@@ -25,41 +25,59 @@
 @endphp
 
 <div x-data="{
-			<div>
-				<x-form.date-picker
-					id="start_date"
-					name="start_date"
-					label="Start Date"
-					placeholder="Select start date"
-					:default-date="old('start_date', $campaign?->start_date?->format('Y-m-d'))"
-				/>
-	        }
-	    },
-	    getCountryName(code) {
-	        const option = this.countryOptions.find(c => c.code.toUpperCase() === code.toUpperCase());
-	        return option ? option.name : code;
-			<div>
-				<x-form.date-picker
-					id="end_date"
-					name="end_date"
-					label="End Date"
-					placeholder="Select end date"
-					:default-date="old('end_date', $campaign?->end_date?->format('Y-m-d'))"
-				/>
+	countryDropdownOpen: false,
+	countryOptions: @js($countryOptions),
+	selectedCountryCodes: @js($selectedCountryCodes),
+	isCountrySelected(code) {
+		const normalizedCode = String(code || '').toUpperCase();
+		return this.selectedCountryCodes.includes(normalizedCode);
+	},
+	toggleCountry(code) {
+		const normalizedCode = String(code || '').toUpperCase();
+
+		if (!normalizedCode) {
+			return;
+		}
+
+		if (this.isCountrySelected(normalizedCode)) {
+			this.selectedCountryCodes = this.selectedCountryCodes.filter((item) => item !== normalizedCode);
+			return;
+		}
+
+		this.selectedCountryCodes = [...this.selectedCountryCodes, normalizedCode];
+	},
+	getCountryName(code) {
+		const normalizedCode = String(code || '').toUpperCase();
+		const option = this.countryOptions.find((item) => String(item.code).toUpperCase() === normalizedCode);
+		return option ? option.name : normalizedCode;
+	}
+}" class="grid grid-cols-1 gap-6 lg:grid-cols-3">
+	<div class="space-y-5 lg:col-span-2">
+		<div>
+			<label for="brand_id" class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+				Creating For <span class="text-red-500">*</span>
+			</label>
+
+			@if ($canSelectBrand)
+				<select id="brand_id" name="brand_id" required
+					class="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-3 text-sm text-gray-900 focus:border-gray-500 focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-white">
+					<option value="">Select a brand</option>
+					@foreach ($brandOptions as $brandOption)
 						<option value="{{ $brandOption['id'] }}" {{ $selectedBrandId === (int) $brandOption['id'] ? 'selected' : '' }}>
 							{{ $brandOption['name'] }}
 						</option>
 					@endforeach
 				</select>
-			<div class="rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 dark:border-gray-800 dark:bg-gray-900">
-				<label class="flex min-h-11 cursor-pointer items-center justify-between gap-3">
-					<span class="text-sm font-medium text-gray-700 dark:text-gray-300">Active Status</span>
-					<span class="flex h-11 items-center">
-						<input type="checkbox" name="is_active" value="1" {{ old('is_active', isset($campaign) ? $campaign->is_active : true) ? 'checked' : '' }}
-							class="h-4 w-4 rounded border-gray-300 text-gray-900 focus:ring-gray-500 dark:border-gray-600 dark:bg-gray-800">
-					</span>
-				</label>
-		@endif
+			@else
+				<input type="hidden" name="brand_id" value="{{ $selectedBrandId }}">
+				<input type="text" value="{{ auth()->user()?->brand?->brand_name ?? 'Current Brand' }}" disabled
+					class="h-11 w-full rounded-lg border border-gray-300 bg-gray-100 px-3 text-sm text-gray-900 dark:border-gray-700 dark:bg-gray-800 dark:text-white">
+			@endif
+
+			@error('brand_id')
+				<p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+			@enderror
+		</div>
 
 		<div>
 			<label for="title" class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
