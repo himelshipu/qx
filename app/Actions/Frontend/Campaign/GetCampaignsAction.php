@@ -39,7 +39,7 @@ class GetCampaignsAction
             },
             'applications.influencer:id,user_id,display_name',
             'applications.influencer.user:id,name',
-            'applications.influencer.platformStats:id,influencer_id,follower_count,
+            'applications.influencer.platformStats:id,influencer_id,follower_count',
             'targetCountries:id,campaign_id,country_code',
             'targeting:id,campaign_id,influencer_count,target_gender,age_min,age_max,notes',
             'categories:id,name',
