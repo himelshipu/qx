@@ -5,9 +5,13 @@
 
     $menuItems = $sidebarData['items'] ?? [];
     $activeAccordion = $sidebarData['activeAccordion'] ?? null;
+    $brandingLogoLight = \App\Models\Setting::fileUrl('branding.logo_light', '/images/logo/header-logo.png');
+    $brandingLogoDark = \App\Models\Setting::fileUrl('branding.logo_dark', '/images/logo/header-logo.png');
 @endphp
 
 <aside id="sidebar"
+    data-badges-route="{{ route('dashboard.api.sidebar-badges') }}"
+    data-badges-refresh-seconds="{{ (int) config('communication.sidebar_refresh_seconds', 60) }}"
     class="fixed top-0 left-0 z-40 h-screen bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 transition-all duration-300 shadow-xl"
     x-data="{ 
         openMenu: @js($activeAccordion),
@@ -41,8 +45,8 @@
     
     <div class="h-20 flex items-center justify-center px-4 border-b border-gray-100 dark:border-gray-800">
         <a href="/">
-            <img src="/images/logo/header-logo.png" alt="Logo" class="h-11 dark:hidden block" x-show="$store.sidebar.isExpanded">
-            <img src="/images/logo/header-logo.png" alt="Logo" class="h-11 dark:block hidden" x-show="$store.sidebar.isExpanded">
+            <img src="{{ $brandingLogoLight }}" alt="Logo" class="h-11 dark:hidden block" x-show="$store.sidebar.isExpanded">
+            <img src="{{ $brandingLogoDark }}" alt="Logo" class="h-11 dark:block hidden" x-show="$store.sidebar.isExpanded">
             <img src="/images/logo/logo-icon.png" alt="logo icon" class="h-9 w-9" x-show="!$store.sidebar.isExpanded">
         </a>
     </div>
@@ -61,15 +65,15 @@
                                 'bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 text-indigo-600 dark:text-indigo-400' => !empty($item['active']),
                                 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800' => empty($item['active']),
                             ])>
-                            <span class="flex-shrink-0 w-5 h-5" @class([
+                            <span class="shrink-0 w-5 h-5" @class([
                                 'text-indigo-600 dark:text-indigo-400' => !empty($item['active']),
                                 'text-gray-500 dark:text-gray-400' => empty($item['active']),
                             ])>
                                 {!! \App\Helpers\MenuHelper::getIconSvg($item['icon']) !!}
                             </span>
                             <span x-show="$store.sidebar.isExpanded" class="flex-1 text-sm font-semibold">{{ $item['name'] }}</span>
-                            @if(!empty($item['count']))
-                                <span x-show="$store.sidebar.isExpanded" class="ml-auto px-2 py-0.5 text-xs font-medium bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400 rounded-full">22</span>
+                            @if(isset($item['badge_count']))
+                                <span x-show="$store.sidebar.isExpanded" data-sidebar-badge-key="{{ $item['badge_key'] ?? '' }}" aria-hidden="{{ ($item['badge_count'] ?? 0) > 0 ? 'false' : 'true' }}" class="{{ ($item['badge_count'] ?? 0) > 0 ? '' : 'hidden' }} ml-auto px-2 py-0.5 text-xs font-medium bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400 rounded-full">{{ ($item['badge_count'] ?? 0) > 99 ? '99+' : ($item['badge_count'] ?? 0) }}</span>
                             @endif
                         </a>
                     </li>
@@ -88,7 +92,7 @@
                                                 'bg-gray-100 dark:bg-gray-800 text-indigo-600 dark:text-indigo-400' => !empty($subItem['active']),
                                                 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800' => empty($subItem['active']),
                                             ])>
-                                            <span class="flex-shrink-0 w-5 h-5" @class([
+                                            <span class="shrink-0 w-5 h-5" @class([
                                                 'text-indigo-600 dark:text-indigo-400' => !empty($subItem['active']),
                                                 'text-gray-500 dark:text-gray-400' => empty($subItem['active']),
                                             ])>
@@ -108,7 +112,7 @@
                                                 'bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 text-indigo-600 dark:text-indigo-400' => !empty($subItem['active']),
                                                 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800' => empty($subItem['active']),
                                             ])>
-                                            <span class="flex-shrink-0 w-5 h-5" @class([
+                                            <span class="shrink-0 w-5 h-5" @class([
                                                 'text-indigo-600 dark:text-indigo-400' => !empty($subItem['active']),
                                                 'text-gray-500 dark:text-gray-400' => empty($subItem['active']),
                                             ])>
@@ -129,15 +133,15 @@
                                                             'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 font-medium' => !empty($nestedItem['active']),
                                                             'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800' => empty($nestedItem['active']),
                                                         ])>
-                                                        <span class="flex-shrink-0 w-5 h-5" @class([
+                                                        <span class="shrink-0 w-5 h-5" @class([
                                                             'text-indigo-600 dark:text-indigo-400' => !empty($nestedItem['active']),
                                                             'text-gray-500 dark:text-gray-400' => empty($nestedItem['active']),
                                                         ])>
                                                             {!! \App\Helpers\MenuHelper::getIconSvg($nestedItem['icon'] ?? ($subItem['icon'] ?? 'dashboard')) !!}
                                                         </span>
                                                         {{ $nestedItem['name'] }}
-                                                        @if(!empty($nestedItem['count']))
-                                                            <span class="ml-auto text-xs px-2 py-0.5 rounded-full bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400">42</span>
+                                                        @if(isset($nestedItem['badge_count']))
+                                                            <span data-sidebar-badge-key="{{ $nestedItem['badge_key'] ?? '' }}" aria-hidden="{{ ($nestedItem['badge_count'] ?? 0) > 0 ? 'false' : 'true' }}" class="{{ ($nestedItem['badge_count'] ?? 0) > 0 ? '' : 'hidden' }} ml-auto text-xs px-2 py-0.5 rounded-full bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400">{{ ($nestedItem['badge_count'] ?? 0) > 99 ? '99+' : ($nestedItem['badge_count'] ?? 0) }}</span>
                                                         @endif
                                                     </a>
                                                 </li>
@@ -153,15 +157,15 @@
                                                 'bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 text-indigo-600 dark:text-indigo-400' => !empty($subItem['active']),
                                                 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800' => empty($subItem['active']),
                                             ])>
-                                            <span class="flex-shrink-0 w-5 h-5" @class([
+                                            <span class="shrink-0 w-5 h-5" @class([
                                                 'text-indigo-600 dark:text-indigo-400' => !empty($subItem['active']),
                                                 'text-gray-500 dark:text-gray-400' => empty($subItem['active']),
                                             ])>
                                                 {!! \App\Helpers\MenuHelper::getIconSvg($subItem['icon'] ?? 'home') !!}
                                             </span>
                                             <span x-show="$store.sidebar.isExpanded" class="flex-1 text-sm">{{ $subItem['name'] }}</span>
-                                            @if(!empty($subItem['count']))
-                                                <span x-show="$store.sidebar.isExpanded" class="ml-auto px-2 py-0.5 text-xs font-medium bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400 rounded-full">22</span>
+                                            @if(isset($subItem['badge_count']))
+                                                <span x-show="$store.sidebar.isExpanded" data-sidebar-badge-key="{{ $subItem['badge_key'] ?? '' }}" aria-hidden="{{ ($subItem['badge_count'] ?? 0) > 0 ? 'false' : 'true' }}" class="{{ ($subItem['badge_count'] ?? 0) > 0 ? '' : 'hidden' }} ml-auto px-2 py-0.5 text-xs font-medium bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400 rounded-full">{{ ($subItem['badge_count'] ?? 0) > 99 ? '99+' : ($subItem['badge_count'] ?? 0) }}</span>
                                             @endif
                                         </a>
                                     @endif
@@ -180,7 +184,7 @@
                                 'bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 text-indigo-600 dark:text-indigo-400' => !empty($item['active']),
                                 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800' => empty($item['active']),
                             ])>
-                            <span class="flex-shrink-0 w-5 h-5" @class([
+                            <span class="shrink-0 w-5 h-5" @class([
                                 'text-indigo-600 dark:text-indigo-400' => !empty($item['active']),
                                 'text-gray-500 dark:text-gray-400' => empty($item['active']),
                             ])>

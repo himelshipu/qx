@@ -1,19 +1,20 @@
 @extends('backend.layouts.app')
 
-@section('title', 'Assign Campaign to Creators')
+@section('title', 'Assign Campaign to Influencers')
 
 @section('content')
-	<x-backend.shell.breadcrumb pageTitle="Assign Campaign to Creators" />
+	<x-backend.shell.breadcrumb pageTitle="Assign Campaign to Influencers" />
 
 	<div class="rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
-		<div class="flex flex-col gap-4 border-b border-gray-200 p-5 sm:flex-row sm:items-center sm:justify-between dark:border-gray-800">
+		<div
+			class="flex flex-col gap-4 border-b border-gray-200 p-5 sm:flex-row sm:items-center sm:justify-between dark:border-gray-800">
 			<div>
-				<h3 class="text-lg font-semibold text-gray-900 dark:text-white">Assign Campaign to Creators</h3>
+				<h3 class="text-lg font-semibold text-gray-900 dark:text-white">Assign Campaign to Influencers</h3>
 				<p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-					Select an active campaign and assign one or more creators (influencers) to participate in it.
+					Select an active campaign and assign one or more influencers to participate in it.
 				</p>
 			</div>
-			<a href="{{ route('dashboard.campaigns.index') }}"
+			<a href="{{ route('dashboard.campaigns.standard') }}"
 				class="inline-flex items-center gap-2 rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800">
 				Back to Campaigns
 			</a>
@@ -31,23 +32,18 @@
 						<label for="campaign_id" class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
 							Select Campaign <span class="text-red-500">*</span>
 						</label>
-						<select id="campaign_id" name="campaign_id" x-model="selectedCampaignId"
-							@change="updateCampaignDetails()"
-							required
+						<select id="campaign_id" name="campaign_id" x-model="selectedCampaignId" @change="updateCampaignDetails()" required
 							class="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-3 text-sm text-gray-900 focus:border-gray-500 focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-white">
 							<option value="">-- Choose an Active Campaign --</option>
 							@foreach ($campaigns as $campaign)
-								<option value="{{ $campaign->id }}"
-									data-title="{{ $campaign->title }}"
-									data-description="{{ $campaign->description ?? '' }}"
-									data-type="{{ $campaign->campaign_type ?? 'Standard' }}"
+								<option value="{{ $campaign->id }}" data-title="{{ $campaign->title }}"
+									data-description="{{ $campaign->description ?? '' }}" data-type="{{ $campaign->campaign_type ?? 'Standard' }}"
 									data-status="{{ $campaign->status ?? 'Active' }}"
 									data-start="{{ $campaign->start_date?->format('M d, Y') ?? 'N/A' }}"
 									data-end="{{ $campaign->end_date?->format('M d, Y') ?? 'N/A' }}"
-									data-budget-min="{{ $campaign->budget_min ?? '0' }}"
-									data-budget-max="{{ $campaign->budget_max ?? '0' }}"
+									data-budget-min="{{ $campaign->budget_min ?? '0' }}" data-budget-max="{{ $campaign->budget_max ?? '0' }}"
 									data-currency="{{ $campaign->currency ?? 'USD' }}">
-									{{ $campaign->title }}
+									{{ $campaign->brand?->brand_name ?? 'Unknown' }} - {{ $campaign->title }}
 								</option>
 							@endforeach
 						</select>
@@ -86,33 +82,34 @@
 							</div>
 							<div class="md:col-span-2">
 								<p class="text-xs text-amber-600 dark:text-amber-400">Already Assigned: <span
-										x-text="campaignDetails.assignedCount || '0'"></span> creator(s)</p>
+										x-text="campaignDetails.assignedCount || '0'"></span> influencer(s)</p>
 							</div>
 						</div>
 					</div>
 
-					<!-- Select Creators with Chips -->
+					<!-- Select Influencers with Chips -->
 					<div>
 						<label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
-							Select Creators <span class="text-red-500">*</span>
+							Select Influencers <span class="text-red-500">*</span>
 						</label>
 
 						<div class="space-y-3">
 							<!-- Search and Filter -->
-							<input type="search" @input="filterCreators($event)" placeholder="Search creators by name or email..."
+							<input type="search" @input="filterInfluencers($event)" placeholder="Search influencers by name or email..."
 								class="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-3 text-sm text-gray-900 focus:border-gray-500 focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-white" />
 
-							<!-- Creator Chips Selection -->
-							<div class="flex flex-wrap gap-2 p-3 min-h-[3rem] rounded-lg border border-gray-300 bg-gray-50 dark:border-gray-700 dark:bg-gray-800">
-								<template x-for="creator in filteredCreators" :key="creator.id">
-									<button type="button" @click.prevent="toggleCreator(creator)"
-										@keydown.enter.prevent="toggleCreator(creator)"
-										:class="isCreatorSelected(creator.id) ?
-											'bg-indigo-600 text-white dark:bg-indigo-500' :
-											'bg-white text-gray-700 border border-gray-300 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600'"
+							<!-- Influencer Chips Selection -->
+							<div
+								class="flex flex-wrap gap-2 p-3 min-h-[3rem] rounded-lg border border-gray-300 bg-gray-50 dark:border-gray-700 dark:bg-gray-800">
+								<template x-for="influencer in filteredInfluencers" :key="influencer.id">
+									<button type="button" @click.prevent="toggleInfluencer(influencer)"
+										@keydown.enter.prevent="toggleInfluencer(influencer)"
+										:class="isInfluencerSelected(influencer.id) ?
+										    'bg-indigo-600 text-white dark:bg-indigo-500' :
+										    'bg-white text-gray-700 border border-gray-300 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600'"
 										class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium transition hover:shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-										<span x-text="creator.display_name"></span>
-										<svg v-if="isCreatorSelected(creator.id)" class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+										<span x-text="influencer.display_name"></span>
+										<svg v-if="isInfluencerSelected(influencer.id)" class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
 											<path fill-rule="evenodd"
 												d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
 												clip-rule="evenodd" />
@@ -120,49 +117,74 @@
 									</button>
 								</template>
 
-								<template x-if="filteredCreators.length === 0">
-									<p class="text-sm text-gray-500 dark:text-gray-400">No creators match your search.</p>
+								<template x-if="filteredInfluencers.length === 0">
+									<p class="text-sm text-gray-500 dark:text-gray-400">No influencers match your search.</p>
 								</template>
 							</div>
 
-							<!-- Selected Creators Summary -->
-							<div x-show="selectedCreatorIds.length > 0" x-cloak
-								class="text-sm text-gray-600 dark:text-gray-400">
+							<!-- Selected Influencers Summary -->
+							<div x-show="selectedInfluencerIds.length > 0" x-cloak class="text-sm text-gray-600 dark:text-gray-400">
 								Selected: <span class="font-medium text-gray-900 dark:text-white"
-									x-text="`${selectedCreatorIds.length} creator(s)`"></span>
+									x-text="`${selectedInfluencerIds.length} influencer(s)`"></span>
 							</div>
 
-							@error('creator_ids')
+							@error('influencer_ids')
 								<p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
 							@enderror
 						</div>
 
-						<!-- Hidden input for selected creator IDs -->
-						<template x-for="creatorId in selectedCreatorIds" :key="`hidden-creator-${creatorId}`">
-							<input type="hidden" name="creator_ids[]" :value="creatorId" />
+						<!-- Hidden input for selected influencer IDs -->
+						<template x-for="influencerId in selectedInfluencerIds" :key="`hidden-influencer-${influencerId}`">
+							<input type="hidden" name="influencer_ids[]" :value="influencerId" />
 						</template>
 					</div>
 
 					<!-- Form Actions -->
-					<div class="flex flex-col-reverse gap-3 border-t border-gray-200 pt-5 sm:flex-row sm:justify-end dark:border-gray-800">
-						<a href="{{ route('dashboard.campaigns.index') }}"
+					<div
+						class="flex flex-col-reverse gap-3 border-t border-gray-200 pt-5 sm:flex-row sm:justify-end dark:border-gray-800">
+						<a href="{{ route('dashboard.campaigns.standard') }}"
 							class="inline-flex items-center justify-center rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800">
 							Cancel
 						</a>
-						<button type="submit"
-							:disabled="selectedCreatorIds.length === 0"
-							:class="selectedCreatorIds.length === 0 ? 'opacity-50 cursor-not-allowed bg-gray-400' : 'hover:bg-indigo-700 bg-indigo-600'"
+						<button type="submit" :disabled="selectedInfluencerIds.length === 0"
+							:class="selectedInfluencerIds.length === 0 ? 'opacity-50 cursor-not-allowed bg-gray-400' :
+							    'hover:bg-indigo-700 bg-indigo-600'"
 							class="inline-flex items-center justify-center rounded-lg px-6 py-2 text-sm font-semibold text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900 transition">
-							Assign &nbsp; <span x-text="selectedCreatorIds.length || '0'"></span> &nbsp; Creator<span x-text="selectedCreatorIds.length === 1 ? '' : 's'"></span> &nbsp; to Campaign
+							Assign &nbsp; <span x-text="selectedInfluencerIds.length || '0'"></span> &nbsp; Influencer<span
+								x-text="selectedInfluencerIds.length === 1 ? '' : 's'"></span> &nbsp; to Campaign
 						</button>
 					</div>
 				</div>
 
 				<!-- Sidebar - Info Cards -->
 				<div class="space-y-4">
+					<!-- Already Assigned Influencers Card -->
+					<div class="rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800" x-show="selectedCampaignId" x-cloak>
+						<h4 class="text-sm font-semibold text-gray-900 dark:text-white mb-3">Already Assigned Influencers</h4>
+						<div x-show="assignedInfluencers.length > 0" x-cloak class="space-y-2">
+							<p class="text-2xl font-bold text-blue-600 dark:text-blue-400" x-text="assignedInfluencers.length"></p>
+							<div class="mt-3 space-y-2 max-h-48 overflow-y-auto">
+								<template x-for="influencer in assignedInfluencers" :key="influencer.id">
+									<div class="p-2 rounded bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600">
+									<div class="flex items-start justify-between gap-2">
+										<div class="flex-1">
+											<p class="text-xs font-medium text-gray-900 dark:text-white" x-text="influencer.display_name"></p>
+											<p class="text-xs text-gray-600 dark:text-gray-400" x-text="influencer.email"></p>
+										</div>
+										<span :class="influencer.status === 'approved' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : influencer.status === 'declined' ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'" class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium whitespace-nowrap" x-text="influencer.status?.charAt(0).toUpperCase() + influencer.status?.slice(1)"></span>
+									</div>
+									</div>
+								</template>
+							</div>
+						</div>
+						<div x-show="assignedInfluencers.length === 0" x-cloak>
+							<p class="text-sm text-gray-600 dark:text-gray-400">No influencers assigned yet</p>
+						</div>
+					</div>
+
 					<div class="rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800">
-						<h4 class="text-sm font-semibold text-gray-900 dark:text-white mb-3">Active Creators</h4>
-						<p class="text-2xl font-bold text-indigo-600 dark:text-indigo-400">{{ $activeCreatorsCount }}</p>
+						<h4 class="text-sm font-semibold text-gray-900 dark:text-white mb-3">Active Influencers</h4>
+						<p class="text-2xl font-bold text-indigo-600 dark:text-indigo-400">{{ $activeInfluencersCount }}</p>
 						<p class="mt-1 text-xs text-gray-600 dark:text-gray-400">Ready to assign</p>
 					</div>
 
@@ -185,13 +207,15 @@
 
 		<div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
 			@forelse ($latestCampaigns as $campaign)
-				<div class="rounded-lg border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900 p-4 hover:shadow-md transition">
+				<div
+					class="rounded-lg border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900 p-4 hover:shadow-md transition">
 					<div class="flex items-start justify-between mb-3">
 						<h4 class="font-semibold text-gray-900 dark:text-white line-clamp-2">{{ $campaign->title }}</h4>
 						<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
-							:class="'{{ $campaign->is_active ? 'Active' : 'Inactive' }}' === 'Active' ?
-								'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' :
-								'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200'">
+							:class="'{{ $campaign->is_active ? 'Active' : 'Inactive' }}'
+							=== 'Active' ?
+							    'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' :
+							    'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200'">
 							{{ $campaign->is_active ? 'Active' : 'Inactive' }}
 						</span>
 					</div>
@@ -210,7 +234,7 @@
 						<div class="flex justify-between">
 							<span class="text-gray-600 dark:text-gray-400">Applicants:</span>
 							<span class="font-medium text-indigo-600 dark:text-indigo-400">
-								{{ count($campaign->applications) }} creator(s)
+								{{ count($campaign->applications) }} influencer(s)
 							</span>
 						</div>
 						<div class="flex justify-between">
@@ -225,7 +249,8 @@
 					</a>
 				</div>
 			@empty
-				<div class="rounded-lg border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900 p-8 col-span-full">
+				<div
+					class="rounded-lg border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900 p-8 col-span-full">
 					<p class="text-center text-gray-500 dark:text-gray-400">No active campaigns available at the moment.</p>
 				</div>
 			@endforelse
@@ -247,19 +272,20 @@
 					description: '',
 					assignedCount: 0
 				},
-				selectedCreatorIds: [],
-				filteredCreators: @js($creators->map(fn($c) => [
-					'id' => $c->id,
-					'display_name' => $c->display_name,
-					'email' => $c->user?->email,
-					'phone' => $c->user?->phone
-				])),
-				allCreators: @js($creators->map(fn($c) => [
-					'id' => $c->id,
-					'display_name' => $c->display_name,
-					'email' => $c->user?->email,
-					'phone' => $c->user?->phone
-				])),
+				assignedInfluencers: [],
+				assignedInfluencerIds: [],
+				selectedInfluencerIds: [],
+                filteredInfluencers: [],
+                allInfluencers: @js(
+    $influencers->map(
+        fn($c) => [
+            'id' => $c->id,
+            'display_name' => $c->display_name,
+            'email' => $c->user?->email,
+            'phone' => $c->user?->phone,
+        ],
+    ),
+),
 				updateCampaignDetails() {
 					const select = document.getElementById('campaign_id');
 					const selected = select.options[select.selectedIndex];
@@ -278,40 +304,67 @@
 						this.updateAssignedCount();
 					} else {
 						this.campaignDetails = {
-							type: '', status: '', startDate: '', endDate: '',
-							budgetMin: '0', budgetMax: '0', currency: 'USD',
-							description: '', assignedCount: 0
+							type: '',
+							status: '',
+							startDate: '',
+							endDate: '',
+							budgetMin: '0',
+							budgetMax: '0',
+							currency: 'USD',
+							description: '',
+							assignedCount: 0
 						};
+						this.filteredInfluencers = [];
+						this.assignedInfluencers = [];
+						this.assignedInfluencerIds = [];
 					}
 				},
 				updateAssignedCount() {
 					if (!this.selectedCampaignId) return;
-					fetch(`/dashboard/campaigns/${this.selectedCampaignId}/assigned-creators`)
+					fetch(`/dashboard/campaigns/${this.selectedCampaignId}/assigned-influencers`)
 						.then(r => r.json())
 						.then(data => {
+							this.assignedInfluencers = data || [];
+							this.assignedInfluencerIds = (data || []).map(influencer => influencer.id);
 							this.campaignDetails.assignedCount = data.length || 0;
+							// Update available influencers after fetching assigned ones
+							this.updateAvailableInfluencers();
 						})
 						.catch(() => {
+							this.assignedInfluencers = [];
+							this.assignedInfluencerIds = [];
 							this.campaignDetails.assignedCount = 0;
+							this.updateAvailableInfluencers();
 						});
 				},
-				filterCreators(event) {
-					const searchTerm = event.target.value.toLowerCase();
-					this.filteredCreators = this.allCreators.filter(creator =>
-						creator.display_name.toLowerCase().includes(searchTerm) ||
-						creator.email.toLowerCase().includes(searchTerm)
+				updateAvailableInfluencers() {
+					// Filter out already assigned influencers from the available list
+					this.filteredInfluencers = this.allInfluencers.filter(influencer => 
+						!this.assignedInfluencerIds.includes(influencer.id)
 					);
 				},
-				toggleCreator(creator) {
-					const index = this.selectedCreatorIds.indexOf(creator.id);
+				filterInfluencers(event) {
+					const searchTerm = event.target.value.toLowerCase();
+					this.filteredInfluencers = this.allInfluencers.filter(influencer => {
+						// Exclude already assigned influencers
+						if (this.assignedInfluencerIds.includes(influencer.id)) {
+							return false;
+						}
+						// Match search term
+						return influencer.display_name.toLowerCase().includes(searchTerm) ||
+							influencer.email.toLowerCase().includes(searchTerm);
+					});
+				},
+				toggleInfluencer(influencer) {
+					const index = this.selectedInfluencerIds.indexOf(influencer.id);
 					if (index > -1) {
-						this.selectedCreatorIds.splice(index, 1);
+						this.selectedInfluencerIds.splice(index, 1);
 					} else {
-						this.selectedCreatorIds.push(creator.id);
+						this.selectedInfluencerIds.push(influencer.id);
 					}
 				},
-				isCreatorSelected(creatorId) {
-					return this.selectedCreatorIds.includes(creatorId);
+				isInfluencerSelected(influencerId) {
+					return this.selectedInfluencerIds.includes(influencerId);
 				}
 			};
 		}

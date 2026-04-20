@@ -100,10 +100,10 @@ final class CampaignService
      */
     public function getFormPayload(): array
     {
-        $authUser = Auth::user();
+        $authUser       = Auth::user();
         $canSelectBrand = (string) ($authUser?->user_type ?? '') === 'admin';
         $defaultBrandId = $canSelectBrand ? null : $authUser?->brand?->id;
-    $brandOptions = $canSelectBrand ? $this->campaignRepository->getBrandOptions() : collect();
+        $brandOptions   = $canSelectBrand ? $this->campaignRepository->getBrandOptions() : collect();
 
         return [
             'categoryOptions'      => $this->campaignRepository->getCategoryOptions(),
@@ -133,10 +133,10 @@ final class CampaignService
             'followerRanges:id,label',
             'targetCountries:id,campaign_id,country_code',
             'applications' => function ($query) {
-                $query->with(['creator' => function ($query) {
+                $query->with(['influencer' => function ($query) {
                     $query->with('user:id,email,name,phone')
                         ->select('id', 'display_name', 'user_id');
-                }])->select('id', 'campaign_id', 'creator_id', 'status', 'pitch_message', 'proposed_rate', 'agreed_rate', 'applied_at', 'decided_at')
+                }])->select('id', 'campaign_id', 'influencer_id', 'status', 'pitch_message', 'proposed_rate', 'agreed_rate', 'applied_at', 'decided_at')
                     ->orderByDesc('applied_at');
             }
         ])->loadCount(['applications', 'assets', 'orders', 'orderItems', 'cartItems']);
@@ -226,6 +226,16 @@ final class CampaignService
             'deleted' => true,
             'message' => '🗑️ Campaign deleted successfully.'
         ];
+    }
+
+    /**
+     * Update campaign lifecycle status.
+     */
+    public function updateCampaignStatus(Campaign $campaign, string $status): Campaign
+    {
+        return $this->campaignRepository->update($campaign, [
+            'status' => $status,
+        ]);
     }
 
     /**
@@ -475,7 +485,7 @@ final class CampaignService
      * Normalize selected target countries from request payload.
      *
      * @param  mixed      $value
-    * @return array<int, array{country_code:string}>
+     * @return array<int, array{country_code:string}>
      */
     private function normalizeTargetCountries(mixed $value): array
     {

@@ -5,15 +5,19 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Review extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     protected $fillable = [
         'order_item_id',
+        'sub_order_id',
         'brand_id',
-        'creator_id',
+        'influencer_id',
+        'reviewer_type',
+        'reviewee_type',
         'rating',
         'title',
         'comment',
@@ -23,9 +27,22 @@ class Review extends Model
     protected function casts(): array
     {
         return [
-            'rating'    => 'integer',
-            'is_public' => 'boolean'
+            'rating'        => 'integer',
+            'is_public'     => 'boolean',
+            'reviewer_type' => 'string',
+            'reviewee_type' => 'string'
         ];
+    }
+
+    protected static function booted(): void
+    {
+        static::updating(function (): void {
+            throw new \LogicException('Reviews are immutable once submitted.');
+        });
+
+        static::deleting(function (): void {
+            throw new \LogicException('Reviews cannot be deleted once submitted.');
+        });
     }
 
     public function orderItem(): BelongsTo
@@ -33,13 +50,18 @@ class Review extends Model
         return $this->belongsTo(OrderItem::class);
     }
 
+    public function subOrder(): BelongsTo
+    {
+        return $this->belongsTo(SubOrder::class);
+    }
+
     public function brand(): BelongsTo
     {
         return $this->belongsTo(Brand::class);
     }
 
-    public function creator(): BelongsTo
+    public function influencer(): BelongsTo
     {
-        return $this->belongsTo(Creator::class);
+        return $this->belongsTo(Influencer::class);
     }
 }

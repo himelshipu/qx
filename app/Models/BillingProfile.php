@@ -35,11 +35,11 @@ class BillingProfile extends Model
     }
 
     /**
-     * Determine if this is a creator billing profile
+     * Determine if this is an influencer billing profile
      */
-    public function isCreator(): bool
+    public function isInfluencer(): bool
     {
-        return $this->user_type === 'creator';
+        return $this->user_type === 'influencer';
     }
 
     /**
@@ -63,9 +63,9 @@ class BillingProfile extends Model
     public function isComplete(): bool
     {
         return !empty($this->legal_company_name) &&
-               !empty($this->billing_address) &&
-               !empty($this->billing_city) &&
-               !empty($this->billing_country) &&
-               !empty($this->billing_postal_code);
+        !empty($this->billing_address) &&
+        !empty($this->billing_city) &&
+        !empty($this->billing_country) &&
+        !empty($this->billing_postal_code);
     }
 }

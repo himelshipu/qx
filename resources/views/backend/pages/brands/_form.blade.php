@@ -1,13 +1,3 @@
-@php
-	/** @var \App\Models\Brand|null $brand */
-	$brand = $brand ?? null;
-	$user = $brand?->user;
-	$isEditMode = $brand !== null;
-
-	$initialProfilePreview = $user?->profile_image_path ? \App\Helpers\ImageHelper::url($user->profile_image_path) : null;
-	$initialCoverPreview = $user?->cover_image_path ? \App\Helpers\ImageHelper::url($user->cover_image_path) : null;
-@endphp
-
 <div x-data="brandUploader({
     profilePreview: @js($initialProfilePreview),
     coverPreview: @js($initialCoverPreview)
@@ -18,7 +8,7 @@
 				<label for="contact_name" class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
 					Contact Name <span class="text-red-500">*</span>
 				</label>
-				<input id="contact_name" name="contact_name" type="text" value="{{ old('contact_name', $user?->name) }}" required
+				<input id="contact_name" name="contact_name" type="text" value="{{ old('contact_name', $brand?->user?->name) }}" required
 					placeholder="e.g., John Doe"
 					class="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-3 text-sm text-gray-900 focus:border-gray-500 focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-white">
 				@error('contact_name')
@@ -42,7 +32,7 @@
 				<label for="email" class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
 					Email <span class="text-red-500">*</span>
 				</label>
-				<input id="email" name="email" type="email" value="{{ old('email', $user?->email ?? $brand?->email) }}"
+				<input id="email" name="email" type="email" value="{{ old('email', $brand?->user?->email) }}"
 					required placeholder="brand@example.com"
 					class="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-3 text-sm text-gray-900 focus:border-gray-500 focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-white">
 				@error('email')
@@ -52,7 +42,7 @@
 
 			<div>
 				<label for="phone" class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Phone</label>
-				<input id="phone" name="phone" type="text" value="{{ old('phone', $brand?->phone ?? $user?->phone) }}"
+				<input id="phone" name="phone" type="text" value="{{ old('phone', $brand?->user?->phone) }}"
 					placeholder="+1 202 555 0100"
 					class="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-3 text-sm text-gray-900 focus:border-gray-500 focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-white">
 				@error('phone')
@@ -112,7 +102,7 @@
 			<label for="bio" class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Bio</label>
 			<textarea id="bio" name="bio" rows="4"
 			 placeholder="Briefly describe the brand and its positioning"
-			 class="w-full rounded-lg border border-gray-300 bg-transparent px-3 py-2 text-sm text-gray-900 focus:border-gray-500 focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-white">{{ old('bio', $user?->bio) }}</textarea>
+			 class="w-full rounded-lg border border-gray-300 bg-transparent px-3 py-2 text-sm text-gray-900 focus:border-gray-500 focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-white">{{ old('bio', $brand?->user?->bio) }}</textarea>
 			@error('bio')
 				<p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
 			@enderror
@@ -121,7 +111,7 @@
 		<div class="grid grid-cols-1 gap-5 md:grid-cols-2">
 			<div>
 				<label for="location" class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Address Line</label>
-				<input id="location" name="location" type="text" value="{{ old('location', $user?->address_line) }}"
+				<input id="location" name="location" type="text" value="{{ old('location', $brand?->user?->address_line) }}"
 					placeholder="Street address"
 					class="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-3 text-sm text-gray-900 focus:border-gray-500 focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-white">
 				@error('location')
@@ -131,7 +121,7 @@
 
 			<div>
 				<label for="city" class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">City</label>
-				<input id="city" name="city" type="text" value="{{ old('city', $user?->city) }}"
+				<input id="city" name="city" type="text" value="{{ old('city', $brand?->user?->city) }}"
 					class="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-3 text-sm text-gray-900 focus:border-gray-500 focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-white">
 				@error('city')
 					<p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
@@ -140,7 +130,7 @@
 
 			<div>
 				<label for="country" class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Country</label>
-				<input id="country" name="country" type="text" value="{{ old('country', $user?->country) }}"
+				<input id="country" name="country" type="text" value="{{ old('country', $brand?->user?->country) }}"
 					class="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-3 text-sm text-gray-900 focus:border-gray-500 focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-white">
 				@error('country')
 					<p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
@@ -151,7 +141,7 @@
 				<label for="postal_code" class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Postal
 					Code</label>
 				<input id="postal_code" name="postal_code" type="text"
-					value="{{ old('postal_code', $user?->postal_code) }}"
+					value="{{ old('postal_code', $brand?->user?->postal_code) }}"
 					class="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-3 text-sm text-gray-900 focus:border-gray-500 focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-white">
 				@error('postal_code')
 					<p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
@@ -257,7 +247,7 @@
 			<label for="is_active" class="flex cursor-pointer items-center justify-between gap-3">
 				<span class="text-sm font-medium text-gray-700 dark:text-gray-300">Active Status</span>
 				<input id="is_active" name="is_active" type="checkbox" value="1"
-					{{ old('is_active', $brand?->is_active ?? true) ? 'checked' : '' }}
+					{{ old('is_active', $currentActive) ? 'checked' : '' }}
 					class="h-4 w-4 rounded border-gray-300 text-gray-900 focus:ring-gray-500 dark:border-gray-600 dark:bg-gray-800">
 			</label>
 			@error('is_active')
@@ -266,80 +256,3 @@
 		</div>
 	</div>
 </div>
-
-@once
-	@push('scripts')
-		<script>
-			function brandUploader(config) {
-				return {
-					profilePreview: config.profilePreview || null,
-					coverPreview: config.coverPreview || null,
-					profileFileName: '',
-					coverFileName: '',
-					profileClientError: '',
-					coverClientError: '',
-
-					onProfileSelected(event) {
-						this.profileClientError = '';
-						const file = event.target.files[0];
-
-						if (!file) {
-							return;
-						}
-
-						const extension = (file.name.split('.').pop() || '').toLowerCase();
-						const allowed = ['jpg', 'jpeg', 'png', 'webp', 'avif', 'gif'];
-
-						if (!allowed.includes(extension)) {
-							this.profileClientError = 'Profile image must be JPG, PNG, WEBP, AVIF, or GIF.';
-							this.clearProfile();
-							return;
-						}
-
-						this.profileFileName = file.name;
-						this.profilePreview = URL.createObjectURL(file);
-					},
-
-					onCoverSelected(event) {
-						this.coverClientError = '';
-						const file = event.target.files[0];
-
-						if (!file) {
-							return;
-						}
-
-						const extension = (file.name.split('.').pop() || '').toLowerCase();
-						const allowed = ['jpg', 'jpeg', 'png', 'webp', 'avif', 'gif'];
-
-						if (!allowed.includes(extension)) {
-							this.coverClientError = 'Cover image must be JPG, PNG, WEBP, AVIF, or GIF.';
-							this.clearCover();
-							return;
-						}
-
-						this.coverFileName = file.name;
-						this.coverPreview = URL.createObjectURL(file);
-					},
-
-					clearProfile() {
-						this.profileClientError = '';
-						this.profileFileName = '';
-						this.profilePreview = config.profilePreview || null;
-						if (this.$refs.profileInput) {
-							this.$refs.profileInput.value = '';
-						}
-					},
-
-					clearCover() {
-						this.coverClientError = '';
-						this.coverFileName = '';
-						this.coverPreview = config.coverPreview || null;
-						if (this.$refs.coverInput) {
-							this.$refs.coverInput.value = '';
-						}
-					}
-				};
-			}
-		</script>
-	@endpush
-@endonce

@@ -13,8 +13,8 @@
 					<p class="mt-1 text-sm font-semibold text-gray-900 dark:text-white">{{ $review->brand?->brand_name ?? 'N/A' }}</p>
 				</div>
 				<div>
-					<p class="text-xs uppercase tracking-wider text-gray-500 dark:text-gray-400">Creator</p>
-					<p class="mt-1 text-sm font-semibold text-gray-900 dark:text-white">{{ $review->creator?->user?->name ?? $review->creator?->display_name ?? 'N/A' }}</p>
+					<p class="text-xs uppercase tracking-wider text-gray-500 dark:text-gray-400">Influencer</p>
+					<p class="mt-1 text-sm font-semibold text-gray-900 dark:text-white">{{ $review->influencer?->user?->name ?? $review->influencer?->display_name ?? 'N/A' }}</p>
 				</div>
 				<div>
 					<p class="text-xs uppercase tracking-wider text-gray-500 dark:text-gray-400">Rating</p>

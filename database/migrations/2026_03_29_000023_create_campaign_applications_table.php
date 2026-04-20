@@ -11,7 +11,7 @@ return new class extends Migration
         Schema::create('campaign_applications', function (Blueprint $table): void {
             $table->id();
             $table->foreignId('campaign_id')->constrained('campaigns')->cascadeOnDelete();
-            $table->foreignId('creator_id')->constrained('creators')->cascadeOnDelete();
+            $table->foreignId('influencer_id')->constrained('influencers')->cascadeOnDelete();
             $table->enum('status', ['invited', 'applied', 'shortlisted', 'approved', 'rejected', 'completed'])->default('applied');
             $table->text('pitch_message')->nullable();
             $table->decimal('proposed_rate', 12, 2)->nullable();
@@ -20,7 +20,7 @@ return new class extends Migration
             $table->timestamp('decided_at')->nullable();
             $table->timestamps();
 
-            $table->unique(['campaign_id', 'creator_id'], 'campaign_creator_unique');
+            $table->unique(['campaign_id', 'influencer_id'], 'campaign_influencer_unique');
         });
     }
 

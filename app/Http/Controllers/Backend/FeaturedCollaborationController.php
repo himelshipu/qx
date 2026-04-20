@@ -3,81 +3,81 @@
 namespace App\Http\Controllers\Backend;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Backend\FeaturedCollaboration\StoreFeaturedCollaborationRequest;
+use App\Http\Requests\Backend\FeaturedCollaboration\UpdateFeaturedCollaborationRequest;
 use App\Models\FeaturedCollaboration;
-use Illuminate\Http\UploadedFile;
+use App\Services\Admin\FeaturedCollaborationService;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
-use Throwable;
+use Illuminate\View\View;
 
 class FeaturedCollaborationController extends Controller
 {
+    public function __construct(
+        private readonly FeaturedCollaborationService $featuredCollaborationService
+    ) {}
+
     /**
      * Display a listing of featured collaborations.
      */
-    public function index()
+    public function index(Request $request): View
     {
-        $collaborations = FeaturedCollaboration::orderBy('sort_order', 'asc')
-            ->orderBy('created_at', 'desc')
-            ->paginate(15);
+        $search = trim((string) $request->string('q', ''));
+        $status = (string) $request->string('status', 'all');
+        $assetType = (string) $request->string('asset_type', 'all');
 
-        return view('backend.pages.featured-collaborations.index', compact('collaborations'));
+        $payload = $this->featuredCollaborationService->getListingPayload($search, $status, $assetType);
+
+        return view('backend.pages.featured-collaborations.index', $payload);
+    }
+
+    /**
+     * Return dashboard table fragment for ajax filters.
+     */
+    public function table(Request $request): JsonResponse
+    {
+        $search = trim((string) $request->string('q', ''));
+        $status = (string) $request->string('status', 'all');
+        $assetType = (string) $request->string('asset_type', 'all');
+
+        $payload = $this->featuredCollaborationService->getListingPayload($search, $status, $assetType);
+
+        $html = view('backend.pages.featured-collaborations._results', [
+            'collaborations' => $payload['collaborations'],
+        ])->render();
+
+        return response()->json([
+            'success' => true,
+            'html' => $html,
+        ]);
     }
 
     /**
      * Show the form for creating a new collaboration.
      */
-    public function create()
+    public function create(): View
     {
-        $assetTypes = ['image', 'video'];
-
-        return view('backend.pages.featured-collaborations.create', compact('assetTypes'));
+        return view('backend.pages.featured-collaborations.create', [
+            'featuredCollaboration' => null,
+            'nextSortOrder' => $this->featuredCollaborationService->getNextSortOrder(),
+        ]);
     }
 
     /**
      * Store a newly created collaboration in storage.
      */
-    public function store(Request $request)
+    public function store(StoreFeaturedCollaborationRequest $request): RedirectResponse
     {
-        $validated = $request->validate([
-            'brand_name'     => 'required|string|max:255',
-            'asset_type'     => 'required|in:image,video',
-            'image_path'     => 'required_if:asset_type,image|nullable|image|mimes:jpeg,png,webp,jpg|max:5120',
-            'video_path'     => 'required_if:asset_type,video|nullable|mimes:mp4,webm,mov|max:102400',
-            'thumbnail_path' => 'exclude_unless:asset_type,video|nullable|image|mimes:jpeg,png,webp,jpg|max:2048',
-            'sort_order'     => 'integer|min:0',
-            'is_published'   => 'boolean'
-        ]);
+        $validated = $request->validated();
+        $validated['is_published'] = $request->boolean('is_published');
 
-        $data = [
-            'brand_name'   => $validated['brand_name'],
-            'asset_type'   => $validated['asset_type'],
-            'sort_order'   => $validated['sort_order'] ?? 0,
-            'is_published' => $request->boolean('is_published')
-        ];
-
-        try {
-            // Ensure upload directories exist before storing files.
-            $this->ensureCollaborationDirectories();
-
-            if ($request->hasFile('image_path')) {
-                $data['image_path'] = $this->storePublicFile($request->file('image_path'), 'collaborations/images');
-            }
-
-            if ($request->hasFile('video_path')) {
-                $data['video_path'] = $this->storePublicFile($request->file('video_path'), 'collaborations/videos');
-            }
-
-            if ($request->hasFile('thumbnail_path') && $validated['asset_type'] === 'video') {
-                $data['thumbnail_path'] = $this->storePublicFile($request->file('thumbnail_path'), 'collaborations/thumbnails');
-            }
-        } catch (Throwable $e) {
-            report($e);
-            return back()->withInput()->withErrors([
-                'media_upload' => 'Unable to upload media right now. Please try again.'
-            ]);
-        }
-
-        FeaturedCollaboration::create($data);
+        $this->featuredCollaborationService->createCollaboration(
+            $validated,
+            $request->file('image_path'),
+            $request->file('video_path'),
+            $request->file('thumbnail_path')
+        );
 
         return redirect()->route('dashboard.featured-collaborations.index')
             ->with('success', 'Featured collaboration created successfully.');
@@ -86,96 +86,31 @@ class FeaturedCollaborationController extends Controller
     /**
      * Show the form for editing the specified collaboration.
      */
-    public function edit(FeaturedCollaboration $featuredCollaboration)
+    public function edit(FeaturedCollaboration $featuredCollaboration): View
     {
-        $assetTypes = ['image', 'video'];
-
-        return view('backend.pages.featured-collaborations.edit', compact('featuredCollaboration', 'assetTypes'));
+        return view('backend.pages.featured-collaborations.edit', [
+            'featuredCollaboration' => $featuredCollaboration,
+        ]);
     }
 
     /**
      * Update the specified collaboration in storage.
      */
-    public function update(Request $request, FeaturedCollaboration $featuredCollaboration)
+    public function update(UpdateFeaturedCollaborationRequest $request, FeaturedCollaboration $featuredCollaboration): RedirectResponse
     {
-        $validated = $request->validate([
-            'brand_name'     => 'required|string|max:255',
-            'asset_type'     => 'required|in:image,video',
-            'image_path'     => 'nullable|image|mimes:jpeg,png,webp,jpg|max:5120',
-            'video_path'     => 'nullable|mimes:mp4,webm,mov|max:102400',
-            'thumbnail_path' => 'exclude_unless:asset_type,video|nullable|image|mimes:jpeg,png,webp,jpg|max:2048',
-            'sort_order'     => 'integer|min:0',
-            'is_published'   => 'boolean',
-            'delete_image'   => 'boolean',
-            'delete_video'   => 'boolean'
-        ]);
+        $validated = $request->validated();
+        $validated['is_published'] = $request->boolean('is_published');
 
-        $data = [
-            'brand_name'   => $validated['brand_name'],
-            'asset_type'   => $validated['asset_type'],
-            'sort_order'   => $validated['sort_order'] ?? 0,
-            'is_published' => $request->boolean('is_published')
-        ];
-
-        if ($validated['asset_type'] === 'image') {
-            $this->deleteFromPublicDisk($featuredCollaboration->video_path);
-            $this->deleteFromPublicDisk($featuredCollaboration->thumbnail_path);
-            $data['video_path'] = null;
-            $data['thumbnail_path'] = null;
-        }
-
-        if ($validated['asset_type'] === 'video') {
-            $this->deleteFromPublicDisk($featuredCollaboration->image_path);
-            $data['image_path'] = null;
-        }
-
-        // Handle image deletion
-        if ($request->boolean('delete_image')) {
-            $this->deleteFromPublicDisk($featuredCollaboration->image_path);
-            $data['image_path'] = null;
-        }
-
-        // Handle video deletion
-        if ($request->boolean('delete_video')) {
-            $this->deleteFromPublicDisk($featuredCollaboration->video_path);
-            $data['video_path'] = null;
-            $this->deleteFromPublicDisk($featuredCollaboration->thumbnail_path);
-            $data['thumbnail_path'] = null;
-        }
-
-        try {
-            $this->ensureCollaborationDirectories();
-
-            // Handle image upload
-            if ($request->hasFile('image_path')) {
-                $this->deleteFromPublicDisk($featuredCollaboration->image_path);
-                $data['image_path'] = $this->storePublicFile($request->file('image_path'), 'collaborations/images');
-            }
-
-            // Handle video upload
-            if ($request->hasFile('video_path')) {
-                $this->deleteFromPublicDisk($featuredCollaboration->video_path);
-                $data['video_path'] = $this->storePublicFile($request->file('video_path'), 'collaborations/videos');
-            }
-
-            // Handle thumbnail upload - only for videos
-            if ($request->hasFile('thumbnail_path') && $validated['asset_type'] === 'video') {
-                $this->deleteFromPublicDisk($featuredCollaboration->thumbnail_path);
-                $data['thumbnail_path'] = $this->storePublicFile($request->file('thumbnail_path'), 'collaborations/thumbnails');
-            }
-        } catch (Throwable $e) {
-            report($e);
-            return back()->withInput()->withErrors([
-                'media_upload' => 'Unable to upload media right now. Please try again.'
-            ]);
-        }
-
-        if ($validated['asset_type'] === 'image') {
-            $data['video_path'] = null;
-            $data['thumbnail_path'] = null;
-        }
-
-        $featuredCollaboration->update($data);
+        $this->featuredCollaborationService->updateCollaboration(
+            $featuredCollaboration,
+            $validated,
+            $request->file('image_path'),
+            $request->file('video_path'),
+            $request->file('thumbnail_path'),
+            $request->boolean('delete_image'),
+            $request->boolean('delete_video'),
+            $request->boolean('delete_thumbnail')
+        );
 
         return redirect()->route('dashboard.featured-collaborations.index')
             ->with('success', 'Featured collaboration updated successfully.');
@@ -184,14 +119,9 @@ class FeaturedCollaborationController extends Controller
     /**
      * Delete the specified collaboration.
      */
-    public function destroy(FeaturedCollaboration $featuredCollaboration)
+    public function destroy(FeaturedCollaboration $featuredCollaboration): RedirectResponse
     {
-        // Delete associated files
-        $this->deleteFromPublicDisk($featuredCollaboration->image_path);
-        $this->deleteFromPublicDisk($featuredCollaboration->video_path);
-        $this->deleteFromPublicDisk($featuredCollaboration->thumbnail_path);
-
-        $featuredCollaboration->delete();
+        $this->featuredCollaborationService->deleteCollaboration($featuredCollaboration);
 
         return redirect()->route('dashboard.featured-collaborations.index')
             ->with('success', 'Featured collaboration deleted successfully.');
@@ -200,42 +130,37 @@ class FeaturedCollaborationController extends Controller
     /**
      * Toggle publish status
      */
-    public function togglePublish(FeaturedCollaboration $featuredCollaboration)
+    public function togglePublish(Request $request, FeaturedCollaboration $featuredCollaboration): JsonResponse|RedirectResponse
     {
-        $featuredCollaboration->update([
-            'is_published' => !$featuredCollaboration->is_published
-        ]);
+        $updated = $this->featuredCollaborationService->toggleStatus($featuredCollaboration);
 
-        $status = $featuredCollaboration->is_published ? 'published' : 'unpublished';
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Featured collaboration status updated successfully.',
+                'is_published' => (bool) $updated->is_published,
+            ]);
+        }
 
         return redirect()->route('dashboard.featured-collaborations.index')
-            ->with('success', "Featured collaboration {$status} successfully.");
+            ->with('success', 'Featured collaboration status updated successfully.');
     }
 
-    private function ensureCollaborationDirectories(): void
+    /**
+     * Reorder featured collaborations.
+     */
+    public function reorder(Request $request): JsonResponse
     {
-        $disk = Storage::disk('public');
+        $validated = $request->validate([
+            'order' => ['required', 'array', 'min:1'],
+            'order.*' => ['required', 'integer', 'min:1'],
+        ]);
 
-        foreach (['collaborations/images', 'collaborations/videos', 'collaborations/thumbnails'] as $directory) {
-            if (!$disk->exists($directory)) {
-                $disk->makeDirectory($directory);
-            }
-        }
-    }
+        $this->featuredCollaborationService->reorderCollaborations($validated['order']);
 
-    private function storePublicFile(UploadedFile $file, string $directory): string
-    {
-        return $file->store($directory, 'public');
-    }
-
-    private function deleteFromPublicDisk(?string $path): void
-    {
-        if (!$path || $path === '0') {
-            return;
-        }
-
-        if (Storage::disk('public')->exists($path)) {
-            Storage::disk('public')->delete($path);
-        }
+        return response()->json([
+            'success' => true,
+            'message' => 'Featured collaborations reordered successfully.',
+        ]);
     }
 }

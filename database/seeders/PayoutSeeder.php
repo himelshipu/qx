@@ -13,7 +13,7 @@ class PayoutSeeder extends Seeder
 
         for ($i = 0; $i < 20; $i++) {
             DB::table('payouts')->insert([
-                    'creator_id' => 1,
+                    'influencer_id' => 1,
                     'payout_account_id' => $faker->numberBetween(1, 1000),
                     'amount' => $faker->randomFloat(2, 10, 5000),
                     'currency' => $faker->word,

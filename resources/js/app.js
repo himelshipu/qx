@@ -1,10 +1,39 @@
+import collapse from "@alpinejs/collapse";
 import { createPopper } from "@popperjs/core";
 import Alpine from "alpinejs";
-import collapse from "@alpinejs/collapse";
 import ApexCharts from "apexcharts";
 import flatpickr from "flatpickr";
 import "flatpickr/dist/flatpickr.min.css";
+import "./conversation";
 import "./stripe/payment";
+import "./admin/blog-dashboard";
+import "./admin/categories-dashboard";
+import "./admin/category-form";
+import "./admin/brands-dashboard";
+import "./admin/brand-form";
+import "./admin/case-studies-dashboard";
+import "./admin/case-study-form";
+import "./admin/featured-collaborations-dashboard";
+import "./admin/featured-collaboration-form";
+import "./admin/faq-items-dashboard";
+import "./admin/faq-sections-dashboard";
+import "./admin/influencers-dashboard";
+import "./admin/campaigns-dashboard";
+import "./admin/knowledge-base-dashboard";
+import "./admin/settings-dashboard";
+import "./admin/testimonials-dashboard";
+import "./admin/users-dashboard";
+import "./admin/user-role-assignment";
+import "./admin/permission-assignment";
+import "./admin/communication-sidebar-badges";
+import "./admin/support-tickets-dashboard";
+import "./admin/packages-dashboard";
+import "./admin/static-page-form";
+import "./admin/static-pages-dashboard";
+import "./frontend/campaigns-index";
+import "./frontend/campaigns-create";
+import "./frontend/campaigns-show";
+import "./frontend/campaigns-negotiation-modal";
 
 Alpine.plugin(collapse);
 
@@ -26,7 +55,7 @@ Alpine.store("toast", {
         }, 4000);
     },
     remove(id) {
-        this.toasts = this.toasts.filter(t => t.id !== id);
+        this.toasts = this.toasts.filter((t) => t.id !== id);
     },
     success(message) {
         this.add("success", message);
@@ -70,7 +99,8 @@ Alpine.store("confirmModal", {
         this.message = options.message || "Are you sure you want to continue?";
         this.confirmText = options.confirmText || "Confirm";
         this.variant = options.variant || "danger";
-        this.onConfirm = typeof options.onConfirm === "function" ? options.onConfirm : null;
+        this.onConfirm =
+            typeof options.onConfirm === "function" ? options.onConfirm : null;
         this.isOpen = true;
     },
 
@@ -93,6 +123,119 @@ window.confirmationModal = {
     },
 };
 
+// Role Form Modal Store
+Alpine.store("roleFormModal", {
+    isOpen: false,
+    editingId: null,
+    loading: false,
+    errors: {},
+    formData: {
+        name: "",
+        description: "",
+        is_active: true,
+    },
+
+    openCreateModal() {
+        this.editingId = null;
+        this.formData = {
+            name: "",
+            description: "",
+            is_active: true,
+        };
+        this.errors = {};
+        this.isOpen = true;
+    },
+
+    async openEditModal(roleId) {
+        this.editingId = roleId;
+        await this.loadRoleData(roleId);
+        this.isOpen = true;
+    },
+
+    closeModal() {
+        this.isOpen = false;
+        this.editingId = null;
+        this.formData = {
+            name: "",
+            description: "",
+            is_active: true,
+        };
+        this.errors = {};
+    },
+
+    async loadRoleData(roleId) {
+        try {
+            const response = await fetch(`/dashboard/roles/${roleId}/data`);
+            const data = await response.json();
+            if (data.success) {
+                this.formData = {
+                    name: data.role.name,
+                    description: data.role.description || "",
+                    is_active: data.role.is_active,
+                };
+            }
+        } catch (error) {
+            console.error("Error loading role:", error);
+            window.toast.error("Failed to load role data");
+        }
+    },
+
+    async submitForm() {
+        this.loading = true;
+        this.errors = {};
+
+        try {
+            const url = this.editingId
+                ? `/dashboard/roles/${this.editingId}`
+                : "/dashboard/roles";
+            const method = this.editingId ? "PUT" : "POST";
+
+            const response = await fetch(url, {
+                method: method,
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRF-TOKEN": document.querySelector(
+                        'meta[name="csrf-token"]',
+                    ).content,
+                },
+                body: JSON.stringify(this.formData),
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                window.toast.success(data.message);
+                this.closeModal();
+                setTimeout(() => window.location.reload(), 500);
+            } else {
+                if (response.status === 422 && data.errors) {
+                    this.errors = data.errors;
+                    window.toast.error("Please check the form for errors");
+                } else {
+                    window.toast.error(data.message);
+                }
+            }
+        } catch (error) {
+            console.error("Error:", error);
+            window.toast.error("An error occurred. Please try again.");
+        } finally {
+            this.loading = false;
+        }
+    },
+});
+
+// Create a direct reference to the store to avoid re-initialization issues
+const roleFormModalStore = Alpine.store("roleFormModal");
+
+window.roleFormModal = {
+    openCreate() {
+        Alpine.store("roleFormModal").openCreateModal();
+    },
+    openEdit(roleId) {
+        Alpine.store("roleFormModal").openEditModal(roleId);
+    },
+};
+
 function extractConfirmMessage(raw) {
     if (!raw || typeof raw !== "string") {
         return null;
@@ -107,7 +250,9 @@ function parseClickConfirm(raw) {
         return null;
     }
 
-    const simpleMatch = raw.match(/^\s*return\s+confirm\((['"`])([\s\S]*?)\1\)\s*;?\s*$/i);
+    const simpleMatch = raw.match(
+        /^\s*return\s+confirm\((['"`])([\s\S]*?)\1\)\s*;?\s*$/i,
+    );
     if (simpleMatch) {
         return {
             message: simpleMatch[2],
@@ -115,7 +260,9 @@ function parseClickConfirm(raw) {
         };
     }
 
-    const conditionalMatch = raw.match(/^\s*if\s*\(\s*confirm\((['"`])([\s\S]*?)\1\)\s*\)\s*\{([\s\S]*)\}\s*;?\s*$/i);
+    const conditionalMatch = raw.match(
+        /^\s*if\s*\(\s*confirm\((['"`])([\s\S]*?)\1\)\s*\)\s*\{([\s\S]*)\}\s*;?\s*$/i,
+    );
     if (conditionalMatch) {
         return {
             message: conditionalMatch[2],
@@ -129,7 +276,9 @@ function parseClickConfirm(raw) {
 function normalizeLegacyConfirmAttributes() {
     document.querySelectorAll("form[onsubmit*='confirm(']").forEach((form) => {
         const onsubmitValue = form.getAttribute("onsubmit");
-        const isSimpleConfirm = /^\s*return\s+confirm\(/i.test(onsubmitValue || "");
+        const isSimpleConfirm = /^\s*return\s+confirm\(/i.test(
+            onsubmitValue || "",
+        );
         if (!isSimpleConfirm) {
             return;
         }
@@ -137,32 +286,41 @@ function normalizeLegacyConfirmAttributes() {
         const message = extractConfirmMessage(onsubmitValue);
         if (message) {
             form.dataset.confirmMessage = message;
-            form.dataset.confirmVariant = form.dataset.confirmVariant || "danger";
+            form.dataset.confirmVariant =
+                form.dataset.confirmVariant || "danger";
             form.classList.add("js-confirmable");
             form.removeAttribute("onsubmit");
         }
     });
 
-    document.querySelectorAll("button[onclick*='confirm('], a[onclick*='confirm(']").forEach((element) => {
-        const parsed = parseClickConfirm(element.getAttribute("onclick"));
-        if (parsed?.message) {
-            element.dataset.confirmMessage = parsed.message;
-            element.dataset.confirmVariant = element.dataset.confirmVariant || "danger";
-            if (parsed.script) {
-                element.dataset.confirmScript = parsed.script;
+    document
+        .querySelectorAll("button[onclick*='confirm('], a[onclick*='confirm(']")
+        .forEach((element) => {
+            const parsed = parseClickConfirm(element.getAttribute("onclick"));
+            if (parsed?.message) {
+                element.dataset.confirmMessage = parsed.message;
+                element.dataset.confirmVariant =
+                    element.dataset.confirmVariant || "danger";
+                if (parsed.script) {
+                    element.dataset.confirmScript = parsed.script;
+                }
+                element.classList.add("js-confirmable");
+                element.removeAttribute("onclick");
             }
-            element.classList.add("js-confirmable");
-            element.removeAttribute("onclick");
-        }
-    });
+        });
 }
 
 function openElementConfirmation(element, onConfirm) {
-    const fallbackTitle = element.dataset.confirmVariant === "danger" ? "Confirm deletion" : "Please confirm";
+    const fallbackTitle =
+        element.dataset.confirmVariant === "danger"
+            ? "Confirm deletion"
+            : "Please confirm";
 
     window.confirmationModal.open({
         title: element.dataset.confirmTitle || fallbackTitle,
-        message: element.dataset.confirmMessage || "Are you sure you want to continue?",
+        message:
+            element.dataset.confirmMessage ||
+            "Are you sure you want to continue?",
         confirmText: element.dataset.confirmButton || "Confirm",
         variant: element.dataset.confirmVariant || "danger",
         onConfirm,
@@ -204,7 +362,9 @@ function initializeConfirmationHandlers() {
     );
 
     document.addEventListener("click", (event) => {
-        const trigger = event.target.closest(".js-confirmable[data-confirm-message]");
+        const trigger = event.target.closest(
+            ".js-confirmable[data-confirm-message]",
+        );
         if (!trigger) {
             return;
         }
@@ -225,7 +385,9 @@ function initializeConfirmationHandlers() {
             if (trigger.dataset.confirmScript) {
                 try {
                     // eslint-disable-next-line no-new-func
-                    const callback = new Function(trigger.dataset.confirmScript);
+                    const callback = new Function(
+                        trigger.dataset.confirmScript,
+                    );
                     callback.call(trigger);
                 } catch (scriptError) {
                     console.error("Confirmation action failed:", scriptError);
@@ -255,7 +417,9 @@ function initializeConfirmationHandlers() {
                     confirmVariant: detail.variant,
                 },
             },
-            typeof detail.onConfirm === "function" ? detail.onConfirm : () => {},
+            typeof detail.onConfirm === "function"
+                ? detail.onConfirm
+                : () => {},
         );
     });
 }
@@ -346,7 +510,9 @@ function bootRockiesApp() {
 if (document.readyState === "loading") {
     if (!window.__rockiesBootListenerRegistered) {
         window.__rockiesBootListenerRegistered = true;
-        document.addEventListener("DOMContentLoaded", bootRockiesApp, { once: true });
+        document.addEventListener("DOMContentLoaded", bootRockiesApp, {
+            once: true,
+        });
     }
 } else {
     bootRockiesApp();

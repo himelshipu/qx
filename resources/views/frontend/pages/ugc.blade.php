@@ -16,7 +16,7 @@
 							User Generated Content (UGC)
 						</h2>
 						<p class="text-sm text-gray-400 font-normal dark:text-gray-400">
-							Find UGC creators by category
+							Find UGC influencers by category
 						</p>
 					</div>
 				</div>
@@ -63,11 +63,11 @@
 										</p>
 									@endif
 
-									<!-- View Creators Button -->
+									<!-- View Influencers Button -->
 									<div class="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
 										<span
 											class="inline-flex items-center gap-2 text-sm font-medium text-indigo-600 dark:text-indigo-400 group-hover:gap-3 transition-all duration-200">
-											View Creators
+											View Influencers
 											<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 												<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
 											</svg>

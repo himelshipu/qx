@@ -23,11 +23,12 @@ class PackageController extends Controller
      */
     public function index(Request $request): View
     {
-        $search   = trim((string) $request->string('q', ''));
-        $status   = (string) $request->string('status', 'all');
-        $platform = (string) $request->string('platform', 'all');
+        return view('backend.pages.packages.index', $this->packageService->getIndexPayload($request->only(['q', 'status', 'platform'])));
+    }
 
-        return view('backend.pages.packages.index', $this->packageService->getListingPayload($search, $status, $platform));
+    public function table(Request $request): View
+    {
+        return view('backend.pages.packages._results', $this->packageService->getTablePayload($request->only(['q', 'status', 'platform'])));
     }
 
     /**
@@ -72,14 +73,14 @@ class PackageController extends Controller
         // Load all relationships needed for detailed view
         $package->load([
             'createdBy',
-            'creator.user',
-            'orderItems.order.brand.user'
+            'influencer.user',
+            'orderItems.order.brand.user',
         ]);
 
         return view('backend.pages.packages.view', [
             'package' => $package,
-            'creator' => $package->creator,
-            'orders' => $package->orderItems()->with(['order.brand.user'])->get()->map(fn($item) => $item->order)->unique('id')->values()
+            'influencer' => $package->influencer,
+            'orders' => $package->orderItems()->with(['order.brand.user'])->get()->map(fn ($item) => $item->order)->unique('id')->values(),
         ]);
     }
 
@@ -106,7 +107,7 @@ class PackageController extends Controller
     {
         $result = $this->packageService->deletePackage($package);
 
-        if (!$result['deleted']) {
+        if (! $result['deleted']) {
             return redirect()
                 ->route('dashboard.packages.index')
                 ->with('error', $result['message']);
@@ -125,9 +126,9 @@ class PackageController extends Controller
         $isActive = $this->packageService->toggleStatus($package);
 
         return response()->json([
-            'success'   => true,
-            'message'   => 'Package status updated successfully.',
-            'is_active' => $isActive
+            'success' => true,
+            'message' => 'Package status updated successfully.',
+            'is_active' => $isActive,
         ]);
     }
 
@@ -146,8 +147,8 @@ class PackageController extends Controller
     {
         $validated = $request->validate([
             'package_id' => 'required|exists:packages,id',
-            'brand_ids'  => 'required|array',
-            'brand_ids.*' => 'exists:brands,id'
+            'brand_ids' => 'required|array',
+            'brand_ids.*' => 'exists:brands,id',
         ]);
 
         $packageId = $validated['package_id'];

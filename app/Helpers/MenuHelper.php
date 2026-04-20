@@ -2,7 +2,10 @@
 
 namespace App\Helpers;
 
+use App\Models\User;
+use App\Services\Admin\CommunicationBadgeService;
 use Illuminate\Support\Facades\Blade;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
 class MenuHelper
@@ -37,19 +40,11 @@ class MenuHelper
                         ]
                     ],
                     [
-                        'icon'     => 'creators',
-                        'name'     => 'Creators',
+                        'icon'     => 'influencers',
+                        'name'     => 'Influencers',
                         'subItems' => [
-                            ['name' => 'All Creators', 'route' => 'creators.index', 'icon' => 'creators'],
-                            ['name' => 'Create Creator', 'route' => 'creators.create', 'icon' => 'campaign-new']
-                        ]
-                    ],
-                    [
-                        'icon'     => 'moderators',
-                        'name'     => 'Moderators',
-                        'subItems' => [
-                            ['name' => 'All Moderators', 'route' => 'moderators.index', 'icon' => 'moderators'],
-                            ['name' => 'Create Moderator', 'route' => 'moderators.create', 'icon' => 'campaign-new']
+                            ['name' => 'All Influencers', 'route' => 'influencers.index', 'icon' => 'influencers'],
+                            ['name' => 'Create Influencer', 'route' => 'influencers.create', 'icon' => 'campaign-new']
                         ]
                     ],
                     [
@@ -91,6 +86,14 @@ class MenuHelper
                             ['name' => 'All Articles', 'route' => 'knowledge-base.index', 'icon' => 'knowledge-base'],
                             ['name' => 'Create Article', 'route' => 'knowledge-base.create', 'icon' => 'campaign-new']
                         ]
+                    ],
+                    [
+                        'icon'     => 'blog',
+                        'name'     => 'Blog',
+                        'subItems' => [
+                            ['name' => 'All Posts', 'route' => 'blogs.index', 'icon' => 'blog'],
+                            ['name' => 'Create Post', 'route' => 'blogs.create', 'icon' => 'campaign-new']
+                        ]
                     ]
                 ]
             ],
@@ -102,18 +105,12 @@ class MenuHelper
                     [
                         'icon'  => 'campaign',
                         'name'  => 'All Campaigns',
-                        'route' => 'campaigns.index'
+                        'route' => 'campaigns.standard'
                     ],
                     [
                         'icon'  => 'campaign-new',
                         'name'  => 'New Campaign',
-                        'route' => 'campaigns.create'
-                    ],
-                   
-                    [
-                        'icon'  => 'content-library',
-                        'name'  => 'Content Library',
-                        'route' => 'content-library'
+                        'route' => 'campaigns.standard.create'
                     ],
                     [
                         'icon'  => 'reviews',
@@ -159,19 +156,14 @@ class MenuHelper
                         'route' => 'orders.index'
                     ],
                     [
-                        'icon'  => 'payments',
-                        'name'  => 'Payments',
-                        'route' => 'payments.index'
-                    ],
-                    [
-                        'icon'  => 'payouts',
-                        'name'  => 'Payouts',
-                        'route' => 'payouts.index'
-                    ],
-                    [
-                        'icon'  => 'wishlist',
-                        'name'  => 'Wishlists',
-                        'route' => 'wishlists.index'
+                        'icon'     => 'payments',
+                        'name'     => 'Payouts',
+                        'subItems' => [
+                            ['name' => 'All Payouts', 'route' => 'payments.index', 'icon' => 'payments'],
+                            ['name' => 'Payment Queue', 'route' => 'payment-queue.index', 'icon' => 'packages'],
+                            ['name' => 'Payment Audit Log', 'route' => 'payment-audit.index', 'icon' => 'history'],
+                            ['name' => 'Payment Statements', 'route' => 'payment-statement.index', 'icon' => 'document']
+                        ]
                     ]
                 ]
             ],
@@ -186,17 +178,17 @@ class MenuHelper
                         'route' => 'users.index'
                     ],
                     [
+                        'icon'  => 'assign-roles',
+                        'name'  => 'Assign User Roles',
+                        'route' => 'users.roles.assign'
+                    ],
+                    [
                         'icon'  => 'roles',
                         'name'  => 'Roles',
                         'route' => 'roles.index'
                     ],
                     [
                         'icon'  => 'permissions',
-                        'name'  => 'Permissions',
-                        'route' => 'permissions.index'
-                    ],
-                    [
-                        'icon'  => 'assign',
                         'name'  => 'Assign Permissions',
                         'route' => 'permissions.assign'
                     ]
@@ -211,27 +203,43 @@ class MenuHelper
                         'icon'  => 'chat',
                         'name'  => 'Conversations',
                         'route' => 'conversations.index',
-                        'count' => true
+                        'badge_key' => 'conversations'
                     ],
                     [
                         'icon'  => 'support',
                         'name'  => 'Support Tickets',
                         'route' => 'support-tickets.index',
-                        'count' => true
+                        'badge_key' => 'support_tickets'
                     ],
                     [
                         'icon'  => 'notifications',
                         'name'  => 'Notifications',
                         'route' => 'notifications.index',
-                        'count' => true
+                        'badge_key' => 'notifications'
                     ]
                 ]
             ],
 
-            'profile'       => [
-                'icon'  => 'profile',
-                'name'  => 'Profile',
-                'route' => '/profile'
+            'settings'      => [
+                'type'  => 'group',
+                'name'  => 'SETTINGS',
+                'items' => [
+                    [
+                        'icon'  => 'pages',
+                        'name'  => 'Static Pages',
+                        'route' => 'static-pages.index'
+                    ],
+                    [
+                        'icon'  => 'campaign-new',
+                        'name'  => 'Create Static Page',
+                        'route' => 'static-pages.create'
+                    ],
+                    [
+                        'icon'  => 'settings',
+                        'name'  => 'Site Settings',
+                        'route' => 'settings.index'
+                    ]
+                ]
             ]
         ];
     }
@@ -243,12 +251,20 @@ class MenuHelper
 
     public static function buildSidebarMenu(string $currentRoute): array
     {
+        /** @var User|null $user */
+        $user            = Auth::user();
         $menuItems       = self::getMainNavItems();
         $preparedItems   = [];
         $activeAccordion = null;
+        $badgeCounts     = $user ? app(CommunicationBadgeService::class)->getSidebarBadgeCounts($user) : [
+            'conversations' => 0,
+            'support_tickets' => 0,
+            'notifications' => 0,
+        ];
 
         foreach ($menuItems as $key => $item) {
             if ($key === 'dashboard') {
+                // Dashboard always visible to authenticated users who passed middleware
                 [$routeName, $url]   = self::resolveRouteMeta($item['route'] ?? null, false);
                 $preparedItems[$key] = [
                      ...$item,
@@ -256,6 +272,7 @@ class MenuHelper
                     'url'        => $url,
                     'active'     => self::isRouteMatch($currentRoute, $routeName)
                 ];
+
                 continue;
             }
 
@@ -266,6 +283,13 @@ class MenuHelper
                 foreach ($item['items'] as $index => $subItem) {
                     $menuId      = $key . '_' . $index;
                     $hasSubItems = isset($subItem['subItems']);
+                    $badgeKey    = $subItem['badge_key'] ?? null;
+                    
+                    // Check if user has permission to view this menu item
+                    $permission = self::getPermissionForMenuItem($key, $subItem);
+                    if ($permission && !self::userHasPermission($user, $permission)) {
+                        continue; // Skip this menu item if user doesn't have permission
+                    }
 
                     if ($hasSubItems) {
                         $nestedItems   = [];
@@ -276,12 +300,23 @@ class MenuHelper
                             $isActive          = self::isRouteMatch($currentRoute, $routeName);
                             $subItemActive     = $subItemActive || $isActive;
 
+                            // Check if user has permission for nested item
+                            $nestedPermission = self::getPermissionForMenuItem($key, $nestedItem);
+                            if ($nestedPermission && !self::userHasPermission($user, $nestedPermission)) {
+                                continue; // Skip if no permission
+                            }
+
                             $nestedItems[] = [
                                  ...$nestedItem,
                                 'route_name' => $routeName,
                                 'url'        => $url,
                                 'active'     => $isActive
                             ];
+                        }
+
+                        // Skip if no nested items left after filtering
+                        if (empty($nestedItems)) {
+                            continue;
                         }
 
                         if ($subItemActive && $activeAccordion === null) {
@@ -294,10 +329,12 @@ class MenuHelper
                             'has_sub_items' => true,
                             'sub_items'     => $nestedItems,
                             'default_url'   => $nestedItems[0]['url'] ?? '#',
-                            'active'        => $subItemActive
+                            'active'        => $subItemActive,
+                            'badge_count'   => $badgeKey ? (int) ($badgeCounts[$badgeKey] ?? 0) : null,
                         ];
 
                         $groupActive = $groupActive || $subItemActive;
+
                         continue;
                     }
 
@@ -310,26 +347,20 @@ class MenuHelper
                         'has_sub_items' => false,
                         'route_name'    => $routeName,
                         'url'           => $url,
-                        'active'        => $isActive
+                        'active'        => $isActive,
+                        'badge_count'   => $badgeKey ? (int) ($badgeCounts[$badgeKey] ?? 0) : null,
                     ];
                 }
 
-                $preparedItems[$key] = [
-                     ...$item,
-                    'items'  => $groupItems,
-                    'active' => $groupActive
-                ];
-                continue;
-            }
+                // Only add group if it has items
+                if (!empty($groupItems)) {
+                    $preparedItems[$key] = [
+                         ...$item,
+                        'items'  => $groupItems,
+                        'active' => $groupActive
+                    ];
+                }
 
-            if ($key === 'profile') {
-                [$routeName, $url]   = self::resolveRouteMeta($item['route'] ?? null, false);
-                $preparedItems[$key] = [
-                     ...$item,
-                    'route_name' => $routeName,
-                    'url'        => $url,
-                    'active'     => self::isRouteMatch($currentRoute, $routeName) || request()->is('profile*')
-                ];
                 continue;
             }
 
@@ -372,6 +403,67 @@ class MenuHelper
         return $routeName !== null && $currentRoute === $routeName;
     }
 
+    /**
+     * Map menu items to their required permissions.
+     * Returns null if no specific permission is required (always visible).
+     */
+    private static function getPermissionForMenuItem(string $groupKey, array $item): ?string
+    {
+        // Extract route name from 'route' field
+        $route = $item['route'] ?? null;
+        if (!$route) {
+            return null;
+        }
+
+        // Map special routes to permissions
+        $specialMappings = [
+            'dashboard.index' => 'dashboard.view',
+            '/dashboard' => 'dashboard.view',
+            'campaigns.standard' => 'campaigns.index',
+            'campaigns.standard.create' => 'campaigns.create',
+            'packages.purchase' => 'packages.purchase',
+            'payment-queue.index' => 'payment-queue.index',
+            'payment-audit.index' => 'payment-audit.index',
+            'payment-statement.index' => 'payment-statement.index',
+            'notifications.index' => 'notifications.index',
+            'settings' => 'settings.index',
+            'reviews.index' => 'reviews.index',
+            'case-studies.index' => 'case-studies.index',
+            'testimonials.index' => 'testimonials.index',
+            'faqs.sections.index' => 'faqs.sections.index',
+            'knowledge-base.index' => 'knowledge-base.index',
+            'featured-collaborations.index' => 'featured-collaborations.index',
+            'static-pages.index' => 'static-pages.index',
+            'static-pages.create' => 'static-pages.create',
+            'settings.index' => 'settings.index',
+        ];
+
+        if (isset($specialMappings[$route])) {
+            return $specialMappings[$route];
+        }
+
+        // Standard pattern: resource.action -> resource.action permission
+        if (strpos($route, '.') !== false) {
+            if (str_starts_with($route, 'dashboard.')) {
+                return $route;
+            }
+            
+            // For routes like 'users.index', check 'users.index' permission
+            return $route;
+        }
+
+        return null;
+    }
+
+    private static function userHasPermission(?User $user, string $permission): bool
+    {
+        if (!$user) {
+            return false;
+        }
+
+        return $user->hasPermission($permission);
+    }
+
     public static function getIconSvg($iconName)
     {
         if (view()->exists('components.icons.' . $iconName)) {
@@ -391,7 +483,7 @@ class MenuHelper
 
             'brands'          => '<svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M20 7L12 3L4 7M20 7L12 11M20 7V17L12 21M12 11L4 7M12 11V21M4 7V17L12 21" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>',
 
-            'creators'        => '<svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>',
+            'influencers'     => '<svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>',
 
             'moderators'      => '<svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>',
 
@@ -403,9 +495,13 @@ class MenuHelper
 
             'knowledge-base'  => '<svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 6a2 2 0 012-2h5a3 3 0 013 3v11a3 3 0 00-3-3H6a2 2 0 01-2-2V6zm16 0a2 2 0 00-2-2h-5a3 3 0 00-3 3v11a3 3 0 013-3h5a2 2 0 002-2V6z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>',
 
+            'blog'            => '<svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M7 4h10a2 2 0 012 2v12a2 2 0 01-2 2H7a2 2 0 01-2-2V6a2 2 0 012-2z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M9 8h6M9 12h6M9 16h4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>',
+
+            'pages'           => '<svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9 4H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M9 9h6M9 15h3M17 3v6h6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+
             'campaign-new'    => '<svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 4v16m8-8H4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>',
 
-            'content-library' => '<svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 5a2 2 0 012-2h8l6 6v10a2 2 0 01-2 2H6a2 2 0 01-2-2V5z" stroke="currentColor" stroke-width="1.5"/><path d="M14 3v5a1 1 0 001 1h5" stroke="currentColor" stroke-width="1.5"/></svg>',
+            'user-add'        => '<svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="8.5" cy="7" r="4" stroke="currentColor" stroke-width="1.5"/><path d="M20 8v6M23 11h-6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>',
 
             'packages'        => '<svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 7l9 4 9-4M3 7l9-4 9 4M3 7v10l9 4 9-4V7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>',
 
@@ -414,8 +510,6 @@ class MenuHelper
             'payments'        => '<svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="2.5" y="5" width="19" height="14" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M2.5 10h19" stroke="currentColor" stroke-width="1.5"/><path d="M7 15h4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>',
 
             'payouts'         => '<svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 4v16M5 11l7-7 7 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><rect x="4" y="18" width="16" height="2" rx="1" fill="currentColor"/></svg>',
-
-            'wishlist'        => '<svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 21s-7-4.35-9.5-8A5.5 5.5 0 1112 6.5 5.5 5.5 0 0121.5 13C19 16.65 12 21 12 21z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>',
 
             'support'         => '<svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9 9a3 3 0 116 0c0 2-3 2-3 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M12 17h.01" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.5"/></svg>',
 
@@ -428,6 +522,8 @@ class MenuHelper
             'assign'          => '<svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" stroke="currentColor" stroke-width="1.5"/></svg>',
 
             'chat'            => '<svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>',
+
+            'group'           => '<svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" stroke="currentColor" stroke-width="1.5"/></svg>',
 
             'notifications'   => '<svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>',
 

@@ -21,60 +21,53 @@
 	@else
 		<div class="flex overflow-x-auto gap-4 pb-2 lg:grid lg:grid-cols-4 sm:grid-cols-2 lg:gap-8 lg:px-0 scroll-smooth">
 
-			@foreach ($featuredInfluencers as $creator)
+			@foreach ($featuredInfluencers as $influencer)
 				@php
-					$profileUrl = !empty($creator['slug']) ? route('creator.profile', ['slug' => $creator['slug']]) : '#';
-					$locationDisplay = trim((string) ($creator['location'] ?? '')) ?: 'N/A';
+					$profileUrl = !empty($influencer['slug']) ? route('influencer.profile', ['slug' => $influencer['slug']]) : '#';
+					$locationDisplay = trim((string) ($influencer['location'] ?? '')) ?: 'N/A';
 				@endphp
 
 			<a href="{{ $profileUrl }}"
-				class="flex-shrink-0 w-[80%] sm:w-[60%] lg:w-auto group overflow-hidden font-sans cursor-pointer creator-card block"
-				data-creator-id="{{ $creator['id'] }}">
+				class="flex-shrink-0 w-[80%] sm:w-[60%] lg:w-auto group overflow-hidden font-sans cursor-pointer influencer-card block"
+				data-influencer-id="{{ $influencer['id'] }}">
 
 				<div class="relative overflow-hidden rounded-xl">
-					<button type="button"
-						class="wishlist-btn absolute top-3 right-3 z-30 p-1.5 transition-all duration-300 hover:scale-110 drop-shadow-md"
-						onclick="event.preventDefault(); event.stopPropagation();">
-						<x-icons.heart class="w-6 h-6 wishlist-heart-icon fill-none stroke-white stroke-[2px]" />
-					</button>
-
-					<img src="{{ image_url($creator['image_url']) }}"
+					<img src="{{ image_url($influencer['image_url']) }}"
 						class="w-full h-48 sm:h-64 object-cover transition-transform duration-500 ease-out group-hover:scale-110"
-						alt="{{ $creator['name'] }}">
+						alt="{{ $influencer['name'] }}">
 
 					<div class="absolute top-3 left-3 flex flex-wrap gap-1.5">
-						<span class="bg-black/80 backdrop-blur-sm text-white text-[10px] font-normal px-2 py-1 rounded-md border border-white/20 flex items-center gap-1">
-							<x-icons.heart-badge class="w-4 h-4 text-purple-400" /> Featured Creator
-						</span>
-						<span class="bg-black/80 backdrop-blur-sm text-white text-[10px] font-normal px-2 py-1 rounded-md border border-white/20 flex items-center gap-1">
-							<x-icons.checkmark class="w-4 h-4 text-green-500" /> {{ $creator['engagement_label'] }} ER
-						</span>
+					<span class="bg-black/80 backdrop-blur-sm text-white text-[10px] font-normal px-2 py-1 rounded-md border border-white/20 flex items-center gap-1">
+						<x-icons.heart-badge class="w-4 h-4 text-purple-400" /> Featured Influencer
+					</span>
+						
 					</div>
 
 					<div class="absolute bottom-3 left-3 right-3">
 						<div class="flex flex-row items-center gap-2">
 							<div class="bg-white text-black text-[10px] font-medium px-2 py-0.5 rounded-md w-fit flex items-center gap-1 mb-1">
-								@if ($creator['platform'] === 'facebook')
+								@if ($influencer['platform'] === 'facebook')
 									<x-icons.facebook class="w-4 h-4 text-blue-600" />
-								@elseif ($creator['platform'] === 'instagram')
+								@elseif ($influencer['platform'] === 'instagram')
 									<x-icons.instagram class="w-4 h-4 text-pink-500" />
-								@elseif ($creator['platform'] === 'tiktok')
+								@elseif ($influencer['platform'] === 'tiktok')
 									<x-icons.tiktok class="w-4 h-4 text-black" />
-								@elseif ($creator['platform'] === 'x')
+								@elseif ($influencer['platform'] === 'x')
 									<x-icons.x class="w-4 h-4 text-black" />
-								@elseif ($creator['platform'] === 'ugc')
+								@elseif ($influencer['platform'] === 'ugc')
 									<x-icons.camera class="w-4 h-4 text-gray-700" />
 								@else
 									<x-icons.group class="w-4 h-4 text-gray-700" />
 								@endif
-								{{ $creator['followers_label'] }}
+								{{ $influencer['followers_label'] }}
 							</div>
 						</div>
 						<div class="flex items-center gap-1 text-white drop-shadow-md">
-							<span class="font-bold text-sm">{{ $creator['name'] }}</span>
-							<span class="flex items-center text-xs gap-0.5">
-								<x-icons.star class="w-4 h-4 text-yellow-400" /> {{ $creator['rating_label'] }}
+							<span class="font-bold text-sm">{{ $influencer['name'] }}</span>
+							<span class="text-xs">
+								<x-icons.star class="w-3 h-3 text-yellow-400" /> 
 							</span>
+							<span class="text-xs mt-1">{{ $influencer['rating_label'] }}</span>
 						</div>
 					</div>
 				</div>
@@ -82,10 +75,10 @@
 				<div class="pt-3 px-1">
 					<div class="flex items-start justify-between gap-3">
 						<h3 class="text-gray-800 dark:text-gray-300 text-[15px] leading-tight font-medium line-clamp-1">
-							{{ $creator['title'] }}
+							{{ $influencer['title'] }}
 						</h3>
-							<span class="text-[#222] dark:text-white font-medium text-sm leading-none max-w-[120px] inline-block truncate" title="{{ $creator['slug'] ?? '' }}">
-								{{ $creator['handle'] ?? (!empty($creator['slug']) ? '@' . $creator['slug'] : 'N/A') }}
+							<span class="text-[#222] dark:text-white font-medium text-sm leading-none max-w-[120px] inline-block truncate" title="{{ $influencer['slug'] ?? '' }}">
+								{{ $influencer['handle'] ?? (!empty($influencer['slug']) ? '@' . $influencer['slug'] : 'N/A') }}
 						</span>
 					</div>
 					<p class="text-sm text-gray-400 font-normal mt-1">{{ $locationDisplay }}</p>

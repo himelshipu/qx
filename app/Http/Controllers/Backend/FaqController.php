@@ -37,7 +37,7 @@ class FaqController extends Controller
         $validated = $request->validate([
             'section_code'  => 'required|string|max:120|unique:faq_sections,section_code',
             'section_title' => 'required|string|max:255',
-            'audience_type' => 'required|in:all,brand,creator',
+            'audience_type' => 'required|in:all,brand,influencer',
             'sort_order'    => 'integer|min:0'
         ]);
 
@@ -69,7 +69,7 @@ class FaqController extends Controller
         $validated = $request->validate([
             'section_code'  => 'required|string|max:120|unique:faq_sections,section_code,' . $section->id,
             'section_title' => 'required|string|max:255',
-            'audience_type' => 'required|in:all,brand,creator',
+            'audience_type' => 'required|in:all,brand,influencer',
             'sort_order'    => 'integer|min:0'
         ]);
 

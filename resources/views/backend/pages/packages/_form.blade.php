@@ -2,25 +2,25 @@
 	/** @var \App\Models\Package|null $package */
 	$package = $package ?? null;
 	$resolvedCurrency = strtoupper((string) old('currency', $package?->currency ?? 'USD'));
-	$isCreator = $isCreator ?? false;
-	$creators = $creators ?? null;
+	$isInfluencer = $isInfluencer ?? false;
+	$influencers = $influencers ?? null;
 @endphp
 
 <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
 	<div class="space-y-5 lg:col-span-2">
-		<!-- Creator Selection (Admin/Moderator Only) -->
-		@if (!$isCreator && $creators)
+		<!-- Influencer Selection (Admin/Moderator Only) -->
+		@if (!$isInfluencer && $influencers)
 			<div>
 				<label for="created_for" class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
 					Create For (Select Influencer) <span class="text-red-500">*</span>
 				</label>
 				<select id="created_for" name="created_for" required
 					class="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-3 text-sm text-gray-900 focus:border-gray-500 focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-white">
-					<option value="" disabled {{ old('created_for', $package?->creator_id) ? '' : 'selected' }}>Select an influencer</option>
-					@foreach ($creators as $creator)
-						<option value="{{ $creator->id }}"
-							{{ old('created_for', $package?->creator_id) == $creator->id ? 'selected' : '' }}>
-							{{ $creator->user?->name ?? $creator->display_name ?? 'Unknown' }}
+					<option value="" disabled {{ old('created_for', $package?->influencer_id) ? '' : 'selected' }}>Select an influencer</option>
+					@foreach ($influencers as $influencer)
+						<option value="{{ $influencer->id }}"
+							{{ old('created_for', $package?->influencer_id) == $influencer->id ? 'selected' : '' }}>
+							{{ $influencer->user?->name ?? $influencer->display_name ?? 'Unknown' }}
 						</option>
 					@endforeach
 				</select>
@@ -28,8 +28,8 @@
 					<p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
 				@enderror
 			</div>
-		@elseif ($isCreator && $package)
-			<!-- Show Creator Info (Read-only for creators) -->
+		@elseif ($isInfluencer && $package)
+			<!-- Show Influencer Info (Read-only for influencers) -->
 			<div class="rounded-lg border border-blue-200 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-900/20">
 				<p class="text-xs font-semibold uppercase tracking-wider text-blue-600 dark:text-blue-400">Your Package</p>
 				<p class="mt-2 text-sm font-medium text-gray-900 dark:text-white">
@@ -130,11 +130,13 @@
 
 		<div class="rounded-lg border border-gray-200 bg-white px-3 py-3 dark:border-gray-700 dark:bg-gray-900">
 			<input type="hidden" name="is_active" value="0">
-			<label for="is_active" class="flex cursor-pointer items-center justify-between gap-3">
+			<label for="is_active" class="flex min-h-11 cursor-pointer items-center justify-between gap-3">
 				<span class="text-sm font-medium text-gray-700 dark:text-gray-300">Active Status</span>
-				<input id="is_active" name="is_active" type="checkbox" value="1"
-					{{ old('is_active', $package?->is_active ?? true) ? 'checked' : '' }}
-					class="h-4 w-4 rounded border-gray-300 text-gray-900 focus:ring-gray-500 dark:border-gray-600 dark:bg-gray-800">
+				<span class="flex h-11 items-center">
+					<input id="is_active" name="is_active" type="checkbox" value="1"
+						{{ old('is_active', $package?->is_active ?? true) ? 'checked' : '' }}
+						class="h-4 w-4 rounded border-gray-300 text-gray-900 focus:ring-gray-500 dark:border-gray-600 dark:bg-gray-800">
+				</span>
 			</label>
 			@error('is_active')
 				<p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>

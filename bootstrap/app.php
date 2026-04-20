@@ -12,12 +12,27 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        //
+
+        $middleware->alias([
+            'restrict-dashboard-access' => \App\Http\Middleware\RestrictDashboardAccess::class,
+            'permission' => \App\Http\Middleware\PermissionMiddleware::class,
+            'check-permission' => \App\Http\Middleware\CheckPermission::class,
+            'dashboard-route-permission' => \App\Http\Middleware\EnforceDashboardRoutePermission::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->render(function (PostTooLargeException $e) {
             return back()
                 ->withErrors(['file' => 'File upload exceeds maximum size limit. Please upload a file smaller than 10 MB.'])
                 ->withInput();
+        });
+
+        $exceptions->render(function (\Illuminate\Validation\ValidationException $e, $request) {
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json([
+                    'message' => 'Validation failed',
+                    'errors'  => $e->errors()
+                ], 422);
+            }
         });
     })->create();

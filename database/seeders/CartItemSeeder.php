@@ -15,7 +15,7 @@ class CartItemSeeder extends Seeder
             DB::table('cart_items')->insert([
                     'cart_id' => 1,
                     'package_id' => 1,
-                    'creator_id' => 1,
+                    'influencer_id' => 1,
                     'campaign_id' => 1,
                     'quantity' => $faker->word,
                     'unit_price' => $faker->randomFloat(2, 10, 1000),

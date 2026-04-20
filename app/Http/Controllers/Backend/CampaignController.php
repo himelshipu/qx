@@ -6,8 +6,10 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Backend\Campaign\StoreCampaignRequest;
 use App\Models\Campaign;
 use App\Models\CampaignApplication;
-use App\Models\Creator;
+use App\Models\Influencer;
+use App\Models\Notification;
 use App\Services\Admin\CampaignService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
@@ -23,113 +25,143 @@ class CampaignController extends Controller
     }
 
     /**
-     * Show the form to assign creators to a campaign.
+     * Show the form to assign influencers to a campaign.
      */
     public function assign(): View
     {
-        // Get ALL active campaigns (no date restrictions for assignment)
-        $campaigns = Campaign::where('is_active', true)
+        // Get ALL campaigns (including inactive for assignment purposes) - dashboard sees all
+        $campaigns = Campaign::with('brand:id,brand_name')
             ->orderByDesc('created_at')
-            ->get(['id', 'title', 'description', 'campaign_type', 'status', 'start_date', 'end_date', 'budget_min', 'budget_max', 'currency']);
+            ->get(['id', 'brand_id', 'title', 'description', 'campaign_type', 'status', 'start_date', 'end_date', 'budget_min', 'budget_max', 'currency']);
 
-        // Get active creators
-        $creators = Creator::with('user:id,email,name,phone')
-            ->where('is_active', true)
+        // Get all influencers - dashboard sees all
+        $influencers = Influencer::with('user:id,email,name,phone')
             ->orderBy('display_name')
             ->get(['id', 'display_name', 'user_id']);
 
         // Get counts
-        $activeCreatorsCount = $creators->count();
+        $activeInfluencersCount = $influencers->count();
         $activeCampaignsCount = $campaigns->count();
 
-        // Get latest active campaigns for display purposes (latest 10)
-        $latestCampaigns = Campaign::where('is_active', true)
-            ->with(['applications' => function ($query) {
-                $query->select('campaign_id');
-            }])
+        // Get latest campaigns for display purposes (latest 10)
+        $latestCampaigns = Campaign::with(['brand:id,brand_name', 'applications', 'orders', 'orderItems', 'cartItems'])
+            ->withCount(['applications', 'orders', 'orderItems', 'cartItems'])
             ->orderByDesc('created_at')
             ->limit(10)
-            ->get(['id', 'title', 'description', 'start_date', 'end_date', 'status', 'is_active']);
+            ->get(['id', 'brand_id', 'title', 'description', 'start_date', 'end_date', 'status', 'is_active']);
 
-        return view('backend.pages.campaigns.assign', compact('campaigns', 'creators', 'latestCampaigns', 'activeCreatorsCount', 'activeCampaignsCount'));
+        return view('backend.pages.campaigns.assign', compact('campaigns', 'influencers', 'latestCampaigns', 'activeInfluencersCount', 'activeCampaignsCount'));
     }
 
     /**
-     * Handle assignment of creators to a campaign.
+     * Handle assignment of influencers to a campaign.
      */
     public function assignStore(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'campaign_id'   => 'required|exists:campaigns,id',
-            'creator_ids'   => 'required|array|min:1',
-            'creator_ids.*' => 'exists:creators,id'
+            'campaign_id' => 'required|exists:campaigns,id',
+            'influencer_ids' => 'required|array|min:1',
+            'influencer_ids.*' => 'exists:influencers,id',
         ], [
-            'creator_ids.required' => 'Please select at least one creator to assign to the campaign.',
-            'creator_ids.min' => 'Please select at least one creator to assign to the campaign.',
-            'creator_ids.*.exists' => 'One or more selected creators are invalid.'
+            'influencer_ids.required' => 'Please select at least one influencer to assign to the campaign.',
+            'influencer_ids.min' => 'Please select at least one influencer to assign to the campaign.',
+            'influencer_ids.*.exists' => 'One or more selected influencers are invalid.',
         ]);
 
         $campaignId = $validated['campaign_id'];
-        $creatorIds = $validated['creator_ids'];
+        $influencerIds = $validated['influencer_ids'];
+        $campaign = Campaign::with(['brand.user'])->findOrFail($campaignId);
 
-        $now     = now();
+        $now = now();
         $created = 0;
+        $createdInfluencerIds = [];
 
-        foreach ($creatorIds as $creatorId) {
+        foreach ($influencerIds as $influencerId) {
             $exists = CampaignApplication::where('campaign_id', $campaignId)
-                ->where('creator_id', $creatorId)
+                ->where('influencer_id', $influencerId)
                 ->exists();
 
-            if (!$exists) {
+            if (! $exists) {
                 CampaignApplication::create([
                     'campaign_id' => $campaignId,
-                    'creator_id'  => $creatorId,
-                    'status'      => 'invited', // valid enum value
-                    'applied_at'  => $now
+                    'influencer_id' => $influencerId,
+                    'status' => 'invited', // valid enum value
+                    'applied_at' => $now,
                 ]);
                 $created++;
+                $createdInfluencerIds[] = (int) $influencerId;
+            }
+        }
+
+        if ($created > 0) {
+            $brandUserId = (int) ($campaign->brand?->user_id ?? 0);
+            if ($brandUserId > 0) {
+                Notification::create([
+                    'user_id' => $brandUserId,
+                    'type' => 'campaign',
+                    'title' => 'Influencers assigned to your campaign',
+                    'body' => sprintf('%d influencer(s) were assigned to "%s" by admin.', $created, $campaign->title),
+                    'data_json' => [
+                        'action_url' => route('frontend.campaigns.show', $campaign),
+                        'campaign_id' => $campaign->id,
+                        'count' => $created,
+                    ],
+                    'notifiable_type' => Campaign::class,
+                    'notifiable_id' => $campaign->id,
+                    'is_read' => false,
+                ]);
+            }
+
+            $influencerUsers = Influencer::query()
+                ->whereIn('id', $createdInfluencerIds)
+                ->pluck('user_id')
+                ->filter()
+                ->map(fn ($id) => (int) $id)
+                ->unique()
+                ->values();
+
+            foreach ($influencerUsers as $userId) {
+                Notification::create([
+                    'user_id' => $userId,
+                    'type' => 'campaign',
+                    'title' => 'You were invited to a campaign',
+                    'body' => sprintf('You have been invited to "%s".', $campaign->title),
+                    'data_json' => [
+                        'action_url' => route('frontend.campaigns.show', $campaign),
+                        'campaign_id' => $campaign->id,
+                    ],
+                    'notifiable_type' => Campaign::class,
+                    'notifiable_id' => $campaign->id,
+                    'is_read' => false,
+                ]);
             }
         }
 
         return redirect()
             ->route('dashboard.campaigns.assign')
-            ->with('success', "{$created} creator(s) assigned to the campaign.");
+            ->with('success', "{$created} influencer(s) assigned to the campaign.");
     }
 
     /**
-     * Get assigned creators for a specific campaign as JSON.
+     * Get assigned influencers for a specific campaign as JSON.
      */
-    public function assignedCreatorsJson(Campaign $campaign)
+    public function assignedInfluencersJson(Campaign $campaign)
     {
-        $assignedCreators = $campaign->applications()
-            ->with(['creator' => function ($query) {
+        $assignedInfluencers = $campaign->applications()
+            ->with(['influencer' => function ($query) {
                 $query->with('user:id,email,name');
             }])
             ->get()
             ->map(function ($application) {
                 return [
-                    'id'           => $application->creator->id,
-                    'display_name' => $application->creator->display_name,
-                    'email'        => $application->creator->user?->email,
+                    'id' => $application->influencer->id,
+                    'display_name' => $application->influencer->display_name,
+                    'email' => $application->influencer->user?->email,
+                    'status' => $application->status,
                 ];
             });
 
-        return response()->json($assignedCreators);
-    }
-
-    /**
-     * Display the designed campaign listing with real data.
-     */
-    public function indexDesigned(Request $request): View
-    {
-        $search = trim((string) $request->input('q', ''));
-        $status = (string) $request->input('status', 'all');
-        $type   = (string) $request->input('type', 'all');
-
-        return view(
-            'backend.pages.campaigns.designed-index',
-            $this->campaignService->getListingPayload($search, $status, $type)
-        );
+        return response()->json($assignedInfluencers);
     }
 
     /**
@@ -139,17 +171,6 @@ class CampaignController extends Controller
     {
         return view(
             'backend.pages.campaigns.create',
-            $this->campaignService->getFormPayload()
-        );
-    }
-
-    /**
-     * Show the designed wizard for creating a campaign.
-     */
-    public function createDesigned(): View
-    {
-        return view(
-            'backend.pages.campaigns.designed-create',
             $this->campaignService->getFormPayload()
         );
     }
@@ -165,13 +186,9 @@ class CampaignController extends Controller
                 $request->boolean('is_active', true)
             );
 
-            $redirectRoute = $request->input('ui_variant') === 'designed'
-            ? 'dashboard.campaigns.designed'
-            : 'dashboard.campaigns.index';
-
             return redirect()
-                ->route($redirectRoute)
-                ->with('success', 'Campaign "' . $campaign->title . '" has been created successfully.');
+                ->route('dashboard.campaigns.standard')
+                ->with('success', 'Campaign "'.$campaign->title.'" has been created successfully.');
 
         } catch (ValidationException $e) {
             return redirect()
@@ -195,14 +212,31 @@ class CampaignController extends Controller
      */
     public function index(Request $request): View
     {
-        $search = trim((string) $request->input('q', ''));
-        $status = (string) $request->input('status', 'all');
-        $type   = (string) $request->input('type', 'all');
+        [$search, $status, $type] = $this->resolveFilters($request);
 
         return view(
             'backend.pages.campaigns.index',
             $this->campaignService->getListingPayload($search, $status, $type)
         );
+    }
+
+    /**
+     * Return only dashboard campaign table HTML for realtime filter updates.
+     */
+    public function table(Request $request): JsonResponse
+    {
+        [$search, $status, $type] = $this->resolveFilters($request);
+
+        $payload = $this->campaignService->getListingPayload($search, $status, $type);
+
+        $html = view('backend.pages.campaigns._results', [
+            'campaigns' => $payload['campaigns'],
+        ])->render();
+
+        return response()->json([
+            'success' => true,
+            'html' => $html,
+        ]);
     }
 
     /**
@@ -223,7 +257,7 @@ class CampaignController extends Controller
     {
         return view('backend.pages.campaigns.edit', [
             'campaign' => $campaign->load(['targeting', 'brand', 'categories', 'followerRanges', 'targetCountries']),
-            ...$this->campaignService->getFormPayload()
+            ...$this->campaignService->getFormPayload(),
         ]);
     }
 
@@ -241,7 +275,7 @@ class CampaignController extends Controller
 
             return redirect()
                 ->route('dashboard.campaigns.standard')
-                ->with('success', 'Campaign "' . $campaign->title . '" has been updated successfully.');
+                ->with('success', 'Campaign "'.$campaign->title.'" has been updated successfully.');
 
         } catch (ValidationException $e) {
             return redirect()
@@ -258,6 +292,51 @@ class CampaignController extends Controller
                 ->with('error', 'Something went wrong. Please try again.')
                 ->withInput();
         }
+    }
+
+    /**
+     * Update the campaign status.
+     */
+    public function updateStatus(Request $request, Campaign $campaign): RedirectResponse
+    {
+        try {
+            $validated = $request->validate([
+                'status' => 'required|in:published,paused,closed,archived',
+            ]);
+
+            $this->campaignService->updateCampaignStatus($campaign, $validated['status']);
+
+            return redirect()
+                ->back()
+                ->with('success', 'Campaign status updated to '.ucfirst($validated['status']).'.');
+
+        } catch (ValidationException $e) {
+            return redirect()
+                ->back()
+                ->withErrors($e->errors())
+                ->with('error', 'Invalid status provided.');
+
+        } catch (\Exception $e) {
+            report($e);
+
+            return redirect()
+                ->back()
+                ->with('error', 'Something went wrong. Please try again.');
+        }
+    }
+
+    /**
+     * Resolve campaign dashboard filters from the request.
+     *
+     * @return array{0:string,1:string,2:string}
+     */
+    private function resolveFilters(Request $request): array
+    {
+        $search = trim((string) $request->string('q', ''));
+        $status = (string) $request->string('status', 'all');
+        $type = (string) $request->string('type', 'all');
+
+        return [$search, $status, $type];
     }
 
     /**

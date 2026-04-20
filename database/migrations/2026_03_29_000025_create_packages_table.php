@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('packages', function (Blueprint $table): void {
             $table->id();
-            $table->foreignId('creator_id')->constrained('creators')->cascadeOnDelete();
+            $table->foreignId('influencer_id')->constrained('influencers')->cascadeOnDelete();
             $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
             $table->enum('platform', ['facebook', 'instagram', 'tiktok', 'linkedin', 'x', 'youtube', 'ugc', 'other']);
             $table->string('name');

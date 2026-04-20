@@ -6,8 +6,8 @@
 
 			@php
 				// Get FAQ sections filtered by audience type
-				$creatorSections = \App\Models\FaqSection::where('is_active', true)
-				    ->whereIn('audience_type', ['all', 'creator'])
+				$influencerSections = \App\Models\FaqSection::where('is_active', true)
+				    ->whereIn('audience_type', ['all', 'influencer'])
 				    ->orderBy('sort_order', 'asc')
 				    ->with('items')
 				    ->get();
@@ -19,8 +19,8 @@
 				    ->get();
 			@endphp
 
-			@foreach ($creatorSections as $section)
-				@if ($section->audience_type === 'creator' || $section->audience_type === 'all')
+			@foreach ($influencerSections as $section)
+				@if ($section->audience_type === 'influencer' || $section->audience_type === 'all')
 					<!-- SECTION: {{ $section->section_title }} -->
 					<section x-data="{ activeAccordion: null }">
 						<h2 class="text-3xl md:text-4xl font-semibold text-[#222] dark:text-white leading-tight text-left mb-8">
@@ -64,7 +64,9 @@
 			@endforeach
 
 			@foreach ($brandSections as $section)
-				@if ($section->audience_type === 'brand' || ($section->audience_type === 'all' && !$creatorSections->contains($section)))
+				@if (
+					$section->audience_type === 'brand' ||
+						($section->audience_type === 'all' && !$influencerSections->contains($section)))
 					<!-- SECTION: {{ $section->section_title }} -->
 					<section x-data="{ activeAccordion: null }">
 						<h2 class="text-3xl md:text-4xl font-semibold text-[#222] dark:text-white leading-tight text-left mb-8">
@@ -107,7 +109,7 @@
 				@endif
 			@endforeach
 
-			@if ($creatorSections->isEmpty() && $brandSections->isEmpty())
+			@if ($influencerSections->isEmpty() && $brandSections->isEmpty())
 				<div class="text-center py-16">
 					<p class="text-gray-500 dark:text-gray-400 text-lg">No FAQs available at the moment.</p>
 				</div>

@@ -12,7 +12,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('cart_id')->constrained('carts')->cascadeOnDelete();
             $table->foreignId('package_id')->constrained('packages')->cascadeOnDelete();
-            $table->foreignId('creator_id')->constrained('creators')->cascadeOnDelete();
+            $table->foreignId('influencer_id')->constrained('influencers')->cascadeOnDelete();
             $table->foreignId('campaign_id')->nullable()->constrained('campaigns')->nullOnDelete();
             $table->unsignedInteger('quantity')->default(1);
             $table->decimal('unit_price', 12, 2);

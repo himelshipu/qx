@@ -5,8 +5,54 @@
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1">
 		<meta name="csrf-token" content="{{ csrf_token() }}">
+		@php
+			$siteName = \App\Models\Setting::get('branding.site_name', config('app.name', 'Rockies'));
+			$explicitTitle = trim((string) $__env->yieldContent('title'));
+			if ($explicitTitle === '' && isset($title)) {
+				$explicitTitle = trim((string) $title);
+			}
 
-		<title>{{ $title ?? 'Admin Dashboard' }} | ROCKIES - Admin</title>
+			$humanize = static function (string $value): string {
+				return ucwords(str_replace(['-', '_'], ' ', $value));
+			};
+
+			$deriveFromRoute = static function (string $routeName) use ($humanize): string {
+				if ($routeName === '') {
+					return '';
+				}
+
+				$parts = array_values(array_filter(explode('.', $routeName), fn ($part) => !in_array($part, ['dashboard', 'frontend', 'api'], true)));
+				if (empty($parts)) {
+					return '';
+				}
+
+				$action = end($parts);
+				$resource = count($parts) >= 2 ? $parts[count($parts) - 2] : $parts[0];
+				$actionMap = [
+					'index' => '',
+					'show' => '',
+					'create' => 'Create ',
+					'store' => 'Create ',
+					'edit' => 'Edit ',
+					'update' => 'Update ',
+					'destroy' => 'Delete ',
+				];
+
+				if (array_key_exists($action, $actionMap)) {
+					return trim($actionMap[$action] . $humanize($resource));
+				}
+
+				return implode(' - ', array_map($humanize, $parts));
+			};
+
+			$routeName = (string) (\Illuminate\Support\Facades\Route::currentRouteName() ?? '');
+			$pageTitle = $explicitTitle !== '' ? $explicitTitle : $deriveFromRoute($routeName);
+			if ($pageTitle === '') {
+				$pageTitle = 'Dashboard';
+			}
+		@endphp
+
+		<title>{{ $pageTitle }} | {{ $siteName }} Admin</title>
 
 		<!-- Apply theme before CSS loads to avoid first-paint flash -->
 		<script>
@@ -32,12 +78,14 @@
 			}
 		</style>
 
+		@stack('styles')
+
 		@vite(['resources/css/app.css', 'resources/js/app.js'])
 	</head>
 
-	<body x-data="{ 'loaded': true }" x-init="$store.sidebar.isExpanded = window.innerWidth >= 1280;
+	<body x-data="{ 'loaded': true }" x-init="$store.sidebar.isExpanded = window.innerWidth >= 1024;
 const checkMobile = () => {
-    if (window.innerWidth < 1280) {
+	if (window.innerWidth < 1024) {
         $store.sidebar.setMobileOpen(false);
         $store.sidebar.isExpanded = false;
     } else {
@@ -47,19 +95,19 @@ const checkMobile = () => {
 };
 window.addEventListener('resize', checkMobile);" class="bg-white text-gray-900 dark:bg-gray-900 dark:text-gray-100">
 
-		<div class="min-h-screen xl:flex">
+		<div class="min-h-screen lg:flex">
 			<x-backend.shell.backdrop />
 			<x-backend.shell.sidebar />
 			<div class="flex-1"
 				:class="{
-				    'xl:ml-[290px]': $store.sidebar.isExpanded,
-				    'xl:ml-[90px]': !$store.sidebar.isExpanded,
+				    'lg:ml-72': $store.sidebar.isExpanded,
+				    'lg:ml-20': !$store.sidebar.isExpanded,
 				    'ml-0': $store.sidebar.isMobileOpen
 				}">
 				<!-- app header start -->
 				<x-backend.shell.header />
 				<!-- app header end -->
-				<main class="max-w-screen-2xl mx-auto px-4 sm:px-6 py-8 bg-white dark:bg-gray-900 ">
+				<main class="max-w-screen-2xl mx-auto px-4 sm:px-6 py-6 bg-white dark:bg-gray-900 ">
 					@yield('content')
 				</main>
 			</div>
@@ -68,7 +116,7 @@ window.addEventListener('resize', checkMobile);" class="bg-white text-gray-900 d
 		<!-- Toast Container -->
 		<div x-data="window.Alpine.store('toast')" class="fixed top-4 right-4 z-50 flex flex-col gap-2">
 			<template x-for="t in toasts" :key="t.id">
-				<div class="px-4 py-3 rounded-lg shadow-lg flex items-center gap-3 min-w-[300px] max-w-md animate-slide-in"
+				<div class="px-4 py-3 rounded-lg shadow-lg flex items-center gap-3 min-w-75 max-w-md animate-slide-in"
 					:class="{
 					    'success': 'bg-green-50 dark:bg-green-900 border border-green-200 dark:border-green-700 text-green-800 dark:text-green-100',
 					    'error': 'bg-red-50 dark:bg-red-900 border border-red-200 dark:border-red-700 text-red-800 dark:text-red-100',
@@ -76,7 +124,7 @@ window.addEventListener('resize', checkMobile);" class="bg-white text-gray-900 d
 					    'warning': 'bg-yellow-50 dark:bg-yellow-900 border border-yellow-200 dark:border-yellow-700 text-yellow-800 dark:text-yellow-100',
 					} [t.type]">
 					<!-- Icons -->
-					<div class="flex-shrink-0">
+					<div class="shrink-0">
 						<template x-if="t.type === 'success'">
 							<svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"

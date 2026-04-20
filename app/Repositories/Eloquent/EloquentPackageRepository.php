@@ -18,26 +18,19 @@ class EloquentPackageRepository implements PackageRepositoryInterface
     /**
      * Get paginated packages for dashboard listing.
      */
-    public function paginateForDashboard(string $search, string $status, string $platform, int $perPage = 12): LengthAwarePaginator
+    public function paginateForDashboard(array $filters, int $perPage = 12): LengthAwarePaginator
     {
+        $search = (string) ($filters['q'] ?? '');
+        $status = (string) ($filters['status'] ?? 'all');
+        $platform = (string) ($filters['platform'] ?? 'all');
+
         return Package::query()
-            ->with('createdBy:id,name')
-            ->withCount(['cartItems', 'orderItems'])
-            ->when($search !== '', function ($query) use ($search) {
-                $query->where(function ($subQuery) use ($search) {
-                    $subQuery
-                        ->where('name', 'like', '%' . $search . '%')
-                        ->orWhere('platform', 'like', '%' . $search . '%')
-                        ->orWhere('description', 'like', '%' . $search . '%')
-                        ->orWhere('currency', 'like', '%' . $search . '%');
-                });
-            })
-            ->when($status === 'active', fn($query) => $query->where('is_active', true))
-            ->when($status === 'inactive', fn($query) => $query->where('is_active', false))
-            ->when($platform !== 'all', fn($query) => $query->where('platform', $platform))
-            ->orderByDesc('updated_at')
-            ->paginate($perPage)
-            ->withQueryString();
+            ->forDashboard()
+            ->dashboardSearch($search)
+            ->dashboardStatus($status)
+            ->dashboardPlatform($platform)
+            ->dashboardOrder()
+            ->paginate($perPage);
     }
 
     /**
@@ -47,14 +40,18 @@ class EloquentPackageRepository implements PackageRepositoryInterface
      */
     public function getStats(): array
     {
+        $counts = Package::query()
+            ->selectRaw('COUNT(*) as total')
+            ->selectRaw('SUM(CASE WHEN is_active = 1 THEN 1 ELSE 0 END) as active')
+            ->selectRaw('SUM(CASE WHEN is_active = 0 THEN 1 ELSE 0 END) as inactive')
+            ->selectRaw('SUM(CASE WHEN EXISTS (SELECT 1 FROM cart_items WHERE cart_items.package_id = packages.id) OR EXISTS (SELECT 1 FROM order_items WHERE order_items.package_id = packages.id) THEN 1 ELSE 0 END) as in_use')
+            ->first();
+
         return [
-            'total'    => Package::count(),
-            'active'   => Package::where('is_active', true)->count(),
-            'inactive' => Package::where('is_active', false)->count(),
-            'in_use'   => Package::query()
-                ->whereHas('cartItems')
-                ->orWhereHas('orderItems')
-                ->count()
+            'total' => (int) ($counts?->total ?? 0),
+            'active' => (int) ($counts?->active ?? 0),
+            'inactive' => (int) ($counts?->inactive ?? 0),
+            'in_use' => (int) ($counts?->in_use ?? 0),
         ];
     }
 

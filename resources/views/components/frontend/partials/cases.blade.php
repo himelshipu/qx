@@ -1,11 +1,22 @@
 <section>
 	<div class="flex flex-col gap-8 mt-8">
 		<div>
-			<h2 class="text-2xl font-semibold text-[#222] dark:text-white mb-4">
-				<a href="{{ route('case-studies') }}" class="hover:text-blue-600 transition">
-					Case Studies
+			<div class="flex flex-row items-end justify-between mb-6 gap-3">
+				<div>
+					<h2 class="text-2xl font-semibold text-[#222] dark:text-white">
+						<a href="{{ route('case-studies') }}" class="hover:text-blue-600 transition">
+							Case Studies
+						</a>
+					</h2>
+					<p class="text-gray-500 dark:text-gray-400 leading-relaxed mt-1">
+						Discover successful brand and influencer collaborations
+					</p>
+				</div>
+				<a href="{{ route('case-studies') }}"
+					class="text-sm font-medium text-[#222] dark:text-gray-400 hover:underline hover:text-purple-300 pb-1 whitespace-nowrap">
+					See All
 				</a>
-			</h2>
+			</div>
 
 			@php
 				$caseStudies = \App\Models\CaseStudy::where('is_published', true)

@@ -45,9 +45,9 @@
 									data-platform="{{ $package->platform }}"
 									data-delivery="{{ $package->delivery_days ?? 0 }}"
 									data-revisions="{{ $package->revisions_included ?? 0 }}"
-									data-creator="{{ $package->creator?->display_name ?? 'Unknown' }}"
-									data-creator-email="{{ $package->creator?->user?->email ?? 'N/A' }}">
-									{{ $package->name }} - {{ $package->currency }} {{ number_format((float) $package->base_price, 2) }}
+									data-influencer="{{ $package->influencer?->display_name ?? 'Unknown' }}"
+									data-influencer-email="{{ $package->influencer?->user?->email ?? 'N/A' }}">
+									{{ $package->influencer?->display_name ?? 'Unknown' }} - {{ $package->name }} - {{ $package->currency }} {{ number_format((float) $package->base_price, 2) }}
 								</option>
 							@endforeach
 						</select>
@@ -62,8 +62,8 @@
 						<h4 class="text-sm font-semibold text-gray-900 dark:text-white mb-3">Package Details</h4>
 						<div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
 							<div>
-								<p class="text-gray-600 dark:text-gray-400">Creator</p>
-								<p class="font-medium text-gray-900 dark:text-white" x-text="packageDetails.creator"></p>
+								<p class="text-gray-600 dark:text-gray-400">Influencer</p>
+								<p class="font-medium text-gray-900 dark:text-white" x-text="packageDetails.influencer"></p>
 							</div>
 							<div>
 								<p class="text-gray-600 dark:text-gray-400">Platform</p>
@@ -248,7 +248,7 @@
 				selectedPackageId: '',
 				packageDetails: {
 					name: '',
-					creator: '',
+					influencer: '',
 					platform: '',
 					price: '0',
 					currency: 'USD',
@@ -263,7 +263,7 @@
 					if (selected.value) {
 						this.packageDetails = {
 							name: selected.dataset.name,
-							creator: selected.dataset.creator,
+							influencer: selected.dataset.influencer,
 							platform: selected.dataset.platform,
 							price: parseFloat(selected.dataset.price).toFixed(2),
 							currency: selected.dataset.currency,
@@ -273,7 +273,7 @@
 						};
 					} else {
 						this.packageDetails = {
-							name: '', creator: '', platform: '',
+							name: '', influencer: '', platform: '',
 							price: '0', currency: 'USD', delivery: '0',
 							revisions: '0', description: ''
 						};

@@ -17,24 +17,25 @@ class StaticPagesController extends Controller
         ]);
     }
 
-     public function support(): View
+    public function support(): View
     {
         return view('frontend.pages.support', [
             'title' => 'support',
         ]);
     }
 
-    public function creatorEditProfile(): View
+    public function influencerEditProfile(): View
     {
-        // Redirect to dashboard edit (authenticated) — creator edit should be handled by CreatorProfileController
+        // Redirect to dashboard edit (authenticated) — influencer edit should be handled by InfluencerProfileController
         return redirect()->route('dashboard.index');
     }
 
-    public function creatorProfile(): View
+    public function influencerProfile(): View
     {
-        // Public creator profile should be served by CreatorProfileController
+        // Public influencer profile should be served by InfluencerProfileController
         return redirect()->route('home');
     }
+
     public function brandProfile(): View
     {
         // Public brand profile should be served by BrandProfileController
@@ -47,5 +48,4 @@ class StaticPagesController extends Controller
             'title' => 'Influencers',
         ]);
     }
-
 }

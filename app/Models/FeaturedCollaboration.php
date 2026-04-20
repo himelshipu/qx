@@ -3,7 +3,9 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Collection;
 
 class FeaturedCollaboration extends Model
 {
@@ -12,7 +14,6 @@ class FeaturedCollaboration extends Model
     protected $table = 'featured_collaborations';
 
     protected $fillable = [
-        'page_id',
         'brand_name',
         'asset_type',
         'image_path',
@@ -28,6 +29,70 @@ class FeaturedCollaboration extends Model
             'sort_order'   => 'integer',
             'is_published' => 'boolean'
         ];
+    }
+
+    /**
+     * Scope listing columns for dashboard.
+     */
+    public function scopeForDashboard(Builder $query): Builder
+    {
+        return $query->select([
+            'id',
+            'brand_name',
+            'asset_type',
+            'image_path',
+            'video_path',
+            'thumbnail_path',
+            'sort_order',
+            'is_published',
+            'updated_at',
+        ]);
+    }
+
+    /**
+     * Scope search by brand name.
+     */
+    public function scopeSearch(Builder $query, string $term): Builder
+    {
+        $term = trim($term);
+
+        if ($term === '') {
+            return $query;
+        }
+
+        return $query->where('brand_name', 'like', '%' . $term . '%');
+    }
+
+    /**
+     * Scope dashboard status filter.
+     */
+    public function scopeDashboardStatus(Builder $query, string $status): Builder
+    {
+        return match ($status) {
+            'published' => $query->where('is_published', true),
+            'unpublished' => $query->where('is_published', false),
+            default => $query,
+        };
+    }
+
+    /**
+     * Scope dashboard type filter.
+     */
+    public function scopeDashboardType(Builder $query, string $type): Builder
+    {
+        return match ($type) {
+            'image' => $query->where('asset_type', 'image'),
+            'video' => $query->where('asset_type', 'video'),
+            default => $query,
+        };
+    }
+
+    /**
+     * Scope default dashboard ordering.
+     */
+    public function scopeDashboardOrder(Builder $query): Builder
+    {
+        return $query->orderBy('sort_order')->orderByDesc('updated_at');
     }
 
     /**
@@ -69,7 +134,7 @@ class FeaturedCollaboration extends Model
     /**
      * Get published collaborations ordered by sort_order
      */
-    public static function published()
+    public static function published(): Collection
     {
         return self::where('is_published', true)
             ->orderBy('sort_order', 'asc')

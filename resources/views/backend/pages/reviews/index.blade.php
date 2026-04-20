@@ -35,7 +35,7 @@
 				<form method="GET" action="{{ route('dashboard.reviews.index') }}" class="mb-5 grid grid-cols-1 gap-3 md:grid-cols-5">
 					<div class="md:col-span-2">
 						<label for="q" class="mb-1 block text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Search</label>
-						<input id="q" name="q" type="text" value="{{ $search }}" placeholder="Title, comment, brand, creator"
+						<input id="q" name="q" type="text" value="{{ $search }}" placeholder="Title, comment, brand, influencer"
 							class="h-10 w-full rounded-lg border border-gray-200 bg-transparent px-3 text-sm text-gray-900 focus:border-gray-400 focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-white">
 					</div>
 					<div>
@@ -68,7 +68,7 @@
 						<thead class="bg-gray-50 dark:bg-gray-800/50">
 							<tr>
 								<th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Brand</th>
-								<th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Creator</th>
+								<th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Influencer</th>
 								<th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Review</th>
 								<th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Rating</th>
 								<th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Visibility</th>
@@ -80,7 +80,7 @@
 							@forelse ($reviews as $review)
 								<tr class="transition hover:bg-gray-50/70 dark:hover:bg-gray-800/40">
 									<td class="px-4 py-3 text-sm font-medium text-gray-900 dark:text-white">{{ $review->brand?->brand_name ?? 'N/A' }}</td>
-									<td class="px-4 py-3 text-sm text-gray-700 dark:text-gray-300">{{ $review->creator?->user?->name ?? 'N/A' }}</td>
+									<td class="px-4 py-3 text-sm text-gray-700 dark:text-gray-300">{{ $review->influencer?->user?->name ?? 'N/A' }}</td>
 									<td class="px-4 py-3 text-sm text-gray-700 dark:text-gray-300">
 										<p class="font-medium text-gray-900 dark:text-white">{{ $review->title ?: 'Untitled review' }}</p>
 										<p class="text-xs text-gray-500 dark:text-gray-400">{{ \Illuminate\Support\Str::limit($review->comment ?: '-', 90) }}</p>

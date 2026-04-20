@@ -7,46 +7,28 @@ use Illuminate\Support\Facades\DB;
 
 class RoleSeeder extends Seeder
 {
+    /**
+     * Seed the roles table.
+     *
+     * IMPORTANT: Only Superadmin role is created by seeder.
+     * All other roles (Admin, Moderator, etc.) are created dynamically by Superadmin.
+     *
+     * Brand and Influencer are NOT roles - they are user_type values in the users table.
+     */
     public function run(): void
     {
-        $roles = [
+        // Only create Superadmin role
+        DB::table('roles')->updateOrInsert(
+            ['slug' => 'superadmin'],
             [
-                'name' => 'Administrator',
-                'slug' => 'admin',
-                'description' => 'Full platform access across all admin modules.',
-                'is_active' => true,
-            ],
-            [
-                'name' => 'Moderator',
-                'slug' => 'moderator',
-                'description' => 'Reviews moderation queues, support tickets, and user content.',
-                'is_active' => true,
-            ],
-            [
-                'name' => 'Brand',
-                'slug' => 'brand',
-                'description' => 'Can create campaigns and manage brand collaborations.',
-                'is_active' => true,
-            ],
-            [
-                'name' => 'Creator',
-                'slug' => 'creator',
-                'description' => 'Can apply to campaigns and manage creator profile content.',
-                'is_active' => true,
-            ],
-        ];
-
-        foreach ($roles as $role) {
-            DB::table('roles')->updateOrInsert(
-                ['slug' => $role['slug']],
-                [
-                    'name' => $role['name'],
-                    'description' => $role['description'],
-                    'is_active' => $role['is_active'],
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ]
-            );
-        }
+                'name'          => 'Superadmin',
+                'slug'          => 'superadmin',
+                'description'   => 'Supreme administrator with complete platform control.',
+                'is_active'     => true,
+                'is_superadmin' => true,
+                'created_at'    => now(),
+                'updated_at'    => now()
+            ]
+        );
     }
 }

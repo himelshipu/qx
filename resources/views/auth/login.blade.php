@@ -19,13 +19,16 @@
                     <div>
                         <form method="POST" action="{{ route('login') }}">
                             @csrf
+                            @if (!empty($redirectTo))
+                                <input type="hidden" name="redirect_to" value="{{ $redirectTo }}">
+                            @endif
 
                             <!-- Email Address -->
                             <div>
                                 <label class="mb-1.5 block text-sm font-medium text-gray-800 dark:text-gray-400">
                                     Email<span class="text-error-500"> *</span>
                                 </label>
-                                <input type="email" name="email" value="{{ old('email') }}" placeholder="info@gmail.com" required autofocus
+                                <input type="email" name="email" value="{{ old('email') }}" placeholder="info@rockies.com" required autofocus
                                     class="dark:bg-dark-900 shadow-theme-xs focus:border-pink-50 focus:ring-gray-500/10 dark:focus:border-gray-800 h-12 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30" autocomplete="username" />
                                 @error('email')
                                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
@@ -85,7 +88,9 @@
                     </div>
 
                     <p class="mt-6 text-sm text-center text-gray-800 dark:text-gray-400">
-                        Don't have an account? <a href="{{ route('register') }}" class="text-purple-400 font-bold pl-1">Sign Up</a>
+                        Don't have an account?
+                        <a href="{{ route('register', array_filter(['redirect' => $redirectTo ?? request('redirect')])) }}"
+                            class="text-purple-400 font-bold pl-1">Sign Up</a>
                     </p>
                 </div>
             </div>

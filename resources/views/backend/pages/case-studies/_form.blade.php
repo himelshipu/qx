@@ -1,11 +1,3 @@
-@php
-	/** @var \App\Models\CaseStudy|null $caseStudy */
-	$caseStudy = $caseStudy ?? null;
-	$isEditMode = $caseStudy !== null;
-
-	$initialCoverPreview = $caseStudy?->cover_image_path ? \App\Helpers\ImageHelper::url($caseStudy->cover_image_path) : null;
-@endphp
-
 <div x-data="caseStudyUploader({
     coverPreview: @js($initialCoverPreview)
 })" class="grid grid-cols-1 gap-6 lg:grid-cols-3">
@@ -27,7 +19,7 @@
 				<label for="sort_order" class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
 					Sort Order
 				</label>
-				<input id="sort_order" name="sort_order" type="number" value="{{ old('sort_order', $caseStudy?->sort_order ?? 0) }}" min="0"
+				<input id="sort_order" name="sort_order" type="number" value="{{ old('sort_order', $caseStudy?->sort_order ?? $nextSortOrder ?? 0) }}" min="0"
 					class="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-3 text-sm text-gray-900 focus:border-gray-500 focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-white">
 				@error('sort_order')
 					<p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
@@ -76,7 +68,7 @@
 			<label for="cover_image"
 				class="flex cursor-pointer flex-col items-center justify-center rounded-lg border border-dashed border-gray-300 px-4 py-6 text-center transition hover:border-gray-400 dark:border-gray-600 dark:hover:border-gray-500">
 				<template x-if="coverPreview">
-					<img :src="coverPreview" alt="Cover preview" class="mb-3 h-20 w-full max-w-[220px] rounded object-cover">
+					<img :src="coverPreview" alt="Cover preview" class="mb-3 h-20 w-full max-w-56 rounded object-cover">
 				</template>
 				<template x-if="!coverPreview">
 					<div class="mb-3 flex h-16 w-16 items-center justify-center rounded-lg bg-gray-100 dark:bg-gray-800">
@@ -117,47 +109,3 @@
 		</div>
 	</div>
 </div>
-
-@once
-	@push('scripts')
-		<script>
-			function caseStudyUploader(config) {
-				return {
-					coverPreview: config.coverPreview || null,
-					coverFileName: '',
-					coverClientError: '',
-
-					onCoverSelected(event) {
-						this.coverClientError = '';
-						const file = event.target.files[0];
-
-						if (!file) {
-							return;
-						}
-
-						const extension = (file.name.split('.').pop() || '').toLowerCase();
-						const allowed = ['jpg', 'jpeg', 'png', 'webp', 'avif', 'gif'];
-
-						if (!allowed.includes(extension)) {
-							this.coverClientError = 'Cover image must be JPG, PNG, WEBP, AVIF, or GIF.';
-							this.clearCover();
-							return;
-						}
-
-						this.coverFileName = file.name;
-						this.coverPreview = URL.createObjectURL(file);
-					},
-
-					clearCover() {
-						this.coverClientError = '';
-						this.coverFileName = '';
-						this.coverPreview = config.coverPreview || null;
-						if (this.$refs.coverInput) {
-							this.$refs.coverInput.value = '';
-						}
-					}
-				};
-			}
-		</script>
-	@endpush
-@endonce

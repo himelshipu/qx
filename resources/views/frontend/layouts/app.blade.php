@@ -5,8 +5,54 @@
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1">
 		<meta name="csrf-token" content="{{ csrf_token() }}">
+		@php
+			$siteName = \App\Models\Setting::get('branding.site_name', config('app.name', 'Rockies'));
+			$explicitTitle = trim((string) $__env->yieldContent('title'));
+			if ($explicitTitle === '' && isset($title)) {
+				$explicitTitle = trim((string) $title);
+			}
 
-		<title>{{ $title ?? 'Welcome' }} | ROCKIES - Influencer Hiring Platform</title>
+			$humanize = static function (string $value): string {
+				return ucwords(str_replace(['-', '_'], ' ', $value));
+			};
+
+			$deriveFromRoute = static function (string $routeName) use ($humanize): string {
+				if ($routeName === '') {
+					return '';
+				}
+
+				$parts = array_values(array_filter(explode('.', $routeName), fn ($part) => !in_array($part, ['frontend', 'dashboard', 'api'], true)));
+				if (empty($parts)) {
+					return '';
+				}
+
+				$action = end($parts);
+				$resource = count($parts) >= 2 ? $parts[count($parts) - 2] : $parts[0];
+				$actionMap = [
+					'index' => '',
+					'show' => '',
+					'create' => 'Create ',
+					'store' => 'Create ',
+					'edit' => 'Edit ',
+					'update' => 'Update ',
+					'destroy' => 'Delete ',
+				];
+
+				if (array_key_exists($action, $actionMap)) {
+					return trim($actionMap[$action] . $humanize($resource));
+				}
+
+				return implode(' - ', array_map($humanize, $parts));
+			};
+
+			$routeName = (string) (\Illuminate\Support\Facades\Route::currentRouteName() ?? '');
+			$pageTitle = $explicitTitle !== '' ? $explicitTitle : $deriveFromRoute($routeName);
+			if ($pageTitle === '') {
+				$pageTitle = 'Home';
+			}
+		@endphp
+
+		<title>{{ $pageTitle }} | {{ $siteName }}</title>
 
 		<!-- Apply theme before CSS loads to avoid first-paint flash -->
 		<script>
@@ -59,6 +105,309 @@
 			</button>
 		</div>
 
+		<!-- Cart Modal Data Function (must load BEFORE auth-header component) -->
+		<script>
+			// Store initial cart data from server
+			window.initialCartData = {!! json_encode($cartItemsData ?? []) !!};
+			window.loginUrl = @js(route('login'));
+			window.autoOpenCartSidebar = @json((bool) session('auto_open_cart_sidebar'));
+			window.brandActionRequiredModal = @json((bool) session('brand_action_required_modal'));
+			window.brandActionRequiredMessage = @json(session('brand_action_required_message'));
+
+			// Global store for cart state (accessible from anywhere)
+			window.cartStore = {
+				isAdding: false,
+				isRemoving: false
+			};
+
+			// Global addToCart function callable from any Alpine component
+			async function addToCart(packageId) {
+				if (window.cartStore.isAdding) return false;
+				window.cartStore.isAdding = true;
+
+				try {
+					const response = await fetch('{{ route('cart.add') }}', {
+						method: 'POST',
+						headers: {
+							'Content-Type': 'application/json',
+							'Accept': 'application/json',
+							'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+						},
+						body: JSON.stringify({
+							package_id: packageId
+						})
+					});
+
+					if (!response.ok) {
+						const errorData = await response.json().catch(() => ({}));
+
+						if (response.status === 401 && errorData.redirect_url) {
+							if (window.toast && window.toast.warning) {
+								window.toast.warning(errorData.message || 'Please login first.');
+							}
+
+							window.location.href = errorData.redirect_url;
+							return false;
+						}
+
+						throw new Error(errorData.message || 'Failed to add item');
+					}
+
+					const data = await response.json();
+					if (data.success) {
+						// Update global initial cart data
+						window.initialCartData = data.cart.items || [];
+
+						// Update cart sidebar component using Alpine's event system
+						// Dispatch custom event that the component listens for
+						window.dispatchEvent(new CustomEvent('cartUpdated', {
+							detail: {
+								items: data.cart.items || [],
+								shouldOpenCart: true
+							}
+						}));
+
+						if (window.toast && window.toast.success) {
+							window.toast.success('Package added to cart!');
+						}
+
+						return true;
+					} else {
+						throw new Error(data.message || 'Failed to add item');
+					}
+				} catch (error) {
+					if (window.toast && window.toast.error) {
+						window.toast.error(error.message || 'Failed to add item to cart');
+					}
+
+					return false;
+				} finally {
+					window.cartStore.isAdding = false;
+				}
+			}
+
+			function cartModalData(initialCartItems = null) {
+				const resolvedInitialItems = Array.isArray(initialCartItems) ?
+					initialCartItems :
+					(Array.isArray(window.initialCartData) ? window.initialCartData : []);
+
+				return {
+					isCartOpen: false,
+					isProfileOpen: false,
+					cartItems: resolvedInitialItems,
+					isRemoving: false,
+					isAdding: false,
+
+					init() {
+						// Set up listener for real-time cart updates when component initializes
+						window.addEventListener('cartUpdated', (event) => {
+							const detail = event.detail || {};
+							if (Array.isArray(detail.items)) {
+								this.cartItems = [...detail.items];
+								window.initialCartData = detail.items;
+							}
+							if (detail.shouldOpenCart) {
+								this.isCartOpen = true;
+							}
+						});
+					},
+
+					get subtotal() {
+						return this.cartItems.reduce((acc, item) => acc + (item.price * item.quantity), 0);
+					},
+
+					get projectedSpend() {
+						return this.cartItems.length > 0 ? this.subtotal : 0;
+					},
+
+					get totalItemCount() {
+						return this.cartItems.reduce((sum, item) => sum + Number(item.quantity || 0), 0);
+					},
+
+					get uniqueInfluencerCount() {
+						const influencerIds = this.cartItems
+							.map((item) => item.influencer_id)
+							.filter((id) => id !== null && id !== undefined);
+
+						return new Set(influencerIds).size;
+					},
+
+					get topAudienceLocations() {
+						const locationMap = new Map();
+
+						this.cartItems.forEach((item) => {
+							const country = (item.country || '').toString().trim();
+							if (!country) {
+								return;
+							}
+
+							const normalized = country.toLowerCase();
+							locationMap.set(normalized, {
+								country,
+								count: (locationMap.get(normalized)?.count || 0) + 1,
+							});
+						});
+
+						return Array.from(locationMap.values())
+							.sort((a, b) => b.count - a.count)
+							.slice(0, 3)
+							.map((entry) => ({
+								country: entry.country,
+								count: entry.count,
+								code: this.countryCode(entry.country),
+							}));
+					},
+
+					countryCode(country) {
+						const value = (country || '').toString().trim();
+						if (!value) {
+							return '--';
+						}
+
+						if (value.length <= 3) {
+							return value.toUpperCase();
+						}
+
+						const words = value.split(/\s+/).filter(Boolean);
+						if (words.length >= 2) {
+							return (words[0][0] + words[1][0]).toUpperCase();
+						}
+
+						return value.slice(0, 2).toUpperCase();
+					},
+
+					async addToCart(packageId) {
+						if (this.isAdding) return;
+						this.isAdding = true;
+
+						try {
+							const response = await fetch('{{ route('cart.add') }}', {
+								method: 'POST',
+								headers: {
+									'Content-Type': 'application/json',
+									'Accept': 'application/json',
+									'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').getAttribute(
+										'content')
+								},
+								body: JSON.stringify({
+									package_id: packageId
+								})
+							});
+
+							if (!response.ok) {
+								const errorData = await response.json().catch(() => ({}));
+
+								if (response.status === 401 && errorData.redirect_url) {
+									if (window.toast && window.toast.warning) {
+										window.toast.warning(errorData.message || 'Please login first.');
+									}
+
+									window.location.href = errorData.redirect_url;
+									return;
+								}
+
+								throw new Error(errorData.message || 'Failed to add item');
+							}
+
+							const data = await response.json();
+							if (data.success) {
+								// Update component data with spread operator to trigger reactivity
+								this.cartItems = data.cart.items ? [...data.cart.items] : [];
+								this.isCartOpen = true;
+								// Dispatch event for other components to listen
+								window.dispatchEvent(new CustomEvent('cartUpdated', {
+									detail: {
+										items: data.cart.items || [],
+										shouldOpenCart: true
+									}
+								}));
+								if (window.toast && window.toast.success) {
+									window.toast.success('Package added to cart!');
+								}
+							} else {
+								throw new Error(data.message || 'Failed to add item');
+							}
+						} catch (error) {
+							if (window.toast && window.toast.error) {
+								window.toast.error(error.message || 'Failed to add item to cart');
+							}
+						} finally {
+							this.isAdding = false;
+						}
+					},
+
+					async removeCartItem(itemId) {
+						if (this.isRemoving) return;
+						this.isRemoving = true;
+
+						try {
+							const response = await fetch(`/cart/items/${itemId}`, {
+								method: 'DELETE',
+								headers: {
+									'Content-Type': 'application/json',
+									'Accept': 'application/json',
+									'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').getAttribute(
+										'content')
+								}
+							});
+
+							if (!response.ok) {
+								const errorData = await response.json().catch(() => ({}));
+								throw new Error(errorData.message || 'Failed to remove item');
+							}
+
+							const data = await response.json();
+							if (data.success) {
+								// Update component data with spread operator to trigger reactivity
+								this.cartItems = data.cart.items ? [...data.cart.items] : [];
+								// Dispatch event for other components to listen
+								window.dispatchEvent(new CustomEvent('cartUpdated', {
+									detail: {
+										items: data.cart.items || [],
+										shouldOpenCart: false
+									}
+								}));
+								if (window.toast && window.toast.success) {
+									window.toast.success('Item removed from cart');
+								}
+							} else {
+								throw new Error(data.message || 'Failed to remove item');
+							}
+						} catch (error) {
+							if (window.toast && window.toast.error) {
+								window.toast.error(error.message || 'Failed to remove item from cart');
+							}
+						} finally {
+							this.isRemoving = false;
+						}
+					}
+				};
+			}
+
+			document.addEventListener('DOMContentLoaded', () => {
+				if (window.autoOpenCartSidebar) {
+					window.setTimeout(() => {
+						const cartHeaderEl = document.querySelector('[x-data*="cartModalData"]');
+						if (cartHeaderEl && cartHeaderEl.__x?.scope) {
+							cartHeaderEl.__x.scope.isCartOpen = true;
+						}
+					}, 150);
+				}
+
+				if (window.brandActionRequiredModal && window.brandActionRequiredMessage) {
+					if (window.confirmationModal) {
+						window.confirmationModal.open({
+							title: 'Brand Account Required',
+							message: window.brandActionRequiredMessage,
+							confirmText: 'OK',
+							variant: 'warning'
+						});
+					} else if (window.toast && window.toast.warning) {
+						window.toast.warning(window.brandActionRequiredMessage);
+					}
+				}
+			});
+		</script>
 
 		@if (auth()->user())
 			<x-frontend.navigation.auth-header />
@@ -76,32 +425,36 @@
 		<!-- Toast Container -->
 		<div x-data="window.Alpine.store('toast')" class="fixed top-4 right-4 z-50 flex flex-col gap-2">
 			<template x-for="t in toasts" :key="t.id">
-				<div class="px-4 py-3 rounded-lg shadow-lg flex items-center gap-3 min-w-[300px] max-w-md animate-slide-in"
+				<div class="px-4 py-3 rounded-lg shadow-lg flex items-center gap-3 min-w-75 max-w-md animate-slide-in"
 					:class="{
 					    'success': 'bg-green-50 dark:bg-green-900 border border-green-200 dark:border-green-700 text-green-800 dark:text-green-100',
 					    'error': 'bg-red-50 dark:bg-red-900 border border-red-200 dark:border-red-700 text-red-800 dark:text-red-100',
 					    'info': 'bg-blue-50 dark:bg-blue-900 border border-blue-200 dark:border-blue-700 text-blue-800 dark:text-blue-100',
 					    'warning': 'bg-yellow-50 dark:bg-yellow-900 border border-yellow-200 dark:border-yellow-700 text-yellow-800 dark:text-yellow-100',
 					} [t.type]">
-					<div class="flex-shrink-0">
+					<div class="shrink-0">
 						<template x-if="t.type === 'success'">
 							<svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+									d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
 							</svg>
 						</template>
 						<template x-if="t.type === 'error'">
 							<svg class="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+									d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
 							</svg>
 						</template>
 						<template x-if="t.type === 'info'">
 							<svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+									d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
 							</svg>
 						</template>
 						<template x-if="t.type === 'warning'">
 							<svg class="w-5 h-5 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+									d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
 							</svg>
 						</template>
 					</div>

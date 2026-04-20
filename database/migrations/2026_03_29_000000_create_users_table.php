@@ -14,7 +14,7 @@ return new class extends Migration
             $table->string('name');
             $table->string('email')->unique();
             $table->string('password');
-            $table->enum('user_type', ['brand', 'creator', 'moderator', 'admin'])->default('brand');
+            $table->enum('user_type', ['brand', 'influencer', 'moderator', 'admin'])->default('brand');
             $table->string('phone', 30)->nullable();
             $table->date('date_of_birth')->nullable();
             $table->enum('gender', ['male', 'female', 'other'])->nullable();
@@ -30,6 +30,7 @@ return new class extends Migration
             $table->timestamp('verification_code_expires_at')->nullable();
             $table->timestamp('email_verified_at')->nullable();
             $table->timestamp('last_login_at')->nullable();
+            $table->string('stripe_customer_id')->nullable()->unique();
             $table->rememberToken();
             $table->timestamps();
         });

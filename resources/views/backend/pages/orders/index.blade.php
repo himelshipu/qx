@@ -32,87 +32,127 @@
 			</div>
 
 			<div class="p-5">
-				<form method="GET" action="{{ route('dashboard.orders.index') }}" class="mb-5 grid grid-cols-1 gap-3 md:grid-cols-4">
-					<div class="md:col-span-2">
-						<label for="q" class="mb-1 block text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Search</label>
-						<input id="q" name="q" type="text" value="{{ $search }}"
-							placeholder="Order #, buyer, brand, campaign"
-							class="h-10 w-full rounded-lg border border-gray-200 bg-transparent px-3 text-sm text-gray-900 focus:border-gray-400 focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-white">
+				<form id="orders-filters-form" method="GET" action="{{ route('dashboard.orders.index') }}"
+					class="mb-5 grid grid-cols-1 gap-3 md:grid-cols-6">
+					<div class="md:col-span-3">
+						<div class="relative">
+							<span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
+								<x-icons.search class="h-4 w-4" />
+							</span>
+							<input id="q" name="q" type="text" value="{{ $search }}"
+								placeholder="Search by order #, buyer, brand, campaign or item"
+								class="h-10 w-full rounded-lg border border-gray-200 bg-transparent pl-10 pr-3 text-sm text-gray-900 focus:border-gray-400 focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-white">
+						</div>
 					</div>
 					<div>
-						<label for="status" class="mb-1 block text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Status</label>
+						<select id="type" name="type"
+							class="h-10 w-full rounded-lg border border-gray-200 bg-transparent px-3 text-sm text-gray-900 focus:border-gray-400 focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-white">
+							<option value="all" {{ $type === 'all' ? 'selected' : '' }}>All Types</option>
+							<option value="campaign" {{ $type === 'campaign' ? 'selected' : '' }}>Campaign</option>
+							<option value="package" {{ $type === 'package' ? 'selected' : '' }}>Package</option>
+						</select>
+					</div>
+					<div>
 						<select id="status" name="status"
 							class="h-10 w-full rounded-lg border border-gray-200 bg-transparent px-3 text-sm text-gray-900 focus:border-gray-400 focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-white">
-							<option value="all" {{ $status === 'all' ? 'selected' : '' }}>All</option>
+							<option value="all" {{ $status === 'all' ? 'selected' : '' }}>All Status</option>
 							@foreach (['pending', 'accepted', 'in_progress', 'delivered', 'completed', 'cancelled', 'refunded'] as $state)
 								<option value="{{ $state }}" {{ $status === $state ? 'selected' : '' }}>{{ ucfirst(str_replace('_', ' ', $state)) }}</option>
 							@endforeach
 						</select>
 					</div>
 					<div class="flex items-end gap-2">
-						<button type="submit" class="h-10 w-full rounded-lg bg-gray-900 px-3 text-sm font-medium text-white transition hover:bg-gray-800 dark:bg-gray-700 dark:hover:bg-gray-600">Apply</button>
-						<a href="{{ route('dashboard.orders.index') }}" class="h-10 w-full rounded-lg border border-gray-200 px-3 text-center text-sm font-medium leading-10 text-gray-700 transition hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800">Reset</a>
+						<a href="{{ route('dashboard.orders.index') }}"
+							class="h-10 w-full rounded-lg bg-gray-900 px-3 text-center text-sm font-medium leading-10 text-white transition hover:bg-gray-800 dark:bg-gray-700 dark:hover:bg-gray-600">
+							Reset
+						</a>
 					</div>
 				</form>
 
-				<div class="overflow-x-auto">
-					<table class="min-w-full divide-y divide-gray-200 dark:divide-gray-800">
-						<thead class="bg-gray-50 dark:bg-gray-800/50">
-							<tr>
-								<th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Order</th>
-								<th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Buyer</th>
-								<th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Brand</th>
-								<th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Campaign</th>
-								<th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Amount</th>
-								<th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Status</th>
-								<th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Placed</th>
-								<th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Actions</th>
-							</tr>
-						</thead>
-						<tbody class="divide-y divide-gray-100 dark:divide-gray-800">
-							@forelse ($orders as $order)
-								@php
-									$statusColor = match ($order->status) {
-										'completed' => 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
-										'cancelled', 'refunded' => 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300',
-										'in_progress', 'accepted', 'delivered' => 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
-										default => 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300',
-									};
-								@endphp
-								<tr class="transition hover:bg-gray-50/70 dark:hover:bg-gray-800/40">
-									<td class="px-4 py-3 text-sm font-semibold text-gray-900 dark:text-white">{{ $order->order_number }}</td>
-									<td class="px-4 py-3 text-sm text-gray-700 dark:text-gray-300">{{ $order->buyer?->name ?? 'N/A' }}</td>
-									<td class="px-4 py-3 text-sm text-gray-700 dark:text-gray-300">{{ $order->brand?->brand_name ?? 'N/A' }}</td>
-									<td class="px-4 py-3 text-sm text-gray-700 dark:text-gray-300">{{ $order->campaign?->title ?? '-' }}</td>
-									<td class="px-4 py-3 text-sm font-medium text-gray-900 dark:text-white">{{ strtoupper($order->currency) }} {{ number_format((float) $order->total_amount, 2) }}</td>
-									<td class="px-4 py-3 text-sm">
-										<span class="inline-flex rounded-full px-2.5 py-1 text-xs font-semibold {{ $statusColor }}">{{ ucfirst(str_replace('_', ' ', $order->status)) }}</span>
-									</td>
-									<td class="px-4 py-3 text-sm text-gray-600 dark:text-gray-300">{{ optional($order->placed_at ?? $order->created_at)?->format('M d, Y H:i') }}</td>
-									<td class="px-4 py-3 text-right">
-										<a href="{{ route('dashboard.orders.show', $order) }}"
-											class="inline-flex items-center rounded-lg border border-gray-200 p-2 text-gray-600 transition hover:bg-gray-100 hover:text-gray-900 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-white"
-											title="View order">
-											<x-icons.eye class="h-4 w-4" />
-										</a>
-									</td>
-								</tr>
-							@empty
-								<tr>
-									<td colspan="8" class="px-4 py-12 text-center text-sm text-gray-500 dark:text-gray-400">No orders found for the current filters.</td>
-								</tr>
-							@endforelse
-						</tbody>
-					</table>
-				</div>
-
-				@if ($orders->hasPages())
-					<div class="mt-5 border-t border-gray-200 pt-4 dark:border-gray-800">
-						{{ $orders->links() }}
-					</div>
-				@endif
+				@include('backend.pages.orders._results')
 			</div>
 		</div>
 	</div>
 @endsection
+
+@push('scripts')
+	<script>
+		document.addEventListener('DOMContentLoaded', function() {
+			const form = document.getElementById('orders-filters-form');
+			const resultsId = 'orders-results';
+			const searchInput = document.getElementById('q');
+			const statusSelect = document.getElementById('status');
+			const typeSelect = document.getElementById('type');
+			let debounceTimer;
+			let activeRequestController = null;
+
+			if (!form) {
+				return;
+			}
+
+			const buildQueryString = () => {
+				const params = new URLSearchParams(new FormData(form));
+				if (!params.get('q')) params.delete('q');
+				if (!params.get('status') || params.get('status') === 'all') params.delete('status');
+				if (!params.get('type') || params.get('type') === 'all') params.delete('type');
+				return params.toString();
+			};
+
+			const applyFilters = async (explicitUrl = null) => {
+				const query = buildQueryString();
+				const requestUrl = explicitUrl || `${form.action}${query ? `?${query}` : ''}`;
+
+				if (activeRequestController) {
+					activeRequestController.abort();
+				}
+
+				activeRequestController = new AbortController();
+
+				try {
+					const response = await fetch(requestUrl, {
+						headers: {
+							'X-Requested-With': 'XMLHttpRequest'
+						},
+						signal: activeRequestController.signal,
+					});
+
+					const html = await response.text();
+					const parser = new DOMParser();
+					const doc = parser.parseFromString(html, 'text/html');
+
+					const newResults = doc.getElementById(resultsId);
+					const currentResults = document.getElementById(resultsId);
+
+					if (newResults && currentResults) {
+						currentResults.outerHTML = newResults.outerHTML;
+						window.history.replaceState({}, '', requestUrl);
+					}
+				} catch (error) {
+					if (error.name !== 'AbortError') {
+						window.location.href = requestUrl;
+					}
+				}
+			};
+
+			searchInput?.addEventListener('input', function() {
+				clearTimeout(debounceTimer);
+				debounceTimer = setTimeout(() => applyFilters(), 350);
+			});
+
+			statusSelect?.addEventListener('change', () => applyFilters());
+			typeSelect?.addEventListener('change', () => applyFilters());
+
+			document.addEventListener('click', function(event) {
+				const link = event.target.closest(`#${resultsId} a[href*="page="]`);
+				if (!link) return;
+
+				event.preventDefault();
+				const href = link.getAttribute('href');
+				if (href) {
+					applyFilters(href);
+				}
+			});
+		});
+	</script>
+@endpush
 

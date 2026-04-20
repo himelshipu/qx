@@ -4,7 +4,10 @@ declare (strict_types = 1);
 
 namespace App\Services\Admin;
 
-use App\Models\Creator;
+use App\Models\Influencer;
+use App\Models\Brand;
+use App\Models\Notification;
+use App\Models\Order;
 use App\Models\Package;
 use App\Repositories\Contracts\PackageRepositoryInterface;
 use Illuminate\Support\Facades\Auth;
@@ -29,34 +32,56 @@ final class PackageService
     /**
      * Build package listing payload for dashboard index page.
      *
-     * @return array{packages:\Illuminate\Contracts\Pagination\LengthAwarePaginator,stats:array{total:int,active:int,inactive:int,in_use:int},search:string,status:string,platform:string,platformOptions:array<int, array{value:string,label:string}>}
+     * @param array<string, mixed> $filters
+     * @return array{packages:\Illuminate\Contracts\Pagination\LengthAwarePaginator,stats:array{total:int,active:int,inactive:int,in_use:int},filters:array<string,mixed>,platformOptions:array<int, array{value:string,label:string}>}
      */
-    public function getListingPayload(string $search, string $status, string $platform): array
+    public function getIndexPayload(array $filters): array
     {
+        $normalized = [
+            'q' => trim((string) ($filters['q'] ?? '')),
+            'status' => (string) ($filters['status'] ?? 'all'),
+            'platform' => (string) ($filters['platform'] ?? 'all'),
+        ];
+
         return [
-            'packages'        => $this->packageRepository->paginateForDashboard($search, $status, $platform),
+            'packages'        => $this->packageRepository->paginateForDashboard($normalized),
             'stats'           => $this->packageRepository->getStats(),
-            'search'          => $search,
-            'status'          => $status,
-            'platform'        => $platform,
+            'filters'         => $normalized,
             'platformOptions' => $this->getPlatformOptions(includeAll: true)
+        ];
+    }
+
+    /**
+     * @param array<string, mixed> $filters
+     * @return array{packages:\Illuminate\Contracts\Pagination\LengthAwarePaginator}
+     */
+    public function getTablePayload(array $filters): array
+    {
+        $normalized = [
+            'q' => trim((string) ($filters['q'] ?? '')),
+            'status' => (string) ($filters['status'] ?? 'all'),
+            'platform' => (string) ($filters['platform'] ?? 'all'),
+        ];
+
+        return [
+            'packages' => $this->packageRepository->paginateForDashboard($normalized),
         ];
     }
 
     /**
      * Build form payload for create/edit pages.
      *
-     * @return array{platformOptions:array<int, array{value:string,label:string}>,isCreator:bool,creators:?\Illuminate\Database\Eloquent\Collection}
+     * @return array{platformOptions:array<int, array{value:string,label:string}>,isInfluencer:bool,influencers:?\Illuminate\Database\Eloquent\Collection}
      */
     public function getFormPayload(): array
     {
-        $user = Auth::user();
-        $isCreator = $user && $user->creator()->exists();
+        $user         = Auth::user();
+        $isInfluencer = $user && $user->influencer()->exists();
 
         return [
             'platformOptions' => $this->getPlatformOptions(),
-            'isCreator'       => $isCreator,
-            'creators'        => !$isCreator ? Creator::query()->whereHas('user')->get() : null
+            'isInfluencer'    => $isInfluencer,
+            'influencers'     => !$isInfluencer ? Influencer::query()->whereHas('user')->get() : null
         ];
     }
 
@@ -68,22 +93,22 @@ final class PackageService
     public function createPackage(array $validated, bool $isActive): Package
     {
         $createdByUserId = $this->resolveAuthenticatedUserId();
-        $user = Auth::user();
-        
-        // Determine creator_id based on user type
-        // If user is a creator, they are creating a package for themselves
-        // If user is admin/moderator, they are creating a package for a selected creator
-        $creatorId = null;
-        
-        if ($user && $user->creator()->exists()) {
-            // User is a creator, set creator_id to their creator id
-            $creatorId = $user->creator->id;
-        } elseif (isset($validated['created_for']) && (int)$validated['created_for'] > 0) {
-            // Admin/moderator creating package for a specific creator
-            $creatorId = (int)$validated['created_for'];
+        $user            = Auth::user();
+
+        // Determine influencer_id based on user type
+        // If user is an influencer, they are creating a package for themselves
+        // If user is admin/moderator, they are creating a package for a selected influencer
+        $influencerId = null;
+
+        if ($user && $user->influencer()->exists()) {
+            // User is an influencer, set influencer_id to their influencer id
+            $influencerId = $user->influencer->id;
+        } elseif (isset($validated['created_for']) && (int) $validated['created_for'] > 0) {
+            // Admin/moderator creating package for a specific influencer
+            $influencerId = (int) $validated['created_for'];
         }
 
-        return $this->packageRepository->create([
+        $package = $this->packageRepository->create([
             'platform'           => $validated['platform'],
             'name'               => $validated['name'],
             'description'        => $this->nullableString($validated['description'] ?? null),
@@ -91,10 +116,14 @@ final class PackageService
             'currency'           => $this->normalizeCurrency((string) $validated['currency']),
             'delivery_days'      => $this->nullableInteger($validated['delivery_days'] ?? null),
             'revisions_included' => $this->nullableInteger($validated['revisions_included'] ?? null),
-            'creator_id'         => $creatorId,
+            'influencer_id'      => $influencerId,
             'created_by'         => $createdByUserId,
             'is_active'          => $isActive
         ]);
+
+        $this->notifyPackageOwner($package, 'Package created', sprintf('Your package "%s" was created in the dashboard.', $package->name));
+
+        return $package;
     }
 
     /**
@@ -104,7 +133,7 @@ final class PackageService
      */
     public function updatePackage(Package $package, array $validated, bool $isActive): Package
     {
-        $user = Auth::user();
+        $user       = Auth::user();
         $updateData = [
             'platform'           => $validated['platform'],
             'name'               => $validated['name'],
@@ -116,12 +145,16 @@ final class PackageService
             'is_active'          => $isActive
         ];
 
-        // Only allow updating creator_id if user is admin/moderator and created_for is provided
-        if ($user && !$user->creator()->exists() && isset($validated['created_for']) && (int)$validated['created_for'] > 0) {
-            $updateData['creator_id'] = (int)$validated['created_for'];
+        // Only allow updating influencer_id if user is admin/moderator and created_for is provided
+        if ($user && !$user->influencer()->exists() && isset($validated['created_for']) && (int) $validated['created_for'] > 0) {
+            $updateData['influencer_id'] = (int) $validated['created_for'];
         }
 
-        return $this->packageRepository->update($package, $updateData);
+        $updated = $this->packageRepository->update($package, $updateData);
+
+        $this->notifyPackageOwner($updated, 'Package updated', sprintf('Your package "%s" was updated in the dashboard.', $updated->name));
+
+        return $updated;
     }
 
     /**
@@ -142,6 +175,22 @@ final class PackageService
 
         $this->packageRepository->delete($package);
 
+        $ownerUserId = (int) ($package->influencer?->user_id ?? 0);
+        if ($ownerUserId > 0) {
+            Notification::create([
+                'user_id' => $ownerUserId,
+                'type' => 'package',
+                'title' => 'Package deleted',
+                'body' => sprintf('Your package "%s" was removed from the dashboard.', $package->name),
+                'data_json' => [
+                    'package_id' => $package->id,
+                ],
+                'notifiable_type' => Package::class,
+                'notifiable_id' => $package->id,
+                'is_read' => false,
+            ]);
+        }
+
         return [
             'deleted' => true,
             'message' => 'Package deleted successfully.'
@@ -153,7 +202,15 @@ final class PackageService
      */
     public function toggleStatus(Package $package): bool
     {
-        return $this->packageRepository->toggleStatus($package)->is_active;
+        $updated = $this->packageRepository->toggleStatus($package);
+
+        $this->notifyPackageOwner(
+            $updated,
+            'Package status changed',
+            sprintf('Your package "%s" is now %s.', $updated->name, $updated->is_active ? 'active' : 'inactive')
+        );
+
+        return $updated->is_active;
     }
 
     /**
@@ -161,7 +218,7 @@ final class PackageService
      *
      * @return array<int, array{value:string,label:string}>
      */
-    private function getPlatformOptions(bool $includeAll = false): array
+    public function getPlatformOptions(bool $includeAll = false): array
     {
         $options = [];
 
@@ -258,23 +315,26 @@ final class PackageService
     public function getPurchasePayload(): array
     {
         $packages = Package::where('is_active', true)
-            ->with(['creator:id,display_name', 'creator.user:id,email,name'])
+            ->select(['id', 'name', 'description', 'base_price', 'currency', 'platform', 'delivery_days', 'revisions_included', 'influencer_id'])
+            ->with(['influencer:id,display_name', 'influencer.user:id,email,name'])
             ->orderByDesc('created_at')
-            ->get(['id', 'name', 'description', 'base_price', 'currency', 'platform', 'delivery_days', 'revisions_included', 'creator_id']);
+            ->get();
 
         $brands = \App\Models\Brand::with('user:id,email,name')
+            ->select(['id', 'user_id', 'brand_name'])
             ->orderBy('brand_name')
-            ->get(['id', 'user_id', 'brand_name']);
+            ->get();
 
-        $activeBrandsCount = $brands->count();
+        $activeBrandsCount   = $brands->count();
         $activePackagesCount = $packages->count();
 
         // Get latest purchased packages
         $latestPurchases = \App\Models\Order::where('status', '!=', 'cancelled')
-            ->with(['items', 'brand:id,brand_name', 'buyer:id,email,name'])
+            ->select(['id', 'order_number', 'brand_id', 'buyer_user_id', 'status', 'total_amount', 'currency', 'placed_at'])
+            ->with(['brand:id,brand_name', 'buyer:id,email,name'])
             ->orderByDesc('placed_at')
             ->limit(10)
-            ->get(['id', 'order_number', 'brand_id', 'buyer_user_id', 'status', 'total_amount', 'currency', 'placed_at']);
+            ->get();
 
         return compact('packages', 'brands', 'activeBrandsCount', 'activePackagesCount', 'latestPurchases');
     }
@@ -284,8 +344,9 @@ final class PackageService
      */
     public function purchasePackageForBrands(int $packageId, array $brandIds): int
     {
-        $package = Package::findOrFail($packageId);
+        $package   = Package::findOrFail($packageId);
         $purchased = 0;
+        $packageOwnerUserId = (int) ($package->influencer?->user_id ?? 0);
 
         foreach ($brandIds as $brandId) {
             // Check if order already exists
@@ -296,38 +357,102 @@ final class PackageService
                 ->exists();
 
             if (!$existingOrder) {
+                // Calculate 20% service fee
+                $subtotal = $package->base_price;
+                $serviceFee = $subtotal * 0.20;
+                $totalAmount = $subtotal + $serviceFee;
+
                 // Create order
                 $order = \App\Models\Order::create([
-                    'order_number' => 'ORD-' . strtoupper(uniqid()),
+                    'order_number'  => Order::generateOrderNumber(Order::SOURCE_PACKAGE),
                     'buyer_user_id' => Auth::id(),
-                    'brand_id' => $brandId,
-                    'status' => 'pending',
-                    'subtotal' => $package->base_price,
-                    'service_fee' => 0,
-                    'tax_amount' => 0,
-                    'total_amount' => $package->base_price,
-                    'currency' => $package->currency,
-                    'placed_at' => now()
+                    'brand_id'      => $brandId,
+                    'status'        => 'pending',
+                    'subtotal'      => $subtotal,
+                    'service_fee'   => $serviceFee,
+                    'tax_amount'    => 0,
+                    'total_amount'  => $totalAmount,
+                    'currency'      => $package->currency,
+                    'placed_at'     => now()
                 ]);
 
                 // Create order item
                 \App\Models\OrderItem::create([
-                    'order_id' => $order->id,
-                    'creator_id' => $package->creator_id,
-                    'package_id' => $packageId,
-                    'title' => $package->name,
-                    'description' => $package->description,
-                    'quantity' => 1,
-                    'unit_price' => $package->base_price,
-                    'line_total' => $package->base_price,
-                    'status' => 'pending',
-                    'due_date' => $package->delivery_days ? now()->addDays($package->delivery_days)->toDateString() : null
+                    'order_id'      => $order->id,
+                    'influencer_id' => $package->influencer_id,
+                    'package_id'    => $packageId,
+                    'title'         => $package->name,
+                    'description'   => $package->description,
+                    'quantity'      => 1,
+                    'unit_price'    => $package->base_price,
+                    'line_total'    => $package->base_price,
+                    'status'        => 'pending',
+                    'due_date'      => $package->delivery_days ? now()->addDays($package->delivery_days)->toDateString() : null
                 ]);
+
+                $brandUserId = (int) (Brand::query()->where('id', $brandId)->value('user_id') ?? 0);
+                if ($brandUserId > 0) {
+                    Notification::create([
+                        'user_id' => $brandUserId,
+                        'type' => 'package',
+                        'title' => 'Package purchase recorded',
+                        'body' => sprintf('You purchased package "%s".', $package->name),
+                        'data_json' => [
+                            'action_url' => route('frontend.orders.show', $order),
+                            'order_id' => $order->id,
+                            'package_id' => $package->id,
+                        ],
+                        'notifiable_type' => Order::class,
+                        'notifiable_id' => $order->id,
+                        'is_read' => false,
+                    ]);
+                }
+
+                if ($packageOwnerUserId > 0) {
+                    Notification::create([
+                        'user_id' => $packageOwnerUserId,
+                        'type' => 'package',
+                        'title' => 'Your package was purchased',
+                        'body' => sprintf('Your package "%s" was purchased by a brand.', $package->name),
+                        'data_json' => [
+                            'action_url' => route('frontend.packages.show', $package),
+                            'package_id' => $package->id,
+                            'order_id' => $order->id,
+                            'brand_id' => $brandId,
+                        ],
+                        'notifiable_type' => Package::class,
+                        'notifiable_id' => $package->id,
+                        'is_read' => false,
+                    ]);
+                }
 
                 $purchased++;
             }
         }
 
         return $purchased;
+    }
+
+    private function notifyPackageOwner(Package $package, string $title, string $body): void
+    {
+        $ownerUserId = (int) ($package->influencer?->user_id ?? 0);
+
+        if ($ownerUserId <= 0) {
+            return;
+        }
+
+        Notification::create([
+            'user_id' => $ownerUserId,
+            'type' => 'package',
+            'title' => $title,
+            'body' => $body,
+            'data_json' => [
+                'action_url' => route('frontend.packages.show', $package),
+                'package_id' => $package->id,
+            ],
+            'notifiable_type' => Package::class,
+            'notifiable_id' => $package->id,
+            'is_read' => false,
+        ]);
     }
 }

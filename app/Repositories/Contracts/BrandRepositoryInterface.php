@@ -7,6 +7,7 @@ namespace App\Repositories\Contracts;
 use App\Models\Brand;
 use App\Models\User;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Collection;
 
 /**
  * Interface BrandRepositoryInterface
@@ -74,4 +75,69 @@ interface BrandRepositoryInterface
      * Toggle brand status and return updated record.
      */
     public function toggleStatus(Brand $brand): Brand;
+
+    /**
+     * Get featured brands ordered by featured_order.
+     *
+     * @return Collection<int, Brand>
+     */
+    public function getFeaturedBrands(?int $limit = null): Collection;
+
+    /**
+     * Search brands by brand name for featured modal.
+     *
+     * @return Collection<int, Brand>
+     */
+    public function searchBrands(string $query, int $limit = 50): Collection;
+
+    /**
+     * Count how many provided IDs are currently featured.
+     *
+     * @param array<int> $brandIds
+     */
+    public function countFeaturedByIds(array $brandIds): int;
+
+    /**
+     * Increment featured_order for all featured brands.
+     */
+    public function incrementFeaturedOrder(?int $excludeBrandId = null): void;
+
+    /**
+     * Mark a brand as featured at a given priority.
+     */
+    public function markAsFeatured(Brand $brand, int $priority = 1): Brand;
+
+    /**
+     * Remove featured state from a brand.
+     */
+    public function unmarkFeatured(Brand $brand): Brand;
+
+    /**
+     * Get featured brand IDs ordered by featured_order.
+     *
+     * @return array<int>
+     */
+    public function getFeaturedBrandIdsByPriority(): array;
+
+    /**
+     * Update featured order for provided brand IDs.
+     *
+     * @param array<int> $brandIds
+     */
+    public function updateFeaturedOrder(array $brandIds): void;
+
+    /**
+     * Get count of featured brands.
+     */
+    public function getFeaturedCount(): int;
+
+    /**
+     * Get the featured brand with lowest priority.
+     */
+    public function getLowestPriorityFeatured(): ?Brand;
+
+    /**
+     * Clear cached dashboard stats.
+     */
+    public function clearStatsCache(): void;
 }

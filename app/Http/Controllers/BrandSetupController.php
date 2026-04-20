@@ -118,7 +118,7 @@ class BrandSetupController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Brand setup completed',
-            'redirect' => route('dashboard'),
+            'redirect' => route('home'),
         ]);
     }
 

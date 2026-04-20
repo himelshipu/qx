@@ -1,0 +1,31 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::create('campaign_influencers', function (Blueprint $table): void {
+            $table->id();
+            $table->foreignId('campaign_id')->constrained('campaigns')->cascadeOnDelete();
+            $table->foreignId('influencer_id')->constrained('influencers')->cascadeOnDelete();
+            $table->enum('status', ['assigned', 'approved', 'rejected', 'cancelled'])->default('assigned');
+            $table->foreignId('approved_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->timestamp('approved_at')->nullable();
+            $table->timestamp('cancelled_at')->nullable();
+            $table->text('rejection_reason')->nullable();
+            $table->timestamps();
+
+            // Ensure no duplicate assignments
+            $table->unique(['campaign_id', 'influencer_id']);
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::dropIfExists('campaign_influencers');
+    }
+};

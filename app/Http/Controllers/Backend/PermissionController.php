@@ -3,32 +3,29 @@
 namespace App\Http\Controllers\Backend;
 
 use App\Http\Controllers\Controller;
-use App\Models\Permission;
-use App\Models\Role;
-use App\Models\User;
+use App\Http\Requests\Backend\Permission\AssignRolePermissionsRequest;
+use App\Http\Requests\Backend\Permission\StorePermissionRequest;
+use App\Http\Requests\Backend\Permission\UpdatePermissionRequest;
+use App\Services\Admin\PermissionService;
+use App\Services\Admin\PermissionAssignmentService;
+use App\Traits\LogsRbacChanges;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
 
 class PermissionController extends Controller
 {
+    use LogsRbacChanges;
+
+    public function __construct(
+        private readonly PermissionService $permissionService,
+        private readonly PermissionAssignmentService $permissionAssignmentService
+    ) {
+    }
     /**
      * Display a listing of the permissions.
      */
     public function index()
     {
-        $permissions = Permission::with('roles')
-            ->orderBy('module')
-            ->orderBy('name')
-            ->paginate(20);
-        
-        $groupedPermissions = Permission::with('roles')
-            ->where('is_active', true)
-            ->orderBy('module')
-            ->orderBy('name')
-            ->get()
-            ->groupBy('module');
-        
-        return view('backend.pages.permissions.index', compact('permissions', 'groupedPermissions'));
+        return view('backend.pages.permissions.index', $this->permissionService->getIndexPayload());
     }
 
     /**
@@ -42,22 +39,12 @@ class PermissionController extends Controller
     /**
      * Store a newly created permission in storage.
      */
-    public function store(Request $request)
+    public function store(StorePermissionRequest $request)
     {
-        $request->validate([
-            'name' => ['required', 'string', 'max:255', 'unique:permissions,name'],
-            'description' => ['nullable', 'string'],
-            'module' => ['required', 'string', 'max:255'],
-            'is_active' => ['boolean'],
-        ]);
-
-        Permission::create([
-            'name' => $request->name,
-            'slug' => Str::slug($request->name),
-            'description' => $request->description,
-            'module' => $request->module,
-            'is_active' => $request->boolean('is_active', true),
-        ]);
+        $this->permissionService->createPermission(
+            $request->validated(),
+            $request->boolean('is_active', true)
+        );
 
         return redirect()->route('dashboard.permissions.index')
             ->with('success', 'Permission created successfully.');
@@ -68,7 +55,7 @@ class PermissionController extends Controller
      */
     public function show(string $id)
     {
-        $permission = Permission::with('roles')->findOrFail($id);
+        $permission = $this->permissionService->getPermissionById((int) $id);
         
         return view('backend.pages.permissions.show', compact('permission'));
     }
@@ -78,7 +65,7 @@ class PermissionController extends Controller
      */
     public function edit(string $id)
     {
-        $permission = Permission::findOrFail($id);
+        $permission = $this->permissionService->getPermissionById((int) $id);
         
         return view('backend.pages.permissions.edit', compact('permission'));
     }
@@ -86,24 +73,13 @@ class PermissionController extends Controller
     /**
      * Update the specified permission in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(UpdatePermissionRequest $request, string $id)
     {
-        $permission = Permission::findOrFail($id);
-
-        $request->validate([
-            'name' => ['required', 'string', 'max:255', 'unique:permissions,name,'.$permission->id],
-            'description' => ['nullable', 'string'],
-            'module' => ['required', 'string', 'max:255'],
-            'is_active' => ['boolean'],
-        ]);
-
-        $permission->update([
-            'name' => $request->name,
-            'slug' => Str::slug($request->name),
-            'description' => $request->description,
-            'module' => $request->module,
-            'is_active' => $request->boolean('is_active', true),
-        ]);
+        $this->permissionService->updatePermission(
+            (int) $id,
+            $request->validated(),
+            $request->boolean('is_active', true)
+        );
 
         return redirect()->route('dashboard.permissions.index')
             ->with('success', 'Permission updated successfully.');
@@ -114,12 +90,7 @@ class PermissionController extends Controller
      */
     public function destroy(string $id)
     {
-        $permission = Permission::findOrFail($id);
-        
-        // Detach from all roles first
-        $permission->roles()->detach();
-        
-        $permission->delete();
+        $this->permissionService->deletePermission((int) $id);
 
         return redirect()->route('dashboard.permissions.index')
             ->with('success', 'Permission deleted successfully.');
@@ -130,13 +101,12 @@ class PermissionController extends Controller
      */
     public function toggleStatus(Request $request, string $id)
     {
-        $permission = Permission::findOrFail($id);
-        $permission->update(['is_active' => !$permission->is_active]);
+        $isActive = $this->permissionService->toggleStatus((int) $id);
 
         return response()->json([
             'success' => true,
             'message' => 'Status updated successfully.',
-            'is_active' => $permission->is_active
+            'is_active' => $isActive
         ]);
     }
 
@@ -145,36 +115,34 @@ class PermissionController extends Controller
      */
     public function assign()
     {
-        $roles = Role::with('permissions')
-            ->where('is_active', true)
-            ->orderBy('name')
-            ->get();
-        
-        $permissions = Permission::where('is_active', true)
-            ->orderBy('module')
-            ->orderBy('name')
-            ->get()
-            ->groupBy('module');
-        
-        return view('backend.pages.permissions.assign', compact('roles', 'permissions'));
+        return view('backend.pages.permissions.assign', $this->permissionAssignmentService->getAssignPayload());
     }
 
     /**
      * Store the role-permission assignments.
      */
-    public function assignStore(Request $request)
+    public function assignStore(AssignRolePermissionsRequest $request)
     {
-        $request->validate([
-            'role_id' => ['required', 'exists:roles,id'],
-            'permissions' => ['nullable', 'array'],
-        ]);
+        $validated = $request->validated();
 
-        $role = Role::findOrFail($request->role_id);
+        $result = $this->permissionAssignmentService->assignPermissions(
+            (int) $validated['role_id'],
+            array_map('intval', $validated['permissions'] ?? [])
+        );
+
+        $previousPermissions = $result['previousPermissions'];
+        $newPermissions = $result['newPermissions'];
+
+        // Log removed permissions
+        $removedPermissions = array_diff($previousPermissions, $newPermissions);
+        foreach ($removedPermissions as $permissionId) {
+            $this->logPermissionRemoval($result['role']->id, $permissionId);
+        }
         
-        if ($request->has('permissions')) {
-            $role->syncPermissions($request->permissions);
-        } else {
-            $role->syncPermissions([]);
+        // Log added permissions
+        $addedPermissions = array_diff($newPermissions, $previousPermissions);
+        foreach ($addedPermissions as $permissionId) {
+            $this->logPermissionAddition($result['role']->id, $permissionId);
         }
 
         return redirect()->route('dashboard.permissions.assign')

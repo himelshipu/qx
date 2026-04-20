@@ -25,27 +25,16 @@ final class CategoryService
     /**
      * Build category listing payload for the dashboard index view.
      *
-     * @return array{categories:LengthAwarePaginator,stats:array{total:int,active:int,inactive:int,linked:int},search:string,status:string}
+     * @return array{categories:LengthAwarePaginator,stats:array{total:int,active:int,inactive:int,linked:int},search:string,status:string,featured:string}
      */
-    public function getListingPayload(string $search, string $status): array
+    public function getListingPayload(string $search, string $status, string $featured = 'all'): array
     {
         return [
-            'categories' => $this->categoryRepository->paginateForDashboard($search, $status),
+            'categories' => $this->categoryRepository->paginateForDashboard($search, $status, $featured),
             'stats'      => $this->categoryRepository->getStats(),
             'search'     => $search,
-            'status'     => $status
-        ];
-    }
-
-    /**
-     * Get next form defaults for create page.
-     *
-     * @return array{nextSortOrder:int}
-     */
-    public function getCreatePayload(): array
-    {
-        return [
-            'nextSortOrder' => $this->categoryRepository->getNextSortOrder()
+            'status'     => $status,
+            'featured'   => $featured
         ];
     }
 
@@ -64,7 +53,6 @@ final class CategoryService
             'description'     => $this->nullableString($validated['description'] ?? null),
             'icon_path'       => $this->storeUploadedAsset($iconFile, 'categories/icons'),
             'image_path'      => $this->storeUploadedAsset($imageFile, 'categories/images'),
-            'sort_order'      => $validated['sort_order'] ?? $this->categoryRepository->getNextSortOrder(),
             'is_featured'     => $validated['is_featured'] ?? false,
             'featured_order'  => $validated['featured_order'] ?? null,
             'is_active'       => $isActive
@@ -103,7 +91,6 @@ final class CategoryService
             'description'     => $this->nullableString($validated['description'] ?? null),
             'icon_path'       => $iconPath,
             'image_path'      => $imagePath,
-            'sort_order'      => $validated['sort_order'] ?? $category->sort_order,
             'is_featured'     => $validated['is_featured'] ?? $category->is_featured,
             'featured_order'  => $validated['featured_order'] ?? $category->featured_order,
             'is_active'       => $isActive

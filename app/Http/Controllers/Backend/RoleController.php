@@ -4,12 +4,16 @@ namespace App\Http\Controllers\Backend;
 
 use App\Http\Controllers\Controller;
 use App\Models\Role;
-use App\Models\Permission;
+use App\Models\Notification;
+use App\Traits\LogsRbacChanges;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
 class RoleController extends Controller
 {
+    use LogsRbacChanges {
+        getRoleData as protected getRoleDataForAudit;
+    }
     /**
      * Display a listing of the roles.
      */
@@ -17,152 +21,241 @@ class RoleController extends Controller
     {
         $roles = Role::with('permissions')
             ->orderBy('created_at', 'desc')
-            ->paginate(10);
-        
+            ->paginate(15);
+
         return view('backend.pages.roles.index', compact('roles'));
     }
 
     /**
-     * Show the form for creating a new role.
-     */
-    public function create()
-    {
-        $permissions = Permission::where('is_active', true)
-            ->orderBy('module')
-            ->orderBy('name')
-            ->get()
-            ->groupBy('module');
-        
-        return view('backend.pages.roles.create', compact('permissions'));
-    }
-
-    /**
-     * Store a newly created role in storage.
+     * Store a newly created role in storage (AJAX).
      */
     public function store(Request $request)
     {
-        $request->validate([
-            'name' => ['required', 'string', 'max:255', 'unique:roles,name'],
-            'description' => ['nullable', 'string'],
-            'permissions' => ['nullable', 'array'],
-            'is_active' => ['boolean'],
-        ]);
+        try {
+            $validated = $request->validate([
+                'name'      => ['required', 'string', 'max:255', 'unique:roles,name'],
+                'description' => ['nullable', 'string', 'max:2000'],
+                'is_active' => ['boolean']
+            ]);
 
-        $role = Role::create([
-            'name' => $request->name,
-            'slug' => Str::slug($request->name),
-            'description' => $request->description,
-            'is_active' => $request->boolean('is_active', true),
-        ]);
+            $role = Role::create([
+                'name'      => $validated['name'],
+                'slug'      => Str::slug($validated['name']),
+                'description' => $validated['description'] ?? null,
+                'is_active' => $request->boolean('is_active', true)
+            ]);
 
-        if ($request->has('permissions')) {
-            $role->syncPermissions($request->permissions);
+            // Log role creation
+            $this->logRoleCreation($role->id, $this->getRoleAuditData($role->id));
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Role created successfully.',
+                'role'    => $role
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed.',
+                'errors'  => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 500);
         }
-
-        return redirect()->route('dashboard.roles.index')
-            ->with('success', 'Role created successfully.');
     }
 
     /**
-     * Display the specified role.
-     */
-    public function show(string $id)
-    {
-        $role = Role::with('permissions', 'users')->findOrFail($id);
-        
-        return view('backend.pages.roles.show', compact('role'));
-    }
-
-    /**
-     * Show the form for editing the specified role.
-     */
-    public function edit(string $id)
-    {
-        $role = Role::with('permissions')->findOrFail($id);
-        
-        $permissions = Permission::where('is_active', true)
-            ->orderBy('module')
-            ->orderBy('name')
-            ->get()
-            ->groupBy('module');
-        
-        return view('backend.pages.roles.edit', compact('role', 'permissions'));
-    }
-
-    /**
-     * Update the specified role in storage.
+     * Update the specified role in storage (AJAX).
      */
     public function update(Request $request, string $id)
     {
-        $role = Role::findOrFail($id);
+        try {
+            $role = Role::findOrFail($id);
 
-        $request->validate([
-            'name' => ['required', 'string', 'max:255', 'unique:roles,name,'.$role->id],
-            'description' => ['nullable', 'string'],
-            'permissions' => ['nullable', 'array'],
-            'is_active' => ['boolean'],
-        ]);
+            // Prevent editing superadmin role
+            if ($role->isProtected()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'The superadmin role is protected and cannot be edited.'
+                ], 403);
+            }
 
-        $role->update([
-            'name' => $request->name,
-            'slug' => Str::slug($request->name),
-            'description' => $request->description,
-            'is_active' => $request->boolean('is_active', true),
-        ]);
+            $validated = $request->validate([
+                'name'      => ['required', 'string', 'max:255', 'unique:roles,name,' . $role->id],
+                'description' => ['nullable', 'string', 'max:2000'],
+                'is_active' => ['boolean']
+            ]);
 
-        if ($request->has('permissions')) {
-            $role->syncPermissions($request->permissions);
-        } else {
-            $role->syncPermissions([]);
+            // Get before data for audit trail
+            $beforeData = $this->getRoleAuditData($role->id);
+
+            $role->update([
+                'name'      => $validated['name'],
+                'slug'      => Str::slug($validated['name']),
+                'description' => $validated['description'] ?? null,
+                'is_active' => $request->boolean('is_active', true)
+            ]);
+
+            // Log role update
+            $afterData = $this->getRoleAuditData($role->id);
+            $this->logRoleUpdate($role->id, $beforeData, $afterData);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Role updated successfully.',
+                'role'    => $role
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed.',
+                'errors'  => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 500);
         }
-
-        return redirect()->route('dashboard.roles.index')
-            ->with('success', 'Role updated successfully.');
     }
 
     /**
-     * Remove the specified role from storage.
+     * Remove the specified role from storage (AJAX - Soft Delete).
      */
     public function destroy(string $id)
     {
-        $role = Role::findOrFail($id);
-        
-        // Check if role has users
-        if ($role->users()->count() > 0) {
-            return redirect()->route('dashboard.roles.index')
-                ->with('error', 'Cannot delete role. It has assigned users.');
+        try {
+            $role = Role::findOrFail($id);
+
+            // Prevent deleting superadmin role
+            if ($role->isProtected()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'The superadmin role is protected and cannot be deleted.'
+                ], 403);
+            }
+
+            // Check if role has users
+            if ($role->users()->count() > 0) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Cannot delete this role. It is assigned to ' . $role->users()->count() . ' user(s).'
+                ], 422);
+            }
+
+            $role->delete();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Role deleted successfully.'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 500);
         }
-
-        $role->delete();
-
-        return redirect()->route('dashboard.roles.index')
-            ->with('success', 'Role deleted successfully.');
     }
 
     /**
-     * Toggle role status.
+     * Toggle role status (AJAX).
      */
     public function toggleStatus(Request $request, string $id)
     {
-        $role = Role::findOrFail($id);
-        $role->update(['is_active' => !$role->is_active]);
+        try {
+            $role = Role::findOrFail($id);
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Status updated successfully.',
-            'is_active' => $role->is_active
-        ]);
+            // Prevent toggling superadmin role status
+            if ($role->isProtected()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'The superadmin role is protected and its status cannot be toggled.'
+                ], 403);
+            }
+
+            $role->update(['is_active' => !$role->is_active]);
+
+            $role->loadMissing('users');
+            foreach ($role->users as $user) {
+                Notification::create([
+                    'user_id' => $user->id,
+                    'type' => 'role',
+                    'title' => 'Role status changed',
+                    'body' => sprintf('The %s role is now %s.', $role->name, $role->is_active ? 'active' : 'inactive'),
+                    'data_json' => [
+                        'role_id' => $role->id,
+                        'role_name' => $role->name,
+                        'is_active' => $role->is_active,
+                    ],
+                    'notifiable_type' => Role::class,
+                    'notifiable_id' => $role->id,
+                    'is_read' => false,
+                ]);
+            }
+
+            return response()->json([
+                'success'   => true,
+                'message'   => 'Role status updated successfully.',
+                'is_active' => $role->is_active
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 500);
+        }
     }
 
     /**
-     * Get role permissions for AJAX request.
+     * Get role data for edit modal (AJAX).
+     */
+    public function getRoleData(string $id)
+    {
+        try {
+            $role = Role::findOrFail($id);
+
+            return response()->json([
+                'success'   => true,
+                'role'      => $role,
+                'protected' => $role->isProtected()
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 404);
+        }
+    }
+
+    /**
+     * Get permission names for a role (AJAX).
      */
     public function getPermissions(string $id)
     {
-        $role = Role::with('permissions')->findOrFail($id);
-        
-        return response()->json([
-            'permissions' => $role->permissions->pluck('id')->toArray()
-        ]);
+        try {
+            $role        = Role::findOrFail($id);
+            $permissions = $role->permissions()->pluck('slug')->toArray();
+
+            return response()->json([
+                'success'     => true,
+                'permissions' => $permissions
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 404);
+        }
+    }
+
+    /**
+     * Build role payload for audit logs without colliding with the public JSON endpoint.
+     */
+    private function getRoleAuditData(int $roleId): array
+    {
+        return $this->getRoleDataForAudit($roleId);
     }
 }

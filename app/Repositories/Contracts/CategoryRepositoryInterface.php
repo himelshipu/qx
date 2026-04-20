@@ -6,6 +6,7 @@ namespace App\Repositories\Contracts;
 
 use App\Models\Category;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Collection;
 
 /**
  * Interface CategoryRepositoryInterface
@@ -17,7 +18,7 @@ interface CategoryRepositoryInterface
     /**
      * Get paginated categories for dashboard listing.
      */
-    public function paginateForDashboard(string $search, string $status, int $perPage = 12): LengthAwarePaginator;
+    public function paginateForDashboard(string $search, string $status, string $featured = 'all', int $perPage = 12): LengthAwarePaginator;
 
     /**
      * Get dashboard category summary stats.
@@ -25,11 +26,6 @@ interface CategoryRepositoryInterface
      * @return array{total:int,active:int,inactive:int,linked:int}
      */
     public function getStats(): array;
-
-    /**
-     * Get next sort order value.
-     */
-    public function getNextSortOrder(): int;
 
     /**
      * Create a category.
@@ -64,4 +60,65 @@ interface CategoryRepositoryInterface
      * Toggle active status and return updated category.
      */
     public function toggleStatus(Category $category): Category;
+
+    /**
+     * Get top featured categories ordered by featured_order.
+     *
+     * @return Collection<int, Category>
+     */
+    public function getFeaturedCategories(?int $limit = null): Collection;
+
+    /**
+     * Search categories by name/slug.
+     *
+     * @return Collection<int, Category>
+     */
+    public function searchCategories(string $query, int $limit = 50): Collection;
+
+    /**
+     * Count how many provided IDs are currently featured.
+     *
+     * @param array<int> $categoryIds
+     */
+    public function countFeaturedByIds(array $categoryIds): int;
+
+    /**
+     * Increment featured_order for all featured categories.
+     * Optionally skip one category ID.
+     */
+    public function incrementFeaturedOrder(?int $excludeCategoryId = null): void;
+
+    /**
+     * Mark a category as featured at a given priority.
+     */
+    public function markAsFeatured(Category $category, int $priority = 1): Category;
+
+    /**
+     * Remove featured state from a category.
+     */
+    public function unmarkFeatured(Category $category): Category;
+
+    /**
+     * Get featured category IDs ordered by featured_order.
+     *
+     * @return array<int>
+     */
+    public function getFeaturedCategoryIdsByPriority(): array;
+
+    /**
+     * Update featured_order for provided category ids.
+     *
+     * @param array<int> $categoryIds
+     */
+    public function updateFeaturedOrder(array $categoryIds): void;
+
+    /**
+     * Get count of featured categories.
+     */
+    public function getFeaturedCount(): int;
+
+    /**
+     * Get the featured category with lowest priority.
+     */
+    public function getLowestPriorityFeatured(): ?Category;
 }

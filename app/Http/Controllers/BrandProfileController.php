@@ -25,7 +25,7 @@ class BrandProfileController extends Controller
      */
     public function edit(string $slug)
     {
-        $user = Auth::user();
+        $user  = Auth::user();
         $brand = $this->getDashboardBrandBySlug($slug);
 
         if (!$brand) {
@@ -33,9 +33,9 @@ class BrandProfileController extends Controller
         }
 
         return view('frontend.pages.brand-edit-profile', [
-            'user' => $user,
+            'user'  => $user,
             'brand' => $brand,
-            'slug' => $slug,
+            'slug'  => $slug
         ]);
     }
 
@@ -44,7 +44,7 @@ class BrandProfileController extends Controller
      */
     public function update(Request $request, string $slug)
     {
-        $user = Auth::user();
+        $user  = Auth::user();
         $brand = $this->getDashboardBrandBySlug($slug);
 
         if (!$brand) {
@@ -55,40 +55,40 @@ class BrandProfileController extends Controller
 
         if ($activeTab === 'social') {
             $request->merge([
-                'website' => $this->normalizeUrl($request->input('website')),
+                'website'   => $this->normalizeUrl($request->input('website')),
                 'instagram' => $this->normalizeUrl($request->input('instagram')),
-                'tiktok' => $this->normalizeUrl($request->input('tiktok')),
-                'facebook' => $this->normalizeUrl($request->input('facebook')),
-                'x' => $this->normalizeUrl($request->input('x')),
-                'youtube' => $this->normalizeUrl($request->input('youtube')),
-                'linkedin' => $this->normalizeUrl($request->input('linkedin')),
+                'tiktok'    => $this->normalizeUrl($request->input('tiktok')),
+                'facebook'  => $this->normalizeUrl($request->input('facebook')),
+                'x'         => $this->normalizeUrl($request->input('x')),
+                'youtube'   => $this->normalizeUrl($request->input('youtube')),
+                'linkedin'  => $this->normalizeUrl($request->input('linkedin'))
             ]);
         }
 
         $rulesByTab = [
             'details' => [
-                'brand_name' => 'required|string|max:255',
-                'industry' => 'nullable|string|max:150',
-                'bio' => 'nullable|string|max:500',
+                'brand_name'   => 'required|string|max:255',
+                'industry'     => 'nullable|string|max:150',
+                'bio'          => 'nullable|string|max:500',
                 'address_line' => 'nullable|string|max:255',
-                'city' => 'nullable|string|max:255',
-                'country' => 'nullable|string|max:255',
-                'postal_code' => 'nullable|string|max:30',
-                'phone' => 'nullable|string|max:30',
+                'city'         => 'nullable|string|max:255',
+                'country'      => 'nullable|string|max:255',
+                'postal_code'  => 'nullable|string|max:30',
+                'phone'        => 'nullable|string|max:30'
             ],
-            'social' => [
-                'website' => ['nullable', 'url', 'max:255'],
+            'social'  => [
+                'website'   => ['nullable', 'url', 'max:255'],
                 'instagram' => ['nullable', 'url', 'max:255', $this->platformUrlRule(['instagram.com'])],
-                'tiktok' => ['nullable', 'url', 'max:255', $this->platformUrlRule(['tiktok.com'])],
-                'facebook' => ['nullable', 'url', 'max:255', $this->platformUrlRule(['facebook.com', 'fb.com'])],
-                'x' => ['nullable', 'url', 'max:255', $this->platformUrlRule(['x.com', 'twitter.com'])],
-                'youtube' => ['nullable', 'url', 'max:255', $this->platformUrlRule(['youtube.com', 'youtu.be'])],
-                'linkedin' => ['nullable', 'url', 'max:255', $this->platformUrlRule(['linkedin.com'])],
+                'tiktok'    => ['nullable', 'url', 'max:255', $this->platformUrlRule(['tiktok.com'])],
+                'facebook'  => ['nullable', 'url', 'max:255', $this->platformUrlRule(['facebook.com', 'fb.com'])],
+                'x'         => ['nullable', 'url', 'max:255', $this->platformUrlRule(['x.com', 'twitter.com'])],
+                'youtube'   => ['nullable', 'url', 'max:255', $this->platformUrlRule(['youtube.com', 'youtu.be'])],
+                'linkedin'  => ['nullable', 'url', 'max:255', $this->platformUrlRule(['linkedin.com'])]
             ],
-            'images' => [
+            'images'  => [
                 'profile_image' => 'nullable|image|mimes:jpeg,png,webp|max:2048',
-                'cover_image' => 'nullable|image|mimes:jpeg,png,webp|max:5120',
-            ],
+                'cover_image'   => 'nullable|image|mimes:jpeg,png,webp|max:5120'
+            ]
         ];
 
         if (!array_key_exists($activeTab, $rulesByTab)) {
@@ -101,16 +101,16 @@ class BrandProfileController extends Controller
         if ($activeTab === 'details') {
             // Update brand fields
             $brand->brand_name = $validated['brand_name'];
-            $brand->industry = $validated['industry'] ?? null;
+            $brand->industry   = $validated['industry'] ?? null;
             $brand->save();
 
             // Update user fields (city, country, postal_code, phone, bio)
             $user->address_line = $validated['address_line'] ?? null;
-            $user->city = $validated['city'] ?? null;
-            $user->country = $validated['country'] ?? null;
-            $user->postal_code = $validated['postal_code'] ?? null;
-            $user->phone = $validated['phone'] ?? null;
-            $user->bio = $validated['bio'] ?? null;
+            $user->city         = $validated['city'] ?? null;
+            $user->country      = $validated['country'] ?? null;
+            $user->postal_code  = $validated['postal_code'] ?? null;
+            $user->phone        = $validated['phone'] ?? null;
+            $user->bio          = $validated['bio'] ?? null;
             $user->save();
         }
 
@@ -127,11 +127,11 @@ class BrandProfileController extends Controller
                 ['brand_id' => $brand->id],
                 [
                     'instagram_url' => $validated['instagram'] ?? null,
-                    'tiktok_url' => $validated['tiktok'] ?? null,
-                    'facebook_url' => $validated['facebook'] ?? null,
-                    'x_url' => $validated['x'] ?? null,
-                    'youtube_url' => $validated['youtube'] ?? null,
-                    'linkedin_url' => $validated['linkedin'] ?? null,
+                    'tiktok_url'    => $validated['tiktok'] ?? null,
+                    'facebook_url'  => $validated['facebook'] ?? null,
+                    'x_url'         => $validated['x'] ?? null,
+                    'youtube_url'   => $validated['youtube'] ?? null,
+                    'linkedin_url'  => $validated['linkedin'] ?? null
                 ]
             );
         }
@@ -160,20 +160,20 @@ class BrandProfileController extends Controller
 
         $messages = [
             'details' => 'Profile details updated successfully.',
-            'social' => 'Social links updated successfully.',
-            'images' => 'Profile images updated successfully.',
+            'social'  => 'Social links updated successfully.',
+            'images'  => 'Profile images updated successfully.'
         ];
 
         $message = $messages[$activeTab] ?? 'Profile updated successfully.';
 
         if ($request->expectsJson() || $request->ajax()) {
             return response()->json([
-                'message' => $message,
-                'active_tab' => $activeTab,
+                'message'    => $message,
+                'active_tab' => $activeTab
             ]);
         }
 
-        return redirect()->route('dashboard.brand.profile.edit', ['slug' => $slug])->with('success', $message);
+        return redirect()->route('brand.profile.edit', ['slug' => $slug])->with('success', $message);
     }
 
     /**
@@ -181,7 +181,7 @@ class BrandProfileController extends Controller
      */
     public function deleteProfileImage(Request $request, string $slug)
     {
-        $user = Auth::user();
+        $user  = Auth::user();
         $brand = $this->getDashboardBrandBySlug($slug);
 
         if (!$brand) {
@@ -196,7 +196,7 @@ class BrandProfileController extends Controller
         // Clear the profile_image_path from user
         $user->update(['profile_image_path' => null]);
 
-        return redirect()->route('dashboard.brand.profile.edit', ['slug' => $slug])->with('success', 'Profile image removed.');
+        return redirect()->route('brand.profile.edit', ['slug' => $slug])->with('success', 'Profile image removed.');
     }
 
     /**
@@ -204,7 +204,7 @@ class BrandProfileController extends Controller
      */
     public function deleteCoverImage(Request $request, string $slug)
     {
-        $user = Auth::user();
+        $user  = Auth::user();
         $brand = $this->getDashboardBrandBySlug($slug);
 
         if (!$brand) {
@@ -219,7 +219,7 @@ class BrandProfileController extends Controller
         // Clear the cover_image_path from user
         $user->update(['cover_image_path' => null]);
 
-        return redirect()->route('dashboard.brand.profile.edit', ['slug' => $slug])->with('success', 'Cover image removed.');
+        return redirect()->route('brand.profile.edit', ['slug' => $slug])->with('success', 'Cover image removed.');
     }
 
     /**
@@ -235,7 +235,7 @@ class BrandProfileController extends Controller
 
         $brand->update(['is_verified' => !$brand->is_verified]);
 
-        return redirect()->route('dashboard.brand.profile.edit', ['slug' => $slug])->with(
+        return redirect()->route('brand.profile.edit', ['slug' => $slug])->with(
             'success',
             $brand->is_verified ? 'Brand marked as verified.' : 'Brand marked as unverified.'
         );
@@ -254,7 +254,7 @@ class BrandProfileController extends Controller
 
         $brand->update(['is_active' => !$brand->is_active]);
 
-        return redirect()->route('dashboard.brand.profile.edit', ['slug' => $slug])->with(
+        return redirect()->route('brand.profile.edit', ['slug' => $slug])->with(
             'success',
             $brand->is_active ? 'Brand activated.' : 'Brand deactivated.'
         );
@@ -269,7 +269,12 @@ class BrandProfileController extends Controller
             ->with([
                 'user:id,name,slug,address_line,city,country,postal_code,phone,bio,profile_image_path,cover_image_path,is_active',
                 'socialLinks:id,brand_id,instagram_url,tiktok_url,facebook_url,x_url,youtube_url,linkedin_url',
-                'campaigns' => fn($query) => $query->where('is_active', true)->where('status', '!=', 'draft')->orderBy('published_at', 'desc')
+                'campaigns' => fn($query) => $query->where('is_active', true)->where('status', '!=', 'draft')->orderBy('published_at', 'desc'),
+                'reviews' => fn($query) => $query->where('is_public', true)->where('reviewee_type', 'brand')->latest()->limit(6),
+                'reviews.influencer.user:id,name,slug',
+                'reviews.orderItem:id,order_id,title,package_id',
+                'reviews.orderItem.order:id,order_number',
+                'reviews.orderItem.package:id,name',
             ])
             ->whereHas('user', fn($query) => $query->where('slug', $slug))
             ->firstOrFail();
@@ -280,9 +285,10 @@ class BrandProfileController extends Controller
         }
 
         return view('frontend.pages.brand-profile', [
-            'brand' => $brand,
+            'brand'     => $brand,
             'campaigns' => $brand->campaigns,
-            'title' => $brand->brand_name ?? $brand->user->name,
+            'reviews'   => $brand->reviews,
+            'title'     => $brand->brand_name ?? $brand->user->name
         ]);
     }
 
@@ -314,6 +320,7 @@ class BrandProfileController extends Controller
             $host = strtolower((string) parse_url((string) $value, PHP_URL_HOST));
             if ($host === '') {
                 $fail('The ' . str_replace('_', ' ', $attribute) . ' field must be a valid URL.');
+
                 return;
             }
 

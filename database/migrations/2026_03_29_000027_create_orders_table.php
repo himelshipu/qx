@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignId('campaign_id')->nullable()->constrained('campaigns')->nullOnDelete();
             $table->enum('status', ['pending', 'accepted', 'in_progress', 'delivered', 'completed', 'cancelled', 'refunded'])->default('pending');
             $table->foreignId('accepted_by_user_id')->nullable()->constrained('users')->nullOnDelete();
-            $table->foreignId('accepted_for_creator_id')->nullable()->constrained('creators')->nullOnDelete();
+            $table->foreignId('accepted_for_influencer_id')->nullable()->constrained('influencers')->nullOnDelete();
             $table->decimal('subtotal', 12, 2)->default(0);
             $table->decimal('service_fee', 12, 2)->default(0);
             $table->decimal('tax_amount', 12, 2)->default(0);
