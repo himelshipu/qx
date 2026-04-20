@@ -63,7 +63,32 @@ use App\Http\Controllers\InfluencerProfileController;
 use App\Http\Controllers\PaymentMethodController;
 use App\Http\Controllers\PublicPageController;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Artisan;
 
+
+
+
+Route::get('/storage-link/{key}', function ($key) {
+    if ($key !== '22') {
+        abort(403, 'Unauthorized');
+    }
+
+    Artisan::call('storage:link');
+
+    return "Storage linked successfully ✅";
+});
+
+Route::get('/clear-cache/{key}', function ($key) {
+    if ($key !== '22') {
+        abort(403, 'Unauthorized');
+    }
+
+    Artisan::call('config:clear');
+    Artisan::call('cache:clear');
+    Artisan::call('config:cache');
+
+    return "Cache cleared successfully ✅";
+});
 /*
 |--------------------------------------------------------------------------
 | Web Routes

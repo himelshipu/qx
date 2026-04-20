@@ -87,8 +87,8 @@ class InfluencerController extends Controller
     public function edit(Influencer $influencer): View
     {
         return view('backend.pages.influencers.edit', [
-            'influencer' => $influencer->load(['user', 'categories']),
-            ...$this->influencerService->getFormPayload()
+            'influencer' => $influencer->load(['user', 'categories', 'socialLinks', 'platformStats']),
+            ...$this->influencerService->getFormPayload($influencer)
         ]);
     }
 

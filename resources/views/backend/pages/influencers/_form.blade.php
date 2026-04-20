@@ -6,6 +6,7 @@
 
 	$selectedCategories = old('categories', $influencer?->categories?->pluck('id')->all() ?? []);
 	$selectedCategoryIds = array_values(array_unique(array_map('intval', (array) $selectedCategories)));
+	$socialRows = old('social_rows', $formDefaults['social_rows'] ?? [['platform' => null, 'link' => null, 'follower_count' => null]]);
 
 	$initialProfilePreview = $user?->profile_image_path ? \App\Helpers\ImageHelper::url($user->profile_image_path) : null;
 	$initialCoverPreview = $user?->cover_image_path ? \App\Helpers\ImageHelper::url($user->cover_image_path) : null;
@@ -15,7 +16,8 @@
     profilePreview: @js($initialProfilePreview),
     coverPreview: @js($initialCoverPreview),
     categoryOptions: @js($categoryOptions),
-    selectedCategoryIds: @js($selectedCategoryIds)
+	selectedCategoryIds: @js($selectedCategoryIds),
+	socialRows: @js($socialRows)
 })" class="grid grid-cols-1 gap-6 lg:grid-cols-3">
 	<div class="space-y-5 lg:col-span-2">
 		<div class="grid grid-cols-1 gap-5 md:grid-cols-2">
@@ -363,6 +365,71 @@
 				<p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
 			@enderror
 		</div>
+
+		<div class="rounded-lg border border-gray-200 bg-white px-3 py-3 dark:border-gray-700 dark:bg-gray-900 space-y-3">
+			<div class="flex items-center justify-between gap-3">
+				<p class="text-sm font-medium text-gray-700 dark:text-gray-300">Social Media Profiles</p>
+				<button type="button" @click="addSocialRow()"
+					class="inline-flex items-center rounded-md border border-gray-300 px-2.5 py-1.5 text-xs font-medium text-gray-700 transition hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800">
+					Add Platform
+				</button>
+			</div>
+
+			<template x-for="(socialRow, index) in socialRows" :key="`social-row-${index}`">
+				<div class="rounded-lg border border-gray-200 p-3 dark:border-gray-700 space-y-3">
+					<div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+						<div>
+							<label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Platform</label>
+							<select :name="`social_rows[${index}][platform]`" x-model="socialRow.platform" @change="normalizeDuplicatePlatforms(index)"
+								class="h-10 w-full rounded-lg border border-gray-300 bg-transparent px-3 text-sm text-gray-900 focus:border-gray-500 focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-white">
+								<option value="">Select platform</option>
+								<option value="instagram" :disabled="isPlatformTaken('instagram', index) && socialRow.platform !== 'instagram'">Instagram</option>
+								<option value="tiktok" :disabled="isPlatformTaken('tiktok', index) && socialRow.platform !== 'tiktok'">TikTok</option>
+								<option value="youtube" :disabled="isPlatformTaken('youtube', index) && socialRow.platform !== 'youtube'">YouTube</option>
+								<option value="linkedin" :disabled="isPlatformTaken('linkedin', index) && socialRow.platform !== 'linkedin'">LinkedIn</option>
+								<option value="facebook" :disabled="isPlatformTaken('facebook', index) && socialRow.platform !== 'facebook'">Facebook</option>
+								<option value="x" :disabled="isPlatformTaken('x', index) && socialRow.platform !== 'x'">X</option>
+								<option value="other" :disabled="isPlatformTaken('other', index) && socialRow.platform !== 'other'">Other</option>
+							</select>
+						</div>
+
+						<div>
+							<label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Follower Count</label>
+							<input type="number" min="0" :name="`social_rows[${index}][follower_count]`" x-model="socialRow.follower_count"
+								placeholder="e.g. 45000"
+								class="h-10 w-full rounded-lg border border-gray-300 bg-transparent px-3 text-sm text-gray-900 focus:border-gray-500 focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-white">
+						</div>
+					</div>
+
+					<div class="flex items-end gap-3">
+						<div class="flex-1">
+							<label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Social Link</label>
+							<input type="url" :name="`social_rows[${index}][link]`" x-model="socialRow.link" placeholder="https://..."
+								class="h-10 w-full rounded-lg border border-gray-300 bg-transparent px-3 text-sm text-gray-900 focus:border-gray-500 focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-white">
+						</div>
+
+						<button type="button" @click="removeSocialRow(index)" x-show="socialRows.length > 1"
+							class="h-10 rounded-md border border-red-200 px-3 text-xs font-medium text-red-600 transition hover:bg-red-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-900/20">
+							Remove
+						</button>
+					</div>
+				</div>
+			</template>
+
+			@error('social_rows')
+				<p class="text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+			@enderror
+			@error('social_rows.*.platform')
+				<p class="text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+			@enderror
+			@error('social_rows.*.link')
+				<p class="text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+			@enderror
+			@error('social_rows.*.follower_count')
+				<p class="text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+			@enderror
+			<p class="text-xs text-gray-500 dark:text-gray-400">Each platform can be selected only once.</p>
+		</div>
 	</div>
 </div>
 
@@ -373,16 +440,72 @@
 				return {
 					profilePreview: config.profilePreview || null,
 					coverPreview: config.coverPreview || null,
+					
 					categoryDropdownOpen: false,
 					categoryOptions: Array.isArray(config.categoryOptions) ? config.categoryOptions : [],
 					selectedCategoryIds: Array.isArray(config.selectedCategoryIds) ?
 						config.selectedCategoryIds
 						.map((id) => Number(id))
 						.filter((id) => Number.isInteger(id) && id > 0) : [],
+					socialRows: Array.isArray(config.socialRows) && config.socialRows.length > 0 ? config.socialRows : [{
+						platform: '',
+						link: '',
+						follower_count: ''
+					}],
 					profileFileName: '',
 					coverFileName: '',
 					profileClientError: '',
 					coverClientError: '',
+
+					addSocialRow() {
+						this.socialRows.push({
+							platform: '',
+							link: '',
+							follower_count: ''
+						});
+					},
+
+					removeSocialRow(index) {
+						if (this.socialRows.length <= 1) {
+							this.socialRows = [{ platform: '', link: '', follower_count: '' }];
+							return;
+						}
+
+						this.socialRows.splice(index, 1);
+					},
+
+					isPlatformTaken(platform, currentIndex) {
+						if (!platform) {
+							return false;
+						}
+
+						return this.socialRows.some((row, index) => index !== currentIndex && row.platform === platform);
+					},
+
+					normalizeDuplicatePlatforms(changedIndex) {
+						const seen = {};
+
+						this.socialRows = this.socialRows.map((row, index) => {
+							const platform = typeof row.platform === 'string' ? row.platform.trim() : '';
+
+							if (platform === '') {
+								return row;
+							}
+
+							if (seen[platform] !== undefined && index !== changedIndex) {
+								return {
+									...row,
+									platform: ''
+								};
+							}
+
+							seen[platform] = index;
+							return {
+								...row,
+								platform
+							};
+						});
+					},
 
 					isCategorySelected(categoryId) {
 						const normalizedId = Number(categoryId);

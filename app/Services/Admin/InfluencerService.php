@@ -41,12 +41,15 @@ final class InfluencerService
     /**
      * Build payload for create/edit forms.
      *
-     * @return array{categoryOptions:\Illuminate\Support\Collection<int, array{id:int,name:string}>}
+     * @return array{categoryOptions:\Illuminate\Support\Collection<int, array{id:int,name:string}>,formDefaults:array{social_rows:array<int, array{platform:?string,link:?string,follower_count:?int}>}}
      */
-    public function getFormPayload(): array
+    public function getFormPayload(?Influencer $influencer = null): array
     {
         return [
-            'categoryOptions' => $this->influencerRepository->getCategoryOptions()
+            'categoryOptions' => $this->influencerRepository->getCategoryOptions(),
+            'formDefaults' => [
+                'social_rows' => $this->resolveSocialRows($influencer),
+            ],
         ];
     }
 
@@ -107,6 +110,7 @@ final class InfluencerService
                 'featured_priority' => $isFeatured ? $featuredPriority : null
             ]);
 
+            $this->syncSocialMeta($influencer, $validated);
             $this->influencerRepository->syncCategories($influencer, $this->normalizeCategoryIds($validated['categories'] ?? []));
 
             return $influencer;
@@ -178,6 +182,7 @@ final class InfluencerService
                 'featured_priority' => $isFeatured ? $featuredPriority : null
             ]);
 
+            $this->syncSocialMeta($influencer, $validated);
             $this->influencerRepository->syncCategories($influencer, $this->normalizeCategoryIds($validated['categories'] ?? []));
 
             return $influencer;
@@ -307,5 +312,177 @@ final class InfluencerService
         })));
 
         return $normalized;
+    }
+
+    /**
+     * Resolve defaults for social rows in dashboard forms.
+     *
+     * @return array<int, array{platform:?string,link:?string,follower_count:?int}>
+     */
+    private function resolveSocialRows(?Influencer $influencer): array
+    {
+        if (!$influencer) {
+            return [['platform' => null, 'link' => null, 'follower_count' => null]];
+        }
+
+        $influencer->loadMissing(['socialLinks', 'platformStats']);
+
+        $rowsByPlatform = [];
+
+        foreach ($influencer->platformStats->sortBy('platform') as $stat) {
+            if (!is_string($stat->platform) || $stat->platform === '') {
+                continue;
+            }
+
+            $platform = strtolower(trim($stat->platform));
+
+            if (in_array($platform, ['twitch', 'ugc'], true)) {
+                $platform = 'other';
+            }
+
+            $rowsByPlatform[$platform] = [
+                'platform' => $platform,
+                'link' => $this->nullableString($stat->profile_url),
+                'follower_count' => isset($stat->follower_count) ? (int) $stat->follower_count : null,
+            ];
+        }
+
+        $fallbackLinks = [
+            'instagram' => $influencer->socialLinks?->instagram_url,
+            'tiktok' => $influencer->socialLinks?->tiktok_url,
+            'youtube' => $influencer->socialLinks?->youtube_url,
+            'linkedin' => $influencer->socialLinks?->linkedin_url,
+            'facebook' => $influencer->socialLinks?->facebook_url,
+            'x' => $influencer->socialLinks?->x_url,
+            'other' => $influencer->socialLinks?->other_url,
+        ];
+
+        foreach ($fallbackLinks as $platform => $linkValue) {
+            $normalizedLink = $this->nullableString($linkValue);
+
+            if ($normalizedLink === null || isset($rowsByPlatform[$platform])) {
+                continue;
+            }
+
+            $rowsByPlatform[$platform] = [
+                'platform' => $platform,
+                'link' => $normalizedLink,
+                'follower_count' => null,
+            ];
+        }
+
+        $rows = array_values($rowsByPlatform);
+
+        return $rows === [] ? [['platform' => null, 'link' => null, 'follower_count' => null]] : $rows;
+    }
+
+    /**
+     * Keep influencer social links and platform stats in sync.
+     *
+     * @param  array<string, mixed> $validated
+     */
+    private function syncSocialMeta(Influencer $influencer, array $validated): void
+    {
+        $rows = $this->normalizeSocialRows($validated['social_rows'] ?? null);
+
+        if (array_key_exists('social_rows', $validated)) {
+            $platforms = array_map(static fn (array $row): string => $row['platform'], $rows);
+            $influencer->platformStats()->whereNotIn('platform', $platforms === [] ? ['__none__'] : $platforms)->delete();
+        }
+
+        foreach ($rows as $row) {
+            $influencer->platformStats()->updateOrCreate(
+                ['platform' => $row['platform']],
+                [
+                    'profile_url' => $row['link'],
+                    'follower_count' => $row['follower_count'],
+                    'is_active' => true,
+                ]
+            );
+        }
+
+        $socialUpdates = [
+            'facebook_url' => null,
+            'instagram_url' => null,
+            'tiktok_url' => null,
+            'youtube_url' => null,
+            'linkedin_url' => null,
+            'x_url' => null,
+            'other_url' => null,
+        ];
+
+        foreach ($rows as $row) {
+            $linkColumn = match ($row['platform']) {
+                'instagram' => 'instagram_url',
+                'tiktok' => 'tiktok_url',
+                'youtube' => 'youtube_url',
+                'linkedin' => 'linkedin_url',
+                'facebook' => 'facebook_url',
+                'x' => 'x_url',
+                'other' => 'other_url',
+                default => null,
+            };
+
+            if ($linkColumn === null) {
+                continue;
+            }
+
+            $socialUpdates[$linkColumn] = $row['link'];
+        }
+
+        $hasAnySocialValue = collect($socialUpdates)->contains(static fn ($value): bool => $value !== null);
+
+        if ($hasAnySocialValue || $influencer->socialLinks()->exists()) {
+            $influencer->socialLinks()->updateOrCreate(
+                ['influencer_id' => $influencer->id],
+                $socialUpdates
+            );
+        }
+    }
+
+    /**
+     * Normalize social rows payload from request.
+     *
+     * @param  mixed $value
+     * @return array<int, array{platform:string,link:?string,follower_count:?int}>
+     */
+    private function normalizeSocialRows(mixed $value): array
+    {
+        if (!is_array($value)) {
+            return [];
+        }
+
+        $rowsByPlatform = [];
+
+        foreach ($value as $row) {
+            if (!is_array($row)) {
+                continue;
+            }
+
+            $platform = $this->nullableString($row['platform'] ?? null);
+
+            if ($platform === null) {
+                continue;
+            }
+
+            $platform = strtolower(trim($platform));
+
+            if (in_array($platform, ['twitch', 'ugc'], true)) {
+                $platform = 'other';
+            }
+
+            $link = $this->nullableString($row['link'] ?? null);
+            $followerCount = array_key_exists('follower_count', $row) && $row['follower_count'] !== null && $row['follower_count'] !== ''
+                ? max(0, (int) $row['follower_count'])
+                : null;
+
+            $rowsByPlatform[$platform] = [
+                'platform' => $platform,
+                'link' => $link,
+                'follower_count' => $followerCount,
+            ];
+        }
+
+        return array_values($rowsByPlatform);
     }
 }

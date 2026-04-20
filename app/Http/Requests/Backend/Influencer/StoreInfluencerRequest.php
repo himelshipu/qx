@@ -40,6 +40,10 @@ class StoreInfluencerRequest extends FormRequest
             'categories.*'       => ['integer', 'exists:categories,id'],
             'profile_image_file' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp,avif,gif', 'max:5120'],
             'cover_image_file'   => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp,avif,gif', 'max:6144'],
+            'social_rows'           => ['nullable', 'array'],
+            'social_rows.*.platform' => ['nullable', 'string', 'in:instagram,tiktok,youtube,linkedin,facebook,x,other', 'required_with:social_rows.*.link,social_rows.*.follower_count'],
+            'social_rows.*.link'     => ['nullable', 'url', 'max:500'],
+            'social_rows.*.follower_count' => ['nullable', 'integer', 'min:0'],
             'is_active'          => ['sometimes', 'boolean'],
             'is_featured'        => ['sometimes', 'boolean'],
             'featured_priority'  => ['nullable', 'integer', 'min:1', 'max:999']
