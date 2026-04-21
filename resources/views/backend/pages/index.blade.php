@@ -5,7 +5,7 @@
 
 	<div class="flex flex-col gap-6 p-2">
 		<!-- ============ SECTION 1: KEY PERFORMANCE INDICATORS (KPIs) ============ -->
-		<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+		<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
 			<!-- Total Orders KPI -->
 			<a href="{{ route('dashboard.orders.index') }}" class="block group">
 				<div
@@ -86,7 +86,7 @@
 		</div>
 
 		<!-- ============ SECTION 2: PLATFORM METRICS ============ -->
-		<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+		<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
 			<!-- Brands Metric -->
 			<a href="{{ route('dashboard.brands.index') }}" class="block group">
 				<div
@@ -174,7 +174,7 @@
 					</svg>
 					Order Status Overview
 				</h3>
-				<div class="grid grid-cols-4 gap-4">
+				<div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
 					<div class="text-center p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-100 dark:border-blue-900">
 						<p class="text-xs font-medium text-gray-600 dark:text-gray-400 mb-2">Total</p>
 						<p class="text-2xl font-bold text-blue-600 dark:text-blue-400">{{ $totalOrders }}</p>
@@ -232,7 +232,7 @@
 		</div>
 
 		<!-- ============ SECTION 4: TOP PERFORMERS ============ -->
-		<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+		<div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
 			<!-- Top Brands -->
 			<div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl p-6 shadow-sm">
 				<h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center justify-between">
@@ -249,18 +249,18 @@
 				<div class="space-y-3">
 					@forelse ($topBrands as $index => $brand)
 						<div
-							class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+							class="flex flex-col md:flex-row gap-2 items-start md:items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
 							<div class="flex items-center gap-3 flex-1">
 								<div
 									class="w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 flex items-center justify-center text-sm font-bold">
 									{{ $index + 1 }}
 								</div>
 								<div>
-									<p class="text-sm font-semibold text-gray-900 dark:text-white truncate">{{ $brand->brand_name }}</p>
-									<p class="text-xs text-gray-500">{{ $brand->industry ?? 'N/A' }}</p>
+									<p class="text-xs sm:text-sm font-semibold text-gray-900 dark:text-white truncate">{{ $brand->brand_name }}</p>
+									<p class="text-[10px] sm:text-xs text-gray-500">{{ $brand->industry ?? 'N/A' }}</p>
 								</div>
 							</div>
-							<span class="text-xs font-bold text-indigo-600 dark:text-indigo-400">{{ $brand->orders_count ?? 0 }}
+							<span class="text-[10px] sm:text-xs font-bold text-indigo-600 dark:text-indigo-400">{{ $brand->orders_count ?? 0 }}
 								orders</span>
 						</div>
 					@empty
@@ -285,18 +285,18 @@
 				<div class="space-y-3">
 					@forelse ($topInfluencers as $index => $influencer)
 						<div
-							class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+							class="flex flex-col md:flex-row gap-2 items-start md:items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
 							<div class="flex items-center gap-3 flex-1">
 								<div
 									class="w-8 h-8 rounded-full bg-pink-100 dark:bg-pink-900/30 text-pink-600 flex items-center justify-center text-sm font-bold">
 									{{ $index + 1 }}
 								</div>
 								<div>
-									<p class="text-sm font-semibold text-gray-900 dark:text-white truncate">{{ $influencer->display_name }}</p>
-									<p class="text-xs text-gray-500">Creator Profile</p>
+									<p class="text-xs sm:text-sm font-semibold text-gray-900 dark:text-white truncate">{{ $influencer->display_name }}</p>
+									<p class="text-[10px] sm:text-xs text-gray-500">Creator Profile</p>
 								</div>
 							</div>
-							<span class="text-xs font-bold text-pink-600 dark:text-pink-400">{{ $influencer->orders_count ?? 0 }}
+							<span class="text-[10px] sm:text-xs font-bold text-pink-600 dark:text-pink-400">{{ $influencer->orders_count ?? 0 }}
 								orders</span>
 						</div>
 					@empty
@@ -321,18 +321,18 @@
 				<div class="space-y-3">
 					@forelse ($topPackages as $index => $package)
 						<div
-							class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+							class="flex flex-col md:flex-row gap-2 items-start md:items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
 							<div class="flex items-center gap-3 flex-1">
 								<div
 									class="w-8 h-8 rounded-full bg-orange-100 dark:bg-orange-900/30 text-orange-600 flex items-center justify-center text-sm font-bold">
 									{{ $index + 1 }}
 								</div>
 								<div>
-									<p class="text-sm font-semibold text-gray-900 dark:text-white truncate">{{ $package->name }}</p>
-									<p class="text-xs text-gray-500">${{ number_format($package->price, 2) }}</p>
+									<p class="text-xs sm:text-sm font-semibold text-gray-900 dark:text-white truncate">{{ $package->name }}</p>
+									<p class="text-[10px] sm:text-xs text-gray-500">${{ number_format($package->price, 2) }}</p>
 								</div>
 							</div>
-							<span class="text-xs font-bold text-orange-600 dark:text-orange-400">{{ $package->orders_count ?? 0 }}
+							<span class="text-[10px] sm:text-xs font-bold text-orange-600 dark:text-orange-400">{{ $package->orders_count ?? 0 }}
 								orders</span>
 						</div>
 					@empty
@@ -344,7 +344,7 @@
 
 		<!-- ============ SECTION 5: RECENT ORDERS TABLE ============ -->
 		<div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl p-6 shadow-sm">
-			<h3 class="text-lg font-bold text-gray-900 dark:text-white mb-6 flex items-center justify-between">
+			<h3 class="text-lg font-bold text-gray-900 dark:text-white mb-6 flex flex-col md:flex-row items-center justify-between">
 				<span class="flex items-center gap-2">
 					<svg class="w-5 h-5 text-blue-500" fill="currentColor" viewBox="0 0 24 24">
 						<path
