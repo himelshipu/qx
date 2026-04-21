@@ -68,10 +68,10 @@
 
 		<!-- Results Counter -->
 		<div class="mb-6 flex items-center justify-between px-1">
-			<div class="text-xs uppercase tracking-[0.22em] text-gray-400 dark:text-gray-500">
+			<div class="text-xs uppercase text-gray-400 dark:text-gray-600">
 				<span>Showing <span x-text="filteredCampaigns.length"></span> of {{ $campaigns->total() }}</span>
 			</div>
-			<div class="text-xs uppercase tracking-[0.22em] text-gray-400 dark:text-gray-500">
+			<div class="text-xs uppercase text-gray-400 dark:text-gray-600">
 				<span>My Campaigns</span>
 			</div>
 		</div>

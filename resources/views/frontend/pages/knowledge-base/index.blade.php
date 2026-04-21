@@ -12,8 +12,8 @@
 				<h2 class="text-xl font-semibold text-gray-900 dark:text-white">Featured Articles</h2>
 				<div class="grid grid-cols-1 gap-4 md:grid-cols-3">
 					@foreach($featured as $article)
-						<a href="{{ route('knowledge-base.show', $article->slug) }}" class="rounded-xl border border-indigo-200 bg-indigo-50 p-5 transition hover:shadow-md dark:border-indigo-900/40 dark:bg-indigo-900/20">
-							<p class="text-xs font-semibold uppercase tracking-wider text-indigo-600 dark:text-indigo-300">{{ $article->badge ?? 'Guide' }}</p>
+						<a href="{{ route('knowledge-base.show', $article->slug) }}" class="rounded-xl border border-purple-200 bg-purple-50 p-5 transition hover:shadow-md dark:border-purple-900/40 dark:bg-purple-900/20">
+							<p class="text-xs font-semibold uppercase tracking-wider text-purple-600 dark:text-purple-300">{{ $article->badge ?? 'Guide' }}</p>
 							<h3 class="mt-2 text-lg font-semibold text-gray-900 dark:text-white">{{ $article->title }}</h3>
 							<p class="mt-2 text-sm text-gray-600 dark:text-gray-300">{{ $article->summary ?? \Illuminate\Support\Str::limit(strip_tags($article->content), 120) }}</p>
 							<p class="mt-3 text-xs text-gray-500 dark:text-gray-400">{{ $article->read_time_minutes }} min read</p>

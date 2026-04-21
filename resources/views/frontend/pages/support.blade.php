@@ -164,7 +164,7 @@
 					<div>
 						<label class="block text-sm font-semibold text-gray-800 dark:text-white mb-2">Subject</label>
 						<input type="text" x-model="formData.subject" placeholder="Brief description of your issue..." required
-							class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 dark:bg-gray-800 dark:text-white placeholder-gray-400">
+							class="dark:bg-dark-900 shadow-theme-xs focus:border-pink-50 focus:ring-gray-500/10 dark:focus:border-gray-800 h-12 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30">
 					</div>
 
 					<!-- Description -->
@@ -172,13 +172,13 @@
 						<label class="block text-sm font-semibold text-gray-800 dark:text-white mb-2">Description</label>
 						<textarea x-model="formData.description" placeholder="Please provide detailed information about your issue..." required
 						 rows="6"
-						 class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 dark:bg-gray-800 dark:text-white placeholder-gray-400"></textarea>
+						 class="dark:bg-dark-900 shadow-theme-xs focus:border-pink-50 focus:ring-gray-500/10 dark:focus:border-gray-800 h-20 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30"></textarea>
 					</div>
 
 					<!-- Submit Button -->
 					<div class="flex gap-4">
 						<button type="submit" :disabled="loading"
-							class="flex-1 px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+							class="flex-1 px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
 							<template x-if="!loading">
 								<span>Submit Ticket</span>
 							</template>
