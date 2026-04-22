@@ -2,10 +2,10 @@
 <div x-data='frontendNotificationDropdown({ unreadCount: @js($frontendUnreadNotifications ?? 0) })' x-init="init()" class="relative">
 	<!-- Bell Icon Button -->
 	<button @click="isOpen = !isOpen"
-		class="relative p-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 transition-colors"
+		class="relative p-1 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 transition-colors"
 		:title="unreadCount > 0 ? `${unreadCount} unread notification${unreadCount !== 1 ? 's' : ''}` : 'No new notifications'">
 		<!-- Bell Icon -->
-		<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+		<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 			<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
 				d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
 		</svg>
@@ -20,17 +20,17 @@
 	<div x-show="isOpen" x-cloak x-transition:enter="transition ease-out duration-200"
 		x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
 		@click.away="isOpen = false"
-		class="absolute right-0 top-full mt-2 w-96 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 z-50 overflow-hidden">
+		class="absolute right-0 sm:right-0 left-0 sm:left-auto top-full mt-2 w-72 md:w-96 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 z-50 overflow-hidden">
 
 		<!-- Header -->
-		<div class="bg-linear-to-r from-blue-600 to-blue-700 text-white px-6 py-4">
+		<div class="bg-purple-600 text-white px-6 py-4">
 			<div class="flex items-center justify-between">
 				<div>
-					<h3 class="font-semibold">Notifications</h3>
-					<p class="text-sm text-blue-100" x-text="`${unreadCount} unread`"></p>
+					<h3 class="font-medium">Notifications</h3>
+					<p class="text-sm text-purple-100" x-text="`${unreadCount} unread`"></p>
 				</div>
 				<a href="{{ route('frontend.notifications.index') }}"
-					class="text-sm text-blue-100 hover:text-white transition-colors underline">
+					class="text-sm text-purple-100 hover:text-white transition-colors underline">
 					View All
 				</a>
 			</div>
@@ -81,7 +81,7 @@
 		<div x-show="unreadCount > 0 && !isLoading"
 			class="border-t border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50 px-6 py-3 flex gap-2">
 			<button @click="markAllAsRead()"
-				class="flex-1 px-3 py-2 text-sm font-medium text-blue-600 dark:text-blue-400 hover:bg-white dark:hover:bg-gray-700 rounded-lg transition-colors">
+				class="flex-1 px-3 py-2 text-sm font-medium text-purple-600 dark:text-purple-400 hover:bg-white dark:hover:bg-gray-700 rounded-lg transition-colors">
 				Mark All as Read
 			</button>
 		</div>

@@ -107,7 +107,7 @@ window.addEventListener('resize', checkMobile);" class="bg-white text-gray-900 d
 				<!-- app header start -->
 				<x-backend.shell.header />
 				<!-- app header end -->
-				<main class="max-w-screen-2xl mx-auto px-4 sm:px-6 py-6 bg-white dark:bg-gray-900 ">
+				<main class="max-w-screen-2xl mx-auto ml-[90px] lg:ml-0  px-4 sm:px-6 py-6 bg-white dark:bg-gray-900 ">
 					@yield('content')
 				</main>
 			</div>

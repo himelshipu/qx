@@ -8,7 +8,7 @@
 			<div class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
 				<div class="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
 					<div>
-						<p class="text-xs font-semibold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Resources</p>
+						<p class="text-xs font-semibold uppercase tracking-wider text-purple-600 dark:text-purple-400">Resources</p>
 						<h1 class="mt-2 text-3xl font-semibold text-gray-900 dark:text-white">Platform Blog</h1>
 						<p class="mt-2 text-sm text-gray-600 dark:text-gray-300">Insights, campaign playbooks, influencer strategy guides, and product updates.</p>
 					</div>
@@ -36,14 +36,14 @@
 					</div>
 					<div class="grid grid-cols-1 gap-4 md:grid-cols-3">
 						@foreach($featuredPosts as $entry)
-							<a href="{{ route('frontend.blogs.show', $entry->slug) }}" class="group overflow-hidden rounded-xl border border-indigo-200 bg-indigo-50 transition hover:shadow-md dark:border-indigo-900/40 dark:bg-indigo-900/20">
+							<a href="{{ route('frontend.blogs.show', $entry->slug) }}" class="group overflow-hidden rounded-xl border border-purple-200 bg-purple-50 transition hover:shadow-md dark:border-purple-900/40 dark:bg-purple-900/20">
 								@if($entry->featured_image_path)
 									<div class="h-40 w-full overflow-hidden">
 										<img src="{{ asset('storage/' . $entry->featured_image_path) }}" alt="{{ $entry->title }}" class="h-full w-full object-cover transition duration-500 group-hover:scale-105">
 									</div>
 								@endif
 								<div class="p-5">
-									<p class="text-xs font-semibold uppercase tracking-wider text-indigo-600 dark:text-indigo-300">Featured</p>
+									<p class="text-xs font-semibold uppercase tracking-wider text-purple-600 dark:text-purple-300">Featured</p>
 									<h3 class="mt-2 line-clamp-2 text-lg font-semibold text-gray-900 dark:text-white">{{ $entry->title }}</h3>
 									<p class="mt-2 line-clamp-2 text-sm text-gray-600 dark:text-gray-300">{{ $entry->summary }}</p>
 								</div>
@@ -71,7 +71,7 @@
 								<div class="flex flex-1 flex-col p-5">
 									<div class="mb-3 flex flex-wrap items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
 										@if($entry->is_featured)
-											<span class="rounded-full bg-indigo-100 px-2.5 py-1 font-semibold text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300">Featured</span>
+											<span class="rounded-full bg-purple-100 px-2.5 py-1 font-semibold text-purple-700 dark:bg-purple-900/30 dark:text-purple-300">Featured</span>
 										@endif
 										<span>{{ optional($entry->published_at)->format('M d, Y') }}</span>
 									</div>

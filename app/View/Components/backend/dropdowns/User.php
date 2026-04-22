@@ -1,6 +1,6 @@
 <?php
 
-namespace App\View\Components\backend\dropdowns;
+namespace App\View\Components\Backend\Dropdowns;
 
 use Closure;
 use Illuminate\Contracts\View\View;
@@ -30,7 +30,8 @@ class User extends Component
             ->take(2)
             ->join('');
 
-        $this->firstName = Str::before($this->user?->name ?? 'User', ' ');
+        $nameParts       = Str::before($this->user?->name ?? 'User', ' ');
+        $this->firstName = Str::limit($nameParts, 7, '');
     }
 
     public function render(): View | Closure | string

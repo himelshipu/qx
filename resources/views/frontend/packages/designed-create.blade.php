@@ -3,7 +3,7 @@
 @section('title', isset($isEditMode) && $isEditMode ? 'Edit Package' : 'Create Package')
 
 @section('content')
-	<x-backend.shell.breadcrumb :pageTitle="isset($isEditMode) && $isEditMode ? 'Edit Package' : 'Create Package'" />
+	<!-- <x-backend.shell.breadcrumb :pageTitle="isset($isEditMode) && $isEditMode ? 'Edit Package' : 'Create Package'" /> -->
 
 	<div class="max-w-6xl px-2 py-2 transition-colors duration-300"
 		x-data="packageDesignedForm({

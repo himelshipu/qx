@@ -45,7 +45,7 @@
                                                 <img src="{{ $avatarUrl }}" alt="{{ $influencerName }}"
                                                     class="h-8 w-8 rounded-full object-cover"
                                                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                                                <div style="display:none" class="h-8 w-8 rounded-full bg-gradient-to-br from-indigo-100 to-purple-100 dark:from-indigo-900/30 dark:to-purple-900/30 flex items-center justify-center text-xs font-semibold text-indigo-700 dark:text-indigo-300">
+                                                <div style="display:none" class="h-8 w-8 rounded-full bg-gradient-to-br from-purple-100 to-purple-100 dark:from-purple-900/30 dark:to-purple-900/30 flex items-center justify-center text-xs font-semibold text-purple-700 dark:text-purple-300">
                                                     {{ strtoupper(substr($influencerName, 0, 2)) }}
                                                 </div>
                                                 <span class="text-sm text-gray-700 dark:text-gray-300">{{ $influencerName }}</span>
@@ -59,7 +59,7 @@
                                                 @csrf
                                                 @method('PUT')
                                                 <input type="number" name="quantity" value="{{ $item->quantity }}" min="1" max="999"
-                                                    class="w-16 rounded-lg border border-gray-300 dark:border-gray-700 bg-transparent px-2 py-1.5 text-sm text-gray-900 dark:text-white focus:border-indigo-500 focus:ring-indigo-500"
+                                                    class="w-16 rounded-lg border border-gray-300 dark:border-gray-700 bg-transparent px-2 py-1.5 text-sm text-gray-900 dark:text-white focus:border-purple-500 focus:ring-purple-500"
                                                     onchange="this.form.submit()">
                                             </form>
                                         </td>
@@ -131,7 +131,7 @@
                         <form action="{{ route('cart.checkout') }}" method="POST">
                             @csrf
                             <button type="submit"
-                                class="w-full rounded-xl bg-indigo-600 px-4 py-3 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-all">
+                                class="w-full rounded-xl bg-purple-600 px-4 py-3 text-sm font-semibold text-white shadow-sm hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 transition-all">
                                 Proceed to Checkout
                             </button>
                         </form>
@@ -154,7 +154,7 @@
                 <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-1">Your cart is empty</h3>
                 <p class="text-gray-500 dark:text-gray-400 mb-6">Browse influencers and packages to get started</p>
                 <a href="{{ route('influencers') }}"
-                    class="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700 transition-all">
+                    class="inline-flex items-center gap-2 rounded-xl bg-purple-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-purple-700 transition-all">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                     </svg>

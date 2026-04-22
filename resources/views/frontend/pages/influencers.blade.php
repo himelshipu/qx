@@ -7,7 +7,7 @@
 
 	<div class="min-h-screen transition-colors duration-200">
 		<main>
-			<div class="w-7xl mx-auto">
+			<div class="w-full sm:w-[620px] lg:w-[980px] mx-auto">
 				<x-frontend.partials.filter />
 			</div>
 

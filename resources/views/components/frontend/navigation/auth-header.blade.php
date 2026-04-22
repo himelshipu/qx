@@ -80,9 +80,10 @@
 			</div>
 
 			<!-- Action Icons Section -->
-			<div class="flex items-center justify-between gap-3 sm:gap-5 w-full sm:w-auto">
+			<div class="flex items-center justify-between gap-2 w-full sm:w-auto">
 
-				@if ($isBrandUser)
+				<div class="flex justify-start items-center gap-2">
+					@if ($isBrandUser)
 					<a href="{{ route('frontend.conversations.index') }}"
 						class="relative flex items-center justify-center w-11 h-11 text-gray-500 bg-white border border-gray-200 rounded-full hover:bg-gray-50 hover:text-gray-700 dark:bg-gray-900 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white transition-colors duration-200"
 						title="Conversations">
@@ -92,29 +93,30 @@
 							</span>
 						@endif
 						<x-icons.message-square class="w-5 h-5" />
-					</a>
-				@endif
+						</a>
+					@endif
 
-				@if ($isBrandUser)
-					<!-- Shopping Cart Icon (Brand only) -->
-					<div @click="isCartOpen = true" class="relative cursor-pointer hover:opacity-70 transition-opacity p-2">
-						<x-icons.shopping-cart class="w-5 h-5 " />
+					@if ($isBrandUser)
+						<!-- Shopping Cart Icon (Brand only) -->
+						<div @click="isCartOpen = true" class="relative cursor-pointer hover:opacity-70 transition-opacity p-2">
+							<x-icons.shopping-cart class="w-5 h-5 " />
 
-						<span x-show="totalItemCount > 0" x-cloak
-							class="absolute -top-1 -right-1 min-w-4.5 h-4.5 px-1 rounded-full bg-purple-600 text-white text-[10px] font-bold leading-4.5 text-center"
-							x-text="totalItemCount"></span>
+							<span x-show="totalItemCount > 0" x-cloak
+								class="absolute -top-1 -right-1 min-w-4.5 h-4.5 px-1 rounded-full bg-purple-600 text-white text-[10px] font-bold leading-4.5 text-center"
+								x-text="totalItemCount"></span>
 
-						<div class="absolute bottom-1.5 left-1/2 -translate-x-1/2 flex items-center gap-0.5">
-							<div class="w-1 h-1 bg-black dark:bg-white rounded-full"></div>
-							<div class="w-1 h-1 bg-black dark:bg-white rounded-full"></div>
+							<div class="absolute bottom-1.5 left-1/2 -translate-x-1/2 flex items-center gap-0.5">
+								<div class="w-1 h-1 bg-black dark:bg-white rounded-full"></div>
+								<div class="w-1 h-1 bg-black dark:bg-white rounded-full"></div>
+							</div>
 						</div>
-					</div>
-				@endif
+					@endif
 
-				<!-- Notification Dropdown -->
-				@auth
-					<x-frontend.notifications.dropdown />
-				@endauth
+					<!-- Notification Dropdown -->
+					@auth
+						<x-frontend.notifications.dropdown />
+					@endauth
+				</div>
 
 				<!-- Profile Dropdown Wrapper -->
 				<div class="relative" @click.away="isProfileOpen = false">
@@ -402,9 +404,16 @@
 								<button type="submit"
 									class="w-full bg-[#1A1A1A] text-white py-5 rounded-2xl font-bold text-sm tracking-widest hover:bg-black transition-all shadow-xl active:scale-95 uppercase">Checkout</button>
 							</form>
-							<button x-show="cartItems.length === 0" @click="isCartOpen = false"
-								class="w-full bg-[#1A1A1A] text-white py-5 rounded-2xl font-bold text-sm tracking-widest hover:bg-black transition-all uppercase">Discover
-								Influencers</button>
+							<div class="w-full">
+								<a
+									href="{{ route('influencers') }}"
+									x-show="cartItems.length === 0"
+									@click="isCartOpen = false"
+									class="block w-full bg-[#1A1A1A] text-white py-5 rounded-2xl font-bold text-sm tracking-widest hover:bg-black transition-all uppercase text-center"
+								>
+									Discover Influencers
+								</a>
+							</div>
 						</div>
 					</div>
 
