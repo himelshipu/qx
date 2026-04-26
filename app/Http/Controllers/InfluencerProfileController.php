@@ -122,7 +122,6 @@ class InfluencerProfileController extends Controller
             ]);
 
         $influencerCategoryIds = $influencer->categories->pluck('id')->filter()->values();
-        $influencerCountry = trim((string) ($influencer->user->country ?? ''));
 
         $similarInfluencersQuery = Influencer::query()
             ->with([
@@ -138,11 +137,6 @@ class InfluencerProfileController extends Controller
             ->where('is_active', true)
             ->whereHas('user', function ($query): void {
                 $query->where('user_type', 'influencer');
-            })
-            ->when($influencerCountry !== '', function ($query) use ($influencerCountry): void {
-                $query->whereHas('user', function ($userQuery) use ($influencerCountry): void {
-                    $userQuery->where('country', $influencerCountry);
-                });
             })
             ->when($influencerCategoryIds->isNotEmpty(), function ($query) use ($influencerCategoryIds): void {
                 $query->whereHas('categories', function ($categoryQuery) use ($influencerCategoryIds): void {
@@ -190,7 +184,9 @@ class InfluencerProfileController extends Controller
             ->map(fn(Influencer $candidate): array => $this->toSimilarInfluencerCard($candidate, $similarInfluencerReviewStats))
             ->values();
 
-        $similarInfluencerRegionLabel = $influencerCountry !== '' ? $influencerCountry : 'this creator';
+        $similarInfluencerRegionLabel = trim((string) ($influencer->display_name ?? '')) !== ''
+            ? (string) $influencer->display_name
+            : (string) ($influencer->user->name ?? 'this creator');
 
         return view('frontend.pages.influencer-profile', [
             'influencer'           => $influencer,
