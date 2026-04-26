@@ -30,10 +30,14 @@
 		}
 
 		$profileImageUrl = image_url($influencer->user?->profile_image_path);
+		$socialLinks = $influencer->socialLinks;
 
 		$platformBadges = $influencer->platformStats
-		    ->take(2)
 		    ->map(static function ($platformStat): array {
+		        $platformKey = \Illuminate\Support\Str::of((string) ($platformStat->platform ?? ''))
+		            ->trim()
+		            ->lower()
+		            ->value();
 		        $followers = (int) ($platformStat->follower_count ?? 0);
 		        $followersLabel =
 		            $followers >= 1000000
@@ -41,34 +45,80 @@
 		                : ($followers >= 1000
 		                    ? number_format($followers / 1000, 1) . 'K'
 		                    : (string) $followers);
-		        $platformLabel = match ($platformStat->platform) {
+		        $platformLabel = match ($platformKey) {
 		            'ugc' => 'UGC',
 		            'x' => 'X',
 		            'tiktok' => 'TikTok',
 		            'youtube' => 'YouTube',
 		            'linkedin' => 'LinkedIn',
-		            default => \Illuminate\Support\Str::headline((string) $platformStat->platform),
+		            default => \Illuminate\Support\Str::headline((string) $platformKey),
 		        };
-		        $icon = match ($platformStat->platform) {
+		        $icon = match ($platformKey) {
+		            'facebook' => 'facebook',
 		            'instagram' => 'instagram',
 		            'tiktok' => 'tiktok',
+		            'youtube' => 'youtube',
+		            'linkedin' => 'linkedin',
+		            'x' => 'x',
 		            'ugc' => 'camera',
 		            default => 'group',
 		        };
+
+		        $url = trim((string) ($platformStat->profile_url ?? ''));
+
 		        return [
+		            'platform' => $platformKey,
 		            'icon' => $icon,
 		            'label' => $platformLabel,
+		            'followers_count' => $followers,
 		            'followers' => $followersLabel,
+		            'url' => $url !== '' ? $url : null,
 		        ];
 		    })
 		    ->values();
 
+		if ($platformBadges->isNotEmpty() && $socialLinks !== null) {
+		    $socialLinksByPlatform = [
+		        'instagram' => trim((string) ($socialLinks->instagram_url ?? '')),
+		        'tiktok' => trim((string) ($socialLinks->tiktok_url ?? '')),
+		        'facebook' => trim((string) ($socialLinks->facebook_url ?? '')),
+		        'x' => trim((string) ($socialLinks->x_url ?? '')),
+		        'youtube' => trim((string) ($socialLinks->youtube_url ?? '')),
+		        'linkedin' => trim((string) ($socialLinks->linkedin_url ?? '')),
+		    ];
+
+		    $platformBadges = $platformBadges
+		        ->map(static function (array $badge) use ($socialLinksByPlatform): array {
+		            if (($badge['url'] ?? null) !== null) {
+		                return $badge;
+		            }
+
+		            $platformKey = (string) ($badge['platform'] ?? '');
+
+		            $fallbackUrl = $platformKey !== '' ? ($socialLinksByPlatform[$platformKey] ?? '') : '';
+
+		            if ($fallbackUrl === '') {
+		                return $badge;
+		            }
+
+		            $badge['url'] = $fallbackUrl;
+
+		            return $badge;
+		        })
+		        ->values();
+		}
+
 		if ($platformBadges->isEmpty()) {
 		    $platformBadges = collect([
-		        ['icon' => 'tiktok', 'label' => 'TikTok', 'followers' => '81.5K'],
-		        ['icon' => 'instagram', 'label' => 'Instagram', 'followers' => '2.3M'],
+		        ['platform' => 'tiktok', 'icon' => 'tiktok', 'label' => 'TikTok', 'followers_count' => 81500, 'followers' => '81.5K', 'url' => null],
+		        ['platform' => 'instagram', 'icon' => 'instagram', 'label' => 'Instagram', 'followers_count' => 2300000, 'followers' => '2.3M', 'url' => null],
 		    ]);
 		}
+
+		$platformBadges = $platformBadges
+		    ->sortByDesc(fn(array $badge): int => (int) ($badge['followers_count'] ?? 0))
+		    ->take(4)
+		    ->values();
 
 		$bioText = trim((string) ($influencer->user->bio ?? ''));
 
@@ -251,7 +301,7 @@
 				}
 			</style>
 
-			<div class="flex flex-col lg:flex-row gap-4 lg:gap-16">
+			<div class="flex flex-col lg:flex-row gap-4 lg:gap-8">
 				<!-- LEFT COLUMN: INFLUENCER INFO -->
 				<div class="flex-1 space-y-6">
 					<!-- Profile Identity -->
@@ -275,19 +325,52 @@
 							<p class="text-sm text-gray-500 font-medium mb-4">{{ $locationText }}</p>
 							<div class="flex gap-3">
 								@foreach ($platformBadges as $platformBadge)
-									<span
-										class="px-2 md:px-4 py-1.5 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-full text-[10px] md:text-sm font-medium text-gray-500 flex items-center gap-2 shadow-sm">
-										@if ($platformBadge['icon'] === 'instagram')
-											<x-icons.instagram class="w-5 h-5 text-[#28303F] dark:text-white" />
-										@elseif ($platformBadge['icon'] === 'tiktok')
-											<x-icons.tiktok class="w-5 h-5 text-[#28303F] dark:text-white" />
-										@elseif ($platformBadge['icon'] === 'camera')
-											<x-icons.camera class="w-5 h-5 text-[#28303F] dark:text-white" />
-										@else
-											<x-icons.group class="w-5 h-5 text-[#28303F] dark:text-white" />
-										@endif
-										{{ $platformBadge['followers'] }} Followers
-									</span>
+									@if (!empty($platformBadge['url']))
+										<a href="{{ $platformBadge['url'] }}" target="_blank" rel="noopener noreferrer"
+											class="px-2 md:px-4 py-1.5 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-full text-[10px] md:text-sm font-medium text-gray-500 flex items-center gap-2 shadow-sm hover:border-gray-300 dark:hover:border-gray-600 transition"
+											title="Open {{ $platformBadge['label'] }} profile">
+											@if ($platformBadge['icon'] === 'facebook')
+												<x-icons.facebook class="w-5 h-5 text-[#28303F] dark:text-white" />
+											@elseif ($platformBadge['icon'] === 'instagram')
+												<x-icons.instagram class="w-5 h-5 text-[#28303F] dark:text-white" />
+											@elseif ($platformBadge['icon'] === 'tiktok')
+												<x-icons.tiktok class="w-5 h-5 text-[#28303F] dark:text-white" />
+											@elseif ($platformBadge['icon'] === 'youtube')
+												<x-icons.youtube class="w-5 h-5 text-[#28303F] dark:text-white" />
+											@elseif ($platformBadge['icon'] === 'linkedin')
+												<x-icons.linkedin class="w-5 h-5 text-[#28303F] dark:text-white" />
+											@elseif ($platformBadge['icon'] === 'x')
+												<x-icons.x class="w-5 h-5 text-[#28303F] dark:text-white" />
+											@elseif ($platformBadge['icon'] === 'camera')
+												<x-icons.camera class="w-5 h-5 text-[#28303F] dark:text-white" />
+											@else
+												<x-icons.group class="w-5 h-5 text-[#28303F] dark:text-white" />
+											@endif
+											{{ $platformBadge['followers'] }} Followers
+										</a>
+									@else
+										<span
+											class="px-2 md:px-4 py-1.5 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-full text-[10px] md:text-sm font-medium text-gray-500 flex items-center gap-2 shadow-sm">
+											@if ($platformBadge['icon'] === 'facebook')
+												<x-icons.facebook class="w-5 h-5 text-[#28303F] dark:text-white" />
+											@elseif ($platformBadge['icon'] === 'instagram')
+												<x-icons.instagram class="w-5 h-5 text-[#28303F] dark:text-white" />
+											@elseif ($platformBadge['icon'] === 'tiktok')
+												<x-icons.tiktok class="w-5 h-5 text-[#28303F] dark:text-white" />
+											@elseif ($platformBadge['icon'] === 'youtube')
+												<x-icons.youtube class="w-5 h-5 text-[#28303F] dark:text-white" />
+											@elseif ($platformBadge['icon'] === 'linkedin')
+												<x-icons.linkedin class="w-5 h-5 text-[#28303F] dark:text-white" />
+											@elseif ($platformBadge['icon'] === 'x')
+												<x-icons.x class="w-5 h-5 text-[#28303F] dark:text-white" />
+											@elseif ($platformBadge['icon'] === 'camera')
+												<x-icons.camera class="w-5 h-5 text-[#28303F] dark:text-white" />
+											@else
+												<x-icons.group class="w-5 h-5 text-[#28303F] dark:text-white" />
+											@endif
+											{{ $platformBadge['followers'] }} Followers
+										</span>
+									@endif
 								@endforeach
 							</div>
 						</div>
@@ -744,6 +827,100 @@
 				</div>
 			@endif
 		</section>
+
+		@if (collect($similarInfluencers ?? [])->isNotEmpty())
+			<section class="py-2 px-4 sm:px-6 lg:px-8 max-w-screen-2xl mx-auto">
+				<div class="rounded-2xl border border-gray-200 dark:border-gray-800 p-4 sm:p-6">
+					<div class="flex items-center justify-between mb-5">
+						<div>
+							<h3 class="text-2xl font-semibold text-gray-900 dark:text-white">Influencers similar to {{ $similarRegionLabel }}</h3>
+						</div>
+						<div class="hidden sm:flex items-center gap-2">
+							<button type="button" @click="scrollSimilar('prev')"
+								class="inline-flex h-9 w-9 items-center justify-center rounded-full border border-gray-300 text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800">
+								<x-icons.chevron-left class="h-4 w-4" />
+							</button>
+							<button type="button" @click="scrollSimilar('next')"
+								class="inline-flex h-9 w-9 items-center justify-center rounded-full border border-gray-300 text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800">
+								<x-icons.chevron-right class="h-4 w-4" />
+							</button>
+						</div>
+					</div>
+
+					<div x-ref="similarCarousel" class="flex gap-4 overflow-x-auto pb-2 snap-x snap-mandatory scroll-smooth no-scrollbar">
+						@foreach ($similarInfluencers as $similar)
+							<a href="{{ !empty($similar['slug']) ? route('influencer.profile', ['slug' => $similar['slug']]) : '#' }}"
+								class="group snap-start shrink-0 w-[80%] sm:w-[44%] lg:w-[31%] overflow-hidden font-sans cursor-pointer influencer-card block"
+								data-influencer-id="{{ $similar['id'] }}">
+								<div class="relative overflow-hidden rounded-xl">
+									<img src="{{ image_url($similar['image_url']) }}"
+										class="w-full h-56 object-cover transition-transform duration-500 ease-out group-hover:scale-110"
+										alt="{{ $similar['name'] }}">
+
+									<div class="absolute top-3 left-3 flex flex-wrap gap-1.5">
+										@if (!empty($similar['has_top_influencer']))
+											<span
+												class="bg-black/80 backdrop-blur-sm text-white text-[10px] font-normal px-2 py-1 rounded-md border border-white/20 flex items-center gap-1">
+												<x-icons.heart-badge class="w-4 h-4 text-pink-400" /> Top Creator
+											</span>
+										@endif
+										@if (!empty($similar['has_responses_fast']))
+											<span
+												class="bg-black/80 backdrop-blur-sm text-white text-[10px] font-normal px-2 py-1 rounded-md border border-white/20 flex items-center gap-1">
+												<x-icons.active class="w-3.5 h-3.5 text-green-400" /> Responds Fast
+											</span>
+										@endif
+									</div>
+
+									<div class="absolute bottom-3 left-3 right-3">
+										<div class="flex flex-row items-center gap-2 mb-1">
+											<div
+												class="bg-white text-black text-[10px] font-medium px-2 py-0.5 rounded-md w-fit flex items-center gap-1">
+												@if ($similar['platform'] === 'facebook')
+													<x-icons.facebook class="w-4 h-4 text-blue-600" />
+												@elseif ($similar['platform'] === 'instagram')
+													<x-icons.instagram class="w-4 h-4 text-pink-500" />
+												@elseif ($similar['platform'] === 'tiktok')
+													<x-icons.tiktok class="w-4 h-4 text-black" />
+												@elseif ($similar['platform'] === 'youtube')
+													<x-icons.youtube class="w-4 h-4 text-red-600" />
+												@elseif ($similar['platform'] === 'linkedin')
+													<x-icons.linkedin class="w-4 h-4 text-blue-700" />
+												@elseif ($similar['platform'] === 'x')
+													<x-icons.x class="w-4 h-4 text-black" />
+												@elseif ($similar['platform'] === 'ugc')
+													<x-icons.camera class="w-4 h-4 text-gray-700" />
+												@else
+													<x-icons.group class="w-4 h-4 text-gray-700" />
+												@endif
+												{{ $similar['followers_label'] }}
+											</div>
+										</div>
+
+										<div class="flex items-center gap-1 text-white drop-shadow-md">
+											<span class="font-bold text-sm">{{ $similar['name'] }}</span>
+											<span class="text-xs">
+												<x-icons.star class="w-4 h-4 text-yellow-400" />
+											</span>
+											<span class="text-xs mt-1">{{ $similar['rating_label'] }}</span>
+										</div>
+									</div>
+								</div>
+
+								<div class="pt-3 px-1">
+									<div class="flex items-start justify-between gap-3">
+										<h4 class="text-gray-800 dark:text-gray-200 text-[15px] leading-tight font-medium line-clamp-1">
+											{{ $similar['title'] !== '' ? $similar['title'] : $similar['platform_label'] . ' Influencer' }}
+										</h4>
+									</div>
+									<p class="text-[13px] text-gray-400 font-normal mt-1">{{ $similar['location'] }}</p>
+								</div>
+							</a>
+						@endforeach
+					</div>
+				</div>
+			</section>
+		@endif
 	</section>
 
 	@push('scripts')
@@ -792,6 +969,19 @@
 					closeGallery() {
 						this.showGallery = false;
 						document.body.style.overflow = 'auto';
+					},
+
+					scrollSimilar(direction) {
+						const container = this.$refs.similarCarousel;
+						if (!container) {
+							return;
+						}
+
+						const offset = Math.max(280, Math.floor(container.clientWidth * 0.8));
+						container.scrollBy({
+							left: direction === 'next' ? offset : -offset,
+							behavior: 'smooth'
+						});
 					},
 
 					nextGalleryItem() {

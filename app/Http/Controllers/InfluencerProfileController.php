@@ -7,6 +7,7 @@ use App\Models\Influencer;
 use App\Models\InfluencerPortfolio;
 use App\Models\Package;
 use App\Models\Review;
+use Illuminate\Support\Collection;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -34,6 +35,7 @@ class InfluencerProfileController extends Controller
         $influencer = Influencer::query()
             ->with([
                 'user',
+                'socialLinks',
                 'categories:id,name',
                 'platformStats' => fn($query) => $query
                     ->where('is_active', true)
@@ -107,6 +109,77 @@ class InfluencerProfileController extends Controller
                 'currency'
             ]);
 
+        $influencerCategoryIds = $influencer->categories->pluck('id')->filter()->values();
+        $influencerCountry = trim((string) ($influencer->user->country ?? ''));
+
+        $similarInfluencersQuery = Influencer::query()
+            ->with([
+                'user:id,name,slug,profile_image_path,city,country',
+                'platformStats' => fn($query) => $query
+                    ->where('is_active', true)
+                    ->orderByDesc('follower_count'),
+                'badges' => fn($query) => $query
+                    ->wherePivot('is_active', true)
+                    ->select('badge_definitions.id', 'badge_definitions.code')
+            ])
+            ->where('id', '!=', $influencer->id)
+            ->where('is_active', true)
+            ->whereHas('user', function ($query): void {
+                $query->where('user_type', 'influencer');
+            })
+            ->when($influencerCountry !== '', function ($query) use ($influencerCountry): void {
+                $query->whereHas('user', function ($userQuery) use ($influencerCountry): void {
+                    $userQuery->where('country', $influencerCountry);
+                });
+            })
+            ->when($influencerCategoryIds->isNotEmpty(), function ($query) use ($influencerCategoryIds): void {
+                $query->whereHas('categories', function ($categoryQuery) use ($influencerCategoryIds): void {
+                    $categoryQuery->whereIn('categories.id', $influencerCategoryIds->all());
+                });
+            })
+            ->limit(7);
+
+        $similarInfluencers = $similarInfluencersQuery->get();
+
+        if ($similarInfluencers->count() < 7) {
+            $excludeIds = $similarInfluencers->pluck('id')->push($influencer->id)->values();
+
+            $fallbackInfluencers = Influencer::query()
+                ->with([
+                    'user:id,name,slug,profile_image_path,city,country',
+                    'platformStats' => fn($query) => $query
+                        ->where('is_active', true)
+                        ->orderByDesc('follower_count'),
+                    'badges' => fn($query) => $query
+                        ->wherePivot('is_active', true)
+                        ->select('badge_definitions.id', 'badge_definitions.code')
+                ])
+                ->whereNotIn('id', $excludeIds->all())
+                ->where('is_active', true)
+                ->whereHas('user', function ($query): void {
+                    $query->where('user_type', 'influencer');
+                })
+                ->limit(7 - $similarInfluencers->count())
+                ->get();
+
+            $similarInfluencers = $similarInfluencers->concat($fallbackInfluencers)->take(7)->values();
+        }
+
+        $similarInfluencerReviewStats = Review::query()
+            ->whereIn('influencer_id', $similarInfluencers->pluck('id')->all())
+            ->where('reviewee_type', 'influencer')
+            ->where('is_public', true)
+            ->selectRaw('influencer_id, COUNT(*) as total_reviews, AVG(rating) as avg_rating')
+            ->groupBy('influencer_id')
+            ->get()
+            ->keyBy('influencer_id');
+
+        $similarInfluencerCards = $similarInfluencers
+            ->map(fn(Influencer $candidate): array => $this->toSimilarInfluencerCard($candidate, $similarInfluencerReviewStats))
+            ->values();
+
+        $similarInfluencerRegionLabel = $influencerCountry !== '' ? $influencerCountry : 'this creator';
+
         return view('frontend.pages.influencer-profile', [
             'influencer'           => $influencer,
             'packages'             => $packages,
@@ -117,8 +190,77 @@ class InfluencerProfileController extends Controller
             'reviewsTotalCount'    => (int) ($reviewSummary?->total_reviews ?? 0),
             'reviewsAverageRating' => $reviewSummary?->avg_rating !== null ? round((float) $reviewSummary->avg_rating, 1) : null,
             'reviewDistribution'   => $reviewDistribution,
+            'similarInfluencers'   => $similarInfluencerCards,
+            'similarRegionLabel'   => $similarInfluencerRegionLabel,
             'title'                => $influencer->user->name . ' — Influencer'
         ]);
+    }
+
+    /**
+     * Build similar influencer card payload for profile page carousel.
+     *
+     * @param  Collection<int, mixed>  $reviewStatsByInfluencer
+     */
+    private function toSimilarInfluencerCard(Influencer $influencer, Collection $reviewStatsByInfluencer): array
+    {
+        $topStat = $influencer->platformStats
+            ->sortByDesc(fn($stat) => (int) ($stat->follower_count ?? 0))
+            ->first();
+
+        $platformKey = strtolower(trim((string) ($topStat?->platform ?? 'other')));
+
+        $platformLabel = match ($platformKey) {
+            'ugc' => 'UGC',
+            'x' => 'X',
+            'tiktok' => 'TikTok',
+            'youtube' => 'YouTube',
+            'linkedin' => 'LinkedIn',
+            default => ucfirst($platformKey),
+        };
+
+        $reviews = $reviewStatsByInfluencer->get($influencer->id);
+        $avgRating = $reviews?->avg_rating !== null ? (float) $reviews->avg_rating : 0.0;
+
+        $displayName = trim((string) ($influencer->display_name ?? '')) !== ''
+            ? (string) $influencer->display_name
+            : (string) ($influencer->user?->name ?? 'Influencer');
+
+        $locationParts = array_values(array_filter([
+            trim((string) ($influencer->user?->city ?? '')),
+            trim((string) ($influencer->user?->country ?? '')),
+        ]));
+
+        $badges = $influencer->badges->keyBy('code');
+
+        return [
+            'id' => (int) $influencer->id,
+            'slug' => (string) ($influencer->user?->slug ?? ''),
+            'name' => $displayName,
+            'title' => trim((string) ($influencer->title_name ?? '')),
+            'image_url' => $influencer->user?->profile_image_path,
+            'location' => $locationParts !== [] ? implode(', ', $locationParts) : 'N/A',
+            'platform' => $platformKey,
+            'platform_label' => $platformLabel,
+            'followers_label' => $this->formatFollowers((int) ($topStat?->follower_count ?? 0)),
+            'rating_label' => number_format($avgRating, 1),
+            'has_top_influencer' => $badges->has('top_influencer'),
+            'has_responses_fast' => $badges->has('responds_fast'),
+        ];
+    }
+
+    private function formatFollowers(?int $count): string
+    {
+        $followers = max(0, (int) $count);
+
+        if ($followers >= 1000000) {
+            return number_format($followers / 1000000, 1) . 'M';
+        }
+
+        if ($followers >= 1000) {
+            return number_format($followers / 1000, 1) . 'K';
+        }
+
+        return (string) $followers;
     }
 
     /**
