@@ -52,19 +52,31 @@ class InfluencerProfileController extends Controller
         $portfolioBaseQuery = InfluencerPortfolio::query()
             ->where('influencer_id', $influencer->id)
             ->where('is_active', true)
-            ->orderBy('sort_order')
+            ->orderByDesc('created_at')
             ->orderByDesc('id');
 
-        $portfolioTotalCount = (clone $portfolioBaseQuery)->count();
+        $portfolioMedia = (clone $portfolioBaseQuery)
+            ->get(['id', 'media_type', 'file_path', 'title', 'description', 'created_at']);
 
-        $portfolioPreview = (clone $portfolioBaseQuery)
+        $portfolioTotalCount = $portfolioMedia->count();
+
+        $portfolioMediaItems = $portfolioMedia
+            ->map(fn(InfluencerPortfolio $portfolioItem): array => $this->toPortfolioMediaCard($portfolioItem))
+            ->values();
+
+        $portfolioTopImageIds = $portfolioMediaItems
             ->where('media_type', 'image')
-            ->limit(3)
-            ->get(['id', 'file_path']);
+            ->take(3)
+            ->pluck('id')
+            ->values();
 
-        $portfolioPage = (clone $portfolioBaseQuery)
-            ->simplePaginate(24, ['id', 'media_type', 'file_path', 'title', 'description', 'created_at'], 'portfolio_page')
-            ->withQueryString();
+        $portfolioTopImages = $portfolioMediaItems
+            ->whereIn('id', $portfolioTopImageIds)
+            ->values();
+
+        $portfolioRemainingMedia = $portfolioMediaItems
+            ->reject(fn(array $portfolioItem): bool => $portfolioTopImageIds->contains($portfolioItem['id']))
+            ->values();
 
         $reviewsBaseQuery = Review::query()
             ->where('influencer_id', $influencer->id)
@@ -183,8 +195,9 @@ class InfluencerProfileController extends Controller
         return view('frontend.pages.influencer-profile', [
             'influencer'           => $influencer,
             'packages'             => $packages,
-            'portfolioPreview'     => $portfolioPreview,
-            'portfolioPage'        => $portfolioPage,
+            'portfolioTopImages'   => $portfolioTopImages,
+            'portfolioRemainingMedia' => $portfolioRemainingMedia,
+            'portfolioMediaItems'  => $portfolioMediaItems,
             'portfolioTotalCount'  => $portfolioTotalCount,
             'reviewsPage'          => $reviewsPage,
             'reviewsTotalCount'    => (int) ($reviewSummary?->total_reviews ?? 0),
@@ -194,6 +207,20 @@ class InfluencerProfileController extends Controller
             'similarRegionLabel'   => $similarInfluencerRegionLabel,
             'title'                => $influencer->user->name . ' — Influencer'
         ]);
+    }
+
+    private function toPortfolioMediaCard(InfluencerPortfolio $portfolio): array
+    {
+        $mediaUrl = ImageHelper::url($portfolio->file_path);
+
+        return [
+            'id' => (int) $portfolio->id,
+            'media_type' => (string) $portfolio->media_type,
+            'url' => $mediaUrl,
+            'poster_url' => null,
+            'title' => trim((string) ($portfolio->title ?? '')),
+            'description' => trim((string) ($portfolio->description ?? '')),
+        ];
     }
 
     /**
@@ -328,7 +355,7 @@ class InfluencerProfileController extends Controller
                 'profile_image'      => ['nullable', 'image', 'mimes:jpeg,png,webp', 'max:2048'],
                 'cover_image'        => ['nullable', 'image', 'mimes:jpeg,png,webp', 'max:4096'],
                 'portfolio_images'   => ['nullable', 'array'],
-                'portfolio_images.*' => ['nullable', 'image', 'mimes:jpeg,png,webp', 'max:5120']
+                    'portfolio_images.*' => ['nullable', 'file', 'mimes:jpeg,png,webp,jpg,mp4,mov,webm,avi', 'max:51200']
             ]
         ];
 
@@ -408,10 +435,14 @@ class InfluencerProfileController extends Controller
                 try {
                     foreach ($request->file('portfolio_images', []) as $portfolioImage) {
                         $path = $portfolioImage->store('creators/portfolio', 'public');
+                            $mimeType = (string) $portfolioImage->getMimeType();
+                            $mediaType = str_starts_with($mimeType, 'video/') ? 'video' : 'image';
                         $influencer->portfolios()->create([
-                            'media_type' => 'image',
+                                'media_type' => $mediaType,
                             'file_path'  => $path,
-                            'title'      => 'Portfolio Image ' . ($influencer->portfolios()->max('sort_order') + 1),
+                                'title'      => $mediaType === 'video'
+                                    ? 'Portfolio Video ' . ($influencer->portfolios()->max('sort_order') + 1)
+                                    : 'Portfolio Image ' . ($influencer->portfolios()->max('sort_order') + 1),
                             'sort_order' => $influencer->portfolios()->max('sort_order') + 1,
                             'is_active'  => true
                         ]);

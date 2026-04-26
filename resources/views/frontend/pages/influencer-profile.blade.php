@@ -21,8 +21,11 @@
 		    $categoryNames = collect(['Tech', 'Tesla', 'Health & Fitness', 'Car', 'Pet']);
 		}
 
-		// Get first 3 portfolio images for grid display
-		$gridImages = $portfolioPreview->pluck('file_path')->map(fn($path) => \App\Helpers\ImageHelper::url($path))->values();
+		// Get the latest 3 portfolio images for the top grid display
+		$gridImages = $portfolioTopImages
+		    ->where('media_type', 'image')
+		    ->pluck('url')
+		    ->values();
 
 		// Fill with defaults if not enough images
 		while ($gridImages->count() < 3) {
@@ -268,9 +271,9 @@
 				</div>
 
 				<!-- Show All Photos Button (Desktop Only) -->
-				@if ($portfolioTotalCount > 3)
+				@if (($portfolioRemainingMedia ?? collect())->isNotEmpty())
 					<div class="hidden lg:block absolute bottom-6 right-6 z-10">
-						<a href="#portfolio-gallery"
+						<button type="button" @click="openGallery()"
 							class="flex items-center gap-2 bg-white/90 backdrop-blur-md px-5 py-2.5 rounded-2xl text-sm font-bold text-gray-900 border border-gray-100 shadow-xl hover:bg-white transition active:scale-95">
 							<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
 								stroke="currentColor" stroke-width="2">
@@ -278,7 +281,7 @@
 									d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
 							</svg>
 							Show All Photos
-						</a>
+						</button>
 					</div>
 				@endif
 
@@ -551,7 +554,7 @@
 						<div class="w-full">
 							<form @submit.prevent="handleAddToCart()" method="POST">
 								<button type="submit"
-									class="flex w-full items-center justify-center rounded-xl bg-gradient-to-r from-rose-400 to-fuchsia-500 px-6 py-3.5 text-base font-bold text-white transition hover:from-rose-500 hover:to-fuchsia-600 active:scale-[0.98] shadow-lg hover:shadow-xl">
+									class="flex w-full items-center justify-center rounded-xl bg-linear-to-r from-rose-400 to-fuchsia-500 px-6 py-3.5 text-base font-bold text-white transition hover:from-rose-500 hover:to-fuchsia-600 active:scale-[0.98] shadow-lg hover:shadow-xl">
 									Add to Cart
 								</button>
 							</form>
@@ -574,136 +577,86 @@
 			</div>
 		</main>
 
-		<!-- PORTFOLIO SECTION (now inside the main Alpine component) -->
-		@if ($portfolioTotalCount > 0)
-			<section id="portfolio-gallery" class="py-4 px-4 sm:px-6 lg:px-8 max-w-screen-2xl mx-auto scroll-mt-24">
-				<div class="mb-12">
-					<h2 class="text-3xl font-bold text-gray-900 dark:text-white mb-2">Portfolio</h2>
-					<p class="text-gray-600 dark:text-gray-400">Showing {{ $portfolioPage->count() }} of
-						{{ number_format($portfolioTotalCount) }} media items</p>
+		<!-- PORTFOLIO SECTION (remaining media) -->
+		@if (($portfolioRemainingMedia ?? collect())->isNotEmpty())
+			<section class="py-4 px-4 sm:px-6 lg:px-8 max-w-screen-2xl mx-auto">
+				<div class="mb-12 flex items-center justify-between gap-4">
+					<div>
+						<h2 class="text-3xl font-bold text-gray-900 dark:text-white mb-2">Portfolio</h2>
+						<p class="text-gray-600 dark:text-gray-400">Showing {{ $portfolioRemainingMedia->count() }} of
+							{{ number_format($portfolioTotalCount) }} media items</p>
+					</div>
+					<button type="button" @click="openGallery()"
+						class="inline-flex items-center rounded-xl border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-900 transition hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:hover:bg-gray-800">
+						See all
+					</button>
 				</div>
 
-				<!-- Portfolio Grid -->
 				<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-					@foreach ($portfolioPage as $item)
-						<button @click="openGallery({{ $item->id }})" type="button"
-							class="portfolio-item group relative rounded-2xl overflow-hidden border border-gray-100 dark:border-gray-800 hover:shadow-xl transition-all duration-300 cursor-pointer w-full text-left bg-transparent p-0">
-							@if ($item->media_type === 'image')
-								<img src="{{ \App\Helpers\ImageHelper::url($item->file_path) }}" alt="{{ $item->title }}"
-									class="w-full h-80 object-cover group-hover:scale-105 transition-transform duration-500">
+					@foreach ($portfolioRemainingMedia as $item)
+						<div class="portfolio-item group relative overflow-hidden rounded-2xl bg-black">
+							@if ($item['media_type'] === 'image')
+								<img src="{{ $item['url'] }}" alt="{{ $item['title'] !== '' ? $item['title'] : 'Portfolio media' }}"
+									class="w-full h-80 object-cover transition-transform duration-500 group-hover:scale-105">
 							@else
-								<div
-									class="w-full h-80 bg-gray-200 dark:bg-gray-700 flex items-center justify-center group-hover:bg-gray-300 transition-colors">
-									<svg class="w-16 h-16 text-gray-400" fill="currentColor" viewBox="0 0 24 24">
-										<path d="M8 5v14l11-7z" />
-									</svg>
+								<div class="relative">
+									<video src="{{ $item['url'] }}" data-video-id="media-{{ $item['id'] }}" @play="pauseOtherVideos($event)"
+										@pause="updateVideoState($event)" poster="{{ $item['poster_url'] ?? '' }}" muted playsinline preload="metadata"
+										class="w-full h-80 object-cover"></video>
+									<button type="button" @click="toggleVideoPlayback($event)" data-video-toggle
+										class="absolute inset-0 flex items-center justify-center bg-black/10 transition hover:bg-black/20">
+										<div class="flex h-14 w-14 items-center justify-center rounded-full bg-black/55 text-white backdrop-blur-sm">
+											<svg class="h-7 w-7" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+												<path d="M8 5v14l11-7z" />
+											</svg>
+										</div>
+									</button>
 								</div>
 							@endif
-							<!-- Overlay -->
-							<div
-								class="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all duration-300 flex items-center justify-center">
-								<div class="opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-									<svg class="w-16 h-16 text-white" fill="currentColor" viewBox="0 0 24 24">
-										<path d="M8 5v14l11-7z" />
-									</svg>
-								</div>
-							</div>
-							<!-- Title Badge -->
-							@if ($item->title)
-								<div class="absolute bottom-0 left-0 right-0 bg-linear-to-t from-black/60 to-transparent p-4">
-									<p class="text-white font-semibold text-sm">{{ Str::limit($item->title, 40) }}</p>
-								</div>
-							@endif
-						</button>
+						</div>
 					@endforeach
-				</div>
-
-				<div class="mt-8">
-					{{ $portfolioPage->appends(request()->except('portfolio_page'))->links() }}
-				</div>
-
-				<!-- Lightbox Modal Overlay -->
-				<div x-show="showGallery" x-cloak @click.outside="closeGallery()" @keydown.escape.window="closeGallery()"
-					@keydown.arrow-right.window="nextGalleryItem()" @keydown.arrow-left.window="prevGalleryItem()"
-					@touchstart="getTouchPosition($event)" @touchmove.prevent @touchend="handleTouchEnd($event)"
-					class="fixed inset-0 z-50 bg-black/95 flex items-center justify-center p-4" role="dialog" aria-modal="true">
-
-					<!-- Loading state -->
-					<template x-if="!currentGalleryItem">
-						<div class="flex items-center justify-center">
-							<div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-white"></div>
-						</div>
-					</template>
-
-					<!-- Modal Content -->
-					<template x-if="currentGalleryItem">
-						<div class="relative w-full h-full flex flex-col items-center justify-center" @click.stop>
-							<!-- Media Display -->
-							<div class="flex-1 flex items-center justify-center w-full max-w-5xl">
-								<!-- Image -->
-								<template x-if="currentGalleryItem.type === 'image'">
-									<img :src="currentGalleryItem.url" :alt="currentGalleryItem.title"
-										class="max-w-full max-h-[80vh] object-contain rounded-lg">
-								</template>
-								<!-- Video -->
-								<template x-if="currentGalleryItem.type === 'video'">
-									<video :src="currentGalleryItem.url" controls autoplay
-										class="max-w-full max-h-[80vh] object-contain rounded-lg" controlsList="nodownload">
-									</video>
-								</template>
-							</div>
-
-							<!-- Bottom Info Bar -->
-							<div class="mt-6 w-full max-w-5xl flex items-center justify-between">
-								<!-- Left: Title and Description -->
-								<div class="flex-1">
-									<h3 class="text-white font-bold text-lg" x-text="currentGalleryItem.title"></h3>
-									<p class="text-gray-300 text-sm mt-1" x-text="currentGalleryItem.description"></p>
-								</div>
-								<!-- Right: Counter -->
-								<div class="text-white text-sm px-4">
-									<span x-text="`${currentGalleryIndex + 1} / ${portfolioItems.length}`"></span>
-								</div>
-							</div>
-
-							<!-- Navigation Controls -->
-							<div class="mt-6 flex items-center gap-4">
-								<!-- Previous Button -->
-								<button @click="prevGalleryItem()" type="button"
-									class="p-3 rounded-full bg-white/10 hover:bg-white/20 transition text-white"
-									:disabled="portfolioItems.length <= 1">
-									<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-									</svg>
-								</button>
-								<!-- Next Button -->
-								<button @click="nextGalleryItem()" type="button"
-									class="p-3 rounded-full bg-white/10 hover:bg-white/20 transition text-white"
-									:disabled="portfolioItems.length <= 1">
-									<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-									</svg>
-								</button>
-							</div>
-
-							<!-- Close Button -->
-							<button @click="closeGallery()" type="button"
-								class="absolute top-4 right-4 p-3 rounded-full bg-white/10 hover:bg-white/20 transition text-white"
-								aria-label="Close gallery">
-								<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-								</svg>
-							</button>
-
-							<!-- Touch swipe hint (mobile) -->
-							<div class="absolute bottom-4 left-4 text-gray-400 text-xs md:hidden">
-								Swipe to navigate (current page)
-							</div>
-						</div>
-					</template>
 				</div>
 			</section>
 		@endif
+
+		<div x-show="showGallery" x-cloak @click.self="closeGallery()" @keydown.escape.window="closeGallery()"
+			class="fixed inset-0 z-50 bg-black/90 p-4 sm:p-6" role="dialog" aria-modal="true">
+			<div x-ref="galleryModal" class="mx-auto flex h-full w-full max-w-7xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl dark:bg-gray-900">
+				<div class="flex justify-end p-4 sm:p-6 pb-0">
+					<button @click="closeGallery()" type="button" class="rounded-full p-2 text-gray-500 transition hover:bg-gray-100 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-white" aria-label="Close gallery">
+						<svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+						</svg>
+					</button>
+				</div>
+
+				<div class="flex-1 overflow-y-auto p-4 sm:p-6">
+					<div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+						<template x-for="item in mediaGalleryItems" :key="item.id">
+							<div class="group overflow-hidden rounded-2xl bg-black">
+								<template x-if="item.media_type === 'image'">
+									<img :src="item.url" :alt="item.title || 'Portfolio media'" class="h-60 w-full object-cover">
+								</template>
+								<template x-if="item.media_type === 'video'">
+									<div class="relative">
+										<video :src="item.url" :poster="item.poster_url || ''" :data-video-id="'gallery-' + item.id" muted playsinline preload="metadata"
+											@play="pauseOtherVideos($event)" @pause="updateVideoState($event)" class="h-60 w-full object-cover"></video>
+										<button type="button" @click="toggleVideoPlayback($event)" data-video-toggle
+											class="absolute inset-0 flex items-center justify-center bg-black/10 transition hover:bg-black/20">
+											<div class="flex h-14 w-14 items-center justify-center rounded-full bg-black/55 text-white backdrop-blur-sm">
+												<svg class="h-7 w-7" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+													<path d="M8 5v14l11-7z" />
+												</svg>
+											</div>
+										</button>
+									</div>
+								</template>
+							</div>
+						</template>
+					</div>
+				</div>
+			</div>
+		</div>
 
 		<!-- REVIEWS SECTION -->
 		<section id="reviews-holder" class="py-2 px-4 sm:px-6 lg:px-8 max-w-screen-2xl mx-auto scroll-mt-24">
@@ -781,7 +734,7 @@
 							<div class="flex items-center justify-between mb-3">
 								<div class="flex items-center gap-3">
 									<div
-										class="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-purple-100 to-pink-100 text-sm font-bold text-gray-700 dark:from-purple-900 dark:to-pink-900 dark:text-gray-100">
+										class="flex h-10 w-10 items-center justify-center rounded-full bg-linear-to-br from-purple-100 to-pink-100 text-sm font-bold text-gray-700 dark:from-purple-900 dark:to-pink-900 dark:text-gray-100">
 										{{ \Illuminate\Support\Str::substr($review->brand?->brand_name ?? 'B', 0, 1) }}
 									</div>
 									<div>
@@ -942,33 +895,81 @@
 					startAddToCartUrl(packageId) {
 						return @js(route('cart.start-add-to-cart', ['package' => ':id'])).replace(':id', packageId);
 					},
-					portfolioItems: @js(
-    $portfolioPage
-        ->getCollection()
-        ->map(
-            fn($p) => [
-                'id' => $p->id,
-                'title' => $p->title,
-                'description' => $p->description,
-                'url' => \App\Helpers\ImageHelper::url($p->file_path),
-                'type' => $p->media_type,
-            ],
-        )
-        ->values()
-        ->toArray(),
-),
+					mediaGalleryItems: @js($portfolioMediaItems),
 					showGallery: false,
-					currentGalleryIndex: 0,
+					activeVideoId: null,
 
-					openGallery(itemId) {
-						this.currentGalleryIndex = this.portfolioItems.findIndex(p => p.id === itemId);
+					openGallery() {
 						this.showGallery = true;
 						document.body.style.overflow = 'hidden';
 					},
 
 					closeGallery() {
 						this.showGallery = false;
+						this.pauseGalleryVideos();
+						this.activeVideoId = null;
 						document.body.style.overflow = 'auto';
+					},
+
+					pauseGalleryVideos() {
+						const container = this.$refs.galleryModal;
+						if (!container) {
+							return;
+						}
+
+						container.querySelectorAll('video').forEach((video) => {
+							video.pause();
+						});
+					},
+
+					pauseOtherVideos(event) {
+						const currentVideo = event.target;
+						if (!(currentVideo instanceof HTMLVideoElement)) {
+							return;
+						}
+
+						this.activeVideoId = currentVideo.dataset.videoId || null;
+						this.$el.querySelectorAll('video').forEach((video) => {
+							if (video !== currentVideo) {
+								video.pause();
+							}
+						});
+					},
+
+					updateVideoState(event) {
+						const currentVideo = event.target;
+						if (!(currentVideo instanceof HTMLVideoElement)) {
+							return;
+						}
+
+						if (currentVideo.paused && this.activeVideoId === currentVideo.dataset.videoId) {
+							this.activeVideoId = null;
+						}
+					},
+
+					toggleVideoPlayback(event) {
+						const trigger = event.currentTarget;
+						const video = trigger.parentElement ? trigger.parentElement.querySelector('video') : null;
+
+						if (!video) {
+							return;
+						}
+
+						if (video.paused) {
+							this.pauseGalleryVideos();
+							this.activeVideoId = video.dataset.videoId || null;
+								const playPromise = video.play();
+								if (playPromise && typeof playPromise.catch === 'function') {
+									playPromise.catch(() => {
+										if (this.activeVideoId === (video.dataset.videoId || null)) {
+											this.activeVideoId = null;
+										}
+									});
+								}
+						} else {
+							this.activeVideoId = null;
+							video.pause();
+						}
 					},
 
 					scrollSimilar(direction) {
@@ -982,19 +983,6 @@
 							left: direction === 'next' ? offset : -offset,
 							behavior: 'smooth'
 						});
-					},
-
-					nextGalleryItem() {
-						this.currentGalleryIndex = (this.currentGalleryIndex + 1) % this.portfolioItems.length;
-					},
-
-					prevGalleryItem() {
-						this.currentGalleryIndex = (this.currentGalleryIndex - 1 + this.portfolioItems.length) % this
-							.portfolioItems.length;
-					},
-
-					get currentGalleryItem() {
-						return this.portfolioItems[this.currentGalleryIndex] || null;
 					},
 
 					get filteredPackages() {
@@ -1037,15 +1025,6 @@
 					},
 
 					handleSwipe() {
-						const swipeThreshold = 50;
-						const diff = this.touchStartX - this.touchEndX;
-						if (Math.abs(diff) > swipeThreshold) {
-							if (diff > 0) {
-								this.nextGalleryItem();
-							} else {
-								this.prevGalleryItem();
-							}
-						}
 					},
 
 					get normalizedUserType() {

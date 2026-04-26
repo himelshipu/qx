@@ -99,7 +99,7 @@
 						<div>
 							<label class="block text-sm font-medium text-gray-800 dark:text-gray-400 mb-1.5">Date of Birth</label>
 							<input type="date" name="date_of_birth"
-								value="{{ old('date_of_birth', $user->date_of_birth?->format('Y-m-d') ?? '') }}"
+								value="{{ old('date_of_birth', optional($user->date_of_birth)->format('Y-m-d') ?? '') }}"
 								class="h-12 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 focus:ring-1 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white/90" />
 							@error('date_of_birth')
 								<p class="mt-1 text-xs text-red-500">{{ $message }}</p>
@@ -326,6 +326,7 @@
 
 					<div>
 						<h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-4">Portfolio Images</h3>
+						<p class="mb-3 text-sm text-gray-500 dark:text-gray-400">Upload multiple images and videos together. Images and videos will be saved in the order selected.</p>
 						@php $totalPortfolioCount = $influencer->portfolios->count(); @endphp
 						<div id="portfolioGrid" class="grid grid-cols-2 md:grid-cols-3 gap-4 mb-4">
 							@foreach ($influencer->portfolios->sortByDesc('sort_order')->take(5) as $portfolio)
@@ -369,14 +370,20 @@
 							name="portfolio_images[]">
 						<button type="button" id="addPortfolioBtn"
 							class="bg-gray-800 hover:bg-gray-700 px-4 py-2 rounded-lg text-sm font-medium text-white transition">
-							Add Portfolio Images
+							Add Portfolio Media
 						</button>
+						@error('portfolio_images')
+							<p class="mt-2 text-xs text-red-500">{{ $message }}</p>
+						@enderror
+						@error('portfolio_images.*')
+							<p class="mt-2 text-xs text-red-500">{{ $message }}</p>
+						@enderror
 					</div>
 
 					<div class="flex justify-end pt-4">
 						<button type="submit" name="image_type" value="portfolio"
 							class="bg-[#1A1A1A] hover:bg-purple-400 px-8 py-3 rounded-xl text-sm font-medium text-white transition shadow-lg active:scale-95">
-							Save Portfolio Images
+							Save Portfolio Media
 						</button>
 					</div>
 				</form>
@@ -385,7 +392,7 @@
 	</div>
 
 	<!-- Confirmation Modal -->
-	<div id="confirmation-modal" class="fixed inset-0 z-[100] hidden items-center justify-center p-4">
+	<div id="confirmation-modal" class="fixed inset-0 z-100 hidden items-center justify-center p-4">
 		<!-- Backdrop -->
 		<div id="modal-backdrop" class="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity"></div>
 
