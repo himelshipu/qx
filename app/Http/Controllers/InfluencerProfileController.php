@@ -304,11 +304,23 @@ class InfluencerProfileController extends Controller
 
         $influencer->load(['user', 'socialLinks', 'portfolios']);
 
+        $portfolioMediaItems = InfluencerPortfolio::query()
+            ->where('influencer_id', $influencer->id)
+            ->where('is_active', true)
+            ->orderByDesc('created_at')
+            ->orderByDesc('id')
+            ->get(['id', 'media_type', 'file_path', 'title', 'description', 'created_at'])
+            ->map(fn(InfluencerPortfolio $portfolioItem): array => $this->toPortfolioMediaCard($portfolioItem))
+            ->values();
+
         return view('frontend.pages.influencer-edit-profile', [
-            'user'       => $influencer->user,
-            'influencer' => $influencer,
-            'brand'      => $influencer,
-            'slug'       => $slug
+            'user'                     => $influencer->user,
+            'influencer'               => $influencer,
+            'brand'                    => $influencer,
+            'slug'                     => $slug,
+            'portfolioMediaItems'      => $portfolioMediaItems,
+            'portfolioPreviewMedia'    => $portfolioMediaItems->take(5)->values(),
+            'portfolioOverflowCount'   => max($portfolioMediaItems->count() - 5, 0),
         ]);
     }
 

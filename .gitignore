@@ -44,6 +44,11 @@ auth.json
 /.nova
 /.zed
 
+/.claude
+/.Vscode
+/.marscode
+/.phpstorm
+/.vscode-server
 # OS
 Thumbs.db
 .DS_Store

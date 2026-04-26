@@ -327,30 +327,33 @@
 					<div>
 						<h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-4">Portfolio Images</h3>
 						<p class="mb-3 text-sm text-gray-500 dark:text-gray-400">Upload multiple images and videos together. Images and videos will be saved in the order selected.</p>
-						@php $totalPortfolioCount = $influencer->portfolios->count(); @endphp
 						<div id="portfolioGrid" class="grid grid-cols-2 md:grid-cols-3 gap-4 mb-4">
-							@foreach ($influencer->portfolios->sortByDesc('sort_order')->take(5) as $portfolio)
-								<div
-									class="portfolio-item relative aspect-3/4 rounded-lg overflow-hidden border border-gray-100 dark:border-gray-800 shadow-sm bg-gray-50 dark:bg-gray-900"
-									data-id="{{ $portfolio->id }}">
-									@if ($portfolio->file_path && $portfolio->media_type === 'image')
-										<img src="{{ \App\Helpers\ImageHelper::url($portfolio->file_path) }}"
-											alt="{{ $portfolio->title ?? 'Portfolio' }}" class="w-full h-full object-cover">
+							@foreach ($portfolioPreviewMedia as $portfolio)
+								<div class="portfolio-item relative aspect-3/4 rounded-lg overflow-hidden border border-gray-100 dark:border-gray-800 shadow-sm bg-gray-50 dark:bg-gray-900"
+									data-id="{{ $portfolio['id'] }}">
+									@if ($portfolio['media_type'] === 'image')
+										<img src="{{ $portfolio['url'] }}" alt="{{ $portfolio['title'] !== '' ? $portfolio['title'] : 'Portfolio' }}"
+											class="w-full h-full object-cover">
 									@else
-										<div class="w-full h-full flex items-center justify-center bg-gray-100 dark:bg-gray-800">
-											<svg class="w-12 h-12 text-gray-300" fill="currentColor" viewBox="0 0 24 24">
-												<path
-													d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-											</svg>
+										<div class="relative h-full w-full bg-black">
+											<video src="{{ $portfolio['url'] }}" poster="{{ $portfolio['poster_url'] ?? '' }}" muted playsinline preload="metadata"
+												class="h-full w-full object-cover"></video>
+											<button type="button" data-portfolio-video-toggle
+												class="absolute inset-0 flex items-center justify-center bg-black/10 transition hover:bg-black/20">
+												<div class="flex h-12 w-12 items-center justify-center rounded-full bg-black/55 text-white backdrop-blur-sm">
+													<svg class="h-6 w-6" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+														<path d="M8 5v14l11-7z" />
+													</svg>
+												</div>
+											</button>
 										</div>
 									@endif
-									<div
-										class="absolute top-2 left-2 bg-white/90 backdrop-blur-sm border border-gray-100 px-2 py-0.5 rounded text-[9px] font-bold text-gray-600 uppercase">
-										{{ $portfolio->title ?? 'Portfolio' }}
+									<div class="absolute top-2 left-2 bg-white/90 backdrop-blur-sm border border-gray-100 px-2 py-0.5 rounded text-[9px] font-bold text-gray-600 uppercase">
+										{{ $portfolio['title'] !== '' ? $portfolio['title'] : 'Portfolio' }}
 									</div>
 									<button type="button"
 										class="delete-portfolio-btn absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white p-1.5 rounded-full transition-colors"
-										data-id="{{ $portfolio->id }}">
+										data-id="{{ $portfolio['id'] }}">
 										<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
 											<path d="M6 18L18 6M6 6l12 12" />
 										</svg>
@@ -358,11 +361,11 @@
 								</div>
 							@endforeach
 
-							@if ($totalPortfolioCount > 5)
-								<div
-									class="relative aspect-3/4 rounded-lg overflow-hidden border border-gray-100 dark:border-gray-800 shadow-sm bg-gray-100 dark:bg-gray-900 flex items-center justify-center">
-									<span class="text-lg font-bold text-gray-700 dark:text-gray-200">+{{ $totalPortfolioCount - 5 }} more</span>
-								</div>
+							@if ($portfolioOverflowCount > 0)
+								<button type="button" id="openPortfolioGalleryBtn"
+									class="relative aspect-3/4 rounded-lg overflow-hidden border border-gray-100 dark:border-gray-800 shadow-sm bg-gray-100 dark:bg-gray-900 flex items-center justify-center text-center px-4 transition hover:bg-gray-200 dark:hover:bg-gray-800">
+									<span class="text-lg font-bold text-gray-700 dark:text-gray-200">+{{ $portfolioOverflowCount }} more</span>
+								</button>
 							@endif
 						</div>
 
@@ -387,6 +390,41 @@
 						</button>
 					</div>
 				</form>
+			</div>
+		</div>
+	</div>
+
+	<div id="portfolio-gallery-modal" class="fixed inset-0 z-100 hidden items-center justify-center bg-black/90 p-4 sm:p-6" role="dialog" aria-modal="true">
+		<div class="mx-auto flex h-full w-full max-w-7xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl dark:bg-gray-900">
+			<div class="flex justify-end p-4 sm:p-6 pb-0">
+				<button type="button" id="close-portfolio-gallery" class="rounded-full p-2 text-gray-500 transition hover:bg-gray-100 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-white" aria-label="Close gallery">
+					<svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+					</svg>
+				</button>
+			</div>
+
+			<div class="flex-1 overflow-y-auto p-4 sm:p-6">
+				<div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+					@foreach ($portfolioMediaItems as $portfolio)
+						<div class="group overflow-hidden rounded-2xl bg-black">
+							@if ($portfolio['media_type'] === 'image')
+								<img src="{{ $portfolio['url'] }}" alt="{{ $portfolio['title'] !== '' ? $portfolio['title'] : 'Portfolio media' }}" class="h-60 w-full object-cover">
+							@else
+								<div class="relative">
+									<video src="{{ $portfolio['url'] }}" poster="{{ $portfolio['poster_url'] ?? '' }}" muted playsinline preload="metadata" class="h-60 w-full object-cover"></video>
+									<button type="button" data-portfolio-video-toggle class="absolute inset-0 flex items-center justify-center bg-black/10 transition hover:bg-black/20">
+										<div class="flex h-14 w-14 items-center justify-center rounded-full bg-black/55 text-white backdrop-blur-sm">
+											<svg class="h-7 w-7" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+												<path d="M8 5v14l11-7z" />
+											</svg>
+										</div>
+									</button>
+								</div>
+							@endif
+						</div>
+					@endforeach
+				</div>
 			</div>
 		</div>
 	</div>
@@ -553,8 +591,88 @@
 				const portfolioGrid = document.getElementById('portfolioGrid');
 				const portfolioInput = document.getElementById('portfolioInput');
 				const addPortfolioBtn = document.getElementById('addPortfolioBtn');
+				const openPortfolioGalleryBtn = document.getElementById('openPortfolioGalleryBtn');
+				const portfolioGalleryModal = document.getElementById('portfolio-gallery-modal');
+				const closePortfolioGalleryBtn = document.getElementById('close-portfolio-gallery');
+				let activePortfolioVideo = null;
 
 				addPortfolioBtn.addEventListener('click', () => portfolioInput.click());
+
+				function pausePortfolioVideos() {
+					[...portfolioGrid.querySelectorAll('video'), ...portfolioGalleryModal.querySelectorAll('video')].forEach((video) => {
+						video.pause();
+					});
+					activePortfolioVideo = null;
+				}
+
+				function togglePortfolioVideo(trigger) {
+					const wrapper = trigger.closest('.group, .portfolio-item');
+					const video = wrapper ? wrapper.querySelector('video') : null;
+
+					if (!video) {
+						return;
+					}
+
+					if (video.paused) {
+						pausePortfolioVideos();
+						activePortfolioVideo = video;
+						const playPromise = video.play();
+						if (playPromise && typeof playPromise.catch === 'function') {
+							playPromise.catch(() => {
+								if (activePortfolioVideo === video) {
+									activePortfolioVideo = null;
+								}
+							});
+						}
+					} else {
+						video.pause();
+						activePortfolioVideo = null;
+					}
+				}
+
+				function openPortfolioGallery() {
+					portfolioGalleryModal.classList.remove('hidden');
+					portfolioGalleryModal.classList.add('flex');
+					document.body.style.overflow = 'hidden';
+				}
+
+				function closePortfolioGallery() {
+					pausePortfolioVideos();
+					portfolioGalleryModal.classList.add('hidden');
+					portfolioGalleryModal.classList.remove('flex');
+					document.body.style.overflow = 'auto';
+				}
+
+				if (openPortfolioGalleryBtn) {
+					openPortfolioGalleryBtn.addEventListener('click', openPortfolioGallery);
+				}
+
+				closePortfolioGalleryBtn.addEventListener('click', closePortfolioGallery);
+				portfolioGalleryModal.addEventListener('click', (event) => {
+					if (event.target === portfolioGalleryModal) {
+						closePortfolioGallery();
+					}
+				});
+
+				document.addEventListener('keydown', (event) => {
+					if (event.key === 'Escape' && !portfolioGalleryModal.classList.contains('hidden')) {
+						closePortfolioGallery();
+					}
+				});
+
+				portfolioGrid.addEventListener('click', (event) => {
+					const trigger = event.target.closest('[data-portfolio-video-toggle]');
+					if (trigger) {
+						togglePortfolioVideo(trigger);
+					}
+				});
+
+				portfolioGalleryModal.addEventListener('click', (event) => {
+					const trigger = event.target.closest('[data-portfolio-video-toggle]');
+					if (trigger) {
+						togglePortfolioVideo(trigger);
+					}
+				});
 
 				portfolioInput.addEventListener('change', function(e) {
 					const files = Array.from(e.target.files);
@@ -572,7 +690,7 @@
 									`<img src="${event.target.result}" alt="New" class="w-full h-full object-cover">`;
 							} else if (file.type.startsWith('video/')) {
 								previewHtml =
-									`<video controls class="w-full h-full object-cover"><source src="${event.target.result}" type="${file.type}" /></video>`;
+									`<div class="relative h-full w-full bg-black"><video muted playsinline preload="metadata" class="w-full h-full object-cover"><source src="${event.target.result}" type="${file.type}" /></video><button type="button" data-portfolio-video-toggle class="absolute inset-0 flex items-center justify-center bg-black/10 transition hover:bg-black/20"><div class="flex h-12 w-12 items-center justify-center rounded-full bg-black/55 text-white backdrop-blur-sm"><svg class="h-6 w-6" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z" /></svg></div></button></div>`;
 							} else {
 								previewHtml =
 									`<div class="w-full h-full flex items-center justify-center bg-gray-200 text-sm text-gray-600">Preview not supported</div>`;
