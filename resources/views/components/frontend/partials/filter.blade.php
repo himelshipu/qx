@@ -1,3 +1,5 @@
+@props(['regionOptions' => [], 'genderOptions' => [], 'followerRangeOptions' => []])
+
 <div>
 	<!-- Search Bar -->
 	<div class="w-full mx-auto">
@@ -83,7 +85,8 @@
 			<!-- Search Button -->
 			<div class="flex items-center mt-6 md:mt-0 md:ml-3 w-full md:w-auto">
 				<button type="submit"
-					class="bg-[#222] hover:opacity-80 transition-all p-4 md:p-5 rounded-full w-full flex justify-center items-center text-white shadow-lg">
+					class="bg-[#222] hover:opacity-80 transition-all px-6 py-3 md:py-3.5 rounded-full w-full flex justify-center items-center gap-2 text-white text-sm font-semibold shadow-lg">
+					
 					<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
 						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
 							d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -92,6 +95,66 @@
 			</div>
 		</form>
 	</div>
+
+	<div class="mt-4 rounded-2xl border border-gray-200 bg-white px-4 py-3 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+		<div class="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-gray-800 dark:text-gray-100">
+			<x-icons.filter class="h-3.5 w-3.5 text-gray-600 dark:text-gray-300" />
+			Refine Results
+		</div>
+		<div class="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-4">
+			<div id="gender-filter-container" class="relative">
+				<button id="gender-trigger" type="button" class="flex w-full items-center gap-2 rounded-lg border border-transparent bg-gray-50 px-2.5 py-2 text-left transition hover:border-gray-200 dark:bg-gray-700/60 dark:hover:border-gray-600">
+					<x-icons.user class="h-4 w-4 text-gray-500 dark:text-gray-300" />
+					<span id="selected-gender" class="flex-1 truncate text-xs text-gray-700 dark:text-gray-100">Any Gender</span>
+					<x-icons.chevron-down class="h-3.5 w-3.5 text-gray-400 dark:text-gray-300" />
+				</button>
+				<div id="gender-menu" class="hidden absolute left-0 right-0 top-[calc(100%+8px)] z-50 max-h-56 overflow-y-auto rounded-xl border border-gray-200 bg-white p-1.5 shadow-lg dark:border-gray-600 dark:bg-gray-800">
+					<button type="button" class="advanced-option w-full rounded-lg px-3 py-2 text-left text-xs text-gray-700 transition hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700" data-target="gender" data-value="" data-label="Any Gender">Any Gender</button>
+					@foreach (($genderOptions ?: [['value' => 'male', 'label' => 'Male'], ['value' => 'female', 'label' => 'Female'], ['value' => 'other', 'label' => 'Other']]) as $genderOption)
+						<button type="button" class="advanced-option w-full rounded-lg px-3 py-2 text-left text-xs text-gray-700 transition hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700" data-target="gender" data-value="{{ $genderOption['value'] ?? '' }}" data-label="{{ $genderOption['label'] ?? '' }}">{{ $genderOption['label'] ?? '' }}</button>
+					@endforeach
+				</div>
+				<input type="hidden" id="gender-input" value="">
+			</div>
+
+			<div id="region-filter-container" class="relative">
+				<button id="region-trigger" type="button" class="flex w-full items-center gap-2 rounded-lg border border-transparent bg-gray-50 px-2.5 py-2 text-left transition hover:border-gray-200 dark:bg-gray-700/60 dark:hover:border-gray-600">
+					<x-icons.navigator class="h-4 w-4 text-gray-500 dark:text-gray-300" />
+					<span id="selected-region" class="flex-1 truncate text-xs text-gray-700 dark:text-gray-100">Any Region</span>
+					<x-icons.chevron-down class="h-3.5 w-3.5 text-gray-400 dark:text-gray-300" />
+				</button>
+				<div id="region-menu" class="hidden absolute left-0 right-0 top-[calc(100%+8px)] z-50 max-h-56 overflow-y-auto rounded-xl border border-gray-200 bg-white p-1.5 shadow-lg dark:border-gray-600 dark:bg-gray-800">
+					<button type="button" class="advanced-option w-full rounded-lg px-3 py-2 text-left text-xs text-gray-700 transition hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700" data-target="region" data-value="" data-label="Any Region">Any Region</button>
+					@foreach (($regionOptions ?: ['United States', 'United Kingdom', 'Canada', 'Australia', 'India']) as $regionOption)
+						<button type="button" class="advanced-option w-full rounded-lg px-3 py-2 text-left text-xs text-gray-700 transition hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700" data-target="region" data-value="{{ $regionOption }}" data-label="{{ $regionOption }}">{{ $regionOption }}</button>
+					@endforeach
+				</div>
+				<input type="hidden" id="region-input" value="">
+			</div>
+
+			<div id="followers-filter-container" class="relative">
+				<button id="followers-trigger" type="button" class="flex w-full items-center gap-2 rounded-lg border border-transparent bg-gray-50 px-2.5 py-2 text-left transition hover:border-gray-200 dark:bg-gray-700/60 dark:hover:border-gray-600">
+					<x-icons.trending-up class="h-4 w-4 text-gray-500 dark:text-gray-300" />
+					<span id="selected-followers" class="flex-1 truncate text-xs text-gray-700 dark:text-gray-100">Any Followers</span>
+					<x-icons.chevron-down class="h-3.5 w-3.5 text-gray-400 dark:text-gray-300" />
+				</button>
+				<div id="followers-menu" class="hidden absolute left-0 right-0 top-[calc(100%+8px)] z-50 max-h-56 overflow-y-auto rounded-xl border border-gray-200 bg-white p-1.5 shadow-lg dark:border-gray-600 dark:bg-gray-800">
+					<button type="button" class="advanced-option w-full rounded-lg px-3 py-2 text-left text-xs text-gray-700 transition hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700" data-target="followers" data-value="" data-label="Any Followers">Any Followers</button>
+					@foreach (($followerRangeOptions ?: [['value' => '0-10000', 'label' => '0 - 10K'], ['value' => '10001-50000', 'label' => '10K - 50K'], ['value' => '50001-100000', 'label' => '50K - 100K'], ['value' => '100001-500000', 'label' => '100K - 500K'], ['value' => '500001+', 'label' => '500K+']]) as $followerRangeOption)
+						<button type="button" class="advanced-option w-full rounded-lg px-3 py-2 text-left text-xs text-gray-700 transition hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700" data-target="followers" data-value="{{ $followerRangeOption['value'] ?? '' }}" data-label="{{ $followerRangeOption['label'] ?? '' }}">{{ $followerRangeOption['label'] ?? '' }}</button>
+					@endforeach
+				</div>
+				<input type="hidden" id="followers-input" value="">
+			</div>
+
+			<div class="relative flex items-center gap-2 rounded-lg">
+				<button id="advanced-filter-submit" type="button" class="w-full rounded-lg bg-[#222] px-4 py-2 text-xs font-semibold text-white transition-opacity hover:opacity-85">
+					Filter
+				</button>
+			</div>
+		</div>
+	</div>
+
 
 	<div class="w-full px-2 py-4 overflow-x-auto">
     
@@ -169,6 +232,22 @@
 		const categoryList = document.getElementById('category-list');
 		const categoriesInput = document.getElementById('categories-input');
 		const selectedCategoriesDisplay = document.getElementById('selected-categories-display');
+		const genderFilterContainer = document.getElementById('gender-filter-container');
+		const regionFilterContainer = document.getElementById('region-filter-container');
+		const followersFilterContainer = document.getElementById('followers-filter-container');
+		const genderTrigger = document.getElementById('gender-trigger');
+		const regionTrigger = document.getElementById('region-trigger');
+		const followersTrigger = document.getElementById('followers-trigger');
+		const genderMenu = document.getElementById('gender-menu');
+		const regionMenu = document.getElementById('region-menu');
+		const followersMenu = document.getElementById('followers-menu');
+		const selectedGender = document.getElementById('selected-gender');
+		const selectedRegion = document.getElementById('selected-region');
+		const selectedFollowers = document.getElementById('selected-followers');
+		const genderInput = document.getElementById('gender-input');
+		const regionInput = document.getElementById('region-input');
+		const followersInput = document.getElementById('followers-input');
+		const advancedFilterSubmit = document.getElementById('advanced-filter-submit');
 
 		let allCategories = [];
 		let selectedCategories = [];
@@ -272,6 +351,104 @@
 			renderCategories(filtered);
 		});
 
+		const advancedMenus = [genderMenu, regionMenu, followersMenu].filter(Boolean);
+		const advancedContainers = [genderFilterContainer, regionFilterContainer, followersFilterContainer].filter(Boolean);
+
+		function closeAdvancedMenus() {
+			advancedMenus.forEach(menu => menu.classList.add('hidden'));
+		}
+
+		function setAdvancedFilterValue(target, value, label) {
+			if (target === 'gender') {
+				if (genderInput) {
+					genderInput.value = value;
+				}
+				if (selectedGender) {
+					selectedGender.textContent = label || 'Any Gender';
+				}
+				return;
+			}
+
+			if (target === 'region') {
+				if (regionInput) {
+					regionInput.value = value;
+				}
+				if (selectedRegion) {
+					selectedRegion.textContent = label || 'Any Region';
+				}
+				return;
+			}
+
+			if (followersInput) {
+				followersInput.value = value;
+			}
+			if (selectedFollowers) {
+				selectedFollowers.textContent = label || 'Any Followers';
+			}
+		}
+
+		function bindAdvancedTrigger(trigger, menu) {
+			if (!trigger || !menu) {
+				return;
+			}
+
+			trigger.addEventListener('click', (e) => {
+				e.preventDefault();
+				e.stopPropagation();
+				platformMenu.classList.add('hidden');
+				categoryMenu.classList.add('hidden');
+				const shouldOpen = menu.classList.contains('hidden');
+				closeAdvancedMenus();
+				if (shouldOpen) {
+					menu.classList.remove('hidden');
+				}
+			});
+		}
+
+		function bindAdvancedMenu(menu, target) {
+			if (!menu) {
+				return;
+			}
+
+			menu.addEventListener('click', (e) => {
+				e.stopPropagation();
+				const option = e.target.closest('.advanced-option');
+				if (!option) {
+					return;
+				}
+
+				e.preventDefault();
+				const value = option.getAttribute('data-value') || '';
+				const label = option.getAttribute('data-label') || option.textContent.trim();
+				setAdvancedFilterValue(target, value, label);
+				closeAdvancedMenus();
+			});
+		}
+
+		function setAdvancedFromQuery(menu, target, queryValue) {
+			if (!queryValue || !menu) {
+				return;
+			}
+
+			const option = Array.from(menu.querySelectorAll('.advanced-option')).find((node) => {
+				return node.getAttribute('data-value') === queryValue;
+			});
+
+			if (option) {
+				setAdvancedFilterValue(target, queryValue, option.getAttribute('data-label') || option.textContent.trim());
+				return;
+			}
+
+			setAdvancedFilterValue(target, queryValue, queryValue);
+		}
+
+		bindAdvancedTrigger(genderTrigger, genderMenu);
+		bindAdvancedTrigger(regionTrigger, regionMenu);
+		bindAdvancedTrigger(followersTrigger, followersMenu);
+		bindAdvancedMenu(genderMenu, 'gender');
+		bindAdvancedMenu(regionMenu, 'region');
+		bindAdvancedMenu(followersMenu, 'followers');
+
 		// Function to rebind platform option handlers
 		function rebindPlatformOptions() {
 			const options = document.querySelectorAll('.platform-option');
@@ -300,6 +477,7 @@
 		platformTrigger.addEventListener('click', (e) => {
 			e.preventDefault();
 			e.stopPropagation();
+			closeAdvancedMenus();
 			categoryMenu.classList.add('hidden');
 			platformMenu.classList.toggle('hidden');
 		});
@@ -351,6 +529,7 @@
 		categoryTrigger.addEventListener('click', (e) => {
 			e.preventDefault();
 			e.stopPropagation();
+			closeAdvancedMenus();
 			platformMenu.classList.add('hidden');
 			categoryMenu.classList.toggle('hidden');
 		});
@@ -368,11 +547,23 @@
 			
 			const platformSlug = platformInput.value;
 			const categories = categoriesInput.value;
+			const gender = genderInput?.value || '';
+			const region = regionInput?.value || '';
+			const followers = followersInput?.value || '';
 			
 			// Build query parameters
 			let queryParams = new URLSearchParams();
 			if (categories) {
 				queryParams.append('categories', categories);
+			}
+			if (gender) {
+				queryParams.append('gender', gender);
+			}
+			if (region) {
+				queryParams.append('region', region);
+			}
+			if (followers) {
+				queryParams.append('followers', followers);
 			}
 			
 			// Determine the action URL
@@ -391,11 +582,18 @@
 			window.location.href = actionUrl;
 		});
 
+		if (advancedFilterSubmit) {
+			advancedFilterSubmit.addEventListener('click', () => {
+				filterForm.dispatchEvent(new Event('submit', { cancelable: true }));
+			});
+		}
+
 
 		// --- GLOBAL CLICK OUTSIDE ---
 		document.addEventListener('click', (e) => {
 			const platformContainer = platformTrigger.closest('div[class*="relative"]');
 			const categoryContainer = categoryTrigger.closest('div[class*="relative"]');
+			const clickedInsideAdvanced = advancedContainers.some(container => container.contains(e.target));
 			
 			// Close platform menu if click is outside
 			if (platformContainer && !platformContainer.contains(e.target)) {
@@ -406,6 +604,10 @@
 			if (categoryContainer && !categoryContainer.contains(e.target)) {
 				categoryMenu.classList.add('hidden');
 			}
+
+			if (!clickedInsideAdvanced) {
+				closeAdvancedMenus();
+			}
 		});
 
 		// Initialize form with current state from URL
@@ -413,7 +615,7 @@
 			const urlParams = new URLSearchParams(window.location.search);
 			
 			// Load platform from URL (check both route param and query param)
-			const pathMatch = window.location.pathname.match(/\/influencer\/([^\/]+)/);
+			const pathMatch = window.location.pathname.match(/\/influencers\/([^\/?]+)/);
 			const platformSlug = pathMatch ? pathMatch[1] : urlParams.get('platformSlug');
 			
 			if (platformSlug) {
@@ -437,6 +639,10 @@
 				renderCategories(getCategoriesForDisplay());
 				updateSelectedCategoriesDisplay();
 			}
+
+			setAdvancedFromQuery(genderMenu, 'gender', urlParams.get('gender'));
+			setAdvancedFromQuery(regionMenu, 'region', urlParams.get('region'));
+			setAdvancedFromQuery(followersMenu, 'followers', urlParams.get('followers'));
 		}
 
 		// Load categories on page load

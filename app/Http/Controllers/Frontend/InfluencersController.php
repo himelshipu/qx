@@ -48,10 +48,16 @@ class InfluencersController extends Controller
 
         // Handle sorting
         $sort = $request->get('sort', 'followers_desc');
+        $gender = trim((string) $request->get('gender', ''));
+        $region = trim((string) $request->get('region', ''));
+        $followers = trim((string) $request->get('followers', ''));
 
         $influencers = $this->influencerService->paginateInfluencers($platformKey, 20, [
             'categories' => $categories->pluck('id')->toArray(),
-            'sort'       => $sort
+            'sort'       => $sort,
+            'gender'     => $gender,
+            'region'     => $region,
+            'followers'  => $followers,
         ]);
 
         $platformFilters  = $this->influencerService->getPlatformFilters();
@@ -66,7 +72,15 @@ class InfluencersController extends Controller
             'influencers'        => $influencers,
             'platformFilters'    => $platformFilters,
             'selectedPlatform'   => $selectedPlatform,
-            'selectedCategories' => $categories
+            'selectedCategories' => $categories,
+            'regionOptions'      => $this->influencerService->getRegionFilters()->all(),
+            'genderOptions'      => $this->influencerService->getGenderFilters()->all(),
+            'followerRangeOptions' => $this->influencerService->getFollowerRangeFilters()->all(),
+            'selectedFilters'    => [
+                'gender'    => in_array($gender, ['male', 'female', 'other'], true) ? ucfirst($gender) : null,
+                'region'    => $region !== '' ? $region : null,
+                'followers' => $this->formatFollowersFilterLabel($followers),
+            ],
         ]);
     }
 
@@ -78,10 +92,16 @@ class InfluencersController extends Controller
         $category = Category::where('slug', $categorySlug)->firstOrFail();
 
         $sort = (string) $request->get('sort', 'followers_desc');
+        $gender = trim((string) $request->get('gender', ''));
+        $region = trim((string) $request->get('region', ''));
+        $followers = trim((string) $request->get('followers', ''));
 
         $influencers = $this->influencerService->paginateInfluencers(null, 20, [
             'categories' => [$category->id],
-            'sort'       => $sort
+            'sort'       => $sort,
+            'gender'     => $gender,
+            'region'     => $region,
+            'followers'  => $followers,
         ]);
 
         return view('frontend.pages.influencers', [
@@ -89,7 +109,15 @@ class InfluencersController extends Controller
             'influencers'        => $influencers,
             'platformFilters'    => $this->influencerService->getPlatformFilters(),
             'selectedPlatform'   => null,
-            'selectedCategories' => collect([$category])
+            'selectedCategories' => collect([$category]),
+            'regionOptions'      => $this->influencerService->getRegionFilters()->all(),
+            'genderOptions'      => $this->influencerService->getGenderFilters()->all(),
+            'followerRangeOptions' => $this->influencerService->getFollowerRangeFilters()->all(),
+            'selectedFilters'    => [
+                'gender'    => in_array($gender, ['male', 'female', 'other'], true) ? ucfirst($gender) : null,
+                'region'    => $region !== '' ? $region : null,
+                'followers' => $this->formatFollowersFilterLabel($followers),
+            ],
         ]);
     }
 
@@ -126,6 +154,18 @@ class InfluencersController extends Controller
             ]);
 
         return response()->json(['categories' => $categories]);
+    }
+
+    private function formatFollowersFilterLabel(string $value): ?string
+    {
+        return match (trim($value)) {
+            '0-10000' => '0 - 10K',
+            '10001-50000' => '10K - 50K',
+            '50001-100000' => '50K - 100K',
+            '100001-500000' => '100K - 500K',
+            '500001+' => '500K+',
+            default => null,
+        };
     }
 
 }

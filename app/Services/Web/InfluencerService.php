@@ -7,6 +7,7 @@ namespace App\Services\Web;
 use App\Models\Influencer;
 use App\Models\InfluencerPlatformStat;
 use App\Models\Review;
+use App\Models\User;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
@@ -121,6 +122,104 @@ final class InfluencerService
     }
 
     /**
+     * Get distinct active regions from influencer profiles.
+     *
+     * @return Collection<int, string>
+     */
+    public function getRegionFilters(int $limit = 24): Collection
+    {
+        return User::query()
+            ->where('is_active', true)
+            ->whereNotNull('country')
+            ->where('country', '!=', '')
+            ->whereHas('influencer', fn (Builder $query): Builder => $query->where('is_active', true))
+            ->select('country')
+            ->distinct()
+            ->orderBy('country')
+            ->limit($limit)
+            ->pluck('country')
+            ->map(fn ($country): string => trim((string) $country))
+            ->filter(fn (string $country): bool => $country !== '')
+            ->values();
+    }
+
+    /**
+     * Get distinct active gender filters from influencer profiles.
+     *
+     * @return Collection<int, array{value:string,label:string}>
+     */
+    public function getGenderFilters(): Collection
+    {
+        $discovered = User::query()
+            ->where('is_active', true)
+            ->whereNotNull('gender')
+            ->where('gender', '!=', '')
+            ->whereHas('influencer', fn (Builder $query): Builder => $query->where('is_active', true))
+            ->select('gender')
+            ->distinct()
+            ->pluck('gender')
+            ->map(fn ($gender): string => Str::of((string) $gender)->lower()->trim()->value())
+            ->filter(fn (string $gender): bool => in_array($gender, ['male', 'female', 'other'], true))
+            ->unique()
+            ->values();
+
+        $ordered = collect(['male', 'female', 'other'])
+            ->filter(fn (string $gender): bool => $discovered->contains($gender));
+
+        if ($ordered->isEmpty()) {
+            $ordered = collect(['male', 'female', 'other']);
+        }
+
+        return $ordered
+            ->map(fn (string $gender): array => [
+                'value' => $gender,
+                'label' => Str::headline($gender),
+            ])
+            ->values();
+    }
+
+    /**
+     * Get follower range filters with only ranges that have active influencers.
+     *
+     * @return Collection<int, array{value:string,label:string}>
+     */
+    public function getFollowerRangeFilters(): Collection
+    {
+        $ranges = [
+            ['value' => '0-10000', 'label' => '0 - 10K', 'min' => 0, 'max' => 10000],
+            ['value' => '10001-50000', 'label' => '10K - 50K', 'min' => 10001, 'max' => 50000],
+            ['value' => '50001-100000', 'label' => '50K - 100K', 'min' => 50001, 'max' => 100000],
+            ['value' => '100001-500000', 'label' => '100K - 500K', 'min' => 100001, 'max' => 500000],
+            ['value' => '500001+', 'label' => '500K+', 'min' => 500001, 'max' => null],
+        ];
+
+        $available = collect($ranges)
+            ->filter(function (array $range): bool {
+                $query = InfluencerPlatformStat::query()->where('is_active', true);
+
+                $query->where('follower_count', '>=', $range['min']);
+
+                if ($range['max'] !== null) {
+                    $query->where('follower_count', '<=', $range['max']);
+                }
+
+                return $query->exists();
+            })
+            ->map(fn (array $range): array => [
+                'value' => $range['value'],
+                'label' => $range['label'],
+            ])
+            ->values();
+
+        return $available->isNotEmpty()
+            ? $available
+            : collect($ranges)->map(fn (array $range): array => [
+                'value' => $range['value'],
+                'label' => $range['label'],
+            ])->values();
+    }
+
+    /**
      * Get paginated influencers, optionally filtered by a platform key.
      *
      * @return LengthAwarePaginator<int, array<string, mixed>>
@@ -200,7 +299,7 @@ final class InfluencerService
     }
 
     /**
-     * @param  array{categories?:array<int, int|string>,sort?:string}  $filters
+     * @param  array{categories?:array<int, int|string>,sort?:string,gender?:string,region?:string,followers?:string}  $filters
      */
     public function paginateInfluencers(?string $platformKey, int $perPage = 20, array $filters = []): LengthAwarePaginator
     {
@@ -212,6 +311,10 @@ final class InfluencerService
             $filters['categories'] ?? []
         ), fn (int $id): bool => $id > 0));
         $sort = trim((string) ($filters['sort'] ?? 'followers_desc'));
+        $gender = Str::of((string) ($filters['gender'] ?? ''))->lower()->trim()->value();
+        $gender = in_array($gender, ['male', 'female', 'other'], true) ? $gender : '';
+        $region = trim((string) ($filters['region'] ?? ''));
+        [$minFollowers, $maxFollowers] = $this->resolveFollowerRange((string) ($filters['followers'] ?? ''));
 
         if ($normalizedPlatformKey === 'featured') {
             return $this->paginateFeaturedInfluencers($perPage);
@@ -231,6 +334,21 @@ final class InfluencerService
                     $query->whereHas('categories', fn ($categoryQuery) => $categoryQuery->whereIn('categories.id', $selectedCategoryIds));
                 }
             })
+            ->whereHas('influencer.user', function (Builder $query) use ($gender, $region): void {
+                if ($gender !== '') {
+                    $query->where('gender', $gender);
+                }
+
+                if ($region !== '') {
+                    $query->where(function (Builder $regionQuery) use ($region): void {
+                        $regionQuery
+                            ->where('country', 'like', "%{$region}%")
+                            ->orWhere('city', 'like', "%{$region}%");
+                    });
+                }
+            })
+            ->when($minFollowers !== null, fn (Builder $query): Builder => $query->where('follower_count', '>=', $minFollowers))
+            ->when($maxFollowers !== null, fn (Builder $query): Builder => $query->where('follower_count', '<=', $maxFollowers))
             ->when($normalizedPlatformKey !== null, fn ($query) => $query->where('platform', $normalizedPlatformKey));
 
         $this->applySorting($query, $sort);
@@ -442,6 +560,41 @@ final class InfluencerService
            'recent' => $query->orderByDesc('created_at'),
             default => $query->orderByDesc('follower_count')
         };
+    }
+
+    /**
+     * Resolve follower range filter values to min/max bounds.
+     *
+     * @return array{0:?int,1:?int}
+     */
+    private function resolveFollowerRange(string $value): array
+    {
+        $normalized = trim($value);
+
+        $presets = [
+            '0-10000' => [0, 10000],
+            '10001-50000' => [10001, 50000],
+            '50001-100000' => [50001, 100000],
+            '100001-500000' => [100001, 500000],
+            '500001+' => [500001, null],
+        ];
+
+        if (array_key_exists($normalized, $presets)) {
+            return $presets[$normalized];
+        }
+
+        if (preg_match('/^(\d+)\-(\d+)$/', $normalized, $matches) === 1) {
+            $min = max(0, (int) $matches[1]);
+            $max = max($min, (int) $matches[2]);
+
+            return [$min, $max];
+        }
+
+        if (preg_match('/^(\d+)\+$/', $normalized, $matches) === 1) {
+            return [max(0, (int) $matches[1]), null];
+        }
+
+        return [null, null];
     }
 
     /**

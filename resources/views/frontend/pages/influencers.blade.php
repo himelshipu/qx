@@ -8,7 +8,7 @@
 	<div class="min-h-screen transition-colors duration-200">
 		<main>
 			<div class="w-full sm:w-[620px] lg:w-[980px] mx-auto">
-				<x-frontend.partials.filter />
+				<x-frontend.partials.filter :region-options="$regionOptions ?? []" :gender-options="$genderOptions ?? []" :follower-range-options="$followerRangeOptions ?? []" />
 			</div>
 
 			<section class="w-full pb-8">
@@ -22,6 +22,31 @@
 						</p>
 					</div>
 				</div>
+
+				@if (!empty($selectedFilters['gender']) || !empty($selectedFilters['region']) || !empty($selectedFilters['followers']))
+					<div class="mb-6 flex flex-wrap items-center gap-2 rounded-xl border border-gray-200 bg-white px-3 py-2 dark:border-gray-700 dark:bg-gray-800">
+						<span class="inline-flex items-center gap-1 text-xs font-semibold text-gray-600 dark:text-gray-300">
+							<x-icons.filter class="h-3.5 w-3.5" />
+							Filtered By
+						</span>
+
+						@if (!empty($selectedFilters['gender']))
+							<span class="inline-flex items-center rounded-full border border-gray-200 bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-700 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200">Gender: {{ $selectedFilters['gender'] }}</span>
+						@endif
+
+						@if (!empty($selectedFilters['region']))
+							<span class="inline-flex items-center rounded-full border border-gray-200 bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-700 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200">Region: {{ $selectedFilters['region'] }}</span>
+						@endif
+
+						@if (!empty($selectedFilters['followers']))
+							<span class="inline-flex items-center rounded-full border border-gray-200 bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-700 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200">Followers: {{ $selectedFilters['followers'] }}</span>
+						@endif
+
+						<a href="{{ url()->current() }}" class="ml-auto text-xs font-semibold text-gray-700 underline decoration-gray-300 underline-offset-4 transition hover:text-black dark:text-gray-300 dark:decoration-gray-600 dark:hover:text-white">
+							Clear Filters
+						</a>
+					</div>
+				@endif
 
 				@if ($influencers->isEmpty())
 					<div class="rounded-xl border border-dashed border-gray-200 dark:border-gray-700 p-8 text-center">
