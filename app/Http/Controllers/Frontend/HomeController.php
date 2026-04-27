@@ -49,7 +49,10 @@ final class HomeController extends Controller
             'influencersByPlatform' => $influencersByPlatform,
             'featuredInfluencers'   => $featuredInfluencers,
             'faqItems'              => $faqItems,
-            'testimonials'          => $testimonials
+            'testimonials'          => $testimonials,
+            'regionOptions'         => $this->influencerService->getRegionFilters()->all(),
+            'genderOptions'         => $this->influencerService->getGenderFilters()->all(),
+            'followerRangeOptions'  => $this->influencerService->getFollowerRangeFilters()->all(),
         ]);
     }
 }

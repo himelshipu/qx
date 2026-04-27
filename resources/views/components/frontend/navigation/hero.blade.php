@@ -8,12 +8,12 @@
         <p class="text-base text-gray-500 dark:text-gray-400 leading-relaxed max-w-4xl">
             Rockies brings brands and influencers together into a single workflow -- talent discovery,
              task assignments, approvals, timeline tracking, and reporting -- plus
-              automated commissions, payouts, invoices and contracts
+             automated commissions, payouts, invoices and contracts
         </p>
     </div>
 
     <div class="w-full sm:w-[620px] lg:w-[980px] mx-auto">
-        <x-frontend.partials.filter />
+        <x-frontend.partials.filter :region-options="$regionOptions" :gender-options="$genderOptions" :follower-range-options="$followerRangeOptions" />
     </div>
 
 </div>

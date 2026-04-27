@@ -11,6 +11,7 @@ use App\Models\User;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 /**
@@ -128,6 +129,7 @@ final class InfluencerService
      */
     public function getRegionFilters(int $limit = 24): Collection
     {
+        // Removed limit to return all distinct countries with active influencers
         return User::query()
             ->where('is_active', true)
             ->whereNotNull('country')
@@ -136,7 +138,6 @@ final class InfluencerService
             ->select('country')
             ->distinct()
             ->orderBy('country')
-            ->limit($limit)
             ->pluck('country')
             ->map(fn ($country): string => trim((string) $country))
             ->filter(fn (string $country): bool => $country !== '')
@@ -304,8 +305,8 @@ final class InfluencerService
     public function paginateInfluencers(?string $platformKey, int $perPage = 20, array $filters = []): LengthAwarePaginator
     {
         $normalizedPlatformKey = $platformKey !== null
-        ? $this->normalizePlatformKey($platformKey)
-        : null;
+            ? $this->normalizePlatformKey($platformKey)
+            : null;
         $selectedCategoryIds = array_values(array_filter(array_map(
             fn ($value): int => (int) $value,
             $filters['categories'] ?? []
@@ -320,46 +321,148 @@ final class InfluencerService
             return $this->paginateFeaturedInfluencers($perPage);
         }
 
-        $query = InfluencerPlatformStat::query()
+        // Platform-specific query (when a specific platform is selected)
+        if ($normalizedPlatformKey !== null) {
+            $query = InfluencerPlatformStat::query()
+                ->with([
+                    'influencer:id,user_id,display_name,title_name,is_active',
+                    'influencer.user:id,name,slug,city,country,profile_image_path,is_active',
+                ])
+                ->where('is_active', true)
+                ->whereHas('influencer', function ($query) use ($selectedCategoryIds) {
+                    $query->where('is_active', true)
+                        ->whereHas('user', fn ($userQuery) => $userQuery->where('is_active', true));
+
+                    if ($selectedCategoryIds !== []) {
+                        $query->whereHas('categories', fn ($categoryQuery) => $categoryQuery->whereIn('categories.id', $selectedCategoryIds));
+                    }
+                })
+                ->whereHas('influencer.user', function (Builder $query) use ($gender, $region): void {
+                    if ($gender !== '') {
+                        $query->where('gender', $gender);
+                    }
+
+                    if ($region !== '') {
+                        $query->where(function (Builder $regionQuery) use ($region): void {
+                            $regionQuery
+                                ->where('country', 'like', "%{$region}%")
+                                ->orWhere('city', 'like', "%{$region}%");
+                        });
+                    }
+                })
+                ->when($minFollowers !== null, fn (Builder $query): Builder => $query->where('follower_count', '>=', $minFollowers))
+                ->when($maxFollowers !== null, fn (Builder $query): Builder => $query->where('follower_count', '<=', $maxFollowers))
+                ->where('platform', $normalizedPlatformKey);
+
+            $this->applySorting($query, $sort);
+
+            $paginator = $query->paginate($perPage)->withQueryString();
+
+            $influencerIds = $paginator->getCollection()
+                ->pluck('influencer_id')
+                ->unique()
+                ->values()
+                ->all();
+
+            $reviewsByInfluencer = Review::query()
+                ->whereIn('influencer_id', $influencerIds)
+                ->selectRaw('influencer_id, AVG(rating) as average_rating, COUNT(*) as reviews_count')
+                ->groupBy('influencer_id')
+                ->get()
+                ->keyBy('influencer_id');
+
+            $influencers = $paginator->getCollection()
+                ->map(function (InfluencerPlatformStat $stat) use ($reviewsByInfluencer): ?array {
+                    $influencer = $stat->influencer;
+
+                    if (! $influencer || ! $influencer->user) {
+                        return null;
+                    }
+
+                    $platformKey = $this->normalizePlatformKey((string) $stat->platform);
+                    $platformMeta = $this->platformMeta($platformKey);
+
+                    $reviewSummary = $reviewsByInfluencer->get($influencer->id);
+                    $averageRating = $reviewSummary && $reviewSummary->average_rating !== null
+                    ? (float) $reviewSummary->average_rating
+                    : null;
+
+                    return [
+                        'id' => $influencer->id,
+                        'slug' => $influencer->user->slug,
+                        'name' => $this->resolveInfluencerName($influencer),
+                        'title' => $this->resolveInfluencerTitle($influencer),
+                        'location' => $this->resolveInfluencerLocation($influencer),
+                        'image_url' => $influencer->user->profile_image_path,
+                        'platform' => $platformKey,
+                        'platform_label' => $platformMeta['label'],
+                        'platform_slug' => $platformMeta['slug'],
+                        'handle' => $this->resolveHandle($stat->handle, $influencer->user->slug),
+                        'followers_label' => $this->formatFollowers($stat->follower_count),
+                        'rating_label' => $averageRating !== null ? number_format($averageRating, 1) : 'N/A',
+                        'reviews_count' => $reviewSummary ? (int) $reviewSummary->reviews_count : 0,
+                    ];
+                })
+                ->filter()
+                ->values();
+
+            $paginator->setCollection($influencers);
+
+            return $paginator;
+        }
+
+        // General query (no specific platform) - one card per influencer using their best active platform stat
+        $query = Influencer::query()
             ->with([
-                'influencer:id,user_id,display_name,title_name,is_active',
-                'influencer.user:id,name,slug,city,country,bio,profile_image_path,is_active',
+                'user:id,name,slug,city,country,profile_image_path,is_active',
+                'platformStats' => fn ($q) => $q->where('is_active', true)->orderByDesc('follower_count'),
             ])
             ->where('is_active', true)
-            ->whereHas('influencer', function ($query) use ($selectedCategoryIds) {
-                $query->where('is_active', true)
-                    ->whereHas('user', fn ($userQuery) => $userQuery->where('is_active', true));
-
-                if ($selectedCategoryIds !== []) {
-                    $query->whereHas('categories', fn ($categoryQuery) => $categoryQuery->whereIn('categories.id', $selectedCategoryIds));
-                }
-            })
-            ->whereHas('influencer.user', function (Builder $query) use ($gender, $region): void {
+            ->whereHas('user', function (Builder $userQuery) use ($gender, $region): void {
+                $userQuery->where('is_active', true);
                 if ($gender !== '') {
-                    $query->where('gender', $gender);
+                    $userQuery->where('gender', $gender);
                 }
-
                 if ($region !== '') {
-                    $query->where(function (Builder $regionQuery) use ($region): void {
-                        $regionQuery
-                            ->where('country', 'like', "%{$region}%")
+                    $userQuery->where(function (Builder $rq) use ($region): void {
+                        $rq->where('country', 'like', "%{$region}%")
                             ->orWhere('city', 'like', "%{$region}%");
                     });
                 }
-            })
-            ->when($minFollowers !== null, fn (Builder $query): Builder => $query->where('follower_count', '>=', $minFollowers))
-            ->when($maxFollowers !== null, fn (Builder $query): Builder => $query->where('follower_count', '<=', $maxFollowers))
-            ->when($normalizedPlatformKey !== null, fn ($query) => $query->where('platform', $normalizedPlatformKey));
+            });
 
-        $this->applySorting($query, $sort);
+        // Category filter
+        if ($selectedCategoryIds !== []) {
+            $query->whereHas('categories', function (Builder $catQuery) use ($selectedCategoryIds) {
+                $catQuery->whereIn('categories.id', $selectedCategoryIds);
+            });
+        }
+
+        // Follower range filter: ensure influencer has at least one active platform stat within the range
+        $query->whereHas('platformStats', function (Builder $ps) use ($minFollowers, $maxFollowers) {
+            $ps->where('is_active', true);
+            if ($minFollowers !== null) {
+                $ps->where('follower_count', '>=', $minFollowers);
+            }
+            if ($maxFollowers !== null) {
+                $ps->where('follower_count', '<=', $maxFollowers);
+            }
+        });
+
+        // Sorting
+        $bestFollowerSub = DB::raw('(SELECT ips.follower_count FROM influencer_platform_stats ips WHERE ips.influencer_id = influencers.id AND ips.is_active = true ORDER BY ips.follower_count DESC LIMIT 1)');
+        if ($sort === 'followers_asc') {
+            $query->orderBy($bestFollowerSub, 'asc');
+        } elseif ($sort === 'recent') {
+            $query->orderByDesc('created_at');
+        } else {
+            // Default: followers_desc
+            $query->orderBy($bestFollowerSub, 'desc');
+        }
 
         $paginator = $query->paginate($perPage)->withQueryString();
 
-        $influencerIds = $paginator->getCollection()
-            ->pluck('influencer_id')
-            ->unique()
-            ->values()
-            ->all();
+        $influencerIds = $paginator->getCollection()->pluck('id')->all();
 
         $reviewsByInfluencer = Review::query()
             ->whereIn('influencer_id', $influencerIds)
@@ -368,45 +471,48 @@ final class InfluencerService
             ->get()
             ->keyBy('influencer_id');
 
-        $influencers = $paginator->getCollection()
-            ->map(function (InfluencerPlatformStat $stat) use ($reviewsByInfluencer): ?array {
-                $influencer = $stat->influencer;
+        $influencers = $paginator->getCollection()->map(function (Influencer $influencer) use ($reviewsByInfluencer): ?array {
+            if (! $influencer->user) {
+                return null;
+            }
 
-                if (! $influencer || ! $influencer->user) {
-                    return null;
-                }
+            // Get the best platform stat (ordered by follower_count desc)
+            $stat = $influencer->platformStats->first();
+            if (! $stat) {
+                return null;
+            }
 
-                $platformKey = $this->normalizePlatformKey((string) $stat->platform);
-                $platformMeta = $this->platformMeta($platformKey);
+            $platformKey = $this->normalizePlatformKey((string) $stat->platform);
+            $platformMeta = $this->platformMeta($platformKey);
 
-                $reviewSummary = $reviewsByInfluencer->get($influencer->id);
-                $averageRating = $reviewSummary && $reviewSummary->average_rating !== null
+            $reviewSummary = $reviewsByInfluencer->get($influencer->id);
+            $averageRating = $reviewSummary && $reviewSummary->average_rating !== null
                 ? (float) $reviewSummary->average_rating
                 : null;
 
-                return [
-                    'id' => $influencer->id,
-                    'slug' => $influencer->user->slug,
-                    'name' => $this->resolveInfluencerName($influencer),
-                    'title' => $this->resolveInfluencerTitle($influencer),
-                    'location' => $this->resolveInfluencerLocation($influencer),
-                    'image_url' => $influencer->user->profile_image_path,
-                    'platform' => $platformKey,
-                    'platform_label' => $platformMeta['label'],
-                    'platform_slug' => $platformMeta['slug'],
-                    'handle' => $this->resolveHandle($stat->handle, $influencer->user->slug),
-                    'followers_label' => $this->formatFollowers($stat->follower_count),
-                    'rating_label' => $averageRating !== null ? number_format($averageRating, 1) : 'N/A',
-                    'reviews_count' => $reviewSummary ? (int) $reviewSummary->reviews_count : 0,
-                ];
-            })
-            ->filter()
-            ->values();
+            return [
+                'id' => $influencer->id,
+                'slug' => $influencer->user->slug,
+                'name' => $this->resolveInfluencerName($influencer),
+                'title' => $this->resolveInfluencerTitle($influencer),
+                'location' => $this->resolveInfluencerLocation($influencer),
+                'image_url' => $influencer->user->profile_image_path,
+                'platform' => $platformKey,
+                'platform_label' => $platformMeta['label'],
+                'platform_slug' => $platformMeta['slug'],
+                'handle' => $this->resolveHandle($stat->handle, $influencer->user->slug),
+                'followers_label' => $this->formatFollowers($stat->follower_count),
+                'rating_label' => $averageRating !== null ? number_format($averageRating, 1) : 'N/A',
+                'reviews_count' => $reviewSummary ? (int) $reviewSummary->reviews_count : 0,
+            ];
+        })->filter()->values();
 
         $paginator->setCollection($influencers);
 
         return $paginator;
     }
+
+
 
     /**
      * Normalize an Influencer model (with eager-loaded platformStats + user) to a card array.
