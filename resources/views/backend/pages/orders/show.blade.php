@@ -198,6 +198,122 @@
 			</div>
 		</div>
 
+		<div class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+			<div
+				class="flex flex-col gap-3 border-b border-gray-200 pb-4 dark:border-gray-800 lg:flex-row lg:items-center lg:justify-between">
+				<div>
+					<p class="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Brand Payment Review</p>
+					<h2 class="mt-1 text-lg font-semibold text-gray-900 dark:text-white">Submitted order payments</h2>
+					<p class="mt-1 text-sm text-gray-600 dark:text-gray-400">Confirm or reject brand-submitted payment details for this
+						order.</p>
+				</div>
+				<div class="flex flex-wrap gap-2 text-xs font-semibold">
+					<span
+						class="rounded-full bg-emerald-100 px-3 py-1 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300">Confirmed
+						${{ number_format($brandConfirmedTotal, 2) }}</span>
+					<span class="rounded-full bg-amber-100 px-3 py-1 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300">Pending
+						${{ number_format($brandPendingTotal, 2) }}</span>
+					<span class="rounded-full bg-rose-100 px-3 py-1 text-rose-700 dark:bg-rose-900/30 dark:text-rose-300">Balance
+						${{ number_format($brandBalanceDue, 2) }}</span>
+				</div>
+			</div>
+
+			<div class="mt-4 space-y-3">
+				@if ($brandPayments->isNotEmpty())
+					@foreach ($brandPayments as $brandPayment)
+						@php
+							$brandPaymentStatusClass = match ($brandPayment->status) {
+							    'confirmed' => 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300',
+							    'rejected' => 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-300',
+							    default => 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300',
+							};
+						@endphp
+						<div class="rounded-xl border border-gray-200 bg-gray-50 p-4 dark:border-gray-800 dark:bg-gray-900/60">
+							<div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+								<div class="min-w-0 flex-1 space-y-2">
+									<div class="flex flex-wrap items-center gap-2">
+										<span
+											class="rounded-full px-2.5 py-0.5 text-xs font-semibold {{ $brandPaymentStatusClass }}">{{ ucfirst($brandPayment->status) }}</span>
+										<span class="text-sm font-semibold text-gray-900 dark:text-white">{{ strtoupper($brandPayment->currency) }}
+											{{ number_format((float) $brandPayment->amount, 2) }}</span>
+									</div>
+									<div class="grid grid-cols-1 gap-2 text-sm text-gray-600 dark:text-gray-300 sm:grid-cols-2">
+										<p><span class="font-medium text-gray-900 dark:text-white">Brand:</span>
+											{{ $brandPayment->brandUser?->name ?? 'Brand' }}</p>
+										<p><span class="font-medium text-gray-900 dark:text-white">Submitted:</span>
+											{{ $brandPayment->submitted_at?->format('M d, Y h:i A') ?? $brandPayment->created_at?->format('M d, Y h:i A') }}
+										</p>
+										<p><span class="font-medium text-gray-900 dark:text-white">Reference:</span>
+											{{ $brandPayment->reference_number ?: 'N/A' }}</p>
+										<p><span class="font-medium text-gray-900 dark:text-white">Invoice ID:</span>
+											{{ $brandPayment->invoice_id ?: 'N/A' }}</p>
+										@if ($brandPayment->brand_note)
+											<p class="sm:col-span-2"><span class="font-medium text-gray-900 dark:text-white">Brand Note:</span>
+												{{ $brandPayment->brand_note }}</p>
+										@endif
+										@if ($brandPayment->admin_note)
+											<p class="sm:col-span-2"><span class="font-medium text-gray-900 dark:text-white">Admin Note:</span>
+												{{ $brandPayment->admin_note }}</p>
+										@endif
+									</div>
+								</div>
+								<div
+									class="w-full max-w-xl rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800/60">
+									@if ($brandPayment->status === 'pending')
+										<form action="{{ route('dashboard.brand-payments.review', $brandPayment) }}" method="POST" class="space-y-3">
+											@csrf
+											<input type="hidden" name="status" value="confirmed">
+											<label class="block space-y-1">
+												<span class="text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Admin note</span>
+												<textarea name="admin_note" rows="3" maxlength="1000" placeholder="Optional note for the brand"
+												 class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-white"></textarea>
+											</label>
+											<div class="flex flex-wrap gap-2">
+												<button type="submit"
+													class="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-700">Confirm</button>
+											</div>
+										</form>
+										<form action="{{ route('dashboard.brand-payments.review', $brandPayment) }}" method="POST"
+											class="mt-2 space-y-3">
+											@csrf
+											<input type="hidden" name="status" value="rejected">
+											<label class="block space-y-1">
+												<span class="text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Admin note for
+													rejection</span>
+												<textarea name="admin_note" rows="3" maxlength="1000" placeholder="Optional note explaining the rejection"
+												 class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-white"></textarea>
+											</label>
+											<div class="flex flex-wrap gap-2">
+												<button type="submit"
+													class="inline-flex items-center gap-2 rounded-lg bg-rose-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-rose-700">Reject</button>
+											</div>
+										</form>
+									@else
+										<div class="space-y-2 text-sm text-gray-600 dark:text-gray-300">
+											<p><span class="font-medium text-gray-900 dark:text-white">Reviewed by:</span>
+												{{ $brandPayment->confirmedBy?->name ?: $brandPayment->rejectedBy?->name ?: 'Admin' }}</p>
+											@if ($brandPayment->confirmed_at)
+												<p><span class="font-medium text-gray-900 dark:text-white">Confirmed at:</span>
+													{{ $brandPayment->confirmed_at->format('M d, Y h:i A') }}</p>
+											@endif
+											@if ($brandPayment->rejected_at)
+												<p><span class="font-medium text-gray-900 dark:text-white">Rejected at:</span>
+													{{ $brandPayment->rejected_at->format('M d, Y h:i A') }}</p>
+											@endif
+										</div>
+									@endif
+								</div>
+							</div>
+						</div>
+					@endforeach
+				@else
+					<div
+						class="rounded-xl border border-dashed border-gray-300 px-4 py-8 text-center text-sm text-gray-500 dark:border-gray-700 dark:text-gray-400">
+						No brand payment submissions yet.</div>
+				@endif
+			</div>
+		</div>
+
 		<div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
 			<div class="space-y-6 lg:col-span-2">
 				<div class="rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
@@ -646,7 +762,8 @@
 																	<p class="text-xs text-gray-600 dark:text-gray-400 mb-2 line-clamp-2">{{ $deliverable->notes }}</p>
 																@endif
 																<div class="text-xs text-gray-500 dark:text-gray-400 mb-2">Uploaded by
-																	{{ $deliverable->uploadedBy?->name ?? 'Unknown' }} • {{ $deliverable->created_at?->format('M d, Y') }}
+																	{{ $deliverable->uploadedBy?->name ?? 'Unknown' }} •
+																	{{ $deliverable->created_at?->format('M d, Y') }}
 																</div>
 
 																@if ($deliverable->status === 'submitted')

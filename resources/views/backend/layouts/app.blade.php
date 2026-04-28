@@ -9,46 +9,51 @@
 			$siteName = \App\Models\Setting::get('branding.site_name', config('app.name', 'Rockies'));
 			$explicitTitle = trim((string) $__env->yieldContent('title'));
 			if ($explicitTitle === '' && isset($title)) {
-				$explicitTitle = trim((string) $title);
+			    $explicitTitle = trim((string) $title);
 			}
 
 			$humanize = static function (string $value): string {
-				return ucwords(str_replace(['-', '_'], ' ', $value));
+			    return ucwords(str_replace(['-', '_'], ' ', $value));
 			};
 
 			$deriveFromRoute = static function (string $routeName) use ($humanize): string {
-				if ($routeName === '') {
-					return '';
-				}
+			    if ($routeName === '') {
+			        return '';
+			    }
 
-				$parts = array_values(array_filter(explode('.', $routeName), fn ($part) => !in_array($part, ['dashboard', 'frontend', 'api'], true)));
-				if (empty($parts)) {
-					return '';
-				}
+			    $parts = array_values(
+			        array_filter(
+			            explode('.', $routeName),
+			            fn($part) => !in_array($part, ['dashboard', 'frontend', 'api'], true),
+			        ),
+			    );
+			    if (empty($parts)) {
+			        return '';
+			    }
 
-				$action = end($parts);
-				$resource = count($parts) >= 2 ? $parts[count($parts) - 2] : $parts[0];
-				$actionMap = [
-					'index' => '',
-					'show' => '',
-					'create' => 'Create ',
-					'store' => 'Create ',
-					'edit' => 'Edit ',
-					'update' => 'Update ',
-					'destroy' => 'Delete ',
-				];
+			    $action = end($parts);
+			    $resource = count($parts) >= 2 ? $parts[count($parts) - 2] : $parts[0];
+			    $actionMap = [
+			        'index' => '',
+			        'show' => '',
+			        'create' => 'Create ',
+			        'store' => 'Create ',
+			        'edit' => 'Edit ',
+			        'update' => 'Update ',
+			        'destroy' => 'Delete ',
+			    ];
 
-				if (array_key_exists($action, $actionMap)) {
-					return trim($actionMap[$action] . $humanize($resource));
-				}
+			    if (array_key_exists($action, $actionMap)) {
+			        return trim($actionMap[$action] . $humanize($resource));
+			    }
 
-				return implode(' - ', array_map($humanize, $parts));
+			    return implode(' - ', array_map($humanize, $parts));
 			};
 
 			$routeName = (string) (\Illuminate\Support\Facades\Route::currentRouteName() ?? '');
 			$pageTitle = $explicitTitle !== '' ? $explicitTitle : $deriveFromRoute($routeName);
 			if ($pageTitle === '') {
-				$pageTitle = 'Dashboard';
+			    $pageTitle = 'Dashboard';
 			}
 		@endphp
 
@@ -85,7 +90,7 @@
 
 	<body x-data="{ 'loaded': true }" x-init="$store.sidebar.isExpanded = window.innerWidth >= 1024;
 const checkMobile = () => {
-	if (window.innerWidth < 1024) {
+    if (window.innerWidth < 1024) {
         $store.sidebar.setMobileOpen(false);
         $store.sidebar.isExpanded = false;
     } else {
@@ -107,7 +112,7 @@ window.addEventListener('resize', checkMobile);" class="bg-white text-gray-900 d
 				<!-- app header start -->
 				<x-backend.shell.header />
 				<!-- app header end -->
-				<main class="max-w-screen-2xl mx-auto ml-[90px] lg:ml-0  px-4 sm:px-6 py-6 bg-white dark:bg-gray-900 ">
+				<main class="max-w-full ml-[90px] lg:ml-0 px-4 sm:px-6 py-6 bg-white dark:bg-gray-900">
 					@yield('content')
 				</main>
 			</div>

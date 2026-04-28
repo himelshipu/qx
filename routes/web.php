@@ -62,11 +62,8 @@ use App\Http\Controllers\Frontend\SupportTicketController as FrontendSupportTick
 use App\Http\Controllers\InfluencerProfileController;
 use App\Http\Controllers\PaymentMethodController;
 use App\Http\Controllers\PublicPageController;
-use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Artisan;
-
-
-
+use Illuminate\Support\Facades\Route;
 
 Route::get('/storage-link/{key}', function ($key) {
     if ($key !== '22') {
@@ -191,6 +188,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Frontend Orders
     Route::get('/orders', [FrontendOrderController::class, 'index'])->name('frontend.orders.index');
     Route::get('/orders/{order}', [FrontendOrderController::class, 'show'])->name('frontend.orders.show');
+    Route::post('/orders/{order}/brand-payments', [FrontendOrderController::class, 'storeBrandPayment'])->name('frontend.orders.brand-payments.store');
     Route::put('/orders/{order}/items/{item}/status', [FrontendOrderController::class, 'updateItemStatus'])->name('frontend.orders.items.update-status');
     Route::put('/orders/{order}/items/{item}/decision', [FrontendOrderController::class, 'updateBrandItemDecision'])->name('frontend.orders.items.update-decision');
     Route::post('/orders/{order}/items/{item}/review', [FrontendOrderController::class, 'storeBrandTaskReview'])->name('frontend.orders.items.reviews.store');
@@ -400,6 +398,7 @@ Route::prefix('dashboard')->name('dashboard.')->middleware(['auth', 'verified', 
     Route::post('/sub-orders/{subOrder}/approve-deliverable', [BackendOrderController::class, 'approveDeliverable'])->name('sub-orders.approve-deliverable');
     Route::put('/order-items/{orderItem}/status', [BackendOrderController::class, 'updateOrderItemStatus'])->name('order-items.update-status');
     Route::post('/order-items/{orderItem}/mark-paid', [BackendOrderController::class, 'markOrderItemPaid'])->name('order-items.mark-paid');
+    Route::post('/brand-payments/{brandPayment}/review', [BackendOrderController::class, 'reviewBrandPayment'])->name('brand-payments.review');
 
     // Payments (offline payout ledger)
     Route::get('/payments', [PaymentsController::class, 'index'])->name('payments.index');

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\OrderBrandPayment;
 use App\Models\OrderMessage;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -14,9 +15,9 @@ class Order extends Model
 {
     use HasFactory, SoftDeletes;
 
-    public const SOURCE_PACKAGE = 'PKG';
+    public const SOURCE_PACKAGE  = 'PKG';
     public const SOURCE_CAMPAIGN = 'CMP';
-    public const SOURCE_CUSTOM = 'CUS';
+    public const SOURCE_CUSTOM   = 'CUS';
 
     protected $fillable = [
         'order_number',
@@ -107,6 +108,11 @@ class Order extends Model
         return $this->hasMany(Payment::class);
     }
 
+    public function brandPayments(): HasMany
+    {
+        return $this->hasMany(OrderBrandPayment::class);
+    }
+
     public function statusHistory(): HasMany
     {
         return $this->hasMany(OrderStatusHistory::class);
@@ -150,18 +156,18 @@ class Order extends Model
                 'total_amount',
                 'currency',
                 'placed_at',
-                'created_at',
+                'created_at'
             ])
             ->with([
                 'buyer:id,name,email,user_type',
                 'brand:id,brand_name',
                 'campaign:id,title',
-                'childOrders:id,parent_order_id,campaign_id,status,total_amount,currency',
+                'childOrders:id,parent_order_id,campaign_id,status,total_amount,currency'
             ])
             ->withCount([
-                'items as package_items_count' => fn (Builder $query) => $query->whereNotNull('package_id'),
+                'items as package_items_count'              => fn(Builder $query)              => $query->whereNotNull('package_id'),
                 'childOrders as child_orders_count',
-                'childOrders as child_package_orders_count' => fn (Builder $query) => $query->whereNull('campaign_id'),
+                'childOrders as child_package_orders_count' => fn(Builder $query) => $query->whereNull('campaign_id')
             ]);
     }
 
@@ -201,8 +207,8 @@ class Order extends Model
         $status = trim($status);
 
         return $status === 'all' || $status === ''
-            ? $query
-            : $query->where('status', $status);
+        ? $query
+        : $query->where('status', $status);
     }
 
     public function scopeDashboardType(Builder $query, string $type): Builder
@@ -218,8 +224,8 @@ class Order extends Model
                 ->whereNull('campaign_id')
                 ->where(function (Builder $packageQuery): void {
                     $packageQuery
-                        ->whereHas('items', fn (Builder $itemQuery) => $itemQuery->whereNotNull('package_id'))
-                        ->orWhereHas('childOrders.items', fn (Builder $itemQuery) => $itemQuery->whereNotNull('package_id'));
+                        ->whereHas('items', fn(Builder $itemQuery) => $itemQuery->whereNotNull('package_id'))
+                        ->orWhereHas('childOrders.items', fn(Builder $itemQuery) => $itemQuery->whereNotNull('package_id'));
                 });
         }
 
@@ -230,7 +236,7 @@ class Order extends Model
     {
         $normalized = strtoupper(trim($source));
 
-        if (! preg_match('/^[A-Z]{3}$/', $normalized)) {
+        if (!preg_match('/^[A-Z]{3}$/', $normalized)) {
             $normalized = 'GEN';
         }
 
@@ -242,7 +248,7 @@ class Order extends Model
                 random_int(0, 9999)
             );
 
-            if (! static::withTrashed()->where('order_number', $candidate)->exists()) {
+            if (!static::withTrashed()->where('order_number', $candidate)->exists()) {
                 return $candidate;
             }
         }

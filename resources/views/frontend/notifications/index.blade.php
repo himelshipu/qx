@@ -4,7 +4,7 @@
 
 @section('content')
 	<div class="min-h-screen bg-gray-50 dark:bg-gray-900 py-8 sm:py-12">
-		<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+		<div class="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
 			<!-- Header -->
 			<div class="mb-8">
 				<h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-2">Notifications</h1>
@@ -76,15 +76,15 @@
 					<div class="flex gap-3 w-full sm:w-auto">
 						@if ($stats['unread'] > 0)
 							<button onclick="markAllAsRead()"
-								class="flex-1 sm:flex-none px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors">
-								Mark All as Read
-							</button>
+									class="flex-1 sm:flex-none px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors">
+									Mark All as Read
+								</button>
 						@endif
 						@if ($stats['total'] > 0)
 							<button onclick="clearAll()"
-								class="flex-1 sm:flex-none px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors">
-								Clear All
-							</button>
+									class="flex-1 sm:flex-none px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors">
+									Clear All
+								</button>
 						@endif
 					</div>
 				</div>
@@ -102,9 +102,9 @@
 									style="background-color: var(--badge-bg); color: var(--badge-color);"
 									@php
 $colors = ['order' => ['bg' => '#dbeafe', 'text' => '#1e40af'], 'payment' => ['bg' => '#dcfce7', 'text' => '#166534'], 'campaign' => ['bg' => '#dbeafe', 'text' => '#1e40af'], 'message' => ['bg' => '#e0e7ff', 'text' => '#312e81'], 'review' => ['bg' => '#fef3c7', 'text' => '#b45309'], 'payout' => ['bg' => '#e9d5ff', 'text' => '#6b21a8']];
-									$color = $colors[$notification->type] ?? $colors['message']; @endphp
+										$color = $colors[$notification->type] ?? $colors['message']; @endphp
 									:style="`--badge-bg: ${@json($color['bg'])}; --badge-color: ${@json($color['text'])};`">
-									{!! $notification->getIconClass() !!}
+									<x-dynamic-component :component="'icons.' . $notification->getIcon()" class="w-6 h-6 text-current" />
 								</div>
 
 								<!-- Content -->
@@ -192,73 +192,86 @@ $colors = ['order' => ['bg' => '#dbeafe', 'text' => '#1e40af'], 'payment' => ['b
 
 		function markAsRead(notificationId) {
 			fetch(`/notifications/${notificationId}/mark-as-read`, {
-					method: 'POST',
-					headers: {
-						'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-						'Content-Type': 'application/json',
-					},
-				})
-				.then(response => response.json())
-				.then(data => location.reload())
-				.catch(error => console.error('Error:', error));
+						method: 'POST',
+						headers: {
+							'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+							'Accept': 'application/json',
+						},
+					})
+					.then(() => location.reload())
+					.catch(error => console.error('Error:', error));
 		}
 
 		function markAsUnread(notificationId) {
 			fetch(`/notifications/${notificationId}/mark-as-unread`, {
-					method: 'POST',
-					headers: {
-						'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-						'Content-Type': 'application/json',
-					},
-				})
-				.then(response => response.json())
-				.then(data => location.reload())
-				.catch(error => console.error('Error:', error));
+						method: 'POST',
+						headers: {
+							'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+							'Accept': 'application/json',
+						},
+					})
+					.then(() => location.reload())
+					.catch(error => console.error('Error:', error));
 		}
 
 		function markAllAsRead() {
-			if (!confirm('Mark all notifications as read?')) return;
-
-			fetch('/notifications/mark-all-as-read', {
-					method: 'POST',
-					headers: {
-						'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-						'Content-Type': 'application/json',
-					},
-				})
-				.then(response => response.json())
-				.then(data => location.reload())
-				.catch(error => console.error('Error:', error));
+			window.confirmationModal.open({
+				title: 'Mark all as read',
+				message: 'Mark all notifications as read?',
+				confirmText: 'Mark All',
+				variant: 'info',
+				onConfirm: () => {
+					fetch('/notifications/mark-all-as-read', {
+						method: 'POST',
+						headers: {
+							'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+							'Accept': 'application/json',
+						},
+					})
+					.then(() => location.reload())
+					.catch(error => console.error('Error:', error));
+				}
+			});
 		}
 
 		function deleteNotification(notificationId) {
-			if (!confirm('Delete this notification?')) return;
-
-			fetch(`/notifications/${notificationId}`, {
-					method: 'DELETE',
-					headers: {
-						'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-						'Content-Type': 'application/json',
-					},
-				})
-				.then(response => response.json())
-				.then(data => location.reload())
-				.catch(error => console.error('Error:', error));
+			window.confirmationModal.open({
+				title: 'Delete notification',
+				message: 'Delete this notification? This action cannot be undone.',
+				confirmText: 'Delete',
+				variant: 'danger',
+				onConfirm: () => {
+					fetch(`/notifications/${notificationId}`, {
+						method: 'DELETE',
+						headers: {
+							'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+							'Accept': 'application/json',
+						},
+					})
+					.then(() => location.reload())
+					.catch(error => console.error('Error:', error));
+				}
+			});
 		}
 
 		function clearAll() {
-			if (!confirm('This will delete all notifications. Are you sure?')) return;
-
-			fetch('{{ route('frontend.notifications.clear-all') }}', {
-					method: 'POST',
-					headers: {
-						'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-						'Content-Type': 'application/json',
-					},
-				})
-				.then(response => response.json())
-				.then(data => location.reload())
-				.catch(error => console.error('Error:', error));
+			window.confirmationModal.open({
+				title: 'Clear all notifications',
+				message: 'This will delete all notifications. Are you sure?',
+				confirmText: 'Clear All',
+				variant: 'danger',
+				onConfirm: () => {
+					fetch('{{ route('frontend.notifications.clear-all') }}', {
+						method: 'POST',
+						headers: {
+							'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+							'Accept': 'application/json',
+						},
+					})
+					.then(() => location.reload())
+					.catch(error => console.error('Error:', error));
+				}
+			});
 		}
 	</script>
 @endsection

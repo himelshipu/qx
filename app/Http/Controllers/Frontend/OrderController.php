@@ -2,11 +2,12 @@
 
 namespace App\Http\Controllers\Frontend;
 
-use App\Http\Controllers\Controller;
 use App\Helpers\OrderStatusHelper;
+use App\Http\Controllers\Controller;
 use App\Models\Influencer;
 use App\Models\Notification;
 use App\Models\Order;
+use App\Models\OrderBrandPayment;
 use App\Models\OrderItem;
 use App\Models\OrderStatusHistory;
 use App\Models\Review;
@@ -14,6 +15,7 @@ use App\Models\SubOrder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 class OrderController extends Controller
@@ -105,7 +107,11 @@ class OrderController extends Controller
             'conversations.influencer.user:id,name,slug',
             'conversations.brandUser:id,name',
             'conversations.handledBy:id,name',
-            'conversations.messages:id,conversation_id,sender_user_id,message,created_at'
+            'conversations.messages:id,conversation_id,sender_user_id,message,created_at',
+            'brandPayments:id,order_id,brand_user_id,brand_id,amount,currency,reference_number,invoice_id,brand_note,admin_note,status,submitted_at,confirmed_at,rejected_at,confirmed_by_user_id,rejected_by_user_id,created_at',
+            'brandPayments.brandUser:id,name,email',
+            'brandPayments.confirmedBy:id,name,email',
+            'brandPayments.rejectedBy:id,name,email'
         ]);
 
         // Parent package orders keep items in child orders; flatten for page rendering.
@@ -122,46 +128,46 @@ class OrderController extends Controller
                 $normalizedStatus = OrderStatusHelper::normalizeStatus((string) $item->status);
 
                 return [
-                    'kind' => 'package',
-                    'id' => $item->id,
-                    'order_id' => $item->order_id,
-                    'title' => $item->title,
-                    'subtitle' => $item->package?->name ?? 'Package task',
+                    'kind'            => 'package',
+                    'id'              => $item->id,
+                    'order_id'        => $item->order_id,
+                    'title'           => $item->title,
+                    'subtitle'        => $item->package?->name ?? 'Package task',
                     'influencer_name' => $item->influencer?->display_name ?: $item->influencer?->user?->name ?: 'Influencer',
                     'influencer_slug' => $item->influencer?->user?->slug,
-                    'status' => $normalizedStatus,
-                    'status_label' => OrderStatusHelper::labelForStatus($normalizedStatus),
-                    'status_classes' => OrderStatusHelper::getStatusClasses($normalizedStatus),
-                    'created_at' => $item->created_at,
-                    'accepted_at' => $item->accepted_at,
-                    'delivered_at' => $item->delivered_at,
-                    'approved_at' => $item->approved_at,
-                    'due_date' => $item->due_date ?: ($item->package?->delivery_days !== null && $order->placed_at ? $order->placed_at->copy()->addDays((int) $item->package->delivery_days) : null),
-                    'amount' => (float) $item->line_total,
-                    'review' => $item->brandToInfluencerReview,
+                    'status'          => $normalizedStatus,
+                    'status_label'    => OrderStatusHelper::labelForStatus($normalizedStatus),
+                    'status_classes'  => OrderStatusHelper::getStatusClasses($normalizedStatus),
+                    'created_at'      => $item->created_at,
+                    'accepted_at'     => $item->accepted_at,
+                    'delivered_at'    => $item->delivered_at,
+                    'approved_at'     => $item->approved_at,
+                    'due_date'        => $item->due_date ?: ($item->package?->delivery_days !== null && $order->placed_at ? $order->placed_at->copy()->addDays((int) $item->package->delivery_days) : null),
+                    'amount'          => (float) $item->line_total,
+                    'review'          => $item->brandToInfluencerReview
                 ];
             }))
             ->merge($order->subOrders->map(function (SubOrder $subOrder) {
                 $normalizedStatus = OrderStatusHelper::normalizeStatus((string) $subOrder->status);
 
                 return [
-                    'kind' => 'campaign',
-                    'id' => $subOrder->id,
-                    'order_id' => $subOrder->order_id,
-                    'title' => $subOrder->order?->campaign?->title ?? 'Campaign task',
-                    'subtitle' => 'Campaign order',
+                    'kind'            => 'campaign',
+                    'id'              => $subOrder->id,
+                    'order_id'        => $subOrder->order_id,
+                    'title'           => $subOrder->order?->campaign?->title ?? 'Campaign task',
+                    'subtitle'        => 'Campaign order',
                     'influencer_name' => $subOrder->influencer?->display_name ?: $subOrder->influencer?->user?->name ?: 'Influencer',
                     'influencer_slug' => $subOrder->influencer?->user?->slug,
-                    'status' => $normalizedStatus,
-                    'status_label' => OrderStatusHelper::labelForStatus($normalizedStatus),
-                    'status_classes' => OrderStatusHelper::getStatusClasses($normalizedStatus),
-                    'created_at' => $subOrder->created_at,
-                    'accepted_at' => $subOrder->accepted_at,
-                    'delivered_at' => $subOrder->delivered_at,
-                    'approved_at' => $subOrder->approved_at,
-                    'due_date' => null,
-                    'amount' => (float) $subOrder->amount,
-                    'review' => $subOrder->review,
+                    'status'          => $normalizedStatus,
+                    'status_label'    => OrderStatusHelper::labelForStatus($normalizedStatus),
+                    'status_classes'  => OrderStatusHelper::getStatusClasses($normalizedStatus),
+                    'created_at'      => $subOrder->created_at,
+                    'accepted_at'     => $subOrder->accepted_at,
+                    'delivered_at'    => $subOrder->delivered_at,
+                    'approved_at'     => $subOrder->approved_at,
+                    'due_date'        => null,
+                    'amount'          => (float) $subOrder->amount,
+                    'review'          => $subOrder->review
                 ];
             }))
             ->sortByDesc(fn(array $task) => $task['created_at']?->timestamp ?? 0)
@@ -258,9 +264,142 @@ class OrderController extends Controller
                 ->contains(fn($item) => $item->influencerToBrandReview !== null);
         }
 
+        $brandPayments = $order->brandPayments
+            ->sortByDesc(fn(OrderBrandPayment $payment): int => $payment->submitted_at?->timestamp ?? $payment->created_at?->timestamp ?? 0)
+            ->values();
+        $brandConfirmedTotal = round((float) $brandPayments->where('status', 'confirmed')->sum('amount'), 2);
+        $brandPendingTotal   = round((float) $brandPayments->where('status', 'pending')->sum('amount'), 2);
+        $brandRejectedTotal  = round((float) $brandPayments->where('status', 'rejected')->sum('amount'), 2);
+        $brandTotalAmount    = round((float) $order->total_amount, 2);
+        $brandBalanceDue     = round(max($brandTotalAmount - $brandConfirmedTotal, 0), 2);
+        $brandOverpaidAmount = round(max($brandConfirmedTotal - $brandTotalAmount, 0), 2);
+        $brandPaymentState   = match (true) {
+            $brandPayments->isEmpty()                           => 'unpaid',
+            $brandPendingTotal > 0 && $brandConfirmedTotal <= 0 => 'awaiting_review',
+            $brandOverpaidAmount > 0                            => 'overpaid',
+            $brandBalanceDue > 0 && $brandConfirmedTotal > 0    => 'partially_paid',
+            $brandBalanceDue > 0                                => 'underpaid',
+            default                                             => 'cleared',
+        };
+        $brandPaymentStateLabel = match ($brandPaymentState) {
+            'awaiting_review' => 'Awaiting Review',
+            'overpaid'        => 'Overpaid',
+            'partially_paid'  => 'Partially Paid',
+            'underpaid'       => 'Underpaid',
+            'cleared'         => 'Cleared',
+            default           => 'Unpaid',
+        };
+        $brandPaymentStateClass = match ($brandPaymentState) {
+            'awaiting_review' => 'bg-amber-100 text-amber-700',
+            'overpaid'        => 'bg-blue-100 text-blue-700',
+            'partially_paid'  => 'bg-orange-100 text-orange-700',
+            'underpaid'       => 'bg-rose-100 text-rose-700',
+            'cleared'         => 'bg-emerald-100 text-emerald-700',
+            default           => 'bg-gray-100 text-gray-700',
+        };
+
         $canLeaveReview = $user->user_type === 'influencer' && $this->isReviewUnlocked($order) && !$hasSubmittedReview;
 
-        return view('frontend.orders.show', compact('order', 'orderInfluencers', 'canLeaveReview', 'hasSubmittedReview', 'timeline', 'orderContext', 'unifiedTasks'));
+        return view('frontend.orders.show', compact(
+            'order',
+            'orderInfluencers',
+            'canLeaveReview',
+            'hasSubmittedReview',
+            'timeline',
+            'orderContext',
+            'unifiedTasks',
+            'brandPayments',
+            'brandConfirmedTotal',
+            'brandPendingTotal',
+            'brandRejectedTotal',
+            'brandTotalAmount',
+            'brandBalanceDue',
+            'brandOverpaidAmount',
+            'brandPaymentState',
+            'brandPaymentStateLabel',
+            'brandPaymentStateClass'
+        ));
+    }
+
+    public function storeBrandPayment(Request $request, Order $order): RedirectResponse
+    {
+        $user = Auth::user();
+
+        if ($user->user_type !== 'brand' || (int) $order->buyer_user_id !== (int) $user->id) {
+            abort(403, 'Unauthorized');
+        }
+
+        $validated = $request->validate([
+            'amount'           => ['required', 'numeric', 'min:0.01'],
+            'reference_number' => ['nullable', 'string', 'max:120', 'required_without:invoice_id'],
+            'invoice_id'       => ['nullable', 'string', 'max:120', 'required_without:reference_number'],
+            'brand_note'       => ['nullable', 'string', 'max:1000']
+        ], [
+            'reference_number.required_without' => 'Enter either a reference number or an invoice ID.',
+            'invoice_id.required_without'       => 'Enter either an invoice ID or a reference number.'
+        ]);
+
+        $brandPayment = DB::transaction(function () use ($order, $user, $validated): OrderBrandPayment {
+            return OrderBrandPayment::create([
+                'order_id'         => $order->id,
+                'brand_user_id'    => $user->id,
+                'brand_id'         => $order->brand_id,
+                'amount'           => round((float) $validated['amount'], 2),
+                'currency'         => $order->currency ?: 'USD',
+                'reference_number' => $validated['reference_number'] ?? null,
+                'invoice_id'       => $validated['invoice_id'] ?? null,
+                'brand_note'       => $validated['brand_note'] ?? null,
+                'status'           => 'pending',
+                'submitted_at'     => now()
+            ]);
+        });
+
+        $dashboardUserIds = \App\Models\User::query()
+            ->whereIn('user_type', ['admin', 'moderator'])
+            ->where('is_active', true)
+            ->pluck('id');
+
+        foreach ($dashboardUserIds as $dashboardUserId) {
+            Notification::create([
+                'user_id'         => (int) $dashboardUserId,
+                'type'            => 'payment',
+                'title'           => 'Brand payment submitted',
+                'body'            => sprintf(
+                    'Brand payment for order %s was submitted with reference %s.',
+                    $order->order_number,
+                    $brandPayment->reference_number ?: ($brandPayment->invoice_id ?: 'N/A')
+                ),
+                'data_json'       => [
+                    'action_url'       => route('dashboard.orders.show', $order),
+                    'order_id'         => $order->id,
+                    'brand_payment_id' => $brandPayment->id,
+                    'amount'           => (float) $brandPayment->amount,
+                    'reference_number' => $brandPayment->reference_number,
+                    'invoice_id'       => $brandPayment->invoice_id
+                ],
+                'notifiable_type' => OrderBrandPayment::class,
+                'notifiable_id'   => $brandPayment->id,
+                'is_read'         => false
+            ]);
+        }
+
+        Notification::create([
+            'user_id'         => (int) $user->id,
+            'type'            => 'payment',
+            'title'           => 'Payment submitted for review',
+            'body'            => sprintf('Your payment for order %s is waiting for admin verification.', $order->order_number),
+            'data_json'       => [
+                'action_url'       => route('frontend.orders.show', $order),
+                'order_id'         => $order->id,
+                'brand_payment_id' => $brandPayment->id,
+                'amount'           => (float) $brandPayment->amount
+            ],
+            'notifiable_type' => OrderBrandPayment::class,
+            'notifiable_id'   => $brandPayment->id,
+            'is_read'         => false
+        ]);
+
+        return back()->with('success', 'Payment submitted for review.');
     }
 
     /**
@@ -315,17 +454,17 @@ class OrderController extends Controller
         $brandUserId = (int) $order->buyer_user_id;
         if ($brandUserId > 0) {
             Notification::create([
-                'user_id' => $brandUserId,
-                'type' => 'review',
-                'title' => 'New brand review received',
-                'body' => sprintf('%s reviewed your brand for order %s.', $user->name, $order->order_number),
-                'data_json' => [
+                'user_id'         => $brandUserId,
+                'type'            => 'review',
+                'title'           => 'New brand review received',
+                'body'            => sprintf('%s reviewed your brand for order %s.', $user->name, $order->order_number),
+                'data_json'       => [
                     'action_url' => route('frontend.orders.show', $order),
-                    'order_id' => $order->id,
+                    'order_id'   => $order->id
                 ],
                 'notifiable_type' => Order::class,
-                'notifiable_id' => $order->id,
-                'is_read' => false,
+                'notifiable_id'   => $order->id,
+                'is_read'         => false
             ]);
         }
 
@@ -390,7 +529,7 @@ class OrderController extends Controller
             'status' => 'required|in:pending,accepted,in_progress,delivered'
         ]);
 
-        $newStatus = $this->normalizeTaskStatus((string) $validated['status'], false);
+        $newStatus     = $this->normalizeTaskStatus((string) $validated['status'], false);
         $currentStatus = $this->normalizeTaskStatus((string) $item->status, false);
 
         if (!$this->canTransitionTaskStatus($currentStatus, $newStatus)) {
@@ -414,24 +553,24 @@ class OrderController extends Controller
         $brandUserId = (int) $order->buyer_user_id;
         if ($brandUserId > 0) {
             Notification::create([
-                'user_id' => $brandUserId,
-                'type' => 'order',
-                'title' => 'Task status updated',
-                'body' => sprintf(
+                'user_id'         => $brandUserId,
+                'type'            => 'order',
+                'title'           => 'Task status updated',
+                'body'            => sprintf(
                     '%s moved task "%s" to %s.',
                     $user->name,
                     (string) ($item->title ?? 'Order task'),
                     ucfirst(str_replace('_', ' ', $newStatus))
                 ),
-                'data_json' => [
+                'data_json'       => [
                     'action_url' => route('frontend.orders.show', $order),
-                    'order_id' => $order->id,
-                    'item_id' => $item->id,
-                    'status' => $newStatus,
+                    'order_id'   => $order->id,
+                    'item_id'    => $item->id,
+                    'status'     => $newStatus
                 ],
                 'notifiable_type' => OrderItem::class,
-                'notifiable_id' => $item->id,
-                'is_read' => false,
+                'notifiable_id'   => $item->id,
+                'is_read'         => false
             ]);
         }
 
@@ -489,7 +628,7 @@ class OrderController extends Controller
             'status' => 'required|in:approved,rejected'
         ]);
 
-        $decision = $this->normalizeTaskStatus((string) $validated['status'], $isSubOrder);
+        $decision      = $this->normalizeTaskStatus((string) $validated['status'], $isSubOrder);
         $currentStatus = $this->normalizeTaskStatus((string) $item->status, $isSubOrder);
 
         // Check if status transition is valid
@@ -515,19 +654,19 @@ class OrderController extends Controller
 
         if ($influencerUserId > 0) {
             Notification::create([
-                'user_id' => $influencerUserId,
-                'type' => 'order',
-                'title' => 'Task decision received',
-                'body' => sprintf('Brand marked your work as %s.', ucfirst(str_replace('_', ' ', $decision))),
-                'data_json' => [
+                'user_id'         => $influencerUserId,
+                'type'            => 'order',
+                'title'           => 'Task decision received',
+                'body'            => sprintf('Brand marked your work as %s.', ucfirst(str_replace('_', ' ', $decision))),
+                'data_json'       => [
                     'action_url' => route('frontend.orders.show', $order),
-                    'order_id' => $order->id,
-                    'item_id' => (int) $item->id,
-                    'status' => $decision,
+                    'order_id'   => $order->id,
+                    'item_id'    => (int) $item->id,
+                    'status'     => $decision
                 ],
                 'notifiable_type' => $isSubOrder ? SubOrder::class : OrderItem::class,
-                'notifiable_id' => (int) $item->id,
-                'is_read' => false,
+                'notifiable_id'   => (int) $item->id,
+                'is_read'         => false
             ]);
         }
 
@@ -626,18 +765,18 @@ class OrderController extends Controller
         $influencerUserId = (int) (Influencer::query()->where('id', (int) $item->influencer_id)->value('user_id') ?? 0);
         if ($influencerUserId > 0) {
             Notification::create([
-                'user_id' => $influencerUserId,
-                'type' => 'review',
-                'title' => 'New task review received',
-                'body' => 'Brand submitted a review for your completed task.',
-                'data_json' => [
+                'user_id'         => $influencerUserId,
+                'type'            => 'review',
+                'title'           => 'New task review received',
+                'body'            => 'Brand submitted a review for your completed task.',
+                'data_json'       => [
                     'action_url' => route('frontend.orders.show', $order),
-                    'order_id' => $order->id,
-                    'item_id' => (int) $item->id,
+                    'order_id'   => $order->id,
+                    'item_id'    => (int) $item->id
                 ],
                 'notifiable_type' => $isSubOrder ? SubOrder::class : OrderItem::class,
-                'notifiable_id' => (int) $item->id,
-                'is_read' => false,
+                'notifiable_id'   => (int) $item->id,
+                'is_read'         => false
             ]);
         }
 
@@ -739,7 +878,7 @@ class OrderController extends Controller
             $this->applyOrderStatus($order, 'pending', [
                 'status'       => 'pending',
                 'accepted_at'  => null,
-                'completed_at' => null,
+                'completed_at' => null
             ], 'Synced from campaign task statuses');
 
             return;
@@ -748,7 +887,7 @@ class OrderController extends Controller
         if ($normalized->every(fn($status) => in_array($status, ['approved', 'completed'], true))) {
             $this->applyOrderStatus($order, 'delivered', [
                 'status'       => 'delivered',
-                'completed_at' => null,
+                'completed_at' => null
             ], 'Synced from campaign task statuses');
 
             return;
@@ -757,7 +896,7 @@ class OrderController extends Controller
         if ($normalized->every(fn($status) => in_array($status, ['delivered', 'approved', 'completed'], true))) {
             $this->applyOrderStatus($order, 'delivered', [
                 'status'       => 'delivered',
-                'completed_at' => null,
+                'completed_at' => null
             ], 'Synced from campaign task statuses');
 
             return;
@@ -765,7 +904,7 @@ class OrderController extends Controller
 
         $this->applyOrderStatus($order, 'in_progress', [
             'status'       => 'in_progress',
-            'completed_at' => null,
+            'completed_at' => null
         ], 'Synced from campaign task statuses');
     }
 

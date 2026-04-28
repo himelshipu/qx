@@ -50,15 +50,29 @@ class NotificationController extends Controller
             ->take(8)
             ->get()
             ->map(function ($notification) {
+                // Render SVG icon component to HTML so the frontend can inject it via x-html
+                $iconHtml = null;
+                try {
+                    $iconView = 'components.icons.' . $notification->getIcon();
+                    if (view()->exists($iconView)) {
+                        $iconHtml = view($iconView)->render();
+                    } else {
+                        $iconHtml = view('components.icons.bell')->render();
+                    }
+                } catch (\Throwable $e) {
+                    $iconHtml = '';
+                }
+
                 return [
                     'id'         => $notification->id,
                     'type'       => $notification->type,
                     'title'      => $notification->title,
                     'body'       => $notification->body,
-                    'icon'       => $notification->getIconClass(),
-                    'color'      => $notification->getColorClass(),
+                    'icon'       => $iconHtml,
+                    'color'      => $notification->getColor(),
                     'action_url' => $notification->getActionUrl(),
-                    'created_at' => $notification->created_at->diffForHumans()
+                    'created_at' => $notification->created_at->diffForHumans(),
+                    'is_read'    => $notification->is_read,
                 ];
             });
 

@@ -128,7 +128,7 @@ class Notification extends Model
     {
         return match ($this->type) {
             'order'    => 'shopping-cart',
-            'payment'  => 'credit-card',
+            'payment'  => 'dollar-sign',
             'campaign' => 'megaphone',
             'message'  => 'message-circle',
             'review'   => 'star',

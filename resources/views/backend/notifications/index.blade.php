@@ -77,15 +77,10 @@
 				</form>
 
 				@if ($stats['total'] > 0)
-					<form action="{{ route('dashboard.notifications.clear-all') }}" method="POST"
-						onsubmit="return confirm('Are you sure? This action cannot be undone.');">
-						@csrf
-						@method('DELETE')
-						<button type="submit"
-							class="px-3 py-2 text-sm text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 transition-colors">
-							Clear All
-						</button>
-					</form>
+					<button type="button" onclick="clearAllNotifications()"
+						class="px-3 py-2 text-sm text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 transition-colors">
+						Clear All
+					</button>
 				@endif
 			</div>
 		</div>
@@ -98,8 +93,22 @@
 						<div class="flex gap-4">
 							<!-- Icon -->
 							<div class="flex-shrink-0">
+								@php
+									$color = $notification->getColor();
+									$iconTextClassMap = [
+									    'blue' => 'text-blue-600 dark:text-blue-400',
+									    'green' => 'text-green-600 dark:text-green-400',
+									    'red' => 'text-red-600 dark:text-red-400',
+									    'yellow' => 'text-yellow-600 dark:text-yellow-400',
+									    'purple' => 'text-purple-600 dark:text-purple-400',
+									    'indigo' => 'text-indigo-600 dark:text-indigo-400',
+									    'emerald' => 'text-emerald-600 dark:text-emerald-400',
+									];
+									$iconClass = $iconTextClassMap[$color] ?? 'text-gray-600 dark:text-gray-400';
+								@endphp
+
 								<div
-									class="w-12 h-12 rounded-lg flex items-center justify-center {{ match ($notification->getColor()) {
+									class="w-12 h-12 rounded-lg flex items-center justify-center {{ match ($color) {
 									    'blue' => 'bg-blue-100 dark:bg-blue-900/30',
 									    'green' => 'bg-green-100 dark:bg-green-900/30',
 									    'red' => 'bg-red-100 dark:bg-red-900/30',
@@ -109,50 +118,7 @@
 									    'emerald' => 'bg-emerald-100 dark:bg-emerald-900/30',
 									    default => 'bg-gray-100 dark:bg-gray-700',
 									} }}">
-									@switch($notification->type)
-										@case('order')
-											<svg class="w-6 h-6 text-blue-600 dark:text-blue-400" fill="currentColor" viewBox="0 0 24 24">
-												<path
-													d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-. 9-2-2zm10 0c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2zm-9.45-9h8.95c.6 0 1.08-.38 1.3-.92l3.02-7.05c.12-.3.12-.62 0-.92-.12-.3-.39-.48-.72-.48H6.21l-.94-2H1v2h2l3.6 7.59-1.35 2.45c-.13.23-.2.49-.2.75 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l2.96-6.59c.13-.22.8-.04 0-.09H6.21l-.94-2z" />
-											</svg>
-										@break
-
-										@case('payment')
-											<svg class="w-6 h-6 text-green-600 dark:text-green-400" fill="currentColor" viewBox="0 0 24 24">
-												<path
-													d="M20 8h-3V4H3c-1.1 0-1.99.9-1.99 2L1 18c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2v-8h3l-3-4zm-1 13H4V4h10v4h5v13z" />
-											</svg>
-										@break
-
-										@case('campaign')
-											<svg class="w-6 h-6 text-purple-600 dark:text-purple-400" fill="currentColor" viewBox="0 0 24 24">
-												<path
-													d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14zm-5.04-6.71l-2.75 3.54h2.79c.77 0 1.49.31 2 .82.51-.51 1.23-.82 2-.82h2.79l-2.75-3.54 2.75-3.54h-2.79c-.77 0-1.49-.31-2-.82-.51.51-1.23.82-2 .82H8.21l2.75 3.54z" />
-											</svg>
-										@break
-
-										@case('message')
-											<svg class="w-6 h-6 text-indigo-600 dark:text-indigo-400" fill="currentColor" viewBox="0 0 24 24">
-												<path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-2 8h-8v-2h8v2zm0 4h-8v-2h8v2z" />
-											</svg>
-										@break
-
-										@case('review')
-											<svg class="w-6 h-6 text-yellow-600 dark:text-yellow-400" fill="currentColor" viewBox="0 0 24 24">
-												<path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2l-2.81 6.63L2 9.24l5.46 4.73L5.82 21z" />
-											</svg>
-										@break
-
-										@case('payout')
-											<svg class="w-6 h-6 text-emerald-600 dark:text-emerald-400" fill="currentColor" viewBox="0 0 24 24">
-												<path
-													d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm3.5-9c.83 0 1.5-.67 1.5-1.5S16.33 8 15.5 8 14 8.67 14 9.5s.67 1.5 1.5 1.5zm-7 0c.83 0 1.5-.67 1.5-1.5S9.33 8 8.5 8 7 8.67 7 9.5 7.67 11 8.5 11zm3.5 6.5c2.33 0 4.31-1.46 5.11-3.5H6.89c.8 2.04 2.78 3.5 5.11 3.5z" />
-											</svg>
-										@break
-
-										@default
-											<x-icons.bell class="w-6 h-6 text-gray-600 dark:text-gray-400" />
-									@endswitch
+									<x-dynamic-component :component="'icons.' . $notification->getIcon()" class="w-6 h-6 {{ $iconClass }}" />
 								</div>
 							</div>
 
@@ -175,7 +141,7 @@
 									</span>
 								</div>
 
-								<p class="text-sm text-gray-600 dark:text-gray-300 mb-3">{{ $notification->message }}</p>
+								<p class="text-sm text-gray-600 dark:text-gray-300 mb-3">{{ $notification->body }}</p>
 
 								<div class="flex items-center justify-between gap-2">
 									<span class="text-xs text-gray-500 dark:text-gray-400">
@@ -203,7 +169,7 @@
 											</form>
 										@endif
 
-										@if ($notification->action_url)
+										@if ($notification->getActionUrl())
 											<a href="{{ route('dashboard.notifications.show', $notification) }}"
 												class="text-xs text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 transition-colors">
 												View
@@ -246,5 +212,45 @@
 			</div>
 		@endif
 	</div>
+
+	<script>
+		function clearAllNotifications() {
+			window.confirmationModal.open({
+				title: 'Clear all notifications',
+				message: 'Are you sure you want to clear all notifications? This action cannot be undone.',
+				confirmText: 'Clear All',
+				variant: 'danger',
+				onConfirm: () => {
+					fetch('{{ route('dashboard.notifications.clear-all') }}', {
+						method: 'DELETE',
+						headers: {
+							'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+							'Accept': 'application/json',
+						},
+					})
+					.then(async response => {
+						if (!response.ok) {
+							const text = await response.text().catch(() => '');
+							throw new Error(`HTTP ${response.status} ${text}`);
+						}
+
+						const contentType = response.headers.get('content-type') || '';
+						if (contentType.includes('application/json')) {
+							return response.json();
+						}
+
+						return null;
+					})
+					.then(() => {
+						window.location.href = window.location.href;
+					})
+					.catch(error => {
+						console.error('Error clearing notifications:', error);
+						window.toast?.error('Unable to clear notifications right now.');
+					});
+				}
+			});
+		}
+	</script>
 
 @endsection
