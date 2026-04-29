@@ -184,10 +184,10 @@ window.addEventListener('resize', checkMobile);" class="bg-white text-gray-900 d
 			}
 
 			$toastrFlash = [
-			    'success' => session('success'),
-			    'error' => session('error') ?: $validationError,
-			    'info' => session('info'),
-			    'warning' => session('warning'),
+				'success' => session()->pull('success'),
+				'error' => session()->pull('error') ?: $validationError,
+				'info' => session()->pull('info'),
+				'warning' => session()->pull('warning'),
 			];
 		@endphp
 

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\View\Components\Backend\Dropdowns;
+namespace App\View\Components\backend\dropdowns;
 
 use Closure;
 use Illuminate\Contracts\View\View;
