@@ -57,6 +57,7 @@ use App\Http\Controllers\Frontend\PackageController as FrontendPackageController
 use App\Http\Controllers\Frontend\PaymentAuditController as FrontendPaymentAuditController;
 use App\Http\Controllers\Frontend\PaymentQueueController as FrontendPaymentQueueController;
 use App\Http\Controllers\Frontend\PaymentStatementController as FrontendPaymentStatementController;
+use App\Http\Controllers\Frontend\PayPalPaymentController;
 use App\Http\Controllers\Frontend\StaticPagesController;
 use App\Http\Controllers\Frontend\SupportTicketController as FrontendSupportTicketController;
 use App\Http\Controllers\InfluencerProfileController;
@@ -141,6 +142,9 @@ Route::middleware(['web'])->group(function () {
 
     // API endpoints
     Route::get('/api/categories', [InfluencersController::class, 'apiCategories']);
+
+    // PayPal IPN Webhook
+    Route::post('/paypal/notify', [PayPalPaymentController::class, 'notify'])->name('frontend.paypal.notify');
 });
 
 /*
@@ -194,6 +198,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/orders/{order}/items/{item}/review', [FrontendOrderController::class, 'storeBrandTaskReview'])->name('frontend.orders.items.reviews.store');
     Route::put('/orders/{order}/complete', [FrontendOrderController::class, 'completeOrder'])->name('frontend.orders.complete');
     Route::post('/orders/{order}/reviews', [FrontendOrderController::class, 'storeReview'])->name('frontend.orders.reviews.store');
+
+    // PayPal Payment Routes
+    Route::prefix('paypal')->name('frontend.paypal.')->group(function () {
+        Route::post('/pay/{order}', [PayPalPaymentController::class, 'initiate'])->name('initiate');
+        Route::get('/success/{brandPayment}', [PayPalPaymentController::class, 'success'])->name('success');
+        Route::get('/cancel', [PayPalPaymentController::class, 'cancel'])->name('cancel');
+    });
 
     // Frontend Conversations
     Route::get('/messages', [FrontendConversationController::class, 'index'])->name('frontend.conversations.index');

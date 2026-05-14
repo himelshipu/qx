@@ -18,6 +18,7 @@ class OrderBrandPayment extends Model
         'brand_id',
         'amount',
         'currency',
+        'payment_method',
         'reference_number',
         'invoice_id',
         'brand_note',
@@ -27,7 +28,9 @@ class OrderBrandPayment extends Model
         'confirmed_at',
         'rejected_at',
         'confirmed_by_user_id',
-        'rejected_by_user_id'
+        'rejected_by_user_id',
+        'paypal_token',
+        'paypal_transaction_id'
     ];
 
     protected function casts(): array

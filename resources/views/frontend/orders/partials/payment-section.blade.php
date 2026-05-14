@@ -65,13 +65,28 @@
 									<div class="flex flex-wrap items-center gap-2">
 										<span
 											class="rounded-full px-2.5 py-0.5 text-xs font-semibold {{ $paymentStateClass }}">{{ ucfirst($payment->status) }}</span>
+										<span class="text-xs px-2 py-0.5 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 font-medium">
+											@if ($payment->payment_method === 'paypal')
+												<svg class="w-3 h-3 inline mr-1" viewBox="0 0 24 24" fill="currentColor">
+													<path d="M20.067 8.478c.492.88.556 2.014.3 3.327-.74 3.806-3.276 5.12-6.514 5.12h-.5a.805.805 0 00-.794.68l-.04.22-.63 4.002-.027.15a.806.806 0 01-.795.68h-2.31a.536.536 0 01-.527-.624l2.36-14.98a.806.806 0 01.795-.68h3.5c2.923 0 4.817-.854 5.41-3.43.19-.825.285-1.622.272-2.365z"/>
+												</svg>
+												PayPal
+											@else
+												Manual
+											@endif
+										</span>
 										<span
 											class="text-sm font-semibold text-gray-900 dark:text-white">${{ number_format((float) $payment->amount, 2) }}</span>
 									</div>
 									<p class="mt-1 text-xs text-gray-600 dark:text-gray-400">Submitted
 										{{ $submittedAt?->format('M d, Y h:i A') ?? 'just now' }}</p>
-									<p class="mt-1 text-xs text-gray-600 dark:text-gray-400">Ref: {{ $payment->reference_number ?: 'N/A' }} •
-										Invoice: {{ $payment->invoice_id ?: 'N/A' }}</p>
+									<p class="mt-1 text-xs text-gray-600 dark:text-gray-400">
+										@if ($payment->paypal_transaction_id)
+											PayPal TXN: {{ $payment->paypal_transaction_id }}
+										@else
+											Ref: {{ $payment->reference_number ?: 'N/A' }} • Invoice: {{ $payment->invoice_id ?: 'N/A' }}
+										@endif
+									</p>
 								</div>
 								<div class="text-xs text-gray-600 dark:text-gray-400">{{ $payment->brandUser?->name ?? 'Brand' }}</div>
 							</div>
@@ -84,40 +99,102 @@
 					No payment submissions yet.</div>
 			@endif
 
-			<form action="{{ route('frontend.orders.brand-payments.store', $order) }}" method="POST"
-				class="grid grid-cols-1 gap-3 rounded-xl border border-gray-200 bg-gray-50 p-4 dark:border-gray-800 dark:bg-gray-900/60 xl:grid-cols-2">
-				@csrf
-				<div class="xl:col-span-2">
-					<h3 class="text-sm font-semibold text-gray-900 dark:text-white">Submit Payment Details</h3>
-					<p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Enter amount and reference or invoice ID.</p>
+			<!-- Payment Method Tabs -->
+			<div class="rounded-xl border border-gray-200 bg-gray-50 dark:border-gray-800 dark:bg-gray-900/60" x-data="{ activeTab: 'manual' }">
+				<!-- Tab Navigation -->
+				<div class="flex border-b border-gray-200 dark:border-gray-800">
+					<button @click="activeTab = 'manual'" :class="activeTab === 'manual' ? 'bg-white dark:bg-gray-800 border-b-2 border-blue-600' : 'text-gray-600 dark:text-gray-400'"
+						class="flex-1 px-4 py-3 text-sm font-semibold transition text-center">
+						Manual Payment
+					</button>
+					<button @click="activeTab = 'paypal'" :class="activeTab === 'paypal' ? 'bg-white dark:bg-gray-800 border-b-2 border-blue-600' : 'text-gray-600 dark:text-gray-400'"
+						class="flex-1 px-4 py-3 text-sm font-semibold transition text-center">
+						PayPal
+					</button>
 				</div>
-				<label class="space-y-1">
-					<span class="text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Amount</span>
-					<input type="number" name="amount" min="0.01" step="0.01" required
-						value="{{ number_format($brandBalanceDue > 0 ? $brandBalanceDue : $brandTotalAmount, 2, '.', '') }}"
-						class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-white">
-				</label>
-				<label class="space-y-1">
-					<span class="text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Reference Number</span>
-					<input type="text" name="reference_number" maxlength="120"
-						class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-white">
-				</label>
-				<label class="space-y-1">
-					<span class="text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Invoice ID</span>
-					<input type="text" name="invoice_id" maxlength="120"
-						class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-white">
-				</label>
-				<label class="space-y-1 xl:col-span-2">
-					<span class="text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Note</span>
-					<textarea name="brand_note" rows="3" maxlength="1000"
-					 class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-white"></textarea>
-				</label>
-				<div class="xl:col-span-2">
-					<button type="submit"
-						class="inline-flex items-center gap-2 rounded-lg bg-gray-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-gray-800 dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100">Submit
-						Payment</button>
+
+				<!-- Tab Content: Manual Payment -->
+				<div x-show="activeTab === 'manual'" class="p-4">
+					<form action="{{ route('frontend.orders.brand-payments.store', $order) }}" method="POST" class="grid grid-cols-1 gap-3 xl:grid-cols-2">
+						@csrf
+						<div class="xl:col-span-2">
+							<h3 class="text-sm font-semibold text-gray-900 dark:text-white">Submit Manual Payment Details</h3>
+							<p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Enter amount and reference or invoice ID for manual payment submission.</p>
+						</div>
+						<label class="space-y-1">
+							<span class="text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Amount</span>
+							<input type="number" name="amount" min="0.01" step="0.01" required
+								value="{{ number_format($brandBalanceDue > 0 ? $brandBalanceDue : $brandTotalAmount, 2, '.', '') }}"
+								class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-white">
+						</label>
+						<label class="space-y-1">
+							<span class="text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Reference Number</span>
+							<input type="text" name="reference_number" maxlength="120"
+								class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-white">
+						</label>
+						<label class="space-y-1">
+							<span class="text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Invoice ID</span>
+							<input type="text" name="invoice_id" maxlength="120"
+								class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-white">
+						</label>
+						<label class="space-y-1 xl:col-span-2">
+							<span class="text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Note</span>
+							<textarea name="brand_note" rows="3" maxlength="1000"
+							 class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-white"></textarea>
+						</label>
+						<div class="xl:col-span-2">
+							<button type="submit"
+								class="inline-flex items-center gap-2 rounded-lg bg-gray-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-gray-800 dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100">
+								<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2m0 0v-8m0 8l-4-2m4 2l4-2" />
+								</svg>
+								Submit Manual Payment
+							</button>
+						</div>
+					</form>
 				</div>
-			</form>
+
+				<!-- Tab Content: PayPal Payment -->
+				<div x-show="activeTab === 'paypal'" class="p-4">
+					<form action="{{ route('frontend.paypal.initiate', $order) }}" method="POST" class="grid grid-cols-1 gap-3 xl:grid-cols-2">
+						@csrf
+						<div class="xl:col-span-2">
+							<h3 class="text-sm font-semibold text-gray-900 dark:text-white">Pay with PayPal</h3>
+							<p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Securely pay your order using PayPal. You'll be redirected to PayPal to complete the payment.</p>
+						</div>
+						<label class="space-y-1">
+							<span class="text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Amount</span>
+							<input type="number" name="amount" min="0.01" step="0.01" required
+								value="{{ number_format($brandBalanceDue > 0 ? $brandBalanceDue : $brandTotalAmount, 2, '.', '') }}"
+								class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-white">
+						</label>
+						<label class="space-y-1">
+							<span class="text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Currency</span>
+							<select name="currency" class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-white" disabled>
+								<option value="{{ $order->currency ?: 'USD' }}">{{ $order->currency ?: 'USD' }}</option>
+							</select>
+						</label>
+						<label class="space-y-1 xl:col-span-2">
+							<span class="text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Note (optional)</span>
+							<textarea name="brand_note" rows="3" maxlength="1000" placeholder="Any additional notes for this payment..."
+							 class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-white"></textarea>
+						</label>
+						<div class="xl:col-span-2">
+							<button type="submit"
+								class="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-800">
+								<svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+									<path d="M20.067 8.478c.492.88.556 2.014.3 3.327-.74 3.806-3.276 5.12-6.514 5.12h-.5a.805.805 0 00-.794.68l-.04.22-.63 4.002-.027.15a.806.806 0 01-.795.68h-2.31a.536.536 0 01-.527-.624l2.36-14.98a.806.806 0 01.795-.68h3.5c2.923 0 4.817-.854 5.41-3.43.19-.825.285-1.622.272-2.365z"/>
+								</svg>
+								Pay with PayPal
+							</button>
+						</div>
+						<div class="xl:col-span-2 text-xs text-gray-500 dark:text-gray-400">
+							<p>✓ Secure payment processed by PayPal</p>
+							<p>✓ Payment will be submitted for admin review</p>
+						</div>
+					</form>
+				</div>
+			</div>
 		</div>
 	</div>
 </div>

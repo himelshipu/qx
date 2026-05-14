@@ -236,6 +236,16 @@
 											class="rounded-full px-2.5 py-0.5 text-xs font-semibold {{ $brandPaymentStatusClass }}">{{ ucfirst($brandPayment->status) }}</span>
 										<span class="text-sm font-semibold text-gray-900 dark:text-white">{{ strtoupper($brandPayment->currency) }}
 											{{ number_format((float) $brandPayment->amount, 2) }}</span>
+										@if ($brandPayment->payment_method === 'paypal')
+											<span class="inline-flex items-center gap-1 rounded-full bg-blue-100 dark:bg-blue-900/30 px-2.5 py-0.5 text-xs font-semibold text-blue-700 dark:text-blue-300">
+												<svg class="w-3 h-3" viewBox="0 0 24 24" fill="currentColor">
+													<path d="M20.067 8.478c.492.88.556 2.014.3 3.327-.74 3.806-3.276 5.12-6.514 5.12h-.5a.805.805 0 00-.794.68l-.04.22-.63 4.002-.027.15a.806.806 0 01-.795.68h-2.31a.536.536 0 01-.527-.624l2.36-14.98a.806.806 0 01.795-.68h3.5c2.923 0 4.817-.854 5.41-3.43.19-.825.285-1.622.272-2.365z"/>
+												</svg>
+												PayPal
+											</span>
+										@else
+											<span class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300">Manual</span>
+										@endif
 									</div>
 									<div class="grid grid-cols-1 gap-2 text-sm text-gray-600 dark:text-gray-300 sm:grid-cols-2">
 										<p><span class="font-medium text-gray-900 dark:text-white">Brand:</span>
@@ -243,10 +253,16 @@
 										<p><span class="font-medium text-gray-900 dark:text-white">Submitted:</span>
 											{{ $brandPayment->submitted_at?->format('M d, Y h:i A') ?? $brandPayment->created_at?->format('M d, Y h:i A') }}
 										</p>
-										<p><span class="font-medium text-gray-900 dark:text-white">Reference:</span>
-											{{ $brandPayment->reference_number ?: 'N/A' }}</p>
-										<p><span class="font-medium text-gray-900 dark:text-white">Invoice ID:</span>
-											{{ $brandPayment->invoice_id ?: 'N/A' }}</p>
+										@if ($brandPayment->paypal_transaction_id)
+											<p class="sm:col-span-2"><span class="font-medium text-gray-900 dark:text-white">PayPal Transaction ID:</span>
+												<code class="bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded text-xs">{{ $brandPayment->paypal_transaction_id }}</code>
+											</p>
+										@else
+											<p><span class="font-medium text-gray-900 dark:text-white">Reference:</span>
+												{{ $brandPayment->reference_number ?: 'N/A' }}</p>
+											<p><span class="font-medium text-gray-900 dark:text-white">Invoice ID:</span>
+												{{ $brandPayment->invoice_id ?: 'N/A' }}</p>
+										@endif
 										@if ($brandPayment->brand_note)
 											<p class="sm:col-span-2"><span class="font-medium text-gray-900 dark:text-white">Brand Note:</span>
 												{{ $brandPayment->brand_note }}</p>
