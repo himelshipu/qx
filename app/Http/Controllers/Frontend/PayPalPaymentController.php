@@ -54,6 +54,8 @@ class PayPalPaymentController extends Controller
                     'brand_id'      => $order->brand_id,
                     'amount'        => round((float) $validated['amount'], 2),
                     'currency'      => $order->currency ?: 'USD',
+                    'payment_method'=> 'paypal',
+                    'invoice_id'    => sprintf('PP-%s-%s', $order->order_number, now()->timestamp),
                     'brand_note'    => $validated['brand_note'] ?? null,
                     'status'        => 'pending',
                     'submitted_at'  => now(),
@@ -78,28 +80,29 @@ class PayPalPaymentController extends Controller
     }
 
     /**
-     * Handle PayPal success callback
+     * Handle PayPal success callback (modern Orders API flow)
      */
     public function success(Request $request, OrderBrandPayment $brandPayment): RedirectResponse
     {
         try {
-            $payerId = $request->query('PayerID');
+            // PayPal Orders API returns token parameter, not PayerID
+            $token = $request->query('token');
 
-            if (!$payerId) {
+            if (!$token) {
                 return redirect()
                     ->route('frontend.orders.show', $brandPayment->order)
-                    ->with('error', 'PayPal payment was not completed');
+                    ->with('error', 'PayPal approval was not completed');
             }
 
-            // Execute the approved payment
-            $result = $this->paypal()->executeApprovedPayment($brandPayment, $payerId);
+            // Capture the approved payment
+            $result = $this->paypal()->captureApprovedPayment($brandPayment);
 
             // Notify admins about the payment
             $this->notifyAdminsAboutPayment($brandPayment);
 
             return redirect()
                 ->route('frontend.orders.show', $brandPayment->order)
-                ->with('success', "PayPal payment of {$brandPayment->currency} {$brandPayment->amount} has been submitted successfully! Transaction ID: {$result['transaction_id']}");
+                ->with('success', "PayPal payment of {$brandPayment->currency} {$brandPayment->amount} has been submitted successfully!");
         } catch (Exception $e) {
             Log::error('PayPal payment success handler failed', [
                 'error'             => $e->getMessage(),
@@ -129,23 +132,14 @@ class PayPalPaymentController extends Controller
     }
 
     /**
-     * Handle PayPal IPN notification
+     * Handle PayPal IPN notification (legacy - kept for future webhook support)
      */
     public function notify(Request $request)
     {
-        // Get raw post data
-        $postData = $request->all();
+        // Log webhook for future processing if needed
+        Log::info('PayPal webhook received', $request->all());
 
-        // Verify IPN is from PayPal
-        if (!$this->paypal()->verifyIpn($postData)) {
-            Log::warning('PayPal IPN verification failed', $postData);
-            return response('Verification failed', 400);
-        }
-
-        // Process the notification
-        $this->paypal()->processIpnNotification($postData);
-
-        return response('IPN received', 200);
+        return response('Webhook received', 200);
     }
 
     /**

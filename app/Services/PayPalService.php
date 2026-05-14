@@ -14,59 +14,89 @@ class PayPalService
 
     public function __construct()
     {
-        $this->client = new PayPalClient();
-        $this->client->setApiContext();
+        $this->client = new PayPalClient(config('paypal'));
     }
 
     /**
-     * Create an approval link for payment
+     * Create an order and get approval link
      */
     public function createApprovalLink(Order $order, OrderBrandPayment $brandPayment): string
     {
         try {
-            $items = [];
+            // Get access token first
+            $this->client->getAccessToken();
+
             $description = "Payment for Order #{$order->order_number}";
 
-            // Single item for order payment
-            $items[] = [
-                'name'        => "Order Payment",
-                'sku'         => "ORDER-{$order->id}",
-                'description' => $description,
-                'price'       => (string) $brandPayment->amount,
-                'quantity'    => 1,
-                'currency'    => $brandPayment->currency ?: 'USD',
+            // Create order using modern PayPal Orders API v2
+            $orderData = [
+                'intent'         => 'CAPTURE',
+                'purchase_units' => [
+                    [
+                        'reference_id' => (string) $brandPayment->id,
+                        'amount'       => [
+                            'currency_code' => $brandPayment->currency ?: 'USD',
+                            'value'         => (string) $brandPayment->amount,
+                        ],
+                        'description'  => $description,
+                    ],
+                ],
+                'payment_source' => [
+                    'paypal' => [
+                        'experience_context' => [
+                            'return_url' => route('frontend.paypal.success', $brandPayment),
+                            'cancel_url' => route('frontend.paypal.cancel', ['order' => $order, 'brand_payment' => $brandPayment]),
+                            'user_action' => 'PAY_NOW',
+                            'brand_name' => config('app.name'),
+                        ],
+                    ],
+                ],
             ];
 
-            $total = (string) $brandPayment->amount;
+            $response = $this->client->createOrder($orderData);
 
-            $response = $this->client->setExpressCheckout(
-                [
-                    'items'      => $items,
-                    'return_url' => route('frontend.paypal.success', $brandPayment),
-                    'cancel_url' => route('frontend.paypal.cancel', ['order' => $order, 'brand_payment' => $brandPayment]),
-                    'notify_url' => route('frontend.paypal.notify'),
-                    'total'      => $total,
-                    'currency'   => $brandPayment->currency ?: 'USD',
-                    'invoice_id' => $brandPayment->id,
-                ],
-                []
-            );
-
-            if (!isset($response['TOKEN'])) {
-                throw new Exception('Failed to get PayPal token');
+            // Normalize response to array for easier handling (vendor may return objects)
+            if (! is_array($response)) {
+                $response = json_decode(json_encode($response), true);
             }
 
-            // Store token for later verification
+            if (empty($response['id'])) {
+                Log::error('PayPal createOrder returned unexpected response', ['response' => $response]);
+                throw new Exception('Failed to create PayPal order: ' . json_encode($response));
+            }
+
+            // Store PayPal order ID
             $brandPayment->update([
-                'payment_method' => 'paypal',
-                'paypal_token'   => $response['TOKEN'],
+                'payment_method'     => 'paypal',
+                'paypal_order_id'    => $response['id'],
             ]);
 
-            $baseUrl = config('paypal.mode') === 'sandbox'
-                ? 'https://www.sandbox.paypal.com/checkoutnow?token='
-                : 'https://www.paypal.com/checkoutnow?token=';
+            // Find the approval link — support multiple rel values returned by PayPal
+            $approvalLink = null;
+            $linkRels = ['approve', 'payer-action', 'payer_action', 'approve_url', 'approval_url'];
 
-            return $baseUrl . $response['TOKEN'];
+            if (! empty($response['links']) && is_array($response['links'])) {
+                foreach ($response['links'] as $link) {
+                    $rel = $link['rel'] ?? $link['relation'] ?? null;
+                    $href = $link['href'] ?? $link['url'] ?? null;
+
+                    if (! $rel || ! $href) {
+                        continue;
+                    }
+
+                    if (in_array($rel, $linkRels, true)) {
+                        $approvalLink = $href;
+                        break;
+                    }
+                }
+            }
+
+            if (! $approvalLink) {
+                Log::error('No approval link found in PayPal createOrder response', ['response' => $response]);
+                throw new Exception('No approval link found in PayPal response');
+            }
+
+            return $approvalLink;
         } catch (Exception $e) {
             Log::error('PayPal approval link creation failed', [
                 'error'         => $e->getMessage(),
@@ -79,42 +109,43 @@ class PayPalService
     }
 
     /**
-     * Execute the approved payment
+     * Capture the approved payment
      */
-    public function executeApprovedPayment(OrderBrandPayment $brandPayment, string $payerId): array
+    public function captureApprovedPayment(OrderBrandPayment $brandPayment): array
     {
         try {
-            $response = $this->client->doExpressCheckoutPayment(
-                [
-                    'TOKEN'     => $brandPayment->paypal_token,
-                    'PAYERID'   => $payerId,
-                    'PAYMENTACTION' => 'Sale',
-                    'AMT'       => (string) $brandPayment->amount,
-                    'CURRENCYCODE' => $brandPayment->currency ?: 'USD',
-                ],
-                []
-            );
-
-            if ($response['ACK'] !== 'Success') {
-                $errorMessage = $response['L_LONGMESSAGE0'] ?? 'Unknown error';
-                throw new Exception("Payment execution failed: {$errorMessage}");
+            if (!$brandPayment->paypal_order_id) {
+                throw new Exception('No PayPal order ID found');
             }
 
-            // Extract transaction details
-            $transactionId = $response['TRANSACTIONID'] ?? null;
-            $paymentStatus = $response['PAYMENTSTATUS'] ?? null;
+            // Get access token
+            $this->client->getAccessToken();
+
+            // Capture the order payment
+            $response = $this->client->capturePaymentOrder($brandPayment->paypal_order_id);
+
+            if (empty($response['id'])) {
+                throw new Exception('Failed to capture PayPal payment: ' . json_encode($response));
+            }
+
+            // Extract transaction details from the captured order
+            $status = $response['status'] ?? null;
+            $transactionId = null;
+
+            if (!empty($response['purchase_units'][0]['payments']['captures'][0]['id'])) {
+                $transactionId = $response['purchase_units'][0]['payments']['captures'][0]['id'];
+            }
 
             // Update brand payment with transaction details
             $updateData = [
-                'reference_number' => $transactionId,
+                'reference_number'      => $transactionId ?? $response['id'],
                 'paypal_transaction_id' => $transactionId,
-                'payment_method'   => 'paypal',
-                'status'           => $paymentStatus === 'Completed' ? 'confirmed' : 'pending',
+                'payment_method'        => 'paypal',
+                'status'                => ($status === 'COMPLETED') ? 'confirmed' : 'pending',
             ];
 
-            if ($paymentStatus === 'Completed') {
+            if ($status === 'COMPLETED') {
                 $updateData['confirmed_at'] = now();
-                $updateData['submitted_at'] = now();
             }
 
             $brandPayment->update($updateData);
@@ -122,15 +153,14 @@ class PayPalService
             return [
                 'success'            => true,
                 'transaction_id'     => $transactionId,
-                'payment_status'     => $paymentStatus,
+                'payment_status'     => $status,
                 'brand_payment_id'   => $brandPayment->id,
                 'order_id'           => $brandPayment->order_id,
             ];
         } catch (Exception $e) {
-            Log::error('PayPal payment execution failed', [
+            Log::error('PayPal payment capture failed', [
                 'error'             => $e->getMessage(),
                 'brand_payment_id'  => $brandPayment->id,
-                'payer_id'          => $payerId,
             ]);
 
             throw $e;
@@ -147,153 +177,37 @@ class PayPalService
                 throw new Exception('No PayPal transaction ID found for refund');
             }
 
-            $response = $this->client->refundTransaction(
-                [
-                    'TRANSACTIONID' => $brandPayment->paypal_transaction_id,
-                    'REFUNDTYPE'    => 'Full',
-                ],
-                []
-            );
+            // Get access token
+            $this->client->getAccessToken();
 
-            if ($response['ACK'] !== 'Success') {
-                $errorMessage = $response['L_LONGMESSAGE0'] ?? 'Unknown error';
-                throw new Exception("Refund failed: {$errorMessage}");
+            // Refund the captured payment
+            // The PayPal SDK requires: capture_id, invoice_id, amount, note
+            $captureId = $brandPayment->paypal_transaction_id;
+            $invoiceId = $brandPayment->reference_number ?? ('BP-' . $brandPayment->id);
+            $amount = (float) $brandPayment->amount;
+            $note = 'Refund for Order ' . ($brandPayment->order?->order_number ?? $brandPayment->order_id);
+
+            $response = $this->client->refundCapturedPayment($captureId, $invoiceId, $amount, $note);
+
+            if (empty($response['id'])) {
+                throw new Exception('Failed to refund PayPal payment: ' . json_encode($response));
             }
 
+            // Update brand payment status
+            $brandPayment->update([
+                'status' => 'refunded',
+                'refunded_at' => now(),
+            ]);
+
             return [
-                'success'   => true,
-                'refund_id' => $response['REFUNDTRANSACTIONID'] ?? null,
+                'success'      => true,
+                'refund_id'    => $response['id'],
+                'status'       => $response['status'] ?? null,
             ];
         } catch (Exception $e) {
             Log::error('PayPal refund failed', [
                 'error'             => $e->getMessage(),
                 'brand_payment_id'  => $brandPayment->id,
-                'transaction_id'    => $brandPayment->paypal_transaction_id,
-            ]);
-
-            throw $e;
-        }
-    }
-
-    /**
-     * Verify transaction from PayPal IPN
-     */
-    public function verifyIpn(array $postData): bool
-    {
-        try {
-            // Build verification request
-            $verifyData = array_merge(['cmd' => '_notify-validate'], $postData);
-
-            $mode = config('paypal.mode') === 'sandbox' ? 'sandbox' : 'live';
-            $url = $mode === 'sandbox'
-                ? 'https://www.sandbox.paypal.com/cgi-bin/webscr'
-                : 'https://www.paypal.com/cgi-bin/webscr';
-
-            $response = @fopen(
-                $url . '?' . http_build_query($verifyData),
-                'r'
-            );
-
-            if (!$response) {
-                throw new Exception('Failed to connect to PayPal for IPN verification');
-            }
-
-            $responseStatus = stream_get_contents($response);
-            fclose($response);
-
-            return $responseStatus === 'VERIFIED';
-        } catch (Exception $e) {
-            Log::error('PayPal IPN verification failed', [
-                'error' => $e->getMessage(),
-            ]);
-
-            return false;
-        }
-    }
-
-    /**
-     * Process IPN notification
-     */
-    public function processIpnNotification(array $postData): void
-    {
-        try {
-            $transactionId = $postData['txn_id'] ?? null;
-            $invoiceId = $postData['invoice'] ?? null;
-            $paymentStatus = $postData['payment_status'] ?? null;
-
-            if (!$transactionId || !$invoiceId) {
-                Log::warning('PayPal IPN missing transaction or invoice ID', $postData);
-                return;
-            }
-
-            // Find the brand payment record
-            $brandPayment = OrderBrandPayment::find($invoiceId);
-
-            if (!$brandPayment) {
-                Log::warning('PayPal IPN invoice not found', ['invoice_id' => $invoiceId]);
-                return;
-            }
-
-            // Update payment status based on PayPal notification
-            $statusMap = [
-                'Completed' => 'confirmed',
-                'Pending'   => 'pending',
-                'Refunded'  => 'rejected',
-                'Failed'    => 'rejected',
-            ];
-
-            $newStatus = $statusMap[$paymentStatus] ?? null;
-
-            if ($newStatus && $brandPayment->status !== $newStatus) {
-                $updateData = [
-                    'paypal_transaction_id' => $transactionId,
-                    'payment_method'        => 'paypal',
-                    'status'                => $newStatus,
-                ];
-
-                if ($newStatus === 'confirmed') {
-                    $updateData['confirmed_at'] = now();
-                    $updateData['submitted_at'] = now();
-                }
-
-                $brandPayment->update($updateData);
-
-                Log::info('PayPal IPN processed', [
-                    'invoice_id' => $invoiceId,
-                    'txn_id'     => $transactionId,
-                    'status'     => $newStatus,
-                ]);
-            }
-        } catch (Exception $e) {
-            Log::error('PayPal IPN processing error', [
-                'error' => $e->getMessage(),
-                'data'  => $postData,
-            ]);
-        }
-    }
-
-    /**
-     * Get payment details from PayPal
-     */
-    public function getTransactionDetails(string $transactionId): array
-    {
-        try {
-            $response = $this->client->getTransactionDetails(
-                [
-                    'TRANSACTIONID' => $transactionId,
-                ],
-                []
-            );
-
-            if ($response['ACK'] !== 'Success') {
-                throw new Exception("Failed to get transaction details");
-            }
-
-            return $response;
-        } catch (Exception $e) {
-            Log::error('PayPal transaction details retrieval failed', [
-                'error'          => $e->getMessage(),
-                'transaction_id' => $transactionId,
             ]);
 
             throw $e;

@@ -103,11 +103,11 @@
 			<div class="rounded-xl border border-gray-200 bg-gray-50 dark:border-gray-800 dark:bg-gray-900/60" x-data="{ activeTab: 'manual' }">
 				<!-- Tab Navigation -->
 				<div class="flex border-b border-gray-200 dark:border-gray-800">
-					<button @click="activeTab = 'manual'" :class="activeTab === 'manual' ? 'bg-white dark:bg-gray-800 border-b-2 border-blue-600' : 'text-gray-600 dark:text-gray-400'"
+					<button type="button" @click.prevent="activeTab = 'manual'" :class="activeTab === 'manual' ? 'bg-white dark:bg-gray-800 border-b-2 border-blue-600' : 'text-gray-600 dark:text-gray-400'"
 						class="flex-1 px-4 py-3 text-sm font-semibold transition text-center">
 						Manual Payment
 					</button>
-					<button @click="activeTab = 'paypal'" :class="activeTab === 'paypal' ? 'bg-white dark:bg-gray-800 border-b-2 border-blue-600' : 'text-gray-600 dark:text-gray-400'"
+					<button type="button" @click.prevent="activeTab = 'paypal'" :class="activeTab === 'paypal' ? 'bg-white dark:bg-gray-800 border-b-2 border-blue-600' : 'text-gray-600 dark:text-gray-400'"
 						class="flex-1 px-4 py-3 text-sm font-semibold transition text-center">
 						PayPal
 					</button>

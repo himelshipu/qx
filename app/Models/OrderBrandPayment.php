@@ -30,7 +30,9 @@ class OrderBrandPayment extends Model
         'confirmed_by_user_id',
         'rejected_by_user_id',
         'paypal_token',
-        'paypal_transaction_id'
+        'paypal_transaction_id',
+        'paypal_order_id',
+        'refunded_at'
     ];
 
     protected function casts(): array
@@ -40,6 +42,7 @@ class OrderBrandPayment extends Model
             'submitted_at' => 'datetime',
             'confirmed_at' => 'datetime',
             'rejected_at'  => 'datetime',
+            'refunded_at'  => 'datetime',
             'created_at'   => 'datetime',
             'updated_at'   => 'datetime'
         ];
