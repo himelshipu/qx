@@ -1,15 +1,15 @@
 @extends('backend.layouts.app')
 
-@section('title', 'Create Campaign')
+@section('title', 'Matchmaking Campaign')
 
 @section('content')
-	<x-backend.shell.breadcrumb pageTitle="Create Campaign" />
+	<x-backend.shell.breadcrumb pageTitle="Matchmaking Campaign" />
 
 	<div class="rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
 		<div
 			class="flex flex-col gap-4 border-b border-gray-200 p-5 sm:flex-row sm:items-center sm:justify-between dark:border-gray-800">
 			<div>
-				<h3 class="text-lg font-semibold text-gray-900 dark:text-white">New Campaign</h3>
+				<h3 class="text-lg font-semibold text-gray-900 dark:text-white">New Matchmaking Campaign</h3>
 				<p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Create campaign targeting, budget, and scheduling details for
 					influencer applications.</p>
 			</div>
@@ -36,7 +36,7 @@
 				</a>
 				<button type="submit"
 					class="inline-flex items-center justify-center rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-gray-800 dark:bg-gray-700 dark:hover:bg-gray-600">
-					Create Campaign
+					Matchmaking Campaign
 				</button>
 			</div>
 		</form>

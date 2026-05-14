@@ -1,7 +1,7 @@
 @extends('frontend.layouts.app')
 
 @section('content')
-	<div class="min-h-screen transition-colors duration-200">
+	<div class="transition-colors duration-200">
 		<main class="max-w-5xl flex flex-col gap-16 mx-auto px-4 py-8">
 
 			@php

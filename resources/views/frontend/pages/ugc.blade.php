@@ -1,7 +1,7 @@
 @extends('frontend.layouts.app')
 
 @section('content')
-	<div class="min-h-screen transition-colors duration-200">
+	<div class="transition-colors duration-200">
 		<main>
 			<!-- Header Section with Filter -->
 			<section class="w-full flex flex-col gap-8">
@@ -9,7 +9,7 @@
 			</section>
 
 			<!-- UGC Categories Grid -->
-			<section class="w-full pb-8">
+			<section class="w-full pb-8 mt-4">
 				<div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-3">
 					<div>
 						<h2 class="text-3xl font-semibold text-[#222] dark:text-white">

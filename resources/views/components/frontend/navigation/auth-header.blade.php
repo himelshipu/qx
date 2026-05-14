@@ -73,6 +73,7 @@
 					<a href="{{ route('home') }}" class="nav-link {{ request()->routeIs('home') ? 'active' : '' }}">Home</a>
 					<a href="{{ route('frontend.content-library') }}"
 						class="nav-link {{ request()->routeIs('frontend.content-library') ? 'active' : '' }}">Library</a>
+					<a href="{{ route('frontend.campaigns.index') }}" class="nav-link {{ request()->routeIs('frontend.campaigns.index') ? 'active' : '' }}">Matchmaking</a>
 					<a href="{{ route('home') }}#how-it-works" class="nav-link">How it Works</a>
 					<a href="{{ route('influencers') }}" class="nav-link">Search</a>
 					<a href="{{ route('faq') }}" class="nav-link {{ request()->routeIs('faq') ? 'active' : '' }}">Faq</a>
@@ -183,7 +184,7 @@
 
 									<a href="{{ route('frontend.campaigns.index') }}"
 										class="px-7 py-3.5 text-[15px] font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
-										<i class="fas fa-bullseye mr-2"></i>Campaign
+										<i class="fas fa-bullseye mr-2"></i>Matchmaking
 									</a>
 
 									<a href="{{ $brandPayoutUrl }}"

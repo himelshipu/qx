@@ -160,7 +160,7 @@ class PermissionSeeder extends Seeder
 
             // CAMPAIGNS
             ['name' => 'View Campaigns', 'slug' => 'campaigns.index', 'module' => 'campaigns'],
-            ['name' => 'Create Campaign', 'slug' => 'campaigns.create', 'module' => 'campaigns'],
+            ['name' => 'Matchmaking Campaign', 'slug' => 'campaigns.create', 'module' => 'campaigns'],
             ['name' => 'Store Campaign', 'slug' => 'campaigns.store', 'module' => 'campaigns'],
             ['name' => 'View Campaign Details', 'slug' => 'campaigns.view', 'module' => 'campaigns'],
             ['name' => 'Edit Campaign', 'slug' => 'campaigns.edit', 'module' => 'campaigns'],

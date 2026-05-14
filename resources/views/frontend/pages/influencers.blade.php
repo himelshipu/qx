@@ -5,13 +5,13 @@
 		$currentPlatformLabel = $selectedPlatform['label'] ?? 'All Platforms';
 	@endphp
 
-	<div class="min-h-screen transition-colors duration-200">
+	<div class="transition-colors duration-200">
 		<main>
 			<div class="w-full sm:w-[620px] lg:w-[980px] mx-auto">
 				<x-frontend.partials.filter :region-options="$regionOptions ?? []" :gender-options="$genderOptions ?? []" :follower-range-options="$followerRangeOptions ?? []" />
 			</div>
 
-			<section class="w-full pb-8">
+			<section class="w-full pb-8 mt-8">
 				<div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-3">
 					<div>
 						<h2 class="text-3xl font-semibold text-[#222] dark:text-white">

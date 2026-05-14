@@ -1,7 +1,7 @@
 @extends('frontend.layouts.app')
 
 @section('content')
-	<div class="min-h-screen transition-colors duration-200" x-data="{
+	<div class="transition-colors duration-200" x-data="{
     step: 'main',
     activeQuestion: null,
     selectedCategory: null,
