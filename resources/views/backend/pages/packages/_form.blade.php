@@ -58,13 +58,20 @@
 		</div>
 
 		<div>
-			<label for="name" class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+			<label for="package_id" class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
 				Package Name <span class="text-red-500">*</span>
 			</label>
-			<input id="name" name="name" type="text" value="{{ old('name', $package?->name) }}"
-				placeholder="e.g., 3 Instagram Reels + Story" required
+			<select id="package_id" name="package_id" required
 				class="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-3 text-sm text-gray-900 focus:border-gray-500 focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-white">
-			@error('name')
+				<option value="" disabled selected>Select a package</option>
+				@foreach(\App\Models\Package::all() as $packageOption)
+					<option value="{{ $packageOption->id }}"
+						{{ (old('package_id', $package?->id) == $packageOption->id) ? 'selected' : '' }}>
+						{{ $packageOption->name }}
+					</option>
+				@endforeach
+			</select>
+			@error('package_id')
 				<p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
 			@enderror
 		</div>
