@@ -57,24 +57,31 @@
 			@enderror
 		</div>
 
-		<div>
-			<label for="package_id" class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+		<div class="relative">
+			<label for="package-input" class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
 				Package Name <span class="text-red-500">*</span>
 			</label>
-			<select id="package_id" name="package_id" required
-				class="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-3 text-sm text-gray-900 focus:border-gray-500 focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-white">
-				<option value="" disabled selected>Select a package</option>
-				@foreach(\App\Models\Package::all() as $packageOption)
-					<option value="{{ $packageOption->id }}"
-						{{ (old('package_id', $package?->id) == $packageOption->id) ? 'selected' : '' }}>
-						{{ $packageOption->name }}
-					</option>
-				@endforeach
-			</select>
+			<div class="flex flex-wrap gap-2 items-center mt-1">
+				<input type="text" id="package-input" placeholder="Select or type a package"
+					class="flex-1 min-w-0 bg-transparent border border-gray-300 dark:border-gray-700 rounded-lg px-3 h-11 text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:border-gray-500"
+					autocomplete="off">
+				<div id="selected-package-display" class="flex flex-wrap gap-2"></div>
+			</div>
+
+			<!-- Dropdown -->
+			<div id="package-menu"
+				class="hidden absolute top-full left-0 right-0 mt-2 bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-xl shadow-lg z-50 p-4 max-h-60 overflow-y-auto">
+				<div id="package-list" class="flex flex-col gap-1"></div>
+			</div>
+
+			<!-- Hidden input for package ID or custom name -->
+			<input type="hidden" id="package_id" name="package_id" value="{{ old('package_id', $package?->id) }}">
 			@error('package_id')
 				<p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
 			@enderror
 		</div>
+
+
 
 		<div>
 			<label for="description" class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Description</label>
@@ -151,3 +158,88 @@
 		</div>
 	</div>
 </div>
+
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    // Packages from backend
+    const packages = @json(\App\Models\Package::all()->map(fn($p) => ['id' => $p->id, 'name' => $p->name]));
+
+    const packageInput = document.getElementById("package-input");
+    const packageList = document.getElementById("package-list");
+    const packageMenu = document.getElementById("package-menu");
+    const selectedDisplay = document.getElementById("selected-package-display");
+    const hiddenInput = document.getElementById("package_id");
+
+    function renderPackageList(filter = "") {
+        packageList.innerHTML = "";
+        const filtered = packages.filter(p =>
+            p.name.toLowerCase().includes(filter.toLowerCase())
+        );
+
+        filtered.forEach(p => {
+            const btn = document.createElement("button");
+            btn.type = "button";
+            btn.className = "text-left px-3 py-4 hover:bg-gray-100 dark:hover:bg-gray-700 rounded text-sm";
+            btn.textContent = p.name;
+            btn.addEventListener("click", () => selectPackage(p));
+            packageList.appendChild(btn);
+        });
+
+        if (filtered.length === 0 && filter.trim() !== "") {
+            // Option to add custom package
+            const customBtn = document.createElement("button");
+            customBtn.type = "button";
+            customBtn.className = "text-left px-3 py-4 hover:bg-gray-100 dark:hover:bg-gray-500 rounded text-sm font-semibold text-purple-600 dark:text-purple-400";
+            customBtn.textContent = `Use "${filter}" as a new package`;
+            customBtn.addEventListener("click", () => selectCustomPackage(filter));
+            packageList.appendChild(customBtn);
+        }
+
+        packageMenu.classList.toggle("hidden", packageList.children.length === 0);
+    }
+
+    function selectPackage(pkg) {
+        hiddenInput.value = pkg.id; // Store existing package ID
+        displaySelected(pkg.name);
+    }
+
+    function selectCustomPackage(name) {
+        hiddenInput.value = name; // Store custom package name
+        displaySelected(name);
+    }
+
+    function displaySelected(name) {
+        selectedDisplay.innerHTML = `
+            <div class="flex items-center gap-1 bg-gray-800 text-white px-4 py-2 rounded-md text-sm">
+                ${name} <span class="cursor-pointer font-bold">&times;</span>
+            </div>
+        `;
+        selectedDisplay.querySelector("span").addEventListener("click", () => {
+            hiddenInput.value = "";
+            selectedDisplay.innerHTML = "";
+            packageInput.value = "";
+            renderPackageList();
+        });
+        packageMenu.classList.add("hidden");
+        packageInput.value = "";
+    }
+
+    packageInput.addEventListener("input", () => renderPackageList(packageInput.value));
+    packageInput.addEventListener("focus", () => renderPackageList(packageInput.value));
+
+    document.addEventListener("click", e => {
+        if (!packageInput.contains(e.target) && !packageMenu.contains(e.target)) {
+            packageMenu.classList.add("hidden");
+        }
+    });
+
+    // Preselect old value if exists
+    const oldValue = hiddenInput.value;
+    if (oldValue) {
+        const pkg = packages.find(p => p.id == oldValue);
+        if (pkg) displaySelected(pkg.name);
+        else displaySelected(oldValue); // custom name
+    }
+});
+</script>
