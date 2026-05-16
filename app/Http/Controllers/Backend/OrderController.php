@@ -83,7 +83,7 @@ class OrderController extends Controller
             'items.deliverables:id,order_item_id,sub_order_id,uploaded_by_user_id,deliverable_type,file_path,external_url,notes,status,created_at',
             'items.deliverables.uploadedBy:id,name',
             'payments:id,order_id,status,amount,currency,payment_provider,paid_at,created_at',
-            'brandPayments:id,order_id,brand_user_id,brand_id,amount,currency,reference_number,invoice_id,brand_note,admin_note,status,submitted_at,confirmed_at,rejected_at,confirmed_by_user_id,rejected_by_user_id,created_at',
+            'brandPayments:id,order_id,brand_user_id,brand_id,amount,currency,payment_method,reference_number,invoice_id,brand_note,admin_note,status,paypal_transaction_id,paypal_order_id,submitted_at,confirmed_at,rejected_at,confirmed_by_user_id,rejected_by_user_id,created_at',
             'brandPayments.brandUser:id,name,email',
             'brandPayments.confirmedBy:id,name,email',
             'brandPayments.rejectedBy:id,name,email',

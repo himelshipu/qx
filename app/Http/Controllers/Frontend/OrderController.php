@@ -108,7 +108,7 @@ class OrderController extends Controller
             'conversations.brandUser:id,name',
             'conversations.handledBy:id,name',
             'conversations.messages:id,conversation_id,sender_user_id,message,created_at',
-            'brandPayments:id,order_id,brand_user_id,brand_id,amount,currency,reference_number,invoice_id,brand_note,admin_note,status,submitted_at,confirmed_at,rejected_at,confirmed_by_user_id,rejected_by_user_id,created_at',
+            'brandPayments:id,order_id,brand_user_id,brand_id,amount,currency,payment_method,reference_number,invoice_id,brand_note,admin_note,status,paypal_transaction_id,paypal_order_id,submitted_at,confirmed_at,rejected_at,confirmed_by_user_id,rejected_by_user_id,created_at',
             'brandPayments.brandUser:id,name,email',
             'brandPayments.confirmedBy:id,name,email',
             'brandPayments.rejectedBy:id,name,email'
