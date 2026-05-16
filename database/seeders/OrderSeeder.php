@@ -32,9 +32,9 @@ class OrderSeeder extends Seeder
                 $sourceCode = $campaignId ? Order::SOURCE_CAMPAIGN : Order::SOURCE_PACKAGE;
                 $status     = $faker->randomElement($statuses);
                 $subtotal   = random_int(300, 2500);
-                $serviceFee = (float) round($subtotal * 0.08, 2);
-                $tax        = (float) round($subtotal * 0.05, 2);
-                $total      = (float) round($subtotal + $serviceFee + $tax, 2);
+                $serviceFee = (float) round($subtotal * 0.20, 2);
+                $tax        = 0.0;
+                $total      = (float) round($subtotal + $serviceFee, 2);
                 $placedAt   = now()->subDays(random_int(3, 50));
 
                 $acceptedAt = in_array($status, ['accepted', 'in_progress', 'delivered', 'completed'], true)
