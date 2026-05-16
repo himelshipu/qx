@@ -1,9 +1,9 @@
 @extends('frontend.layouts.app')
 
-@section('title', isset($isEditMode) && $isEditMode ? 'Edit Campaign' : 'Create Campaign')
+@section('title', isset($isEditMode) && $isEditMode ? 'Edit Campaign' : 'Matchmaking Campaign')
 
 @section('content')
-	<x-backend.shell.breadcrumb :pageTitle="isset($isEditMode) && $isEditMode ? 'Edit Campaign' : 'Create Campaign'" />
+	<x-backend.shell.breadcrumb :pageTitle="isset($isEditMode) && $isEditMode ? 'Edit Campaign' : 'Matchmaking Campaign'" />
 
 	<div class="max-w-6xl px-2 py-2 transition-colors duration-300"
 		x-data="campaignDesignedWizard({

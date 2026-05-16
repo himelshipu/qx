@@ -160,7 +160,7 @@ class PermissionSeeder extends Seeder
 
             // CAMPAIGNS
             ['name' => 'View Campaigns', 'slug' => 'campaigns.index', 'module' => 'campaigns'],
-            ['name' => 'Create Campaign', 'slug' => 'campaigns.create', 'module' => 'campaigns'],
+            ['name' => 'Matchmaking Campaign', 'slug' => 'campaigns.create', 'module' => 'campaigns'],
             ['name' => 'Store Campaign', 'slug' => 'campaigns.store', 'module' => 'campaigns'],
             ['name' => 'View Campaign Details', 'slug' => 'campaigns.view', 'module' => 'campaigns'],
             ['name' => 'Edit Campaign', 'slug' => 'campaigns.edit', 'module' => 'campaigns'],
@@ -213,6 +213,9 @@ class PermissionSeeder extends Seeder
             ['name' => 'View Payment Details', 'slug' => 'payments.show', 'module' => 'payments'],
             ['name' => 'Refund Payment', 'slug' => 'payments.refund', 'module' => 'payments'],
             ['name' => 'Retry Payment', 'slug' => 'payments.retry', 'module' => 'payments'],
+            ['name' => 'View Received Payments', 'slug' => 'received-payments.index', 'module' => 'payments'],
+            ['name' => 'View Received Payment Details', 'slug' => 'received-payments.show', 'module' => 'payments'],
+            ['name' => 'Review Brand Payment', 'slug' => 'brand-payments.review', 'module' => 'payments'],
 
             // COMMERCE: PAYMENT QUEUE
             ['name' => 'View Payment Queue', 'slug' => 'payment-queue.index', 'module' => 'payments'],

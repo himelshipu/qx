@@ -28,6 +28,7 @@ use App\Http\Controllers\Backend\PackageController;
 use App\Http\Controllers\Backend\PaymentAuditController;
 use App\Http\Controllers\Backend\PaymentQueueController;
 use App\Http\Controllers\Backend\PaymentsController;
+use App\Http\Controllers\Backend\ReceivedPaymentController;
 use App\Http\Controllers\Backend\PaymentStatementController;
 use App\Http\Controllers\Backend\PermissionController;
 use App\Http\Controllers\Backend\ReviewController as BackendReviewController;
@@ -416,6 +417,10 @@ Route::prefix('dashboard')->name('dashboard.')->middleware(['auth', 'verified', 
     Route::get('/payments/{payment}', [PaymentsController::class, 'show'])->name('payments.show');
     Route::post('/payments/{payment}/refund', [PaymentsController::class, 'refund'])->name('payments.refund');
     Route::post('/payments/{payment}/retry', [PaymentsController::class, 'retry'])->name('payments.retry');
+
+    // Received payments (brand submissions for package/campaign orders)
+    Route::get('/received-payments', [ReceivedPaymentController::class, 'index'])->name('received-payments.index');
+    Route::get('/received-payments/{brandPayment}', [ReceivedPaymentController::class, 'show'])->name('received-payments.show');
 
     // Legacy manual payouts module retired. Keep old URL working.
     Route::permanentRedirect('/payouts', '/dashboard/payments')->name('payouts.index');

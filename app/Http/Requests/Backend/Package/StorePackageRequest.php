@@ -23,6 +23,10 @@ class StorePackageRequest extends FormRequest
         $user = Auth::user();
         $isInfluencer = $user && $user->influencer()->exists();
 
+        $this->merge([
+            'name' => trim((string) $this->input('name')),
+        ]);
+
         // If user is not an influencer, ensure created_for is provided
         // If user is an influencer, remove created_for from input as it will be set automatically
         if ($isInfluencer) {

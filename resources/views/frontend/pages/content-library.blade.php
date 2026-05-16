@@ -1,11 +1,10 @@
 @extends('frontend.layouts.app')
 
 @section('content')
-	<section class="min-h-screen transition-colors duration-200">
-		<div class="mb-10">
-			<h1 class="text-3xl md:text-4xl font-semibold text-[#222] dark:text-white leading-tight text-left mb-2">Content Library
+	<section class="container transition-colors duration-200">
+		<div class="mb-12 mt-2">
+			<h1 class="text-3xl md:text-4xl font-semibold text-[#222] dark:text-white leading-tight text-left mb-2">Database
 			</h1>
-			<p class="text-sm text-gray-700 dark:text-gray-400">See all your delivered content in one place</p>
 		</div>
 
 		@php

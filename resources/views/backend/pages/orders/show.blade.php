@@ -134,15 +134,12 @@
 		}
 
 		$serviceFee = (float) ($order->service_fee ?? 0);
-		$taxAmount = (float) ($order->tax_amount ?? 0);
-		$totalAmount = (float) ($order->total_amount ?? 0);
-		if ($totalAmount <= 0) {
-		    $totalAmount = $subtotal + $serviceFee + $taxAmount;
-		}
+		$totalAmount = round($subtotal + $serviceFee, 2);
 		if ($serviceFee <= 0 && $totalAmount > $subtotal && $subtotal > 0) {
-		    $serviceFee = max($totalAmount - $subtotal - $taxAmount, 0);
+		    $serviceFee = max($totalAmount - $subtotal, 0);
 		}
 		$totalPaidAmount = (float) $order->payments->where('status', 'paid')->sum('amount');
+		$remainingBalance = max(round($totalAmount - $totalPaidAmount, 2), 0);
 	@endphp
 
 	<div class="space-y-6">
@@ -197,6 +194,45 @@
 				<p class="mt-2 text-xl font-semibold text-amber-700 dark:text-amber-200">{{ $order->payments->count() }}</p>
 			</div>
 		</div>
+
+			@if ($order->parentOrder)
+				<div id="parent-order-section"
+					class="rounded-xl border border-indigo-200 bg-indigo-50/70 p-5 shadow-sm dark:border-indigo-900/40 dark:bg-indigo-900/10">
+					<div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+						<div>
+							<p class="text-xs font-semibold uppercase tracking-wider text-indigo-700 dark:text-indigo-300">Parent Order</p>
+							<h2 class="mt-1 text-lg font-semibold text-gray-900 dark:text-white">{{ $order->parentOrder->order_number }}</h2>
+							<p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
+								This order belongs to the parent order above.
+							</p>
+						</div>
+						<div class="flex flex-wrap gap-2">
+							<a href="{{ route('dashboard.orders.show', $order->parentOrder) }}"
+								class="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-indigo-700">
+								<x-icons.eye class="h-4 w-4" />Open parent order details
+							</a>
+						</div>
+					</div>
+					<div class="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+						<div class="rounded-lg bg-white px-4 py-3 shadow-sm dark:bg-gray-900/70">
+							<p class="text-xs uppercase tracking-wider text-gray-500 dark:text-gray-400">Status</p>
+							<p class="mt-1 font-semibold text-gray-900 dark:text-white">{{ ucfirst(str_replace('_', ' ', $order->parentOrder->status)) }}</p>
+						</div>
+						<div class="rounded-lg bg-white px-4 py-3 shadow-sm dark:bg-gray-900/70">
+							<p class="text-xs uppercase tracking-wider text-gray-500 dark:text-gray-400">Buyer</p>
+							<p class="mt-1 font-semibold text-gray-900 dark:text-white">{{ $order->parentOrder->buyer?->name ?? 'N/A' }}</p>
+						</div>
+						<div class="rounded-lg bg-white px-4 py-3 shadow-sm dark:bg-gray-900/70">
+							<p class="text-xs uppercase tracking-wider text-gray-500 dark:text-gray-400">Brand</p>
+							<p class="mt-1 font-semibold text-gray-900 dark:text-white">{{ $order->parentOrder->brand?->brand_name ?? 'N/A' }}</p>
+						</div>
+						<div class="rounded-lg bg-white px-4 py-3 shadow-sm dark:bg-gray-900/70">
+							<p class="text-xs uppercase tracking-wider text-gray-500 dark:text-gray-400">Total</p>
+							<p class="mt-1 font-semibold text-gray-900 dark:text-white">{{ strtoupper($order->parentOrder->currency) }} {{ number_format((float) $order->parentOrder->total_amount, 2) }}</p>
+						</div>
+					</div>
+				</div>
+			@endif
 
 		<div class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900">
 			<div
@@ -332,7 +368,7 @@
 
 		<div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
 			<div class="space-y-6 lg:col-span-2">
-				<div class="rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
+				<div class="rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900" id="order-items-section">
 					<div
 						class="flex items-center justify-between border-b border-gray-200 bg-gray-50 px-5 py-4 dark:border-gray-800 dark:bg-gray-800/50">
 						<h2 class="text-base font-semibold text-gray-900 dark:text-white">Order Items</h2>
@@ -471,7 +507,7 @@
 				</div>
 
 				@if ($order->childOrders->isNotEmpty())
-					<div class="rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
+					<div id="child-orders-section" class="rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
 						<div
 							class="flex items-center justify-between border-b border-gray-200 bg-gray-50 px-5 py-4 dark:border-gray-800 dark:bg-gray-800/50">
 							<div>
@@ -994,33 +1030,56 @@
 
 				<div class="rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
 					<div class="border-b border-gray-200 bg-gray-50 px-5 py-4 dark:border-gray-800 dark:bg-gray-800/50">
-						<h3 class="text-base font-semibold text-gray-900 dark:text-white">Order Summary</h3>
+						<div class="flex items-center justify-between gap-3">
+							<h3 class="text-base font-semibold text-gray-900 dark:text-white">Order Summary</h3>
+							<div class="flex flex-wrap items-center gap-2">
+								<a href="#order-items-section"
+									class="inline-flex items-center gap-1 rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-semibold text-gray-700 transition hover:bg-gray-100 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800">
+									View item breakdown
+								</a>
+								@if ($order->parentOrder)
+									<a href="#parent-order-section"
+										class="inline-flex items-center gap-1 rounded-lg border border-indigo-300 px-3 py-1.5 text-xs font-semibold text-indigo-700 transition hover:bg-indigo-50 dark:border-indigo-800 dark:text-indigo-300 dark:hover:bg-indigo-900/20">
+										View parent order
+									</a>
+								@endif
+								@if ($order->childOrders->isNotEmpty())
+									<a href="#child-orders-section"
+										class="inline-flex items-center gap-1 rounded-lg border border-emerald-300 px-3 py-1.5 text-xs font-semibold text-emerald-700 transition hover:bg-emerald-50 dark:border-emerald-800 dark:text-emerald-300 dark:hover:bg-emerald-900/20">
+										View child orders
+									</a>
+								@endif
+							</div>
+						</div>
 					</div>
 					<div class="space-y-2 p-5 text-sm">
 						<div class="flex items-center justify-between">
-							<span class="text-gray-600 dark:text-gray-400">Subtotal</span>
+							<span class="text-gray-600 dark:text-gray-400">Net Subtotal</span>
 							<span class="font-semibold text-gray-900 dark:text-white">{{ strtoupper($order->currency) }}
 								{{ number_format($subtotal, 2) }}</span>
 						</div>
+						<p class="text-xs text-gray-500 dark:text-gray-400">This is the sum of all line totals in the order, not a single item.</p>
 						<div class="flex items-center justify-between">
 							<span class="text-gray-600 dark:text-gray-400">Platform Charge (20%)</span>
 							<span class="font-semibold text-gray-900 dark:text-white">{{ strtoupper($order->currency) }}
 								{{ number_format($serviceFee, 2) }}</span>
 						</div>
-						<div class="flex items-center justify-between">
-							<span class="text-gray-600 dark:text-gray-400">Tax</span>
-							<span class="font-semibold text-gray-900 dark:text-white">{{ strtoupper($order->currency) }}
-								{{ number_format($taxAmount, 2) }}</span>
-						</div>
 						<div class="border-t border-gray-200 pt-2 dark:border-gray-700">
 							<div class="flex items-center justify-between">
-								<span class="font-semibold text-gray-900 dark:text-white">Total</span>
+								<span class="font-semibold text-gray-900 dark:text-white">Order Total</span>
 								<span class="text-base font-bold text-gray-900 dark:text-white">{{ strtoupper($order->currency) }}
 									{{ number_format($totalAmount, 2) }}</span>
 							</div>
 						</div>
-						<div class="pt-1 text-xs text-gray-500 dark:text-gray-400">Paid via payment logs:
+						<div class="pt-1 text-xs text-gray-500 dark:text-gray-400">Amount paid via payment logs:
 							{{ strtoupper($order->currency) }} {{ number_format($totalPaidAmount, 2) }}</div>
+						<div class="pt-1 text-xs text-gray-500 dark:text-gray-400">Remaining balance:
+							{{ strtoupper($order->currency) }} {{ number_format($remainingBalance, 2) }}</div>
+						@if ($order->parentOrder)
+							<p class="pt-2 text-xs text-indigo-600 dark:text-indigo-300">This is a child order linked to a parent order below.</p>
+						@elseif ($order->childOrders->isNotEmpty())
+							<p class="pt-2 text-xs text-emerald-600 dark:text-emerald-300">This is a parent order. Its child orders are shown below.</p>
+						@endif
 					</div>
 				</div>
 

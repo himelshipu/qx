@@ -71,17 +71,26 @@ final class PackageService
     /**
      * Build form payload for create/edit pages.
      *
-     * @return array{platformOptions:array<int, array{value:string,label:string}>,isInfluencer:bool,influencers:?\Illuminate\Database\Eloquent\Collection}
+     * @return array{platformOptions:array<int, array{value:string,label:string}>,isInfluencer:bool,influencers:?\Illuminate\Database\Eloquent\Collection,packageOptions:array<int, string>}
      */
     public function getFormPayload(): array
     {
         $user         = Auth::user();
         $isInfluencer = $user && $user->influencer()->exists();
+        $packageOptions = Package::query()
+            ->whereNotNull('name')
+            ->select('name')
+            ->distinct()
+            ->orderBy('name')
+            ->pluck('name')
+            ->values()
+            ->all();
 
         return [
             'platformOptions' => $this->getPlatformOptions(),
             'isInfluencer'    => $isInfluencer,
-            'influencers'     => !$isInfluencer ? Influencer::query()->whereHas('user')->get() : null
+            'influencers'     => !$isInfluencer ? Influencer::query()->whereHas('user')->get() : null,
+            'packageOptions'  => $packageOptions,
         ];
     }
 

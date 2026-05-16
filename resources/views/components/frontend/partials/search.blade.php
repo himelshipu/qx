@@ -10,31 +10,12 @@
                         </span>
 
                         <h2 class="text-3xl md:text-4xl font-semibold text-[#222] dark:text-white leading-tight mt-8">
-                            Find and Hire Influencers in Seconds on the Marketplace
+                            Connect with Creators Who Has Sales Record
                         </h2>
 
-                        <div class="mt-8 space-y-8">
-                            <div>
-                                <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-3">Search Influencers</h3>
-                                <p class="text-gray-500 dark:text-gray-400 leading-relaxed max-w-lg">
-                                    Search thousands of vetted Instagram, TikTok, and YouTube influencers.
-                                </p>
-                            </div>
-
-                            <div>
-                                <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-3">Purchase & Chat Securely</h3>
-                                <p class="text-gray-500 dark:text-gray-400 leading-relaxed max-w-lg">
-                                    Safely purchase and communicate through Collabstr. We hold your payment until the work is completed.
-                                </p>
-                            </div>
-
-                            <div>
-                                <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-3">Receive Quality Content</h3>
-                                <p class="text-gray-500 dark:text-gray-400 leading-relaxed max-w-lg">
-                                    Receive your high-quality content from influencers directly through the platform.
-                                </p>
-                            </div>
-                        </div>
+                        <p class="text-gray-500 dark:text-gray-400 leading-relaxed max-w-lg mt-4">
+                           Purchase and chat with creators.  Place a deposit so you can quickly access creators and their profiles
+                        </p>
                     </div>
 
 
@@ -52,23 +33,23 @@
                         $benefits = [
                             [
                                 'icon' => '$',
-                                'title' => 'No Upfront Cost',
-                                'desc' => 'Search influencers for free. No subscriptions, contracts, or hidden fees.'
+                                'title' => 'Free to Use',
+                                'desc' => 'Find ecommerce creators for free. No subscription, or hidden fee.'
                             ],
                             [
                                 'icon' => '✓',
-                                'title' => 'Vetted Influencers',
-                                'desc' => 'Every influencer is vetted by us. Always receive high-quality, professional content.'
+                                'title' => 'E-commerce and Exposure creators',
+                                'desc' => 'Creators are vetted by us and they are separated into categories for e-commerce and exposure (high views)'
                             ],
                             [
                                 'icon' => '💬',
-                                'title' => 'Instant Chat',
-                                'desc' => 'Instantly chat with influencers and stay in touch throughout the whole transaction.'
+                                'title' => 'Directly chat',
+                                'desc' => 'Chat with creators to go through the task you need done'
                             ],
                             [
                                 'icon' => '🔒',
-                                'title' => 'Secure Purchases',
-                                'desc' => "Your money is held safely until you approve the influencer's work."
+                                'title' => 'Pay at completion',
+                                'desc' => "You only need to pay the creator once you are satisfied"
                             ],
                         ];
                     @endphp

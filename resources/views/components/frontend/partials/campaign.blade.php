@@ -13,21 +13,14 @@
             <div class="w-full lg:w-1/2">
                 <!-- Search Badge -->
                 <span class="inline-block px-6 py-2 rounded-full text-white font-bold text-sm bg-gradient-to-r from-[#9333EA] to-[#c084fc] shadow-md">
-                    Campaigns
+                    Matchmaking
                 </span>
 
                 <h2 class="text-3xl md:text-4xl font-semibold text-[#222] dark:text-white leading-tight mt-8">
-                    Post Campaigns and Have 550,000+ Influencers in one place
+                    Matchmaking campaign and creators can reach out to you
                 </h2>
 
                 <div class="mt-8 space-y-8">          
-                    <div>
-                        <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-3">Set Targeting</h3>
-                        <p class="text-gray-500 dark:text-gray-400 leading-relaxed max-w-lg">
-                            Specify demographics including niche, location and following size of the influencers you want to target.
-                        </p>
-                    </div>
-
                     <div>
                         <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-3">Post Campaign</h3>
                         <p class="text-gray-500 dark:text-gray-400 leading-relaxed max-w-lg">

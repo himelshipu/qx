@@ -223,10 +223,6 @@
 						<span class="text-sm text-gray-600 dark:text-gray-400">Service Fees</span>
 						<span class="font-bold text-gray-900 dark:text-white">${{ number_format($totalServiceFees, 2) }}</span>
 					</div>
-					<div class="flex justify-between items-center">
-						<span class="text-sm text-gray-600 dark:text-gray-400">Platform Taxes</span>
-						<span class="font-bold text-gray-900 dark:text-white">${{ number_format($totalTaxes, 2) }}</span>
-					</div>
 				</div>
 			</div>
 		</div>

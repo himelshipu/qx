@@ -23,6 +23,10 @@ class UpdatePackageRequest extends FormRequest
         $user = Auth::user();
         $isInfluencer = $user && $user->influencer()->exists();
 
+        $this->merge([
+            'name' => trim((string) $this->input('name')),
+        ]);
+
         // If user is an influencer, remove created_for from input as they cannot change it
         if ($isInfluencer) {
             $this->request->remove('created_for');

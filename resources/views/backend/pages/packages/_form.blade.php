@@ -1,9 +1,11 @@
 @php
 	/** @var \App\Models\Package|null $package */
 	$package = $package ?? null;
+	$resolvedName = old('name', $package?->name ?? '');
 	$resolvedCurrency = strtoupper((string) old('currency', $package?->currency ?? 'USD'));
 	$isInfluencer = $isInfluencer ?? false;
 	$influencers = $influencers ?? null;
+	$packageOptions = $packageOptions ?? [];
 @endphp
 
 <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
@@ -57,17 +59,27 @@
 			@enderror
 		</div>
 
-		<div>
+		<div class="relative">
 			<label for="name" class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
 				Package Name <span class="text-red-500">*</span>
 			</label>
-			<input id="name" name="name" type="text" value="{{ old('name', $package?->name) }}"
-				placeholder="e.g., 3 Instagram Reels + Story" required
-				class="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-3 text-sm text-gray-900 focus:border-gray-500 focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-white">
+			<input type="text" id="name" name="name" value="{{ $resolvedName }}" required
+				placeholder="Select a suggestion or type a new package name"
+				class="mt-1 h-11 w-full rounded-lg border border-gray-300 bg-transparent px-3 text-sm text-gray-900 placeholder-gray-400 focus:border-gray-500 focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-white"
+				autocomplete="off" aria-autocomplete="list" aria-controls="package-menu" aria-expanded="false">
+			<p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Choose an existing package name or enter a new one.</p>
+
+			<!-- Dropdown -->
+			<div id="package-menu"
+				class="hidden absolute top-full left-0 right-0 mt-2 bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-xl shadow-lg z-50 p-4 max-h-60 overflow-y-auto">
+				<div id="package-list" class="flex flex-col gap-1"></div>
+			</div>
 			@error('name')
 				<p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
 			@enderror
 		</div>
+
+
 
 		<div>
 			<label for="description" class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Description</label>
@@ -144,3 +156,71 @@
 		</div>
 	</div>
 </div>
+
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+	const packageNames = @json($packageOptions);
+
+	const packageInput = document.getElementById("name");
+    const packageList = document.getElementById("package-list");
+    const packageMenu = document.getElementById("package-menu");
+
+    function renderPackageList(filter = "") {
+        packageList.innerHTML = "";
+		const normalizedFilter = filter.trim().toLowerCase();
+		const filtered = packageNames.filter(name =>
+			name.toLowerCase().includes(normalizedFilter)
+		).slice(0, 8);
+
+		filtered.forEach(name => {
+            const btn = document.createElement("button");
+            btn.type = "button";
+			btn.className = "text-left px-3 py-4 rounded text-sm hover:bg-gray-100 dark:hover:bg-gray-700";
+			btn.textContent = name;
+			btn.addEventListener("click", () => selectPackageName(name));
+            packageList.appendChild(btn);
+        });
+
+		if (filter.trim() !== "") {
+            const customBtn = document.createElement("button");
+            customBtn.type = "button";
+			customBtn.className = "text-left px-3 py-4 rounded text-sm font-semibold text-gray-900 hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700";
+			customBtn.textContent = filtered.length > 0 ? `Use "${filter}" as a new package name` : `Create new package name: ${filter}`;
+			customBtn.addEventListener("click", () => selectPackageName(filter));
+            packageList.appendChild(customBtn);
+        }
+
+		const shouldShow = packageList.children.length > 0;
+		packageMenu.classList.toggle("hidden", !shouldShow);
+		packageInput.setAttribute("aria-expanded", shouldShow ? "true" : "false");
+    }
+
+	function selectPackageName(name) {
+		packageInput.value = name;
+        packageMenu.classList.add("hidden");
+		packageInput.setAttribute("aria-expanded", "false");
+    }
+
+    packageInput.addEventListener("input", () => renderPackageList(packageInput.value));
+    packageInput.addEventListener("focus", () => renderPackageList(packageInput.value));
+
+	packageInput.addEventListener("keydown", event => {
+		if (event.key === "Escape") {
+			packageMenu.classList.add("hidden");
+			packageInput.setAttribute("aria-expanded", "false");
+		}
+	});
+
+    document.addEventListener("click", e => {
+        if (!packageInput.contains(e.target) && !packageMenu.contains(e.target)) {
+            packageMenu.classList.add("hidden");
+			packageInput.setAttribute("aria-expanded", "false");
+        }
+    });
+
+	if (packageInput.value.trim() !== "") {
+		renderPackageList(packageInput.value);
+    }
+});
+</script>
