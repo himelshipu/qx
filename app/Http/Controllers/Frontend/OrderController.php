@@ -270,7 +270,7 @@ class OrderController extends Controller
         $brandConfirmedTotal = round((float) $brandPayments->where('status', 'confirmed')->sum('amount'), 2);
         $brandPendingTotal   = round((float) $brandPayments->where('status', 'pending')->sum('amount'), 2);
         $brandRejectedTotal  = round((float) $brandPayments->where('status', 'rejected')->sum('amount'), 2);
-        $brandTotalAmount    = round((float) $order->total_amount, 2);
+        $brandTotalAmount    = round((float) $order->subtotal + (float) $order->service_fee, 2);
         $brandBalanceDue     = round(max($brandTotalAmount - $brandConfirmedTotal, 0), 2);
         $brandOverpaidAmount = round(max($brandConfirmedTotal - $brandTotalAmount, 0), 2);
         $brandPaymentState   = match (true) {

@@ -87,6 +87,7 @@ class RolePermissionSeeder extends Seeder
             'packages.index', 'packages.view',
             'influencers.index', 'influencers.view',
             'brands.index', 'brands.view',
+            'received-payments.index', 'received-payments.show', 'brand-payments.review',
 
         ];
 
@@ -105,6 +106,7 @@ class RolePermissionSeeder extends Seeder
             'influencers.index', 'influencers.view',
             'brands.index', 'brands.view',
             'payments.index',
+            'received-payments.index', 'received-payments.show',
             'reviews.index',
             'support-tickets.index',
         ];

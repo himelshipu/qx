@@ -75,6 +75,10 @@ class OrderController extends Controller
             'acceptedBy:id,name,email',
             'acceptedForInfluencer:id,user_id,display_name',
             'acceptedForInfluencer.user:id,name',
+            'parentOrder:id,parent_order_id,order_number,buyer_user_id,brand_id,campaign_id,status,subtotal,service_fee,tax_amount,total_amount,currency,placed_at,created_at',
+            'parentOrder.buyer:id,name,email',
+            'parentOrder.brand:id,brand_name',
+            'parentOrder.campaign:id,title',
             'items:id,order_id,influencer_id,package_id,title,quantity,unit_price,line_total,status,due_date,paid_at,payout_amount,payout_reference,payout_note,payout_marked_by_user_id,payout_marked_at',
             'items.influencer:id,user_id,display_name',
             'items.influencer.user:id,name',
@@ -117,7 +121,7 @@ class OrderController extends Controller
         $brandConfirmedTotal = round((float) $brandPayments->where('status', 'confirmed')->sum('amount'), 2);
         $brandPendingTotal   = round((float) $brandPayments->where('status', 'pending')->sum('amount'), 2);
         $brandRejectedTotal  = round((float) $brandPayments->where('status', 'rejected')->sum('amount'), 2);
-        $brandTotalAmount    = round((float) $order->total_amount, 2);
+        $brandTotalAmount    = round((float) $order->subtotal + (float) $order->service_fee, 2);
         $brandBalanceDue     = round(max($brandTotalAmount - $brandConfirmedTotal, 0), 2);
         $brandOverpaidAmount = round(max($brandConfirmedTotal - $brandTotalAmount, 0), 2);
 

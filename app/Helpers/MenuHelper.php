@@ -160,6 +160,7 @@ class MenuHelper
                         'name'     => 'Payouts',
                         'subItems' => [
                             ['name' => 'All Payouts', 'route' => 'payments.index', 'icon' => 'payments'],
+                            ['name' => 'Received Payments', 'route' => 'received-payments.index', 'icon' => 'payments'],
                             ['name' => 'Payment Queue', 'route' => 'payment-queue.index', 'icon' => 'packages'],
                             ['name' => 'Payment Audit Log', 'route' => 'payment-audit.index', 'icon' => 'history'],
                             ['name' => 'Payment Statements', 'route' => 'payment-statement.index', 'icon' => 'document']
