@@ -54,6 +54,20 @@ class OrderItemSeeder extends Seeder
                     'updated_at'          => now()
                 ]
             );
+
+            $orderSubtotal = (float) DB::table('order_items')->where('order_id', $order->id)->sum('line_total');
+            $orderServiceFee = (float) round($orderSubtotal * 0.20, 2);
+            $orderTotal = (float) round($orderSubtotal + $orderServiceFee, 2);
+
+            DB::table('orders')
+                ->where('id', $order->id)
+                ->update([
+                    'subtotal' => $orderSubtotal,
+                    'service_fee' => $orderServiceFee,
+                    'tax_amount' => 0,
+                    'total_amount' => $orderTotal,
+                    'updated_at' => now(),
+                ]);
         }
     }
 }

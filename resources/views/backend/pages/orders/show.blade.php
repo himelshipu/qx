@@ -1035,7 +1035,7 @@
 							<div class="flex flex-wrap items-center gap-2">
 								<a href="#order-items-section"
 									class="inline-flex items-center gap-1 rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-semibold text-gray-700 transition hover:bg-gray-100 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800">
-									View item breakdown
+									Jump to order items
 								</a>
 								@if ($order->parentOrder)
 									<a href="#parent-order-section"
