@@ -444,10 +444,10 @@
 									<form action="{{ route('dashboard.order-items.update-status', $item) }}" method="POST" class="space-y-2">
 										@csrf
 										@method('PUT')
-										<div class="flex items-center gap-2">
+										<div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full">
 											<label for="item_status_{{ $item->id }}" class="sr-only">Item status</label>
 											<select id="item_status_{{ $item->id }}" name="status"
-												class="h-10 flex-1 rounded-lg border border-gray-300 bg-white px-3 text-sm font-medium text-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-white">
+												class="flex-1 min-w-0 h-10 rounded-lg border border-gray-300 bg-white px-3 text-sm font-medium text-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-white">
 												<option value="pending" @selected($item->status === 'pending')>Pending</option>
 												<option value="accepted" @selected($item->status === 'accepted')>{{ $itemAcceptedLabel }}</option>
 												<option value="in_progress" @selected($item->status === 'in_progress')>Work In Progress</option>
@@ -456,10 +456,11 @@
 												<option value="rejected" @selected($item->status === 'rejected')>Rejected</option>
 												<option value="cancelled" @selected($item->status === 'cancelled')>Cancelled</option>
 											</select>
+
 											<button type="submit"
-												class="inline-flex h-10 items-center gap-1 rounded-lg bg-blue-600 px-4 text-sm font-semibold text-white transition hover:bg-blue-700"
+												class="w-full sm:w-auto h-10 flex items-center justify-center gap-1 rounded-lg bg-blue-600 px-4 text-sm font-semibold text-white transition hover:bg-blue-700"
 												title="Save item-level workflow stage">
-												<x-icons.check class="h-4 w-4" />Save Item Stage
+												<x-icons.check class="h-4 w-4" /> Save Item Stage
 											</button>
 										</div>
 										<div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
