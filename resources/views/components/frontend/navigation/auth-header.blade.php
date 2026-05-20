@@ -72,7 +72,7 @@
 				<nav class="flex flex-wrap items-center justify-center gap-4 md:gap-6 lg:gap-10 text-sm font-medium mb-0">
 					<a href="{{ route('home') }}" class="nav-link {{ request()->routeIs('home') ? 'active' : '' }}">Home</a>
 					<a href="{{ route('frontend.content-library') }}"
-						class="nav-link {{ request()->routeIs('frontend.content-library') ? 'active' : '' }}">Library</a>
+						class="nav-link {{ request()->routeIs('frontend.content-library') ? 'active' : '' }}">Database</a>
 					<a href="{{ route('frontend.campaigns.index') }}" class="nav-link {{ request()->routeIs('frontend.campaigns.index') ? 'active' : '' }}">Matchmaking</a>
 					<a href="{{ route('home') }}#how-it-works" class="nav-link">How it Works</a>
 					<a href="{{ route('influencers') }}" class="nav-link">Search</a>

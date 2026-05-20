@@ -15,15 +15,26 @@ class PackageSeeder extends Seeder
         $managerIds = DB::table('users')->whereIn('user_type', ['admin', 'moderator'])->pluck('id')->all();
         $hasCreatedByColumn = Schema::hasColumn('packages', 'created_by');
 
-        $templates = [
-            ['platform' => 'facebook', 'name' => '1 Facebook Feed Post', 'price' => [90, 420]],
-            ['platform' => 'instagram', 'name' => '1 Instagram Reel (30-60 sec)', 'price' => [120, 650]],
-            ['platform' => 'tiktok', 'name' => '1 TikTok Video', 'price' => [150, 700]],
-            ['platform' => 'linkedin', 'name' => '1 LinkedIn Brand Mention', 'price' => [140, 800]],
-            ['platform' => 'x', 'name' => '1 X Thread + Post', 'price' => [80, 450]],
-            ['platform' => 'youtube', 'name' => 'YouTube Integration (60 sec)', 'price' => [400, 1800]],
-            ['platform' => 'ugc', 'name' => 'UGC Product Demo', 'price' => [100, 550]],
-            ['platform' => 'other', 'name' => 'Custom Platform Deliverable', 'price' => [120, 900]],
+       $templates = [
+            // Instagram
+            ['platform' => 'instagram', 'name' => '1 Instagram Story', 'price' => [50, 200]],
+            ['platform' => 'instagram', 'name' => '2 Instagram Stories', 'price' => [90, 350]],
+            ['platform' => 'instagram', 'name' => '1 Instagram Reel (60 Seconds)', 'price' => [120, 650]],
+            ['platform' => 'instagram', 'name' => '2 Instagram Reels', 'price' => [220, 1200]],
+            ['platform' => 'instagram', 'name' => '1 Instagram Photo Feed Post', 'price' => [60, 250]],
+
+            // TikTok
+            ['platform' => 'tiktok', 'name' => '1 TikTok Video (30 Seconds)', 'price' => [100, 450]],
+            ['platform' => 'tiktok', 'name' => '1 TikTok Video (60 Seconds)', 'price' => [150, 700]],
+            ['platform' => 'tiktok', 'name' => '2 TikTok Videos', 'price' => [280, 1300]],
+            ['platform' => 'tiktok', 'name' => '3 TikTok Videos', 'price' => [400, 1800]],
+            ['platform' => 'tiktok', 'name' => '1 TikTok Stories', 'price' => [60, 250]],
+            ['platform' => 'tiktok', 'name' => '1 TikTok Live (30 Minutes)', 'price' => [300, 1200]],
+
+            // YouTube
+            ['platform' => 'youtube', 'name' => '1 YouTube Short', 'price' => [150, 600]],
+            ['platform' => 'youtube', 'name' => '1 YouTube Video', 'price' => [500, 2500]],
+            ['platform' => 'youtube', 'name' => '2 YouTube Videos', 'price' => [950, 4500]],
         ];
 
         foreach ($influencerIds as $influencerId) {
