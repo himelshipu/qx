@@ -8,7 +8,7 @@
 	<div class="transition-colors duration-200">
 		<main>
 			<div class="w-full sm:w-155 lg:w-245 mx-auto">
-				<x-frontend.partials.filter :region-options="$regionOptions ?? []" :gender-options="$genderOptions ?? []" :follower-range-options="$followerRangeOptions ?? []" />
+				<x-frontend.partials.filter :region-options="$regionOptions ?? []" :gender-options="$genderOptions ?? []" :follower-range-options="$followerRangeOptions ?? []" :content-type-options="$contentTypeOptions ?? []" :selected-content-types="$selectedContentTypes ?? []" :price-range="$priceRange ?? []" :selected-price-label="$selectedPriceLabel ?? null" />
 			</div>
 
 			<section class="w-full pb-8 mt-8">
@@ -23,12 +23,16 @@
 					</div>
 				</div>
 
-				@if (!empty($selectedFilters['gender']) || !empty($selectedFilters['region']) || !empty($selectedFilters['followers']))
+				@if (!empty($selectedFilters['contentTypes']) || !empty($selectedFilters['gender']) || !empty($selectedFilters['region']) || !empty($selectedFilters['followers']) || !empty($selectedFilters['price']))
 					<div class="mb-6 flex flex-wrap items-center gap-2 rounded-xl border border-gray-200 bg-white px-3 py-2 dark:border-gray-700 dark:bg-gray-800">
 						<span class="inline-flex items-center gap-1 text-xs font-semibold text-gray-600 dark:text-gray-300">
 							<x-icons.filter class="h-3.5 w-3.5" />
 							Filtered By
 						</span>
+
+						@foreach (($selectedFilters['contentTypes'] ?? []) as $contentTypeLabel)
+							<span class="inline-flex items-center rounded-full border border-gray-200 bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-700 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200">Content Type: {{ $contentTypeLabel }}</span>
+						@endforeach
 
 						@if (!empty($selectedFilters['gender']))
 							<span class="inline-flex items-center rounded-full border border-gray-200 bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-700 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200">Gender: {{ $selectedFilters['gender'] }}</span>
@@ -40,6 +44,10 @@
 
 						@if (!empty($selectedFilters['followers']))
 							<span class="inline-flex items-center rounded-full border border-gray-200 bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-700 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200">Followers: {{ $selectedFilters['followers'] }}</span>
+						@endif
+
+						@if (!empty($selectedFilters['price']))
+							<span class="inline-flex items-center rounded-full border border-gray-200 bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-700 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200">Price: {{ $selectedFilters['price'] }}</span>
 						@endif
 
 						<a href="{{ url()->current() }}" class="ml-auto text-xs font-semibold text-gray-700 underline decoration-gray-300 underline-offset-4 transition hover:text-black dark:text-gray-300 dark:decoration-gray-600 dark:hover:text-white">

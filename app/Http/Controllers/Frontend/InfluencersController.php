@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Frontend;
 use App\Http\Controllers\Controller;
 use App\Models\Category;
 use App\Services\Web\InfluencerService;
+use Illuminate\Support\Collection;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -46,18 +47,26 @@ class InfluencersController extends Controller
             $categories  = Category::whereIn('id', $categoryIds)->get();
         }
 
+        $contentTypeIds = array_values(array_unique(array_filter(array_map('intval', explode(',', (string) $request->get('contentTypes', ''))))));
+
         // Handle sorting
         $sort = $request->get('sort', 'followers_desc');
         $gender = trim((string) $request->get('gender', ''));
         $region = trim((string) $request->get('region', ''));
         $followers = trim((string) $request->get('followers', ''));
+        $price = trim((string) $request->get('price', ''));
+
+        $contentTypeOptions = $this->influencerService->getContentTypeFilters();
+        $selectedContentTypes = $this->filterSelectedContentTypes($contentTypeOptions, $contentTypeIds);
 
         $influencers = $this->influencerService->paginateInfluencers($platformKey, 20, [
             'categories' => $categories->pluck('id')->toArray(),
+            'contentTypes' => $contentTypeIds,
             'sort'       => $sort,
             'gender'     => $gender,
             'region'     => $region,
             'followers'  => $followers,
+            'price'      => $price,
         ]);
 
         $platformFilters  = $this->influencerService->getPlatformFilters();
@@ -73,13 +82,19 @@ class InfluencersController extends Controller
             'platformFilters'    => $platformFilters,
             'selectedPlatform'   => $selectedPlatform,
             'selectedCategories' => $categories,
+            'contentTypeOptions' => $contentTypeOptions->all(),
+            'selectedContentTypes' => $selectedContentTypes->all(),
+            'priceRange'         => $this->influencerService->getPackagePriceRange(),
+            'selectedPriceLabel' => $this->formatPriceRangeFilterLabel($price),
             'regionOptions'      => $this->influencerService->getRegionFilters()->all(),
             'genderOptions'      => $this->influencerService->getGenderFilters()->all(),
             'followerRangeOptions' => $this->influencerService->getFollowerRangeFilters()->all(),
             'selectedFilters'    => [
+                'contentTypes' => $selectedContentTypes->pluck('label')->all(),
                 'gender'    => in_array($gender, ['male', 'female', 'other'], true) ? ucfirst($gender) : null,
                 'region'    => $region !== '' ? $region : null,
                 'followers' => $this->formatFollowersFilterLabel($followers),
+                'price'     => $this->formatPriceRangeFilterLabel($price),
             ],
         ]);
     }
@@ -95,13 +110,20 @@ class InfluencersController extends Controller
         $gender = trim((string) $request->get('gender', ''));
         $region = trim((string) $request->get('region', ''));
         $followers = trim((string) $request->get('followers', ''));
+        $price = trim((string) $request->get('price', ''));
+        $contentTypeIds = array_values(array_unique(array_filter(array_map('intval', explode(',', (string) $request->get('contentTypes', ''))))));
+
+        $contentTypeOptions = $this->influencerService->getContentTypeFilters();
+        $selectedContentTypes = $this->filterSelectedContentTypes($contentTypeOptions, $contentTypeIds);
 
         $influencers = $this->influencerService->paginateInfluencers(null, 20, [
             'categories' => [$category->id],
+            'contentTypes' => $contentTypeIds,
             'sort'       => $sort,
             'gender'     => $gender,
             'region'     => $region,
             'followers'  => $followers,
+            'price'      => $price,
         ]);
 
         return view('frontend.pages.influencers', [
@@ -110,13 +132,19 @@ class InfluencersController extends Controller
             'platformFilters'    => $this->influencerService->getPlatformFilters(),
             'selectedPlatform'   => null,
             'selectedCategories' => collect([$category]),
+            'contentTypeOptions' => $contentTypeOptions->all(),
+            'selectedContentTypes' => $selectedContentTypes->all(),
+            'priceRange'         => $this->influencerService->getPackagePriceRange(),
+            'selectedPriceLabel' => $this->formatPriceRangeFilterLabel($price),
             'regionOptions'      => $this->influencerService->getRegionFilters()->all(),
             'genderOptions'      => $this->influencerService->getGenderFilters()->all(),
             'followerRangeOptions' => $this->influencerService->getFollowerRangeFilters()->all(),
             'selectedFilters'    => [
+                'contentTypes' => $selectedContentTypes->pluck('label')->all(),
                 'gender'    => in_array($gender, ['male', 'female', 'other'], true) ? ucfirst($gender) : null,
                 'region'    => $region !== '' ? $region : null,
                 'followers' => $this->formatFollowersFilterLabel($followers),
+                'price'     => $this->formatPriceRangeFilterLabel($price),
             ],
         ]);
     }
@@ -166,6 +194,34 @@ class InfluencersController extends Controller
             '500001+' => '500K+',
             default => null,
         };
+    }
+
+    /**
+     * @param Collection<int, array{value:string,label:string,price_label:string}> $contentTypeOptions
+     * @return Collection<int, array{value:string,label:string,price_label:string}>
+     */
+    private function filterSelectedContentTypes(Collection $contentTypeOptions, array $contentTypeIds): Collection
+    {
+        $selectedIds = array_map('strval', $contentTypeIds);
+
+        return $contentTypeOptions
+            ->filter(fn (array $contentType): bool => in_array((string) $contentType['value'], $selectedIds, true))
+            ->values();
+    }
+
+    private function formatPriceRangeFilterLabel(string $value): ?string
+    {
+        $value = trim($value);
+
+        if ($value === '' || preg_match('/^(\d+(?:\.\d+)?)\-(\d+(?:\.\d+)?)$/', $value, $matches) !== 1) {
+            return null;
+        }
+
+        $min = (float) $matches[1];
+        $max = (float) $matches[2];
+        $maxLabel = '$' . number_format($max, $max === (float) (int) $max ? 0 : 2) . ($max >= 3000.0 ? '+' : '');
+
+        return '$' . number_format($min, $min === (float) (int) $min ? 0 : 2) . ' - ' . $maxLabel;
     }
 
 }

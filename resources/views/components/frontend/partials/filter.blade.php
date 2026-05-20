@@ -1,4 +1,4 @@
-@props(['regionOptions' => [], 'genderOptions' => [], 'followerRangeOptions' => []])
+@props(['regionOptions' => [], 'genderOptions' => [], 'followerRangeOptions' => [], 'contentTypeOptions' => [], 'selectedContentTypes' => [], 'priceRange' => ['min' => 0, 'max' => 0], 'selectedPriceLabel' => null])
 
 <div>
 	<!-- Search Bar -->
@@ -20,7 +20,7 @@
 					<div
 						class="platform-option px-4 py-3 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl cursor-pointer transition-colors"
 						data-value="">
-						Any Platform
+						Platform
 					</div>
 					<div
 						class="platform-option px-4 py-3 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl cursor-pointer transition-colors"
@@ -101,15 +101,63 @@
 			<x-icons.filter class="h-3.5 w-3.5 text-gray-600 dark:text-gray-300" />
 			Refine Results
 		</div>
-		<div class="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-4">
+		<div class="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-7">
+			<div id="content-type-filter-container" class="relative sm:col-span-2 xl:col-span-2">
+				<button id="content-type-trigger" type="button" class="flex w-full items-center gap-2 rounded-lg border border-transparent bg-gray-50 px-2.5 py-2 text-left transition hover:border-gray-200 dark:bg-gray-700/60 dark:hover:border-gray-600">
+					<x-icons.package class="h-4 w-4 text-gray-500 dark:text-gray-300" />
+					<span id="selected-content-type" class="flex-1 truncate text-xs text-gray-700 dark:text-gray-100">
+						@if (!empty($selectedContentTypes))
+							@if (count($selectedContentTypes) === 1)
+								{{ $selectedContentTypes[0]['label'] ?? 'Content Type' }}
+							@else
+								{{ count($selectedContentTypes) }} Content Types
+							@endif
+						@else
+							Content Type
+						@endif
+					</span>
+					<x-icons.chevron-down class="h-3.5 w-3.5 text-gray-400 dark:text-gray-300" />
+				</button>
+				<div id="content-type-menu" class="hidden absolute left-0 right-0 top-[calc(100%+8px)] z-50 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-lg dark:border-gray-600 dark:bg-gray-800">
+					<div class="max-h-64 overflow-y-auto p-1.5">
+						@forelse (($contentTypeOptions ?: []) as $contentType)
+							<button type="button" class="content-type-option flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-xs text-gray-700 transition hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700" data-value="{{ $contentType['value'] ?? '' }}" data-label="{{ $contentType['label'] ?? '' }}">
+								<span class="content-type-checkbox inline-flex h-4 w-4 shrink-0 items-center justify-center rounded border border-gray-300 bg-white text-transparent transition dark:border-gray-500 dark:bg-gray-900">
+									<x-icons.check class="h-3 w-3" />
+								</span>
+								<span class="flex-1 truncate">{{ $contentType['label'] ?? '' }}</span>
+								@if (!empty($contentType['price_label']))
+									<span class="text-[11px] font-medium text-gray-400 dark:text-gray-500">{{ $contentType['price_label'] }}</span>
+								@endif
+							</button>
+						@empty
+							<div class="px-3 py-2 text-xs text-gray-500 dark:text-gray-400">No packages available</div>
+						@endforelse
+					</div>
+					<div class="flex items-center justify-between border-t border-gray-100 px-3 py-2 dark:border-gray-700">
+						<button id="content-type-clear" type="button" class="text-[11px] font-semibold text-gray-500 transition hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200">Clear</button>
+						<span class="text-[11px] text-gray-400 dark:text-gray-500">Select packages directly</span>
+					</div>
+				</div>
+				<input type="hidden" id="content-types-input" value="">
+			</div>
+
+			<div id="price-filter-container" class="relative">
+				<button id="price-trigger" type="button" class="flex w-full items-center gap-2 rounded-lg border border-transparent bg-gray-50 px-2.5 py-2 text-left transition hover:border-gray-200 dark:bg-gray-700/60 dark:hover:border-gray-600">
+					<x-icons.dollar-sign class="h-4 w-4 text-gray-500 dark:text-gray-300" />
+					<span id="selected-price" class="flex-1 truncate text-xs text-gray-700 dark:text-gray-100">{{ $selectedPriceLabel ?: 'Price' }}</span>
+					<x-icons.chevron-down class="h-3.5 w-3.5 text-gray-400 dark:text-gray-300" />
+				</button>
+			</div>
+
 			<div id="gender-filter-container" class="relative">
 				<button id="gender-trigger" type="button" class="flex w-full items-center gap-2 rounded-lg border border-transparent bg-gray-50 px-2.5 py-2 text-left transition hover:border-gray-200 dark:bg-gray-700/60 dark:hover:border-gray-600">
 					<x-icons.user class="h-4 w-4 text-gray-500 dark:text-gray-300" />
-					<span id="selected-gender" class="flex-1 truncate text-xs text-gray-700 dark:text-gray-100">Any Gender</span>
+					<span id="selected-gender" class="flex-1 truncate text-xs text-gray-700 dark:text-gray-100">Gender</span>
 					<x-icons.chevron-down class="h-3.5 w-3.5 text-gray-400 dark:text-gray-300" />
 				</button>
 				<div id="gender-menu" class="hidden absolute left-0 right-0 top-[calc(100%+8px)] z-50 max-h-56 overflow-y-auto rounded-xl border border-gray-200 bg-white p-1.5 shadow-lg dark:border-gray-600 dark:bg-gray-800">
-					<button type="button" class="advanced-option w-full rounded-lg px-3 py-2 text-left text-xs text-gray-700 transition hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700" data-target="gender" data-value="" data-label="Any Gender">Any Gender</button>
+					<button type="button" class="advanced-option w-full rounded-lg px-3 py-2 text-left text-xs text-gray-700 transition hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700" data-target="gender" data-value="" data-label="Gender">Gender</button>
 					@foreach (($genderOptions ?: [['value' => 'male', 'label' => 'Male'], ['value' => 'female', 'label' => 'Female'], ['value' => 'other', 'label' => 'Other']]) as $genderOption)
 						<button type="button" class="advanced-option w-full rounded-lg px-3 py-2 text-left text-xs text-gray-700 transition hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700" data-target="gender" data-value="{{ $genderOption['value'] ?? '' }}" data-label="{{ $genderOption['label'] ?? '' }}">{{ $genderOption['label'] ?? '' }}</button>
 					@endforeach
@@ -120,11 +168,11 @@
 			<div id="region-filter-container" class="relative">
 				<button id="region-trigger" type="button" class="flex w-full items-center gap-2 rounded-lg border border-transparent bg-gray-50 px-2.5 py-2 text-left transition hover:border-gray-200 dark:bg-gray-700/60 dark:hover:border-gray-600">
 					<x-icons.navigator class="h-4 w-4 text-gray-500 dark:text-gray-300" />
-					<span id="selected-region" class="flex-1 truncate text-xs text-gray-700 dark:text-gray-100">Any Region</span>
+					<span id="selected-region" class="flex-1 truncate text-xs text-gray-700 dark:text-gray-100">Region</span>
 					<x-icons.chevron-down class="h-3.5 w-3.5 text-gray-400 dark:text-gray-300" />
 				</button>
 				<div id="region-menu" class="hidden absolute left-0 right-0 top-[calc(100%+8px)] z-50 max-h-56 overflow-y-auto rounded-xl border border-gray-200 bg-white p-1.5 shadow-lg dark:border-gray-600 dark:bg-gray-800">
-					<button type="button" class="advanced-option w-full rounded-lg px-3 py-2 text-left text-xs text-gray-700 transition hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700" data-target="region" data-value="" data-label="Any Region">Any Region</button>
+					<button type="button" class="advanced-option w-full rounded-lg px-3 py-2 text-left text-xs text-gray-700 transition hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700" data-target="region" data-value="" data-label="Region">Region</button>
 					@foreach (($regionOptions ?: ['United States', 'United Kingdom', 'Canada', 'Australia', 'India']) as $regionOption)
 						<button type="button" class="advanced-option w-full rounded-lg px-3 py-2 text-left text-xs text-gray-700 transition hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700" data-target="region" data-value="{{ $regionOption }}" data-label="{{ $regionOption }}">{{ $regionOption }}</button>
 					@endforeach
@@ -135,11 +183,11 @@
 			<div id="followers-filter-container" class="relative">
 				<button id="followers-trigger" type="button" class="flex w-full items-center gap-2 rounded-lg border border-transparent bg-gray-50 px-2.5 py-2 text-left transition hover:border-gray-200 dark:bg-gray-700/60 dark:hover:border-gray-600">
 					<x-icons.trending-up class="h-4 w-4 text-gray-500 dark:text-gray-300" />
-					<span id="selected-followers" class="flex-1 truncate text-xs text-gray-700 dark:text-gray-100">Any Followers</span>
+					<span id="selected-followers" class="flex-1 truncate text-xs text-gray-700 dark:text-gray-100">Followers</span>
 					<x-icons.chevron-down class="h-3.5 w-3.5 text-gray-400 dark:text-gray-300" />
 				</button>
 				<div id="followers-menu" class="hidden absolute left-0 right-0 top-[calc(100%+8px)] z-50 max-h-56 overflow-y-auto rounded-xl border border-gray-200 bg-white p-1.5 shadow-lg dark:border-gray-600 dark:bg-gray-800">
-					<button type="button" class="advanced-option w-full rounded-lg px-3 py-2 text-left text-xs text-gray-700 transition hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700" data-target="followers" data-value="" data-label="Any Followers">Any Followers</button>
+					<button type="button" class="advanced-option w-full rounded-lg px-3 py-2 text-left text-xs text-gray-700 transition hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700" data-target="followers" data-value="" data-label="Followers">Followers</button>
 					@foreach (($followerRangeOptions ?: [['value' => '0-10000', 'label' => '0 - 10K'], ['value' => '10001-50000', 'label' => '10K - 50K'], ['value' => '50001-100000', 'label' => '50K - 100K'], ['value' => '100001-500000', 'label' => '100K - 500K'], ['value' => '500001+', 'label' => '500K+']]) as $followerRangeOption)
 						<button type="button" class="advanced-option w-full rounded-lg px-3 py-2 text-left text-xs text-gray-700 transition hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700" data-target="followers" data-value="{{ $followerRangeOption['value'] ?? '' }}" data-label="{{ $followerRangeOption['label'] ?? '' }}">{{ $followerRangeOption['label'] ?? '' }}</button>
 					@endforeach
@@ -150,6 +198,71 @@
 			<div class="relative flex items-center gap-2 rounded-lg">
 				<button id="advanced-filter-submit" type="button" class="w-full rounded-lg bg-[#222] px-4 py-2 text-xs font-semibold text-white transition-opacity hover:opacity-85">
 					Filter
+				</button>
+			</div>
+		</div>
+	</div>
+
+	<style>
+		#price-modal .price-track-line {
+			height: 3px;
+		}
+
+		#price-modal .price-thumb {
+			transform: translate(-50%, -50%);
+			touch-action: none;
+			cursor: grab;
+		}
+
+		#price-modal .price-thumb:active {
+			cursor: grabbing;
+		}
+	</style>
+
+	@php
+		$modalMinPrice = (float) ($priceRange['min'] ?? 50);
+		$modalMaxPrice = (float) ($priceRange['max'] ?? 3000);
+
+		if ($modalMaxPrice <= $modalMinPrice) {
+			$modalMinPrice = 50;
+			$modalMaxPrice = 3000;
+		}
+	@endphp
+
+	<div id="price-modal" class="fixed inset-0 z-[60] hidden items-center justify-center px-4 py-6">
+		<div id="price-modal-backdrop" class="absolute inset-0 bg-black/70"></div>
+		<div class="relative z-10 w-full max-w-[550px] rounded-[20px] bg-white px-[58px] pb-5 pt-5 shadow-2xl dark:bg-gray-800 max-sm:px-6" data-min-price="{{ $modalMinPrice }}" data-max-price="{{ $modalMaxPrice }}">
+			<button id="price-modal-close" type="button" class="absolute right-5 top-5 inline-flex h-7 w-7 items-center justify-center rounded-full bg-white text-[#222] shadow-[0_4px_14px_rgba(0,0,0,0.12)] transition hover:bg-gray-50 dark:bg-gray-900 dark:text-gray-200 dark:hover:bg-gray-700">
+				<x-icons.close class="h-3.5 w-3.5" />
+			</button>
+
+			<h3 class="text-center text-xl font-semibold leading-7 text-[#222] dark:text-white">Price</h3>
+
+			<div class="mt-10 grid grid-cols-2 gap-6">
+				<div>
+					<p class="text-sm font-normal leading-5 text-[#222] dark:text-gray-200">Min Price</p>
+					<p id="price-min-label" class="mt-0.5 text-[26px] font-semibold leading-8 tracking-normal text-[#222] dark:text-white">$0</p>
+				</div>
+				<div class="text-left sm:text-right">
+					<p class="text-sm font-normal leading-5 text-[#222] dark:text-gray-200">Max Price</p>
+					<p id="price-max-label" class="mt-0.5 text-[26px] font-semibold leading-8 tracking-normal text-[#222] dark:text-white">$0</p>
+				</div>
+			</div>
+
+			<div id="price-track" class="relative mt-5 h-8">
+				<div class="price-track-line absolute left-0 right-0 top-1/2 -translate-y-1/2 rounded-full bg-gray-200 dark:bg-gray-700"></div>
+				<div id="price-range-fill" class="price-track-line absolute top-1/2 -translate-y-1/2 rounded-full bg-[#222]" style="left: 0%; right: 0%;"></div>
+				<button id="price-min-thumb" type="button" class="price-thumb absolute top-1/2 z-20 inline-flex h-5 w-5 items-center justify-center rounded-full bg-[#222] shadow-[0_2px_8px_rgba(0,0,0,0.22)]">
+					<span class="sr-only">Adjust minimum price</span>
+				</button>
+				<button id="price-max-thumb" type="button" class="price-thumb absolute top-1/2 z-30 inline-flex h-5 w-5 items-center justify-center rounded-full bg-[#222] shadow-[0_2px_8px_rgba(0,0,0,0.22)]">
+					<span class="sr-only">Adjust maximum price</span>
+				</button>
+			</div>
+
+			<div class="mt-10">
+				<button id="price-save" type="button" class="inline-flex h-[52px] w-full items-center justify-center rounded-[7px] bg-[#222] px-5 text-sm font-semibold text-white transition hover:opacity-90">
+					Save
 				</button>
 			</div>
 		</div>
@@ -232,26 +345,83 @@
 		const categoryList = document.getElementById('category-list');
 		const categoriesInput = document.getElementById('categories-input');
 		const selectedCategoriesDisplay = document.getElementById('selected-categories-display');
+		const contentTypeFilterContainer = document.getElementById('content-type-filter-container');
+		const priceFilterContainer = document.getElementById('price-filter-container');
 		const genderFilterContainer = document.getElementById('gender-filter-container');
 		const regionFilterContainer = document.getElementById('region-filter-container');
 		const followersFilterContainer = document.getElementById('followers-filter-container');
+		const contentTypeTrigger = document.getElementById('content-type-trigger');
+		const priceTrigger = document.getElementById('price-trigger');
 		const genderTrigger = document.getElementById('gender-trigger');
 		const regionTrigger = document.getElementById('region-trigger');
 		const followersTrigger = document.getElementById('followers-trigger');
+		const contentTypeMenu = document.getElementById('content-type-menu');
+		const priceModal = document.getElementById('price-modal');
+		const priceModalBackdrop = document.getElementById('price-modal-backdrop');
+		const priceModalClose = document.getElementById('price-modal-close');
+		const priceTrack = document.getElementById('price-track');
+		const priceMinThumb = document.getElementById('price-min-thumb');
+		const priceMaxThumb = document.getElementById('price-max-thumb');
+		const priceMinLabel = document.getElementById('price-min-label');
+		const priceMaxLabel = document.getElementById('price-max-label');
+		const priceRangeFill = document.getElementById('price-range-fill');
+		const priceSave = document.getElementById('price-save');
+		const contentTypeClear = document.getElementById('content-type-clear');
+		const selectedContentTypeLabel = document.getElementById('selected-content-type');
+		const selectedPriceLabel = document.getElementById('selected-price');
 		const genderMenu = document.getElementById('gender-menu');
 		const regionMenu = document.getElementById('region-menu');
 		const followersMenu = document.getElementById('followers-menu');
 		const selectedGender = document.getElementById('selected-gender');
 		const selectedRegion = document.getElementById('selected-region');
 		const selectedFollowers = document.getElementById('selected-followers');
+		const contentTypesInput = document.getElementById('content-types-input');
 		const genderInput = document.getElementById('gender-input');
 		const regionInput = document.getElementById('region-input');
 		const followersInput = document.getElementById('followers-input');
 		const advancedFilterSubmit = document.getElementById('advanced-filter-submit');
+		const priceBoundsPanel = priceModal?.querySelector('[data-min-price]');
+		const rawPriceBounds = {
+			min: Number(priceBoundsPanel?.getAttribute('data-min-price') || 50),
+			max: Number(priceBoundsPanel?.getAttribute('data-max-price') || 3000),
+		};
+		const priceBounds = {
+			min: rawPriceBounds.max > rawPriceBounds.min ? rawPriceBounds.min : 50,
+			max: rawPriceBounds.max > rawPriceBounds.min ? rawPriceBounds.max : 3000,
+		};
 
 		let allCategories = [];
 		let selectedCategories = [];
 		let categorySearchText = '';
+		let selectedContentTypeIds = [];
+		let priceMinValue = priceBounds.min;
+		let priceMaxValue = priceBounds.max;
+		let priceSelectionActive = false;
+		let priceRangeCommitted = false;
+		let activePriceThumb = null;
+		const minimumPriceGap = 1;
+
+		function formatPriceValue(value, showPlus = false) {
+			const numericValue = Number(value || 0);
+			const fractionDigits = Number.isInteger(numericValue) ? 0 : 2;
+			const formattedValue = numericValue.toLocaleString('en-US', { maximumFractionDigits: fractionDigits, minimumFractionDigits: fractionDigits });
+			return `$${formattedValue}${showPlus ? '+' : ''}`;
+		}
+
+		function getPriceValueFromClientX(clientX) {
+			if (!priceTrack) {
+				return priceBounds.min;
+			}
+
+			const rect = priceTrack.getBoundingClientRect();
+			if (rect.width <= 0) {
+				return priceBounds.min;
+			}
+
+			const ratio = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+			const rawValue = priceBounds.min + (ratio * Math.max(priceBounds.max - priceBounds.min, 0));
+			return Math.round(rawValue);
+		}
 
 		// Fetch categories from server
 		async function loadCategories() {
@@ -296,6 +466,131 @@
 					updateSelectedCategoriesDisplay();
 				});
 			});
+		}
+
+		function syncContentTypeUI() {
+			if (contentTypesInput) {
+				contentTypesInput.value = selectedContentTypeIds.join(',');
+			}
+
+			if (selectedContentTypeLabel) {
+				if (selectedContentTypeIds.length === 0) {
+					selectedContentTypeLabel.textContent = 'Content Type';
+				} else if (selectedContentTypeIds.length === 1) {
+					const option = Array.from(contentTypeMenu?.querySelectorAll('.content-type-option') || []).find((node) => node.getAttribute('data-value') === selectedContentTypeIds[0]);
+					selectedContentTypeLabel.textContent = option?.getAttribute('data-label') || '1 Content Type';
+				} else {
+					selectedContentTypeLabel.textContent = `${selectedContentTypeIds.length} Content Types`;
+				}
+			}
+
+			contentTypeMenu?.querySelectorAll('.content-type-option').forEach((option) => {
+				const value = option.getAttribute('data-value') || '';
+				const checkbox = option.querySelector('.content-type-checkbox');
+				const isSelected = selectedContentTypeIds.includes(value);
+
+				option.classList.toggle('bg-gray-100', isSelected);
+				option.classList.toggle('dark:bg-gray-700', isSelected);
+				option.classList.toggle('text-gray-900', isSelected);
+				option.classList.toggle('dark:text-white', isSelected);
+				option.classList.toggle('font-medium', isSelected);
+
+				if (checkbox) {
+					checkbox.classList.toggle('bg-black', isSelected);
+					checkbox.classList.toggle('border-black', isSelected);
+					checkbox.classList.toggle('text-white', isSelected);
+					checkbox.classList.toggle('text-transparent', !isSelected);
+				}
+			});
+		}
+
+		function syncPriceUI() {
+			const hasCustomRange = priceMinValue > priceBounds.min || priceMaxValue < priceBounds.max;
+			const hasActivePriceRange = priceRangeCommitted || hasCustomRange;
+			priceSelectionActive = hasActivePriceRange;
+
+			if (priceMinLabel) {
+				priceMinLabel.textContent = formatPriceValue(priceMinValue);
+			}
+
+			if (priceMaxLabel) {
+				priceMaxLabel.textContent = formatPriceValue(priceMaxValue, priceMaxValue >= priceBounds.max);
+			}
+
+			if (selectedPriceLabel) {
+				selectedPriceLabel.textContent = hasActivePriceRange
+					? `${formatPriceValue(priceMinValue)} - ${formatPriceValue(priceMaxValue, priceMaxValue >= priceBounds.max)}`
+					: 'Price';
+			}
+
+			if (priceRangeFill) {
+				const range = Math.max(priceBounds.max - priceBounds.min, 1);
+				const start = ((priceMinValue - priceBounds.min) / range) * 100;
+				const end = ((priceBounds.max - priceMaxValue) / range) * 100;
+				priceRangeFill.style.left = `${Math.max(0, Math.min(100, start))}%`;
+				priceRangeFill.style.right = `${Math.max(0, Math.min(100, end))}%`;
+			}
+
+			if (priceMinThumb) {
+				const range = Math.max(priceBounds.max - priceBounds.min, 1);
+				const start = ((priceMinValue - priceBounds.min) / range) * 100;
+				priceMinThumb.style.left = `${Math.max(0, Math.min(100, start))}%`;
+			}
+
+			if (priceMaxThumb) {
+				const range = Math.max(priceBounds.max - priceBounds.min, 1);
+				const end = ((priceMaxValue - priceBounds.min) / range) * 100;
+				priceMaxThumb.style.left = `${Math.max(0, Math.min(100, end))}%`;
+			}
+		}
+
+		function setPriceRange(minValue, maxValue) {
+			const clampedMin = Math.max(priceBounds.min, Math.min(minValue, priceBounds.max));
+			const clampedMax = Math.max(priceBounds.min, Math.min(maxValue, priceBounds.max));
+			const normalizedMin = Math.min(clampedMin, clampedMax);
+			const normalizedMax = Math.max(clampedMin, clampedMax);
+
+			if (normalizedMax - normalizedMin < minimumPriceGap) {
+				if (normalizedMax >= priceBounds.max) {
+					priceMaxValue = priceBounds.max;
+					priceMinValue = Math.max(priceBounds.min, priceBounds.max - minimumPriceGap);
+				} else {
+					priceMinValue = normalizedMin;
+					priceMaxValue = Math.min(priceBounds.max, normalizedMin + minimumPriceGap);
+				}
+			} else {
+				priceMinValue = normalizedMin;
+				priceMaxValue = normalizedMax;
+			}
+			syncPriceUI();
+		}
+
+		function clearContentTypes() {
+			selectedContentTypeIds = [];
+			syncContentTypeUI();
+		}
+
+		function updatePriceFromPointer(clientX) {
+			if (!activePriceThumb) {
+				return;
+			}
+
+			const nextValue = getPriceValueFromClientX(clientX);
+
+			if (activePriceThumb === 'min') {
+				setPriceRange(Math.min(nextValue, priceMaxValue - minimumPriceGap), priceMaxValue);
+			} else if (activePriceThumb === 'max') {
+				setPriceRange(priceMinValue, Math.max(nextValue, priceMinValue + minimumPriceGap));
+			}
+		}
+
+		function beginPriceDrag(clientX) {
+			const nextValue = getPriceValueFromClientX(clientX);
+			const minDistance = Math.abs(nextValue - priceMinValue);
+			const maxDistance = Math.abs(nextValue - priceMaxValue);
+
+			activePriceThumb = minDistance <= maxDistance ? 'min' : 'max';
+			updatePriceFromPointer(clientX);
 		}
 
 		function getCategoriesForDisplay() {
@@ -351,8 +646,8 @@
 			renderCategories(filtered);
 		});
 
-		const advancedMenus = [genderMenu, regionMenu, followersMenu].filter(Boolean);
-		const advancedContainers = [genderFilterContainer, regionFilterContainer, followersFilterContainer].filter(Boolean);
+		const advancedMenus = [genderMenu, regionMenu, followersMenu, contentTypeMenu].filter(Boolean);
+		const advancedContainers = [contentTypeFilterContainer, genderFilterContainer, regionFilterContainer, followersFilterContainer].filter(Boolean);
 
 		function closeAdvancedMenus() {
 			advancedMenus.forEach(menu => menu.classList.add('hidden'));
@@ -364,7 +659,7 @@
 					genderInput.value = value;
 				}
 				if (selectedGender) {
-					selectedGender.textContent = label || 'Any Gender';
+					selectedGender.textContent = label || 'Gender';
 				}
 				return;
 			}
@@ -374,7 +669,7 @@
 					regionInput.value = value;
 				}
 				if (selectedRegion) {
-					selectedRegion.textContent = label || 'Any Region';
+					selectedRegion.textContent = label || 'Region';
 				}
 				return;
 			}
@@ -383,7 +678,7 @@
 				followersInput.value = value;
 			}
 			if (selectedFollowers) {
-				selectedFollowers.textContent = label || 'Any Followers';
+				selectedFollowers.textContent = label || 'Followers';
 			}
 		}
 
@@ -442,12 +737,165 @@
 			setAdvancedFilterValue(target, queryValue, queryValue);
 		}
 
+		function toggleContentType(value) {
+			const normalizedValue = String(value || '');
+			if (normalizedValue === '') {
+				return;
+			}
+
+			if (selectedContentTypeIds.includes(normalizedValue)) {
+				selectedContentTypeIds = selectedContentTypeIds.filter((id) => id !== normalizedValue);
+			} else {
+				selectedContentTypeIds.push(normalizedValue);
+			}
+
+			syncContentTypeUI();
+		}
+
+		function setContentTypesFromQuery(queryValue) {
+			if (!queryValue) {
+				clearContentTypes();
+				return;
+			}
+
+			const availableValues = Array.from(contentTypeMenu?.querySelectorAll('.content-type-option') || []).map((node) => node.getAttribute('data-value') || '');
+			selectedContentTypeIds = queryValue
+				.split(',')
+				.map((value) => value.trim())
+				.filter((value) => value !== '' && availableValues.includes(value));
+			selectedContentTypeIds = Array.from(new Set(selectedContentTypeIds));
+			syncContentTypeUI();
+		}
+
+		function setPriceFromQuery(queryValue) {
+			if (!queryValue) {
+				priceRangeCommitted = false;
+				setPriceRange(priceBounds.min, priceBounds.max);
+				return;
+			}
+
+			const match = String(queryValue).match(/^(\d+(?:\.\d+)?)\-(\d+(?:\.\d+)?)$/);
+			if (!match) {
+				priceRangeCommitted = false;
+				setPriceRange(priceBounds.min, priceBounds.max);
+				return;
+			}
+
+			priceRangeCommitted = true;
+			setPriceRange(Number(match[1]), Number(match[2]));
+		}
+
+		function openPriceModal() {
+			if (!priceModal) {
+				return;
+			}
+
+			priceModal.classList.remove('hidden');
+			priceModal.classList.add('flex');
+			closeAdvancedMenus();
+			platformMenu.classList.add('hidden');
+			categoryMenu.classList.add('hidden');
+			syncPriceUI();
+		}
+
+		function closePriceModal() {
+			if (!priceModal) {
+				return;
+			}
+
+			priceModal.classList.add('hidden');
+			priceModal.classList.remove('flex');
+		}
+
 		bindAdvancedTrigger(genderTrigger, genderMenu);
 		bindAdvancedTrigger(regionTrigger, regionMenu);
 		bindAdvancedTrigger(followersTrigger, followersMenu);
 		bindAdvancedMenu(genderMenu, 'gender');
 		bindAdvancedMenu(regionMenu, 'region');
 		bindAdvancedMenu(followersMenu, 'followers');
+
+		if (contentTypeTrigger && contentTypeMenu) {
+			contentTypeTrigger.addEventListener('click', (e) => {
+				e.preventDefault();
+				e.stopPropagation();
+				platformMenu.classList.add('hidden');
+				categoryMenu.classList.add('hidden');
+				closeAdvancedMenus();
+				closePriceModal();
+				contentTypeMenu.classList.toggle('hidden');
+			});
+
+			contentTypeMenu.addEventListener('click', (e) => {
+				e.stopPropagation();
+				const option = e.target.closest('.content-type-option');
+				if (option) {
+					e.preventDefault();
+					toggleContentType(option.getAttribute('data-value') || '');
+					return;
+				}
+
+				const clearButton = e.target.closest('#content-type-clear');
+				if (clearButton) {
+					e.preventDefault();
+					clearContentTypes();
+				}
+			});
+		}
+
+		if (priceTrigger) {
+			priceTrigger.addEventListener('click', (e) => {
+				e.preventDefault();
+				e.stopPropagation();
+				contentTypeMenu?.classList.add('hidden');
+				closeAdvancedMenus();
+				openPriceModal();
+			});
+		}
+
+		priceModalBackdrop?.addEventListener('click', closePriceModal);
+		priceModalClose?.addEventListener('click', closePriceModal);
+		priceSave?.addEventListener('click', () => {
+			priceRangeCommitted = true;
+			syncPriceUI();
+			closePriceModal();
+		});
+
+		priceMinThumb?.addEventListener('pointerdown', (e) => {
+			e.preventDefault();
+			e.stopPropagation();
+			activePriceThumb = 'min';
+			priceMinThumb.setPointerCapture(e.pointerId);
+		});
+
+		priceMaxThumb?.addEventListener('pointerdown', (e) => {
+			e.preventDefault();
+			e.stopPropagation();
+			activePriceThumb = 'max';
+			priceMaxThumb.setPointerCapture(e.pointerId);
+		});
+
+		priceTrack?.addEventListener('pointerdown', (e) => {
+			e.preventDefault();
+			beginPriceDrag(e.clientX);
+		});
+
+		document.addEventListener('pointermove', (e) => {
+			if (!activePriceThumb || !priceModal || priceModal.classList.contains('hidden')) {
+				return;
+			}
+
+			updatePriceFromPointer(e.clientX);
+		});
+
+		document.addEventListener('pointerup', () => {
+			activePriceThumb = null;
+		});
+
+		document.addEventListener('keydown', (e) => {
+			if (e.key === 'Escape' && priceModal && !priceModal.classList.contains('hidden')) {
+				closePriceModal();
+			}
+		});
 
 		// Function to rebind platform option handlers
 		function rebindPlatformOptions() {
@@ -504,7 +952,7 @@
 			}
 		});
 
-		// Keep the old forEach for any existing handlers (for safety)
+		// Keep the old forEach for existing handlers (for safety)
 		platformOptions.forEach(option => {
 			option.addEventListener('click', (e) => {
 				e.preventDefault();
@@ -547,14 +995,19 @@
 			
 			const platformSlug = platformInput.value;
 			const categories = categoriesInput.value;
+			const contentTypes = contentTypesInput?.value || '';
 			const gender = genderInput?.value || '';
 			const region = regionInput?.value || '';
 			const followers = followersInput?.value || '';
+			const price = priceSelectionActive ? `${priceMinValue}-${priceMaxValue}` : '';
 			
 			// Build query parameters
 			let queryParams = new URLSearchParams();
 			if (categories) {
 				queryParams.append('categories', categories);
+			}
+			if (contentTypes) {
+				queryParams.append('contentTypes', contentTypes);
 			}
 			if (gender) {
 				queryParams.append('gender', gender);
@@ -564,6 +1017,9 @@
 			}
 			if (followers) {
 				queryParams.append('followers', followers);
+			}
+			if (price) {
+				queryParams.append('price', price);
 			}
 			
 			// Determine the action URL
@@ -643,6 +1099,8 @@
 			setAdvancedFromQuery(genderMenu, 'gender', urlParams.get('gender'));
 			setAdvancedFromQuery(regionMenu, 'region', urlParams.get('region'));
 			setAdvancedFromQuery(followersMenu, 'followers', urlParams.get('followers'));
+			setContentTypesFromQuery(urlParams.get('contentTypes'));
+			setPriceFromQuery(urlParams.get('price'));
 		}
 
 		// Load categories on page load

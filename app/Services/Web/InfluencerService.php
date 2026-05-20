@@ -6,6 +6,7 @@ namespace App\Services\Web;
 
 use App\Models\Influencer;
 use App\Models\InfluencerPlatformStat;
+use App\Models\Package;
 use App\Models\Review;
 use App\Models\User;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -221,6 +222,45 @@ final class InfluencerService
     }
 
     /**
+     * Get active package filters for the content type dropdown.
+     *
+     * @return Collection<int, array{value:string,label:string,price_label:string}>
+     */
+    public function getContentTypeFilters(): Collection
+    {
+        $packages = Package::query()
+            ->select(['id', 'name', 'base_price', 'currency', 'platform', 'influencer_id', 'is_active'])
+            ->orderByDesc('is_active')
+            ->orderByDesc('updated_at')
+            ->get();
+            
+
+        return $packages
+            ->sortBy(fn (Package $package): string => Str::lower((string) $package->name))
+            ->values()
+            ->map(function (Package $package): array {
+                return [
+                    'value' => (string) $package->id,
+                    'label' => (string) $package->name,
+                    'price_label' => $this->formatPackagePrice((string) $package->base_price, (string) $package->currency),
+                ];
+            });
+    }
+
+    /**
+     * Get min/max price bounds from active packages.
+     *
+     * @return array{min:float,max:float}
+     */
+    public function getPackagePriceRange(): array
+    {
+        return [
+            'min' => 50.0,
+            'max' => 3000.0,
+        ];
+    }
+
+    /**
      * Get paginated influencers, optionally filtered by a platform key.
      *
      * @return LengthAwarePaginator<int, array<string, mixed>>
@@ -265,7 +305,7 @@ final class InfluencerService
      *
      * @return LengthAwarePaginator<int, array<string, mixed>>
      */
-    public function paginateFeaturedInfluencers(int $perPage = 20): LengthAwarePaginator
+    public function paginateFeaturedInfluencers(int $perPage = 20, ?float $minPrice = null, ?float $maxPrice = null): LengthAwarePaginator
     {
         $paginator = Influencer::query()
             ->with([
@@ -275,6 +315,19 @@ final class InfluencerService
             ->where('is_featured', true)
             ->where('is_active', true)
             ->whereHas('user', fn ($q) => $q->where('is_active', true))
+            ->when($minPrice !== null || $maxPrice !== null, function (Builder $query) use ($minPrice, $maxPrice): void {
+                $query->whereHas('packages', function (Builder $packageQuery) use ($minPrice, $maxPrice): void {
+                    $packageQuery->where('is_active', true);
+
+                    if ($minPrice !== null) {
+                        $packageQuery->where('base_price', '>=', $minPrice);
+                    }
+
+                    if ($maxPrice !== null) {
+                        $packageQuery->where('base_price', '<=', $maxPrice);
+                    }
+                });
+            })
             ->orderByRaw('featured_priority IS NULL')
             ->orderBy('featured_priority')
             ->paginate($perPage)
@@ -300,7 +353,7 @@ final class InfluencerService
     }
 
     /**
-     * @param  array{categories?:array<int, int|string>,sort?:string,gender?:string,region?:string,followers?:string}  $filters
+    * @param  array{categories?:array<int, int|string>,contentTypes?:array<int, int|string>,sort?:string,gender?:string,region?:string,followers?:string,price?:string}  $filters
      */
     public function paginateInfluencers(?string $platformKey, int $perPage = 20, array $filters = []): LengthAwarePaginator
     {
@@ -311,14 +364,19 @@ final class InfluencerService
             fn ($value): int => (int) $value,
             $filters['categories'] ?? []
         ), fn (int $id): bool => $id > 0));
+        $selectedContentTypeIds = array_values(array_filter(array_map(
+            fn ($value): int => (int) $value,
+            $filters['contentTypes'] ?? []
+        ), fn (int $id): bool => $id > 0));
         $sort = trim((string) ($filters['sort'] ?? 'followers_desc'));
         $gender = Str::of((string) ($filters['gender'] ?? ''))->lower()->trim()->value();
         $gender = in_array($gender, ['male', 'female', 'other'], true) ? $gender : '';
         $region = trim((string) ($filters['region'] ?? ''));
         [$minFollowers, $maxFollowers] = $this->resolveFollowerRange((string) ($filters['followers'] ?? ''));
+        [$minPrice, $maxPrice] = $this->resolvePriceRange((string) ($filters['price'] ?? ''));
 
         if ($normalizedPlatformKey === 'featured') {
-            return $this->paginateFeaturedInfluencers($perPage);
+            return $this->paginateFeaturedInfluencers($perPage, $minPrice, $maxPrice);
         }
 
         // Platform-specific query (when a specific platform is selected)
@@ -329,13 +387,15 @@ final class InfluencerService
                     'influencer.user:id,name,slug,city,country,profile_image_path,is_active',
                 ])
                 ->where('is_active', true)
-                ->whereHas('influencer', function ($query) use ($selectedCategoryIds) {
+                ->whereHas('influencer', function ($query) use ($selectedCategoryIds, $selectedContentTypeIds, $minPrice, $maxPrice) {
                     $query->where('is_active', true)
                         ->whereHas('user', fn ($userQuery) => $userQuery->where('is_active', true));
 
                     if ($selectedCategoryIds !== []) {
                         $query->whereHas('categories', fn ($categoryQuery) => $categoryQuery->whereIn('categories.id', $selectedCategoryIds));
                     }
+
+                    $this->applyPackageFilters($query, $selectedContentTypeIds, $minPrice, $maxPrice);
                 })
                 ->whereHas('influencer.user', function (Builder $query) use ($gender, $region): void {
                     if ($gender !== '') {
@@ -437,6 +497,8 @@ final class InfluencerService
                 $catQuery->whereIn('categories.id', $selectedCategoryIds);
             });
         }
+
+        $this->applyPackageFilters($query, $selectedContentTypeIds, $minPrice, $maxPrice);
 
         // Follower range filter: ensure influencer has at least one active platform stat within the range
         $query->whereHas('platformStats', function (Builder $ps) use ($minFollowers, $maxFollowers) {
@@ -701,6 +763,69 @@ final class InfluencerService
         }
 
         return [null, null];
+    }
+
+    /**
+     * Resolve a package price range filter to min/max bounds.
+     *
+     * @return array{0:?float,1:?float}
+     */
+    private function resolvePriceRange(string $value): array
+    {
+        $normalized = trim($value);
+
+        if ($normalized === '') {
+            return [null, null];
+        }
+
+        if (preg_match('/^(\d+(?:\.\d+)?)\-(\d+(?:\.\d+)?)$/', $normalized, $matches) === 1) {
+            $min = max(0, (float) $matches[1]);
+            $max = max($min, (float) $matches[2]);
+
+            return [$min, $max >= 3000.0 ? null : $max];
+        }
+
+        return [null, null];
+    }
+
+    /**
+     * Apply package-based filters to an influencer query.
+     *
+     * @param array<int, int> $selectedContentTypeIds
+     */
+    private function applyPackageFilters(Builder $query, array $selectedContentTypeIds, ?float $minPrice, ?float $maxPrice): void
+    {
+        if ($selectedContentTypeIds === [] && $minPrice === null && $maxPrice === null) {
+            return;
+        }
+
+        $query->whereHas('packages', function (Builder $packageQuery) use ($selectedContentTypeIds, $minPrice, $maxPrice): void {
+            $packageQuery->where('is_active', true);
+
+            if ($selectedContentTypeIds !== []) {
+                $packageQuery->whereIn('packages.id', $selectedContentTypeIds);
+            }
+
+            if ($minPrice !== null) {
+                $packageQuery->where('base_price', '>=', $minPrice);
+            }
+
+            if ($maxPrice !== null) {
+                $packageQuery->where('base_price', '<=', $maxPrice);
+            }
+        });
+    }
+
+    /**
+     * Format a package price for display.
+     */
+    private function formatPackagePrice(string $price, string $currency): string
+    {
+        $amount = (float) $price;
+        $currencyCode = strtoupper(trim($currency));
+        $symbol = $currencyCode === '' || $currencyCode === 'USD' ? '$' : $currencyCode.' ';
+
+        return $symbol . number_format($amount, $amount === (float) (int) $amount ? 0 : 2);
     }
 
     /**
