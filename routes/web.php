@@ -59,6 +59,7 @@ use App\Http\Controllers\Frontend\PaymentAuditController as FrontendPaymentAudit
 use App\Http\Controllers\Frontend\PaymentQueueController as FrontendPaymentQueueController;
 use App\Http\Controllers\Frontend\PaymentStatementController as FrontendPaymentStatementController;
 use App\Http\Controllers\Frontend\PayPalPaymentController;
+use App\Http\Controllers\Frontend\WishlistController;
 use App\Http\Controllers\Frontend\StaticPagesController;
 use App\Http\Controllers\Frontend\SupportTicketController as FrontendSupportTicketController;
 use App\Http\Controllers\InfluencerProfileController;
@@ -216,6 +217,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Frontend Content Library
     Route::get('/content-library', [ContentLibraryController::class, 'index'])->name('frontend.content-library');
 
+    // Frontend Wishlist
+    Route::get('/wishlist', [WishlistController::class, 'page'])->name('frontend.wishlist.index');
+
     // Account Management (shared for both brand and Influencer)
     Route::get('/account/{slug}', [FrontendAccountController::class, 'edit'])->name('frontend.account.edit');
     Route::post('/account/{slug}/details', [FrontendAccountController::class, 'updateDetails'])->name('frontend.account.details.update');
@@ -275,6 +279,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/clear-all', [FrontendNotificationController::class, 'clearAll'])->name('clear-all');
         Route::get('/{notification}/show', [FrontendNotificationController::class, 'show'])->name('show');
     });
+});
+
+Route::middleware(['auth'])->prefix('wishlist')->name('frontend.wishlists.')->group(function () {
+    Route::get('/status', [WishlistController::class, 'status'])->name('status');
+    Route::get('/lists', [WishlistController::class, 'index'])->name('index');
+    Route::post('/lists', [WishlistController::class, 'store'])->name('store');
+    Route::post('/lists/{wishlist}/items', [WishlistController::class, 'storeItem'])->name('items.store');
+    Route::delete('/lists/{wishlist}/items/{influencer}', [WishlistController::class, 'destroyItem'])->name('items.destroy');
+    Route::delete('/influencers/{influencer}', [WishlistController::class, 'destroyInfluencer'])->name('influencers.destroy');
 });
 
 /*

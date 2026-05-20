@@ -35,6 +35,494 @@ import "./frontend/campaigns-create";
 import "./frontend/campaigns-show";
 import "./frontend/campaigns-negotiation-modal";
 
+document.addEventListener("DOMContentLoaded", () => {
+    const modal = document.querySelector("[data-wishlist-modal]");
+
+    if (!modal) {
+        return;
+    }
+
+    const modalPanel = modal.querySelector("[data-wishlist-modal-panel]");
+    const modalTitle = modal.querySelector("[data-wishlist-modal-title]");
+    const defaultView = modal.querySelector("[data-wishlist-modal-default-view]");
+    const createView = modal.querySelector("[data-wishlist-modal-create-view]");
+    const backdrop = modal.querySelector("[data-wishlist-modal-backdrop]");
+    const closeButton = modal.querySelector("[data-wishlist-modal-close]");
+    const createListButton = modal.querySelector("[data-wishlist-create-list]");
+    const backToListsButton = modal.querySelector("[data-wishlist-back-to-lists]");
+    const createInput = modal.querySelector("[data-wishlist-create-input]");
+    const createSubmit = modal.querySelector("[data-wishlist-create-submit]");
+    const existingListsContainer = modal.querySelector("[data-wishlist-existing-lists]");
+    const emptyState = modal.querySelector("[data-wishlist-empty-state]");
+    const loadingState = modal.querySelector("[data-wishlist-loading-state]");
+    const previewImage = modal.querySelector("[data-wishlist-preview-image]");
+    const previewPlaceholder = modal.querySelector("[data-wishlist-preview-placeholder]");
+
+    const isAuthenticated = modal.dataset.wishlistAuthenticated === "true";
+    const loginUrl = modal.dataset.wishlistLoginUrl || "/login";
+    const statusUrl = modal.dataset.wishlistStatusUrl || "";
+    const listsUrl = modal.dataset.wishlistListsUrl || "";
+    const baseListsUrl = modal.dataset.wishlistBaseUrl || "";
+    const removeInfluencerUrl = "/wishlist/influencers";
+
+    let activeTrigger = null;
+    let activeInfluencerId = null;
+    let currentWishlistedIds = new Set();
+    let currentLists = [];
+    let isLoadingLists = false;
+    let loginRedirectTimer = null;
+
+    const getInfluencerIdFromTrigger = (trigger) => {
+        const card = trigger.closest(".influencer-card");
+        const rawId = card?.dataset.influencerId || trigger.dataset.influencerId || "";
+        const influencerId = Number(rawId);
+
+        return Number.isFinite(influencerId) && influencerId > 0 ? influencerId : null;
+    };
+
+    const setBodyScroll = (lock) => {
+        document.body.style.overflow = lock ? "hidden" : "";
+    };
+
+    const setTriggerState = (trigger, isActive) => {
+        if (!trigger) {
+            return;
+        }
+
+        trigger.dataset.wishlistActive = isActive ? "true" : "false";
+        trigger.setAttribute("aria-pressed", isActive ? "true" : "false");
+
+        const heart = trigger.querySelector(".wishlist-heart-icon");
+        if (!heart) {
+            return;
+        }
+
+        heart.classList.toggle("fill-none", !isActive);
+        heart.classList.toggle("fill-red-500", isActive);
+        heart.classList.toggle("stroke-red-500", isActive);
+    };
+
+    const setPreviewImage = (src) => {
+        if (!previewImage || !previewPlaceholder) {
+            return;
+        }
+
+        if (src) {
+            previewImage.src = src;
+            previewImage.classList.remove("hidden");
+            previewPlaceholder.classList.add("hidden");
+            return;
+        }
+
+        previewImage.removeAttribute("src");
+        previewImage.classList.add("hidden");
+        previewPlaceholder.classList.remove("hidden");
+    };
+
+    const setMode = (mode) => {
+        const createMode = mode === "create";
+
+        defaultView?.classList.toggle("hidden", createMode);
+        createView?.classList.toggle("hidden", !createMode);
+
+        if (modalTitle) {
+            modalTitle.textContent = createMode ? "Name Your List" : "Add to List";
+        }
+
+        if (createMode) {
+            window.requestAnimationFrame(() => {
+                createInput?.focus();
+                createInput?.select?.();
+            });
+        }
+    };
+
+    const fetchJson = async (url, options = {}) => {
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+
+        const response = await fetch(url, {
+            headers: {
+                Accept: "application/json",
+                "Content-Type": "application/json",
+                ...(csrfToken ? { "X-CSRF-TOKEN": csrfToken } : {}),
+                ...(options.headers || {}),
+            },
+            ...options,
+        });
+
+        const data = await response.json().catch(() => ({}));
+
+        if (!response.ok) {
+            throw new Error(data.message || "Something went wrong.");
+        }
+
+        return data;
+    };
+
+    const requireLogin = () => {
+        window.toast?.warning("Only logged in user can add to wishlist");
+
+        if (loginRedirectTimer) {
+            window.clearTimeout(loginRedirectTimer);
+        }
+
+        loginRedirectTimer = window.setTimeout(() => {
+            window.location.href = loginUrl;
+        }, 1200);
+    };
+
+    const renderLists = () => {
+        if (!existingListsContainer || !emptyState || !loadingState) {
+            return;
+        }
+
+        loadingState.classList.add("hidden");
+        existingListsContainer.innerHTML = "";
+
+        if (!currentLists.length) {
+            existingListsContainer.classList.add("hidden");
+            emptyState.classList.remove("hidden");
+            return;
+        }
+
+        emptyState.classList.add("hidden");
+        existingListsContainer.classList.remove("hidden");
+
+        currentLists.forEach((list) => {
+            const isIncluded = Boolean(list.contains_influencer);
+            const button = document.createElement("button");
+            button.type = "button";
+            button.className = "wishlist-list-button w-full flex items-center gap-4 rounded-2xl bg-gray-50 p-4 transition-colors hover:bg-gray-100 dark:bg-gray-800/50 dark:hover:bg-gray-800";
+            button.dataset.wishlistListId = String(list.id);
+            button.dataset.wishlistContainsInfluencer = isIncluded ? "true" : "false";
+
+            button.innerHTML = `
+                <div class="flex h-14 w-14 items-center justify-center overflow-hidden rounded-xl bg-gray-200 dark:bg-gray-700">
+                    ${list.preview_image ? `<img src="${list.preview_image}" alt="${list.name}" class="h-full w-full object-cover" onerror="this.src='/default.webp'"/>` : `<svg class="h-6 w-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                    </svg>`}
+                </div>
+                <div class="flex-1 text-left">
+                    <p class="text-lg font-bold text-gray-900 dark:text-white">${list.name}</p>
+                    <p class="text-sm text-gray-500">${list.items_count} influencers</p>
+                </div>
+                <span class="rounded-full px-3 py-1 text-xs font-semibold ${isIncluded ? 'bg-red-100 text-red-700 dark:bg-red-500/15 dark:text-red-300' : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300'}">
+                    ${isIncluded ? 'Remove' : 'Add'}
+                </span>
+            `;
+
+            button.addEventListener("click", () => {
+                void toggleListMembership(list.id, isIncluded);
+            });
+
+            existingListsContainer.appendChild(button);
+        });
+    };
+
+    const loadListsForInfluencer = async (influencerId) => {
+        if (!isAuthenticated || !listsUrl || !influencerId) {
+            return;
+        }
+
+        if (isLoadingLists) {
+            return;
+        }
+
+        isLoadingLists = true;
+        loadingState?.classList.remove("hidden");
+
+        try {
+            const url = new URL(listsUrl, window.location.origin);
+            url.searchParams.set("influencer_id", String(influencerId));
+
+            const data = await fetchJson(url.toString(), { method: "GET" });
+
+            currentLists = Array.isArray(data.wishlists) ? data.wishlists : [];
+            renderLists();
+        } catch (error) {
+            console.error("Failed to load wishlist lists:", error);
+            window.toast?.error(error.message || "Failed to load your lists");
+        } finally {
+            isLoadingLists = false;
+            loadingState?.classList.add("hidden");
+        }
+    };
+
+    const refreshWishlistStatus = async () => {
+        if (!isAuthenticated || !statusUrl) {
+            return;
+        }
+
+        try {
+            const data = await fetchJson(statusUrl, { method: "GET" });
+            currentWishlistedIds = new Set((data.wishlisted_influencer_ids || []).map((value) => Number(value)));
+
+            document.querySelectorAll("[data-wishlist-trigger]").forEach((trigger) => {
+                const influencerId = getInfluencerIdFromTrigger(trigger);
+                if (!influencerId) {
+                    return;
+                }
+
+                setTriggerState(trigger, currentWishlistedIds.has(influencerId));
+            });
+        } catch (error) {
+            console.error("Failed to load wishlist status:", error);
+        }
+    };
+
+    const openModal = (trigger) => {
+        activeTrigger = trigger;
+        activeInfluencerId = getInfluencerIdFromTrigger(trigger);
+
+        const card = trigger.closest(".influencer-card");
+        const image = trigger.dataset.wishlistImage || card?.querySelector("img")?.src || "";
+
+        setPreviewImage(image);
+        setMode("default");
+        modal.classList.remove("hidden");
+        modal.classList.add("flex");
+        modal.setAttribute("aria-hidden", "false");
+
+        if (modalPanel) {
+            requestAnimationFrame(() => {
+                modalPanel.classList.remove("scale-95", "opacity-0");
+                modalPanel.classList.add("scale-100", "opacity-100");
+            });
+        }
+
+        setBodyScroll(true);
+        void loadListsForInfluencer(activeInfluencerId);
+    };
+
+    const closeModal = () => {
+        if (modalPanel) {
+            modalPanel.classList.add("scale-95", "opacity-0");
+            modalPanel.classList.remove("scale-100", "opacity-100");
+        }
+
+        modal.setAttribute("aria-hidden", "true");
+        setBodyScroll(false);
+
+        window.setTimeout(() => {
+            modal.classList.add("hidden");
+            modal.classList.remove("flex");
+            activeTrigger = null;
+            activeInfluencerId = null;
+            setPreviewImage("");
+            createInput.value = "";
+            setMode("default");
+        }, 300);
+    };
+
+    const toggleListMembership = async (wishlistId, isIncluded) => {
+        if (!isAuthenticated) {
+            requireLogin();
+            return;
+        }
+
+        if (!activeInfluencerId || !baseListsUrl) {
+            return;
+        }
+
+        const endpoint = isIncluded
+            ? `${baseListsUrl}/${wishlistId}/items/${activeInfluencerId}`
+            : `${baseListsUrl}/${wishlistId}/items`;
+
+        try {
+            await fetchJson(endpoint, {
+                method: isIncluded ? "DELETE" : "POST",
+                body: isIncluded ? null : JSON.stringify({ influencer_id: activeInfluencerId }),
+            });
+
+            window.toast?.success(isIncluded ? "Removed from list" : "Added to list");
+            await loadListsForInfluencer(activeInfluencerId);
+            await refreshWishlistStatus();
+            closeModal();
+        } catch (error) {
+            console.error("Failed to update wishlist:", error);
+            window.toast?.error(error.message || "Could not update the list");
+        }
+    };
+
+    const removeInfluencerFromAllLists = async (trigger, influencerId) => {
+        if (!isAuthenticated) {
+            requireLogin();
+            return;
+        }
+
+        try {
+            await fetchJson(`${removeInfluencerUrl}/${influencerId}`, {
+                method: "DELETE",
+            });
+
+            setTriggerState(trigger, false);
+            currentWishlistedIds.delete(influencerId);
+            window.toast?.success("Removed from wishlist");
+            await refreshWishlistStatus();
+            closeModal();
+        } catch (error) {
+            console.error("Failed to remove influencer from wishlist:", error);
+            window.toast?.error(error.message || "Could not remove from wishlist");
+        }
+    };
+
+    const createWishlist = async () => {
+        if (!isAuthenticated) {
+            requireLogin();
+            return;
+        }
+
+        const listName = createInput.value.trim();
+
+        if (!listName) {
+            createInput.focus();
+            return;
+        }
+
+        if (!baseListsUrl) {
+            return;
+        }
+
+        try {
+            await fetchJson(baseListsUrl, {
+                method: "POST",
+                body: JSON.stringify({
+                    name: listName,
+                    influencer_id: activeInfluencerId,
+                }),
+            });
+
+            window.toast?.success(`Created ${listName}`);
+            createInput.value = "";
+            await loadListsForInfluencer(activeInfluencerId);
+            await refreshWishlistStatus();
+            closeModal();
+        } catch (error) {
+            console.error("Failed to create wishlist:", error);
+            window.toast?.error(error.message || "Failed to create list");
+        }
+    };
+
+    document.addEventListener("click", (event) => {
+        const trigger = event.target.closest("[data-wishlist-trigger]");
+
+        if (trigger) {
+            event.preventDefault();
+            event.stopPropagation();
+
+            if (!isAuthenticated) {
+                requireLogin();
+                return;
+            }
+
+            const influencerId = getInfluencerIdFromTrigger(trigger);
+            if (!influencerId) {
+                return;
+            }
+
+            if (trigger.dataset.wishlistActive === "true") {
+                activeTrigger = trigger;
+                activeInfluencerId = influencerId;
+                void removeInfluencerFromAllLists(trigger, influencerId);
+                return;
+            }
+
+            activeTrigger = trigger;
+            activeInfluencerId = influencerId;
+            openModal(trigger);
+        }
+    });
+
+    createListButton?.addEventListener("click", () => setMode("create"));
+    backToListsButton?.addEventListener("click", () => setMode("default"));
+    createSubmit?.addEventListener("click", () => {
+        void createWishlist();
+    });
+
+    createInput?.addEventListener("keydown", (event) => {
+        if (event.key === "Enter") {
+            event.preventDefault();
+            void createWishlist();
+        }
+    });
+
+    closeButton?.addEventListener("click", closeModal);
+    backdrop?.addEventListener("click", closeModal);
+
+    document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape" && !modal.classList.contains("hidden")) {
+            closeModal();
+        }
+    });
+
+    void refreshWishlistStatus();
+});
+
+document.addEventListener("click", async (event) => {
+    const removeButton = event.target.closest(".js-wishlist-remove");
+
+    if (!removeButton) {
+        return;
+    }
+
+    event.preventDefault();
+
+    const removeUrl = removeButton.dataset.removeUrl;
+    const card = removeButton.closest("[data-wishlist-item-card]");
+    const listSection = removeButton.closest("[data-wishlist-list-section]");
+
+    if (!removeUrl || !card || !listSection) {
+        return;
+    }
+
+    try {
+        const response = await fetch(removeUrl, {
+            method: "DELETE",
+            headers: {
+                Accept: "application/json",
+                "X-Requested-With": "XMLHttpRequest",
+                ...(document.querySelector('meta[name="csrf-token"]')?.getAttribute("content")
+                    ? {
+                          "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]')?.getAttribute("content"),
+                      }
+                    : {}),
+            },
+        });
+
+        const data = await response.json().catch(() => ({}));
+
+        if (!response.ok) {
+            throw new Error(data.message || "Failed to remove wishlist item");
+        }
+
+        card.remove();
+
+        const countLabel = listSection.querySelector("[data-wishlist-list-count]");
+        if (countLabel) {
+            const currentCount = Number(countLabel.textContent || 0);
+            const nextCount = Number.isFinite(currentCount) ? Math.max(0, currentCount - 1) : 0;
+            countLabel.textContent = String(nextCount);
+        }
+
+        const remainingCards = listSection.querySelectorAll("[data-wishlist-item-card]");
+        if (remainingCards.length === 0) {
+            listSection.remove();
+
+            const wishlistPage = document.querySelector("[data-wishlist-page]");
+            const sections = wishlistPage?.querySelectorAll("[data-wishlist-list-section]") || [];
+            if (sections.length === 0) {
+                const emptyState = wishlistPage?.querySelector("[data-wishlist-page-empty]");
+                emptyState?.classList.remove("hidden");
+            }
+        }
+
+        window.toast?.success(data.message || "Removed from wishlist");
+    } catch (error) {
+        console.error("Failed to remove wishlist item:", error);
+        window.toast?.error(error.message || "Could not remove wishlist item");
+    }
+});
+
 Alpine.plugin(collapse);
 
 window.Alpine = Alpine;

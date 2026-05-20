@@ -472,6 +472,10 @@
 
 		<x-confirmation-modal />
 
+		@once
+			@include('components.frontend.partials.wishlist-modal')
+		@endonce
+
 		@php
 			$validationError = null;
 			$errorsBag = session()->get('errors') ?: $errors ?? null;

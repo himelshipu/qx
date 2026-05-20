@@ -48,6 +48,7 @@
 	$isInfluencerUser = $userType === 'influencer';
 	$brandPayoutUrl = route('frontend.orders.index');
 	$influencerPaymentUrl = route('payment-statements.index');
+	$wishlistUrl = route('frontend.wishlist.index');
 @endphp
 
 
@@ -172,6 +173,11 @@
 											x-text="totalItemCount"></span>
 									</a>
 
+									<a href="{{ $wishlistUrl }}"
+										class="px-7 py-3.5 text-[15px] font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors flex items-center justify-between">
+										<span><i class="fas fa-heart mr-2"></i>Wishlist</span>
+									</a>
+
 									<a href="{{ route('frontend.orders.index') }}"
 										class="px-7 py-3.5 text-[15px] font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
 										<i class="fas fa-receipt mr-2"></i>Orders
@@ -205,6 +211,11 @@
 									<a href="{{ route('frontend.account.edit', Auth::user()->slug) }}"
 										class="px-7 py-3.5 text-[15px] font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
 										<i class="fas fa-cog mr-2"></i>Account
+									</a>
+
+									<a href="{{ $wishlistUrl }}"
+										class="px-7 py-3.5 text-[15px] font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors flex items-center justify-between">
+										<span><i class="fas fa-heart mr-2"></i>Wishlist</span>
 									</a>
 
 									<a href="{{ route('frontend.orders.index') }}"

@@ -185,6 +185,20 @@
 					@endforeach
 				</div>
 				<div class="flex items-center gap-2">
+					<button type="button"
+						class="wishlist-btn flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm font-semibold text-purple-700 dark:text-purple-300 hover:bg-purple-50 dark:hover:bg-gray-800 transition"
+						data-wishlist-trigger
+						data-wishlist-active="false"
+						data-influencer-id="{{ $influencer->id }}"
+						data-wishlist-image="{{ $profileImageUrl }}"
+						aria-label="Add {{ $displayName }} to wishlist"
+						aria-pressed="false">
+						<svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 wishlist-heart-icon fill-none stroke-current stroke-[2px]" viewBox="0 0 24 24">
+							<path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l8.84-8.84 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+						</svg>
+						Save
+					</button>
+
 					<button id="share-btn" type="button"
 						class="flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm font-semibold text-purple-700 dark:text-purple-300 hover:bg-purple-50 dark:hover:bg-gray-800 transition"
 						onclick="copyProfileUrl(event); return false;">
@@ -806,6 +820,20 @@
 								class="group snap-start shrink-0 w-[80%] sm:w-[44%] lg:w-[31%] overflow-hidden font-sans cursor-pointer influencer-card block"
 								data-influencer-id="{{ $similar['id'] }}">
 								<div class="relative overflow-hidden rounded-xl">
+									<button
+										type="button"
+										class="wishlist-btn absolute top-3 right-3 z-30 p-1.5 text-white transition-all duration-300 hover:scale-110 drop-shadow-md"
+										data-wishlist-trigger
+										data-wishlist-active="false"
+										data-influencer-id="{{ $similar['id'] }}"
+										data-wishlist-image="{{ image_url($similar['image_url']) }}"
+										aria-label="Add {{ $similar['name'] }} to wishlist"
+										aria-pressed="false">
+										<svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 wishlist-heart-icon fill-none stroke-current stroke-[2px]" viewBox="0 0 24 24">
+											<path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l8.84-8.84 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+										</svg>
+									</button>
+
 									<img src="{{ image_url($similar['image_url']) }}"
 										class="w-full h-56 object-cover transition-transform duration-500 ease-out group-hover:scale-110"
 										alt="{{ $similar['name'] }}">
