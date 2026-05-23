@@ -6,7 +6,6 @@ namespace App\Services\Web;
 
 use App\Models\Influencer;
 use App\Models\InfluencerPlatformStat;
-use App\Models\Package;
 use App\Models\Review;
 use App\Models\User;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -53,6 +52,43 @@ final class InfluencerService
         'linkedin' => ['label' => 'LinkedIn', 'slug' => 'linkedin'],
         'x' => ['label' => 'X', 'slug' => 'x'],
         'other' => ['label' => 'Other', 'slug' => 'other'],
+    ];
+    
+    /**
+     * Platform-scoped content type definitions derived from package name keywords.
+     *
+     * @var array<string, array<int, array{value:string,label:string,keywords:array<int, string>}>>
+     */
+    private const CONTENT_TYPE_CONFIG = [
+        'facebook' => [
+            ['value' => 'posts', 'label' => 'Facebook Posts', 'keywords' => ['post', 'posts', 'feed post', 'video', 'videos']],
+        ],
+        'instagram' => [
+            ['value' => 'stories', 'label' => 'Instagram Stories', 'keywords' => ['story', 'stories']],
+            ['value' => 'reels', 'label' => 'Instagram Reels', 'keywords' => ['reel', 'reels']],
+            ['value' => 'photo-feed-post', 'label' => 'Instagram Photo Feed Post', 'keywords' => ['photo feed post', 'feed post', 'photo post']],
+        ],
+        'tiktok' => [
+            ['value' => 'stories', 'label' => 'TikTok Stories', 'keywords' => ['story', 'stories']],
+            ['value' => 'videos', 'label' => 'TikTok Videos', 'keywords' => ['video', 'videos']],
+            ['value' => 'live', 'label' => 'TikTok Live', 'keywords' => ['live']],
+        ],
+        'youtube' => [
+            ['value' => 'shorts', 'label' => 'YouTube Shorts', 'keywords' => ['short', 'shorts']],
+            ['value' => 'videos', 'label' => 'YouTube Videos', 'keywords' => ['video', 'videos']],
+        ],
+        'linkedin' => [
+            ['value' => 'posts', 'label' => 'LinkedIn Posts', 'keywords' => ['post', 'posts', 'video', 'videos']],
+        ],
+        'x' => [
+            ['value' => 'posts', 'label' => 'X Posts', 'keywords' => ['post', 'posts', 'tweet', 'tweets']],
+        ],
+        'ugc' => [
+            ['value' => 'content', 'label' => 'UGC Content', 'keywords' => ['ugc', 'content']],
+        ],
+        'other' => [
+            ['value' => 'content', 'label' => 'Other Content', 'keywords' => ['content']],
+        ],
     ];
 
     /**
@@ -222,29 +258,37 @@ final class InfluencerService
     }
 
     /**
-     * Get active package filters for the content type dropdown.
+     * Get platform-specific content type filters.
      *
-     * @return Collection<int, array{value:string,label:string,price_label:string}>
+     * The dropdown is driven by these definitions directly; package names are used later
+     * when matching influencers, not when deciding which options to show.
+     *
+     * @return Collection<int, array{value:string,label:string,keywords:array<int, string>}>
      */
-    public function getContentTypeFilters(): Collection
+    public function getContentTypeFilters(?string $platformKey = null): Collection
     {
-        $packages = Package::query()
-            ->select(['id', 'name', 'base_price', 'currency', 'platform', 'influencer_id', 'is_active'])
-            ->orderByDesc('is_active')
-            ->orderByDesc('updated_at')
-            ->get();
-            
+        $normalizedPlatformKey = $platformKey !== null ? $this->normalizePlatformKey($platformKey) : null;
+        $definitions = $normalizedPlatformKey !== null
+            ? self::CONTENT_TYPE_CONFIG[$normalizedPlatformKey] ?? []
+            : [];
 
-        return $packages
-            ->sortBy(fn (Package $package): string => Str::lower((string) $package->name))
-            ->values()
-            ->map(function (Package $package): array {
-                return [
-                    'value' => (string) $package->id,
-                    'label' => (string) $package->name,
-                    'price_label' => $this->formatPackagePrice((string) $package->base_price, (string) $package->currency),
-                ];
-            });
+        return collect($definitions)->values();
+    }
+
+    /**
+     * Get all content type filters grouped by platform for client-side dependent menus.
+     *
+     * @return array<string, array<int, array{value:string,label:string,keywords:array<int, string>}>>
+     */
+    public function getContentTypeFiltersByPlatform(): array
+    {
+        $filters = [];
+
+        foreach (array_keys(self::CONTENT_TYPE_CONFIG) as $platformKey) {
+            $filters[$platformKey] = collect(self::CONTENT_TYPE_CONFIG[$platformKey] ?? [])->values()->all();
+        }
+
+        return $filters;
     }
 
     /**
@@ -353,7 +397,7 @@ final class InfluencerService
     }
 
     /**
-    * @param  array{categories?:array<int, int|string>,contentTypes?:array<int, int|string>,sort?:string,gender?:string,region?:string,followers?:string,price?:string}  $filters
+    * @param  array{categories?:array<int, int|string>,contentTypes?:array<int, string>,sort?:string,gender?:string,region?:string,followers?:string,price?:string}  $filters
      */
     public function paginateInfluencers(?string $platformKey, int $perPage = 20, array $filters = []): LengthAwarePaginator
     {
@@ -364,10 +408,10 @@ final class InfluencerService
             fn ($value): int => (int) $value,
             $filters['categories'] ?? []
         ), fn (int $id): bool => $id > 0));
-        $selectedContentTypeIds = array_values(array_filter(array_map(
-            fn ($value): int => (int) $value,
+        $selectedContentTypeKeys = array_values(array_filter(array_map(
+            fn ($value): string => Str::of((string) $value)->lower()->trim()->value(),
             $filters['contentTypes'] ?? []
-        ), fn (int $id): bool => $id > 0));
+        ), fn (string $key): bool => $key !== ''));
         $sort = trim((string) ($filters['sort'] ?? 'followers_desc'));
         $gender = Str::of((string) ($filters['gender'] ?? ''))->lower()->trim()->value();
         $gender = in_array($gender, ['male', 'female', 'other'], true) ? $gender : '';
@@ -387,7 +431,7 @@ final class InfluencerService
                     'influencer.user:id,name,slug,city,country,profile_image_path,is_active',
                 ])
                 ->where('is_active', true)
-                ->whereHas('influencer', function ($query) use ($selectedCategoryIds, $selectedContentTypeIds, $minPrice, $maxPrice) {
+                ->whereHas('influencer', function ($query) use ($selectedCategoryIds, $normalizedPlatformKey, $selectedContentTypeKeys, $minPrice, $maxPrice) {
                     $query->where('is_active', true)
                         ->whereHas('user', fn ($userQuery) => $userQuery->where('is_active', true));
 
@@ -395,7 +439,7 @@ final class InfluencerService
                         $query->whereHas('categories', fn ($categoryQuery) => $categoryQuery->whereIn('categories.id', $selectedCategoryIds));
                     }
 
-                    $this->applyPackageFilters($query, $selectedContentTypeIds, $minPrice, $maxPrice);
+                    $this->applyPackageFilters($query, $normalizedPlatformKey, $selectedContentTypeKeys, $minPrice, $maxPrice);
                 })
                 ->whereHas('influencer.user', function (Builder $query) use ($gender, $region): void {
                     if ($gender !== '') {
@@ -497,19 +541,6 @@ final class InfluencerService
                 $catQuery->whereIn('categories.id', $selectedCategoryIds);
             });
         }
-
-        $this->applyPackageFilters($query, $selectedContentTypeIds, $minPrice, $maxPrice);
-
-        // Follower range filter: ensure influencer has at least one active platform stat within the range
-        $query->whereHas('platformStats', function (Builder $ps) use ($minFollowers, $maxFollowers) {
-            $ps->where('is_active', true);
-            if ($minFollowers !== null) {
-                $ps->where('follower_count', '>=', $minFollowers);
-            }
-            if ($maxFollowers !== null) {
-                $ps->where('follower_count', '<=', $maxFollowers);
-            }
-        });
 
         // Sorting
         $bestFollowerSub = DB::raw('(SELECT ips.follower_count FROM influencer_platform_stats ips WHERE ips.influencer_id = influencers.id AND ips.is_active = true ORDER BY ips.follower_count DESC LIMIT 1)');
@@ -791,19 +822,45 @@ final class InfluencerService
     /**
      * Apply package-based filters to an influencer query.
      *
-     * @param array<int, int> $selectedContentTypeIds
+     * @param array<int, string> $selectedContentTypeKeys
      */
-    private function applyPackageFilters(Builder $query, array $selectedContentTypeIds, ?float $minPrice, ?float $maxPrice): void
+    private function applyPackageFilters(Builder $query, string $platformKey, array $selectedContentTypeKeys, ?float $minPrice, ?float $maxPrice): void
     {
-        if ($selectedContentTypeIds === [] && $minPrice === null && $maxPrice === null) {
+        if ($selectedContentTypeKeys === [] && $minPrice === null && $maxPrice === null) {
             return;
         }
 
-        $query->whereHas('packages', function (Builder $packageQuery) use ($selectedContentTypeIds, $minPrice, $maxPrice): void {
+        $contentTypeDefinitions = $this->getContentTypeFilters($platformKey)
+            ->keyBy(fn (array $definition): string => $definition['value']);
+
+        $query->whereHas('packages', function (Builder $packageQuery) use ($contentTypeDefinitions, $platformKey, $selectedContentTypeKeys, $minPrice, $maxPrice): void {
             $packageQuery->where('is_active', true);
 
-            if ($selectedContentTypeIds !== []) {
-                $packageQuery->whereIn('packages.id', $selectedContentTypeIds);
+            $packageQuery->where('platform', $platformKey);
+
+            if ($selectedContentTypeKeys !== []) {
+                $selectedDefinitions = collect($selectedContentTypeKeys)
+                    ->map(fn (string $contentTypeKey): ?array => $contentTypeDefinitions->get($contentTypeKey))
+                    ->filter()
+                    ->values();
+
+                if ($selectedDefinitions->isNotEmpty()) {
+                    $packageQuery->where(function (Builder $contentTypeQuery) use ($selectedDefinitions): void {
+                        foreach ($selectedDefinitions as $definition) {
+                            $contentTypeQuery->orWhere(function (Builder $keywordQuery) use ($definition): void {
+                                $keywords = array_values(array_filter(array_map(
+                                    fn ($keyword): string => Str::lower(trim((string) $keyword)),
+                                    $definition['keywords'] ?? []
+                                ), fn (string $keyword): bool => $keyword !== ''));
+
+                                foreach ($keywords as $index => $keyword) {
+                                    $method = $index === 0 ? 'where' : 'orWhere';
+                                    $keywordQuery->{$method}('name', 'like', '%' . $keyword . '%');
+                                }
+                            });
+                        }
+                    });
+                }
             }
 
             if ($minPrice !== null) {

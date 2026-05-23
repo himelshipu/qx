@@ -47,7 +47,10 @@ class InfluencersController extends Controller
             $categories  = Category::whereIn('id', $categoryIds)->get();
         }
 
-        $contentTypeIds = array_values(array_unique(array_filter(array_map('intval', explode(',', (string) $request->get('contentTypes', ''))))));
+        $contentTypeKeys = array_values(array_unique(array_filter(array_map(
+            fn (string $value): string => strtolower(trim($value)),
+            explode(',', (string) $request->get('contentTypes', ''))
+        ))));
 
         // Handle sorting
         $sort = $request->get('sort', 'followers_desc');
@@ -56,12 +59,15 @@ class InfluencersController extends Controller
         $followers = trim((string) $request->get('followers', ''));
         $price = trim((string) $request->get('price', ''));
 
-        $contentTypeOptions = $this->influencerService->getContentTypeFilters();
-        $selectedContentTypes = $this->filterSelectedContentTypes($contentTypeOptions, $contentTypeIds);
+        $contentTypeOptions = $platformKey !== null
+            ? $this->influencerService->getContentTypeFilters($platformKey)
+            : collect();
+        $contentTypeOptionsByPlatform = $this->influencerService->getContentTypeFiltersByPlatform();
+        $selectedContentTypes = $this->filterSelectedContentTypes($contentTypeOptions, $contentTypeKeys);
 
         $influencers = $this->influencerService->paginateInfluencers($platformKey, 20, [
             'categories' => $categories->pluck('id')->toArray(),
-            'contentTypes' => $contentTypeIds,
+            'contentTypes' => $contentTypeKeys,
             'sort'       => $sort,
             'gender'     => $gender,
             'region'     => $region,
@@ -73,6 +79,7 @@ class InfluencersController extends Controller
         $selectedPlatform = $platformKey !== null
         ? $this->influencerService->getPlatformMeta($platformKey)
         : null;
+        $selectedFollowersLabel = $platformKey !== null ? $this->formatFollowersFilterLabel($followers) : null;
 
         return view('frontend.pages.influencers', [
             'title'              => $selectedPlatform !== null
@@ -83,6 +90,7 @@ class InfluencersController extends Controller
             'selectedPlatform'   => $selectedPlatform,
             'selectedCategories' => $categories,
             'contentTypeOptions' => $contentTypeOptions->all(),
+            'contentTypeOptionsByPlatform' => $contentTypeOptionsByPlatform,
             'selectedContentTypes' => $selectedContentTypes->all(),
             'priceRange'         => $this->influencerService->getPackagePriceRange(),
             'selectedPriceLabel' => $this->formatPriceRangeFilterLabel($price),
@@ -90,10 +98,10 @@ class InfluencersController extends Controller
             'genderOptions'      => $this->influencerService->getGenderFilters()->all(),
             'followerRangeOptions' => $this->influencerService->getFollowerRangeFilters()->all(),
             'selectedFilters'    => [
-                'contentTypes' => $selectedContentTypes->pluck('label')->all(),
+                'contentTypes' => $platformKey !== null ? $selectedContentTypes->pluck('label')->all() : [],
                 'gender'    => in_array($gender, ['male', 'female', 'other'], true) ? ucfirst($gender) : null,
                 'region'    => $region !== '' ? $region : null,
-                'followers' => $this->formatFollowersFilterLabel($followers),
+                'followers' => $selectedFollowersLabel,
                 'price'     => $this->formatPriceRangeFilterLabel($price),
             ],
         ]);
@@ -111,14 +119,19 @@ class InfluencersController extends Controller
         $region = trim((string) $request->get('region', ''));
         $followers = trim((string) $request->get('followers', ''));
         $price = trim((string) $request->get('price', ''));
-        $contentTypeIds = array_values(array_unique(array_filter(array_map('intval', explode(',', (string) $request->get('contentTypes', ''))))));
+        $contentTypeKeys = array_values(array_unique(array_filter(array_map(
+            fn (string $value): string => strtolower(trim($value)),
+            explode(',', (string) $request->get('contentTypes', ''))
+        ))));
 
-        $contentTypeOptions = $this->influencerService->getContentTypeFilters();
-        $selectedContentTypes = $this->filterSelectedContentTypes($contentTypeOptions, $contentTypeIds);
+        $contentTypeOptions = collect();
+        $contentTypeOptionsByPlatform = $this->influencerService->getContentTypeFiltersByPlatform();
+        $selectedContentTypes = collect();
+        $selectedFollowersLabel = null;
 
         $influencers = $this->influencerService->paginateInfluencers(null, 20, [
             'categories' => [$category->id],
-            'contentTypes' => $contentTypeIds,
+            'contentTypes' => $contentTypeKeys,
             'sort'       => $sort,
             'gender'     => $gender,
             'region'     => $region,
@@ -133,6 +146,7 @@ class InfluencersController extends Controller
             'selectedPlatform'   => null,
             'selectedCategories' => collect([$category]),
             'contentTypeOptions' => $contentTypeOptions->all(),
+            'contentTypeOptionsByPlatform' => $contentTypeOptionsByPlatform,
             'selectedContentTypes' => $selectedContentTypes->all(),
             'priceRange'         => $this->influencerService->getPackagePriceRange(),
             'selectedPriceLabel' => $this->formatPriceRangeFilterLabel($price),
@@ -143,7 +157,7 @@ class InfluencersController extends Controller
                 'contentTypes' => $selectedContentTypes->pluck('label')->all(),
                 'gender'    => in_array($gender, ['male', 'female', 'other'], true) ? ucfirst($gender) : null,
                 'region'    => $region !== '' ? $region : null,
-                'followers' => $this->formatFollowersFilterLabel($followers),
+                'followers' => $selectedFollowersLabel,
                 'price'     => $this->formatPriceRangeFilterLabel($price),
             ],
         ]);
@@ -197,12 +211,12 @@ class InfluencersController extends Controller
     }
 
     /**
-     * @param Collection<int, array{value:string,label:string,price_label:string}> $contentTypeOptions
-     * @return Collection<int, array{value:string,label:string,price_label:string}>
+     * @param Collection<int, array{value:string,label:string,keywords?:array<int, string>}> $contentTypeOptions
+     * @return Collection<int, array{value:string,label:string,keywords?:array<int, string>}>
      */
-    private function filterSelectedContentTypes(Collection $contentTypeOptions, array $contentTypeIds): Collection
+    private function filterSelectedContentTypes(Collection $contentTypeOptions, array $contentTypeKeys): Collection
     {
-        $selectedIds = array_map('strval', $contentTypeIds);
+        $selectedIds = array_map('strval', $contentTypeKeys);
 
         return $contentTypeOptions
             ->filter(fn (array $contentType): bool => in_array((string) $contentType['value'], $selectedIds, true))

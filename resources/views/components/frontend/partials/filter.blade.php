@@ -1,4 +1,9 @@
-@props(['regionOptions' => [], 'genderOptions' => [], 'followerRangeOptions' => [], 'contentTypeOptions' => [], 'selectedContentTypes' => [], 'priceRange' => ['min' => 0, 'max' => 0], 'selectedPriceLabel' => null])
+@props(['selectedPlatform' => null, 'regionOptions' => [], 'genderOptions' => [], 'followerRangeOptions' => [], 'contentTypeOptions' => [], 'contentTypeOptionsByPlatform' => [], 'selectedContentTypes' => [], 'priceRange' => ['min' => 0, 'max' => 0], 'selectedPriceLabel' => null])
+
+@php
+	$platformSelected = !empty($selectedPlatform);
+	$initialContentTypeOptions = $platformSelected ? $contentTypeOptions : [];
+@endphp
 
 <div>
 	<!-- Search Bar -->
@@ -103,7 +108,7 @@
 		</div>
 		<div class="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-7">
 			<div id="content-type-filter-container" class="relative sm:col-span-2 xl:col-span-2">
-				<button id="content-type-trigger" type="button" class="flex w-full items-center gap-2 rounded-lg border border-transparent bg-gray-50 px-2.5 py-2 text-left transition hover:border-gray-200 dark:bg-gray-700/60 dark:hover:border-gray-600">
+				<button id="content-type-trigger" type="button" @disabled(!$platformSelected) aria-disabled="{{ $platformSelected ? 'false' : 'true' }}" class="flex w-full items-center gap-2 rounded-lg border border-transparent bg-gray-50 px-2.5 py-2 text-left transition hover:border-gray-200 dark:bg-gray-700/60 dark:hover:border-gray-600 disabled:cursor-not-allowed disabled:opacity-50">
 					<x-icons.package class="h-4 w-4 text-gray-500 dark:text-gray-300" />
 					<span id="selected-content-type" class="flex-1 truncate text-xs text-gray-700 dark:text-gray-100">
 						@if (!empty($selectedContentTypes))
@@ -112,6 +117,8 @@
 							@else
 								{{ count($selectedContentTypes) }} Content Types
 							@endif
+						@elseif (!$platformSelected)
+							Select a platform first
 						@else
 							Content Type
 						@endif
@@ -119,27 +126,39 @@
 					<x-icons.chevron-down class="h-3.5 w-3.5 text-gray-400 dark:text-gray-300" />
 				</button>
 				<div id="content-type-menu" class="hidden absolute left-0 right-0 top-[calc(100%+8px)] z-50 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-lg dark:border-gray-600 dark:bg-gray-800">
-					<div class="max-h-64 overflow-y-auto p-1.5">
-						@forelse (($contentTypeOptions ?: []) as $contentType)
+					<div class="max-h-64 overflow-y-auto p-1.5" id="content-type-options-list">
+						@forelse (($initialContentTypeOptions ?: []) as $contentType)
 							<button type="button" class="content-type-option flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-xs text-gray-700 transition hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700" data-value="{{ $contentType['value'] ?? '' }}" data-label="{{ $contentType['label'] ?? '' }}">
-								<span class="content-type-checkbox inline-flex h-4 w-4 shrink-0 items-center justify-center rounded border border-gray-300 bg-white text-transparent transition dark:border-gray-500 dark:bg-gray-900">
-									<x-icons.check class="h-3 w-3" />
+								<span class="content-type-checkbox inline-flex h-4 w-4 shrink-0 items-center justify-center rounded border border-gray-300 bg-white transition dark:border-gray-500 dark:bg-gray-900">
+									<x-icons.check class="checkmark-icon h-3 w-3 opacity-0 transition-opacity" />
 								</span>
 								<span class="flex-1 truncate">{{ $contentType['label'] ?? '' }}</span>
-								@if (!empty($contentType['price_label']))
-									<span class="text-[11px] font-medium text-gray-400 dark:text-gray-500">{{ $contentType['price_label'] }}</span>
-								@endif
 							</button>
 						@empty
-							<div class="px-3 py-2 text-xs text-gray-500 dark:text-gray-400">No packages available</div>
+							<div class="px-3 py-2 text-xs text-gray-500 dark:text-gray-400" id="content-type-empty-state">{{ $platformSelected ? 'No content types available' : 'Select a platform first' }}</div>
 						@endforelse
 					</div>
 					<div class="flex items-center justify-between border-t border-gray-100 px-3 py-2 dark:border-gray-700">
 						<button id="content-type-clear" type="button" class="text-[11px] font-semibold text-gray-500 transition hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200">Clear</button>
-						<span class="text-[11px] text-gray-400 dark:text-gray-500">Select packages directly</span>
+						<span class="text-[11px] text-gray-400 dark:text-gray-500">Pick a platform first</span>
 					</div>
 				</div>
 				<input type="hidden" id="content-types-input" value="">
+			</div>
+
+			<div id="followers-filter-container" class="relative">
+				<button id="followers-trigger" type="button" @disabled(!$platformSelected) aria-disabled="{{ $platformSelected ? 'false' : 'true' }}" class="flex w-full items-center gap-2 rounded-lg border border-transparent bg-gray-50 px-2.5 py-2 text-left transition hover:border-gray-200 dark:bg-gray-700/60 dark:hover:border-gray-600 disabled:cursor-not-allowed disabled:opacity-50">
+					<x-icons.trending-up class="h-4 w-4 text-gray-500 dark:text-gray-300" />
+					<span id="selected-followers" class="flex-1 truncate text-xs text-gray-700 dark:text-gray-100">Followers</span>
+					<x-icons.chevron-down class="h-3.5 w-3.5 text-gray-400 dark:text-gray-300" />
+				</button>
+				<div id="followers-menu" class="hidden absolute left-0 right-0 top-[calc(100%+8px)] z-50 max-h-56 overflow-y-auto rounded-xl border border-gray-200 bg-white p-1.5 shadow-lg dark:border-gray-600 dark:bg-gray-800">
+					<button type="button" class="advanced-option w-full rounded-lg px-3 py-2 text-left text-xs text-gray-700 transition hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700" data-target="followers" data-value="" data-label="Followers">Followers</button>
+					@foreach (($followerRangeOptions ?: [['value' => '0-10000', 'label' => '0 - 10K'], ['value' => '10001-50000', 'label' => '10K - 50K'], ['value' => '50001-100000', 'label' => '50K - 100K'], ['value' => '100001-500000', 'label' => '100K - 500K'], ['value' => '500001+', 'label' => '500K+']]) as $followerRangeOption)
+						<button type="button" class="advanced-option w-full rounded-lg px-3 py-2 text-left text-xs text-gray-700 transition hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700" data-target="followers" data-value="{{ $followerRangeOption['value'] ?? '' }}" data-label="{{ $followerRangeOption['label'] ?? '' }}">{{ $followerRangeOption['label'] ?? '' }}</button>
+					@endforeach
+				</div>
+				<input type="hidden" id="followers-input" value="">
 			</div>
 
 			<div id="price-filter-container" class="relative">
@@ -178,21 +197,6 @@
 					@endforeach
 				</div>
 				<input type="hidden" id="region-input" value="">
-			</div>
-
-			<div id="followers-filter-container" class="relative">
-				<button id="followers-trigger" type="button" class="flex w-full items-center gap-2 rounded-lg border border-transparent bg-gray-50 px-2.5 py-2 text-left transition hover:border-gray-200 dark:bg-gray-700/60 dark:hover:border-gray-600">
-					<x-icons.trending-up class="h-4 w-4 text-gray-500 dark:text-gray-300" />
-					<span id="selected-followers" class="flex-1 truncate text-xs text-gray-700 dark:text-gray-100">Followers</span>
-					<x-icons.chevron-down class="h-3.5 w-3.5 text-gray-400 dark:text-gray-300" />
-				</button>
-				<div id="followers-menu" class="hidden absolute left-0 right-0 top-[calc(100%+8px)] z-50 max-h-56 overflow-y-auto rounded-xl border border-gray-200 bg-white p-1.5 shadow-lg dark:border-gray-600 dark:bg-gray-800">
-					<button type="button" class="advanced-option w-full rounded-lg px-3 py-2 text-left text-xs text-gray-700 transition hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700" data-target="followers" data-value="" data-label="Followers">Followers</button>
-					@foreach (($followerRangeOptions ?: [['value' => '0-10000', 'label' => '0 - 10K'], ['value' => '10001-50000', 'label' => '10K - 50K'], ['value' => '50001-100000', 'label' => '50K - 100K'], ['value' => '100001-500000', 'label' => '100K - 500K'], ['value' => '500001+', 'label' => '500K+']]) as $followerRangeOption)
-						<button type="button" class="advanced-option w-full rounded-lg px-3 py-2 text-left text-xs text-gray-700 transition hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700" data-target="followers" data-value="{{ $followerRangeOption['value'] ?? '' }}" data-label="{{ $followerRangeOption['label'] ?? '' }}">{{ $followerRangeOption['label'] ?? '' }}</button>
-					@endforeach
-				</div>
-				<input type="hidden" id="followers-input" value="">
 			</div>
 
 			<div class="relative flex items-center gap-2 rounded-lg">
@@ -376,10 +380,43 @@
 		const selectedRegion = document.getElementById('selected-region');
 		const selectedFollowers = document.getElementById('selected-followers');
 		const contentTypesInput = document.getElementById('content-types-input');
+		const contentTypeOptionsList = document.getElementById('content-type-options-list');
 		const genderInput = document.getElementById('gender-input');
 		const regionInput = document.getElementById('region-input');
 		const followersInput = document.getElementById('followers-input');
 		const advancedFilterSubmit = document.getElementById('advanced-filter-submit');
+		const contentTypeOptionsByPlatform = @json($contentTypeOptionsByPlatform ?? []);
+		const fallbackContentTypeOptionsByPlatform = {
+			facebook: [
+				{ value: 'posts', label: 'Facebook Posts' },
+			],
+			instagram: [
+				{ value: 'stories', label: 'Instagram Stories' },
+				{ value: 'reels', label: 'Instagram Reels' },
+				{ value: 'photo-feed-post', label: 'Instagram Photo Feed Post' },
+			],
+			tiktok: [
+				{ value: 'stories', label: 'TikTok Stories' },
+				{ value: 'videos', label: 'TikTok Videos' },
+				{ value: 'live', label: 'TikTok Live' },
+			],
+			youtube: [
+				{ value: 'shorts', label: 'YouTube Shorts' },
+				{ value: 'videos', label: 'YouTube Videos' },
+			],
+			linkedin: [
+				{ value: 'posts', label: 'LinkedIn Posts' },
+			],
+			x: [
+				{ value: 'posts', label: 'X Posts' },
+			],
+			ugc: [
+				{ value: 'content', label: 'UGC Content' },
+			],
+			other: [
+				{ value: 'content', label: 'Other Content' },
+			],
+		};
 		const priceBoundsPanel = priceModal?.querySelector('[data-min-price]');
 		const rawPriceBounds = {
 			min: Number(priceBoundsPanel?.getAttribute('data-min-price') || 50),
@@ -394,6 +431,7 @@
 		let selectedCategories = [];
 		let categorySearchText = '';
 		let selectedContentTypeIds = [];
+		let activePlatformKey = '';
 		let priceMinValue = priceBounds.min;
 		let priceMaxValue = priceBounds.max;
 		let priceSelectionActive = false;
@@ -498,10 +536,112 @@
 				if (checkbox) {
 					checkbox.classList.toggle('bg-black', isSelected);
 					checkbox.classList.toggle('border-black', isSelected);
-					checkbox.classList.toggle('text-white', isSelected);
-					checkbox.classList.toggle('text-transparent', !isSelected);
+					const checkmark = checkbox.querySelector('.checkmark-icon');
+					if (checkmark) {
+						checkmark.classList.toggle('opacity-100', isSelected);
+						checkmark.classList.toggle('opacity-0', !isSelected);
+					}
 				}
 			});
+		}
+
+		function normalizePlatformKey(platformValue) {
+			const aliases = {
+				'twitter': 'x',
+				'twitter-x': 'x',
+				'user-generated-content': 'ugc',
+			};
+
+			const normalized = String(platformValue || '').trim().toLowerCase();
+			return aliases[normalized] || normalized;
+		}
+
+		function setDependentControlsEnabled(enabled) {
+			if (contentTypeTrigger) {
+				contentTypeTrigger.disabled = !enabled;
+				contentTypeTrigger.setAttribute('aria-disabled', enabled ? 'false' : 'true');
+			}
+
+			if (followersTrigger) {
+				followersTrigger.disabled = !enabled;
+				followersTrigger.setAttribute('aria-disabled', enabled ? 'false' : 'true');
+			}
+
+			if (contentTypeFilterContainer) {
+				contentTypeFilterContainer.classList.toggle('opacity-50', !enabled);
+			}
+
+			if (followersFilterContainer) {
+				followersFilterContainer.classList.toggle('opacity-50', !enabled);
+			}
+		}
+
+		function renderContentTypeOptions(platformKey) {
+			if (!contentTypeOptionsList) {
+				return;
+			}
+
+			const options = contentTypeOptionsByPlatform[platformKey] || fallbackContentTypeOptionsByPlatform[platformKey] || [];
+			contentTypeOptionsList.innerHTML = '';
+
+			if (options.length === 0) {
+				const emptyState = document.createElement('div');
+				emptyState.className = 'px-3 py-2 text-xs text-gray-500 dark:text-gray-400';
+				emptyState.textContent = 'Select a platform first';
+				contentTypeOptionsList.appendChild(emptyState);
+				return;
+			}
+
+			options.forEach((contentType) => {
+				const option = document.createElement('button');
+				option.type = 'button';
+				option.className = 'content-type-option flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-xs text-gray-700 transition hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700';
+				option.setAttribute('data-value', contentType.value || '');
+				option.setAttribute('data-label', contentType.label || '');
+				option.innerHTML = `
+					<span class="content-type-checkbox inline-flex h-4 w-4 shrink-0 items-center justify-center rounded border border-gray-300 bg-white transition dark:border-gray-500 dark:bg-gray-900">
+						<svg class="checkmark-icon h-3 w-3 opacity-0 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+					</span>
+					<span class="flex-1 truncate"></span>
+				`;
+				option.querySelector('span.flex-1')?.replaceChildren(document.createTextNode(contentType.label || ''));
+				contentTypeOptionsList.appendChild(option);
+			});
+		}
+
+		function clearDependentFilters() {
+			selectedContentTypeIds = [];
+			if (followersInput) {
+				followersInput.value = '';
+			}
+			if (selectedFollowers) {
+				selectedFollowers.textContent = 'Followers';
+			}
+		}
+
+		function syncPlatformDependentFilters(platformValue, { preserveSelections = false } = {}) {
+			const platformKey = normalizePlatformKey(platformValue);
+			const hasPlatform = platformKey !== '';
+			const platformChanged = platformKey !== activePlatformKey;
+
+			activePlatformKey = platformKey;
+			setDependentControlsEnabled(hasPlatform);
+			renderContentTypeOptions(platformKey);
+
+			if (!hasPlatform) {
+				clearDependentFilters();
+				syncContentTypeUI();
+				if (selectedContentTypeLabel) {
+					selectedContentTypeLabel.textContent = 'Select a platform first';
+				}
+				return;
+			}
+
+			if (platformChanged && !preserveSelections) {
+				clearDependentFilters();
+			}
+
+			syncContentTypeUI();
 		}
 
 		function syncPriceUI() {
@@ -690,6 +830,9 @@
 			trigger.addEventListener('click', (e) => {
 				e.preventDefault();
 				e.stopPropagation();
+				if (trigger.disabled) {
+					return;
+				}
 				platformMenu.classList.add('hidden');
 				categoryMenu.classList.add('hidden');
 				const shouldOpen = menu.classList.contains('hidden');
@@ -818,6 +961,9 @@
 			contentTypeTrigger.addEventListener('click', (e) => {
 				e.preventDefault();
 				e.stopPropagation();
+				if (contentTypeTrigger.disabled) {
+					return;
+				}
 				platformMenu.classList.add('hidden');
 				categoryMenu.classList.add('hidden');
 				closeAdvancedMenus();
@@ -948,6 +1094,7 @@
 					platformLabel.classList.remove('text-gray-400');
 					platformLabel.classList.add('text-gray-900', 'dark:text-white');
 				}
+				syncPlatformDependentFilters(val);
 				platformMenu.classList.add('hidden');
 			}
 		});
@@ -969,6 +1116,7 @@
 					platformLabel.classList.remove('text-gray-400');
 					platformLabel.classList.add('text-gray-900', 'dark:text-white');
 				}
+				syncPlatformDependentFilters(val);
 				platformMenu.classList.add('hidden');
 			});
 		});
@@ -995,10 +1143,11 @@
 			
 			const platformSlug = platformInput.value;
 			const categories = categoriesInput.value;
-			const contentTypes = contentTypesInput?.value || '';
+			const platformKey = normalizePlatformKey(platformSlug);
+			const contentTypes = platformKey ? (contentTypesInput?.value || '') : '';
 			const gender = genderInput?.value || '';
 			const region = regionInput?.value || '';
-			const followers = followersInput?.value || '';
+			const followers = platformKey ? (followersInput?.value || '') : '';
 			const price = priceSelectionActive ? `${priceMinValue}-${priceMaxValue}` : '';
 			
 			// Build query parameters
@@ -1084,6 +1233,9 @@
 					platformLabel.classList.remove('text-gray-400');
 					platformLabel.classList.add('text-gray-900', 'dark:text-white');
 				}
+				syncPlatformDependentFilters(platformSlug, { preserveSelections: true });
+			} else {
+				syncPlatformDependentFilters('', { preserveSelections: false });
 			}
 			
 			// Load categories from URL
