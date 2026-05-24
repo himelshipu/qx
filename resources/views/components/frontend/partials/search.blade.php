@@ -10,7 +10,7 @@
                         </span>
 
                         <h2 class="text-3xl md:text-4xl font-semibold text-[#222] dark:text-white leading-tight mt-8">
-                            Connect with Creators Who Has Sales Record
+                            Connect with Creators Who Have Sales Records
                         </h2>
 
                         <p class="text-gray-500 dark:text-gray-400 leading-relaxed max-w-lg mt-4">

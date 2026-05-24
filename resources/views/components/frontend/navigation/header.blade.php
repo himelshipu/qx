@@ -20,7 +20,7 @@
 
 				<a href="{{ route('influencers') }}" class="nav-link">Search</a>
 				<a href="{{ route('faq') }}" class="nav-link">Faq</a>
-				<a href="#how-it-works" class="nav-link">How it Works</a>
+				<a href="{{ route('home') }}#how-it-works" class="nav-link">How it Works</a>
 				<a href="{{ route('support') }}" class="nav-link">Support</a>
 				<a href="{{ route('frontend.blogs.index') }}" class="nav-link">Blog</a>
 				@auth
