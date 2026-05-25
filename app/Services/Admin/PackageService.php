@@ -25,6 +25,34 @@ final class PackageService
      */
     private const PLATFORM_VALUES = ['facebook', 'instagram', 'tiktok', 'linkedin', 'x', 'youtube', 'ugc', 'other'];
 
+    /**
+     * Package names seeded by Database\Seeders\PackageSeeder, grouped by platform.
+     *
+     * @var array<string, array<int, string>>
+     */
+    private const SEEDED_PACKAGE_NAMES_BY_PLATFORM = [
+        'instagram' => [
+            '1 Instagram Story',
+            '2 Instagram Stories',
+            '1 Instagram Reel (60 Seconds)',
+            '2 Instagram Reels',
+            '1 Instagram Photo Feed Post',
+        ],
+        'tiktok' => [
+            '1 TikTok Video (30 Seconds)',
+            '1 TikTok Video (60 Seconds)',
+            '2 TikTok Videos',
+            '3 TikTok Videos',
+            '1 TikTok Stories',
+            '1 TikTok Live (30 Minutes)',
+        ],
+        'youtube' => [
+            '1 YouTube Short',
+            '1 YouTube Video',
+            '2 YouTube Videos',
+        ],
+    ];
+
     public function __construct(
         private readonly PackageRepositoryInterface $packageRepository
     ) {}
@@ -77,20 +105,12 @@ final class PackageService
     {
         $user         = Auth::user();
         $isInfluencer = $user && $user->influencer()->exists();
-        $packageOptions = Package::query()
-            ->whereNotNull('name')
-            ->select('name')
-            ->distinct()
-            ->orderBy('name')
-            ->pluck('name')
-            ->values()
-            ->all();
 
         return [
             'platformOptions' => $this->getPlatformOptions(),
             'isInfluencer'    => $isInfluencer,
             'influencers'     => !$isInfluencer ? Influencer::query()->whereHas('user')->get() : null,
-            'packageOptions'  => $packageOptions,
+            'packageNamesByPlatform' => self::SEEDED_PACKAGE_NAMES_BY_PLATFORM,
         ];
     }
 

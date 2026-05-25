@@ -5,7 +5,7 @@
 	$resolvedCurrency = strtoupper((string) old('currency', $package?->currency ?? 'USD'));
 	$isInfluencer = $isInfluencer ?? false;
 	$influencers = $influencers ?? null;
-	$packageOptions = $packageOptions ?? [];
+	$packageNamesByPlatform = $packageNamesByPlatform ?? [];
 @endphp
 
 <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
@@ -160,18 +160,25 @@
 
 <script>
 document.addEventListener("DOMContentLoaded", () => {
-	const packageNames = @json($packageOptions);
+	const packageNamesByPlatform = @json($packageNamesByPlatform);
 
 	const packageInput = document.getElementById("name");
+	const platformSelect = document.getElementById("platform");
     const packageList = document.getElementById("package-list");
     const packageMenu = document.getElementById("package-menu");
 
+	function getSeededPackageNames() {
+		const platform = (platformSelect?.value || "").trim().toLowerCase();
+		return packageNamesByPlatform[platform] || [];
+	}
+
     function renderPackageList(filter = "") {
         packageList.innerHTML = "";
+		const packageNames = getSeededPackageNames();
 		const normalizedFilter = filter.trim().toLowerCase();
 		const filtered = packageNames.filter(name =>
 			name.toLowerCase().includes(normalizedFilter)
-		).slice(0, 8);
+		);
 
 		filtered.forEach(name => {
             const btn = document.createElement("button");
@@ -204,6 +211,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     packageInput.addEventListener("input", () => renderPackageList(packageInput.value));
     packageInput.addEventListener("focus", () => renderPackageList(packageInput.value));
+	platformSelect.addEventListener("change", () => renderPackageList(packageInput.value));
 
 	packageInput.addEventListener("keydown", event => {
 		if (event.key === "Escape") {
