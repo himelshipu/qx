@@ -329,7 +329,7 @@
 			<!-- Footer -->
 			<div class="footer">
 				<p>This payment statement was generated on {{ now()->format('F d, Y \a\t H:i A') }}.</p>
-				<p>For questions, please contact support@qxmarketplace.com</p>
+				<p>For questions, please contact contact@rockiesconnect.com</p>
 			</div>
 		</div>
 	</body>

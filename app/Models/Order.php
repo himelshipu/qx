@@ -242,7 +242,7 @@ class Order extends Model
 
         for ($attempt = 0; $attempt < 5; $attempt++) {
             $candidate = sprintf(
-                'QX-%s-%s-%04d',
+                'ROCKIES-%s-%s-%04d',
                 $normalized,
                 now()->format('ymdHis'),
                 random_int(0, 9999)
@@ -253,6 +253,6 @@ class Order extends Model
             }
         }
 
-        return sprintf('QX-%s-%s', $normalized, strtoupper(uniqid()));
+        return sprintf('ROCKIES-%s-%s', $normalized, strtoupper(uniqid()));
     }
 }

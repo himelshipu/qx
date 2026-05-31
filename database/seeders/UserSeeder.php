@@ -16,7 +16,7 @@ class UserSeeder extends Seeder
         $users = [
             [
                 'name'         => 'Superadministrator',
-                'email'        => 'superadmin@rockies.com',
+                'email'        => 'superadmin@rockiesconnect.com',
                 'user_type'    => 'admin',
                 'phone'        => '+1-415-555-0001',
                 'gender'       => 'other',
@@ -28,7 +28,7 @@ class UserSeeder extends Seeder
             ],
             [
                 'name'         => 'System Administrator',
-                'email'        => 'admin@rockies.local',
+                'email'        => 'admin@rockiesconnect.com',
                 'user_type'    => 'admin',
                 'phone'        => '+1-415-555-0100',
                 'gender'       => 'other',
@@ -40,7 +40,7 @@ class UserSeeder extends Seeder
             ],
             [
                 'name'         => 'Community Moderator',
-                'email'        => 'moderator@rockies.local',
+                'email'        => 'moderator@rockiesconnect.com',
                 'user_type'    => 'moderator',
                 'phone'        => '+1-646-555-0112',
                 'gender'       => 'female',
@@ -55,7 +55,7 @@ class UserSeeder extends Seeder
         for ($i = 1; $i <= 12; $i++) {
             $users[] = [
                 'name'         => $faker->company() . ' Team',
-                'email'        => sprintf('brand%02d@rockies.local', $i),
+                'email'        => sprintf('brand%02d@rockiesconnect.com', $i),
                 'user_type'    => 'brand',
                 'phone'        => $faker->numerify('+1-###-555-####'),
                 'gender'       => $faker->randomElement(['male', 'female', 'other']),
@@ -70,7 +70,7 @@ class UserSeeder extends Seeder
         for ($i = 1; $i <= 12; $i++) {
             $users[] = [
                 'name'         => $faker->name(),
-                'email'        => sprintf('influencer%02d@rockies.local', $i),
+                'email'        => sprintf('influencer%02d@rockiesconnect.com', $i),
                 'user_type'    => 'influencer',
                 'phone'        => $faker->numerify('+1-###-555-####'),
                 'gender'       => $faker->randomElement(['male', 'female', 'other']),

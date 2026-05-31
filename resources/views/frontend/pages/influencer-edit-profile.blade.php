@@ -787,13 +787,13 @@
 
 									// Restore saved images to preview
 									if (savedProfileImage && savedProfileImage !==
-										'http://qx.local/default.webp') {
+										'http://rockiesconnect.com/default.webp') {
 										profilePreview.innerHTML =
 											`<img src="${savedProfileImage}" alt="Profile" class="w-full h-full object-cover" onerror="this.src='{{ asset('default.webp') }}'">`;
 									}
 
 									if (savedCoverImage && savedCoverImage !==
-										'http://qx.local/default.webp') {
+										'http://rockiesconnect.com/default.webp') {
 										coverPreview.innerHTML =
 											`<img src="${savedCoverImage}" alt="Cover" class="w-full h-full object-cover" onerror="this.src='{{ asset('default.webp') }}'">`;
 									}
