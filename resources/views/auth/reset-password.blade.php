@@ -1,6 +1,6 @@
 @extends('frontend.layouts.app')
 @section('content')
-<div class="max-w-lg mx-auto">
+<div class="max-w-xl mx-auto">
     <div class="mb-8">
         <h1 class="text-3xl md:text-4xl font-semibold text-[#222] dark:text-white leading-tight text-center mb-4">Reset Password</h1>
         <p class="text-sm text-gray-700 dark:text-gray-400">Please choose a new password for your account.</p>

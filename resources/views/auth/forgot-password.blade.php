@@ -1,6 +1,6 @@
 @extends('frontend.layouts.app')
 @section('content')
-<div class="max-w-lg mx-auto">
+<div class="max-w-xl mx-auto">
     <div class="mb-8">
         <h1 class="text-3xl md:text-4xl font-semibold text-[#222] dark:text-white leading-tight text-center mb-4">Forgot Password</h1>
         <p class="text-sm text-gray-800 text-center dark:text-gray-400">No problem. Just let us know your email address and we will send you a password reset link.</p>

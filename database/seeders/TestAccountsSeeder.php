@@ -38,7 +38,7 @@ class TestAccountsSeeder extends Seeder
         $this->command->table(
             ['Account Type', 'Email', 'Password', 'Authority Level'],
             [
-                ['👑 SuperAdmin', 'superadmin@rockies.local', 'password', 'Supreme - All Access'],
+                ['👑 SuperAdmin', 'superadmin@rockiesconnect.com', 'password', 'Supreme - All Access'],
                 ['Admin', 'testadmin@system.local', 'password', 'Full Control'],
                 ['Moderator', 'testmoderator@system.local', 'password', 'Moderation'],
                 ['Brand 1', 'testbrand1@system.local', 'password', 'Campaign Owner'],
@@ -82,7 +82,7 @@ class TestAccountsSeeder extends Seeder
      */
     private function createSuperAdmin(): void
     {
-        $email = 'superadmin@rockies.local';
+        $email = 'superadmin@rockiesconnect.com';
 
         $user = User::where('email', $email)->first();
         if ($user) {

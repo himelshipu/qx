@@ -1,6 +1,6 @@
 @extends('frontend.layouts.app')
 @section('content')
-<div class="max-w-lg mx-auto">
+<div class="max-w-xl mx-auto">
     <div class="mb-8">
         <h1 class="text-3xl md:text-4xl font-semibold text-[#222] dark:text-white leading-tight text-left mb-4">Verify your email</h1>
         <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -19,7 +19,7 @@
         <div class="bg-blue-50 dark:bg-blue-900/20 border border-purple-300 dark:border-purple-300 rounded-xl p-4">
             <p class="text-sm text-gray-700 dark:text-gray-300">
                 <span class="font-medium">Tip:</span> Check your <span class="font-semibold text-purple-400 dark:text-purple-400">spam</span> folder for an email from 
-                <span class="font-mono text-xs bg-blue-100 dark:bg-blue-900/40 px-2 py-1 rounded-md">info@rockies.com</span>
+                <span class="font-mono text-xs bg-blue-100 dark:bg-blue-900/40 px-2 py-1 rounded-md">contact@rockiesconnect.com</span>
             </p>
         </div>
 
