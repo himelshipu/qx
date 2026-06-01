@@ -2,7 +2,6 @@
 
 @section('content')
 <div x-data="brandSetup()" x-init="loadData()" class="max-w-2xl mx-auto">
-    <!-- Top Navigation -->
     <div class="flex items-center justify-between mb-6">
         <button 
             @click="prevStep()" 
