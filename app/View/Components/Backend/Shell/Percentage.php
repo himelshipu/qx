@@ -1,12 +1,12 @@
 <?php
 
-namespace App\View\Components\backend\dropdowns;
+namespace App\View\Components\Backend\Shell;
 
 use Closure;
 use Illuminate\Contracts\View\View;
 use Illuminate\View\Component;
 
-class Notification extends Component
+class Percentage extends Component
 {
     /**
      * Create a new component instance.
@@ -21,6 +21,6 @@ class Notification extends Component
      */
     public function render(): View|Closure|string
     {
-        return view('components.backend.dropdowns.notification');
+        return view('components.backend.shell.percentage');
     }
 }
