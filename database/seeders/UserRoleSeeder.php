@@ -13,8 +13,8 @@ class UserRoleSeeder extends Seeder
         $users = DB::table('users')->get(['id', 'email', 'user_type']);
 
         foreach ($users as $user) {
-            // Special case: superadmin@rockies.com gets superadmin role
-            if ($user->email === 'superadmin@rockies.com') {
+            // Special case: superadmin@rockiesconnect.com gets superadmin role
+            if ($user->email === 'superadmin@rockiesconnect.com') {
                 $roleSlug = 'superadmin';
             } else {
                 // For other users, map based on user_type

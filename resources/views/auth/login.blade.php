@@ -28,7 +28,7 @@
                                 <label class="mb-1.5 block text-sm font-medium text-gray-800 dark:text-gray-400">
                                     Email<span class="text-error-500"> *</span>
                                 </label>
-                                <input type="email" name="email" value="{{ old('email') }}" placeholder="info@rockies.com" required autofocus
+                                <input type="email" name="email" value="{{ old('email') }}" placeholder="contact@rockiesconnect.com" required autofocus
                                     class="dark:bg-dark-900 shadow-theme-xs focus:border-pink-50 focus:ring-gray-500/10 dark:focus:border-gray-800 h-12 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-1 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30" autocomplete="username" />
                                 @error('email')
                                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
