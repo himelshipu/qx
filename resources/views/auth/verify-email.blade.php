@@ -1,6 +1,6 @@
 @extends('frontend.layouts.app')
 @section('content')
-<div class="max-w-lg mx-auto">
+<div class="max-w-xl mx-auto">
     <div class="mb-8">
         <h1 class="text-3xl md:text-4xl font-semibold text-[#222] dark:text-white leading-tight text-left mb-4">Verify your email</h1>
         <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
