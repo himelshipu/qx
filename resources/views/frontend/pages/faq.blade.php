@@ -21,7 +21,6 @@
 
 			@foreach ($influencerSections as $section)
 				@if ($section->audience_type === 'influencer' || $section->audience_type === 'all')
-					<!-- SECTION: {{ $section->section_title }} -->
 					<section x-data="{ activeAccordion: null }">
 						<h2 class="text-3xl md:text-4xl font-semibold text-[#222] dark:text-white leading-tight text-left mb-8">
 							{{ $section->section_title }}
@@ -67,7 +66,6 @@
 				@if (
 					$section->audience_type === 'brand' ||
 						($section->audience_type === 'all' && !$influencerSections->contains($section)))
-					<!-- SECTION: {{ $section->section_title }} -->
 					<section x-data="{ activeAccordion: null }">
 						<h2 class="text-3xl md:text-4xl font-semibold text-[#222] dark:text-white leading-tight text-left mb-8">
 							{{ $section->section_title }}
