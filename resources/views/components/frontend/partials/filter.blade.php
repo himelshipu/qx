@@ -19,7 +19,7 @@
 					<input type="hidden" id="platform-input" name="platformSlug" value="">
 				</div>
 
-				<!-- Platform Dropdown Menu -->
+				<!-- Platform Dropdown Menus -->
 				<div id="platform-menu"
 					class="hidden absolute top-14 left-[-24px] mt-2 w-[320px] md:w-[420px] px-3 bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-2xl shadow-xl z-50 py-2 overflow-hidden overflow-y-scroll max-h-60">
 					<div
