@@ -177,7 +177,7 @@
 		<main class="max-w-screen-2xl mx-auto">
 			<!-- 1. TOP CATEGORIES & EDIT -->
 			<div class="flex items-center justify-between mb-4">
-				<div class="flex flex-wrap gap-2 text-xl font-semibold text-gray-800 dark:text-gray-300 tracking-tight">
+				<div class="flex flex-wrap gap-2 text-sm lg:text-xl font-semibold text-gray-800 dark:text-gray-300 tracking-tight">
 					@foreach ($categoryNames as $categoryName)
 						<span>{{ $categoryName }}@if (!$loop->last)
 								,
@@ -260,7 +260,7 @@
 			@endpush
 
 			<!-- 2. PORTRAIT IMAGE GRID & MOBILE SLIDER -->
-			<div class="relative -mx-4 sm:-mx-6 lg:mx-0 mb-10 lg:mb-16" x-data="{
+			<div class="relative -mx-4 sm:-mx-6 lg:mx-0 mb-4 lg:mb-16" x-data="{
     activeImage: 1,
     total: {{ count($gridImages) }},
     handleScroll(e) {
@@ -322,7 +322,7 @@
 				<!-- LEFT COLUMN: INFLUENCER INFO -->
 				<div class="flex-1 space-y-6">
 					<!-- Profile Identity -->
-					<div class="flex items-center gap-6">
+					<div class="flex flex-col lg:flex-row items-center gap-6">
 						<img src="{{ $profileImageUrl }}" class="w-24 h-24 rounded-full border-2 border-gray-50 shadow-md object-cover"
 							alt="{{ $displayName }}">
 						<div>
@@ -340,7 +340,7 @@
 								</span>
 							</div>
 							<p class="text-sm text-gray-500 font-medium mb-4">{{ $locationText }}</p>
-							<div class="flex gap-3">
+							<div class="flex flex-wrap gap-3">
 								@foreach ($platformBadges as $platformBadge)
 									@if (!empty($platformBadge['url']))
 										<a href="{{ $platformBadge['url'] }}" target="_blank" rel="noopener noreferrer"

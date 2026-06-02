@@ -10,7 +10,7 @@
 		</div>
 
 		<!-- Collaborations Grid -->
-		<div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+		<div class="flex overflow-x-auto gap-4 pb-3 lg:grid lg:grid-cols-4 sm:grid-cols-2 lg:gap-6 lg:px-0 scroll-smooth">
 			@php
 				use App\Models\FeaturedCollaboration;
 				$collabs = FeaturedCollaboration::published();
@@ -18,7 +18,7 @@
 
 			@forelse($collabs as $collab)
 				<div
-					class="relative aspect-[3/4.2] rounded-xl overflow-hidden group bg-gray-100 dark:bg-gray-900 shadow-sm hover:shadow-xl transition-all duration-300"
+					class="relative w-full rounded-xl overflow-hidden group bg-gray-100 dark:bg-gray-900 shadow-sm transition-all duration-300"
 					title="{{ $collab->brand_name }}">
 
 					@if ($collab->asset_type === 'video' && $collab->video_path)
