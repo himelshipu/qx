@@ -4,7 +4,7 @@
         <div class="flex flex-col lg:flex-row items-center gap-16 lg:gap-24">  
             <div class="w-full lg:w-1/2 relative group">
                 <div class="relative z-10 drop-shadow-2xl transition-transform duration-700 group-hover:-translate-y-2">
-                    <img src="{{ asset('images/campaignApply.png') }}" alt="Marketplace Preview" class="w-full h-auto rounded-2xl">
+                    <img src="{{ asset('images/rockies-002.webp') }}" alt="Marketplace Preview" class="w-full h-auto rounded-2xl">
                 </div>
                 
                 <div class="absolute -top-10 -right-10 w-64 h-64 bg-purple-100 dark:bg-purple-900/10 rounded-full blur-3xl opacity-50 -z-1"></div>
