@@ -1,12 +1,12 @@
 <?php
 
-namespace App\View\Components\backend\Shell;
+namespace App\View\Components\Backend\Shell;
 
 use Closure;
 use Illuminate\Contracts\View\View;
 use Illuminate\View\Component;
 
-class Backdrop extends Component
+class Breadcrumb extends Component
 {
     /**
      * Create a new component instance.
@@ -21,6 +21,6 @@ class Backdrop extends Component
      */
     public function render(): View|Closure|string
     {
-        return view('components.backend.shell.backdrop');
+        return view('components.backend.shell.breadcrumb');
     }
 }

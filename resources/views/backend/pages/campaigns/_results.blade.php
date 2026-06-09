@@ -25,7 +25,7 @@
 						<td class="px-4 py-3">
 							<div>
 								<a href="{{ route('dashboard.campaigns.view', $campaign) }}"
-									class="text-sm font-semibold text-gray-900 transition hover:text-gray-700 dark:text-white dark:hover:text-gray-200">
+									class="text-xs md:text-sm font-semibold text-gray-900 transition hover:text-gray-700 dark:text-white dark:hover:text-gray-200">
 									{{ $campaign->title }}
 								</a>
 								<p class="mt-1 text-xs text-gray-500 dark:text-gray-400">

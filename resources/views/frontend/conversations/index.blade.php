@@ -33,10 +33,10 @@
         };
     @endphp
 
-    <div class="h-[calc(100vh-120px)] rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900 overflow-hidden transition-all duration-200">
-        <div class="flex h-full w-full">
+    <div class="h-full lg:h-screen rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900 overflow-hidden transition-all duration-200">
+        <div class="flex flex-col md:flex-row h-full w-full">
             <!-- Sidebar -->
-            <aside class="w-80 flex-shrink-0 border-r border-gray-200 dark:border-gray-800 bg-gray-50/40 dark:bg-gray-900/50 flex flex-col h-full">
+            <aside class="w-auto md:w-80 flex-shrink-0 border-r border-gray-200 dark:border-gray-800 bg-gray-50/40 dark:bg-gray-900/50 flex flex-col h-full">
                 <header class="flex-shrink-0 border-b border-gray-200 bg-white/80 backdrop-blur-sm px-5 py-4 dark:border-gray-800 dark:bg-gray-900/80">
                     <div class="flex items-center justify-between">
                         <h2 class="text-base font-semibold text-gray-900 dark:text-white flex items-center gap-2">
@@ -102,7 +102,7 @@
             </aside>
 
             <!-- Main panel - Empty State -->
-            <section class="flex-1 flex flex-col h-full bg-white dark:bg-gray-900 min-w-0">
+            <section class="flex-1 flex flex-col h-full bg-white dark:bg-gray-900 min-w-0 mt-14 md:mt-0 border-t-2 md:border-t-0 border-gray-200 dark:border-gray-800">
                 <div class="flex-1 flex items-center justify-center">
                     <div class="text-center px-8">
                         <div class="w-24 h-24 rounded-full bg-gradient-to-br from-indigo-100 to-purple-100 dark:from-indigo-900/30 dark:to-purple-900/30 flex items-center justify-center mx-auto mb-6">

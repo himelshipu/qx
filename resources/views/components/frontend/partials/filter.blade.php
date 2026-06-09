@@ -13,13 +13,13 @@
 			<!-- Platform Selector -->
 			<div class="relative flex-1 min-w-0 md:border-r border-gray-100 dark:border-gray-700 md:pr-6">
 				<div id="platform-trigger"
-					class="flex flex-col items-start cursor-pointer group">
+					class="flex flex-col gap-[1px] items-start cursor-pointer group">
 					<span class="text-[11px] font-bold text-gray-900 dark:text-gray-100 uppercase tracking-wider">Platform</span>
 					<span id="selected-platform" class="text-gray-400 text-sm truncate">Choose a platform</span>
 					<input type="hidden" id="platform-input" name="platformSlug" value="">
 				</div>
 
-				<!-- Platform Dropdown Menu -->
+				<!-- Platform Dropdown Menus -->
 				<div id="platform-menu"
 					class="hidden absolute top-14 left-[-24px] mt-2 w-[320px] md:w-[420px] px-3 bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-2xl shadow-xl z-50 py-2 overflow-hidden overflow-y-scroll max-h-60">
 					<div
@@ -64,9 +64,9 @@
 			<div class="relative flex-[1.5] min-w-0 md:pl-6 mt-6 md:mt-0 group">
 				<div id="category-trigger" class="w-full cursor-pointer">
 					<span class="text-[11px] font-bold text-gray-900 dark:text-gray-100 uppercase tracking-wider">Category</span>
-					<div class="flex flex-wrap gap-2 items-center mt-1">
+					<div class="flex flex-wrap gap-2 items-center">
 						<input type="text" id="category-input" placeholder="Enter keywords, niches or categories"
-							class="flex-1 min-w-0 bg-transparent border-none p-0 outline-none focus:ring-0 text-sm text-gray-900 dark:text-white placeholder-gray-400"
+							class="flex-1 w-full min-w-[320px] sm:min-w-0 bg-transparent border-none p-0 outline-none focus:ring-0 text-sm text-gray-900 dark:text-white placeholder-gray-400"
 							autocomplete="off">
 						<div id="selected-categories-display" class="flex flex-wrap gap-2">
 							<!-- Selected category chips will appear here -->
@@ -76,7 +76,7 @@
 
 				<!-- Category Dropdown -->
 				<div id="category-menu"
-					class="hidden absolute top-full left-0 right-0 mt-4 w-[250px] md:w-[420px] xl:w-[500px] bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-4xl shadow-2xl z-50 p-6 transition-all">
+					class="hidden absolute top-full left-0 right-0 mt-4 w-[320px] md:w-[420px] xl:w-[500px] bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-4xl shadow-2xl z-50 p-6 transition-all">
 					<p class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Popular Categories</p>
 					<div id="category-list" class="flex flex-wrap overflow-x-hidden gap-2">
 						<!-- Populated dynamically by JavaScript -->

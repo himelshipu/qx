@@ -77,7 +77,7 @@
 		</div>
 
 		<!-- Campaigns Grid -->
-		<div class="mt-6 grid grid-cols-1 gap-6 pb-20 md:grid-cols-2 lg:grid-cols-3 lg:gap-8">
+		<div class="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 lg:gap-8">
 			<template x-for="campaign in filteredCampaigns" :key="campaign.id">
 				<div
 					class="group relative overflow-hidden rounded-[1.8rem] border border-gray-100 bg-gray-100 shadow-sm transition-all duration-500 hover:shadow-2xl dark:border-gray-800 dark:bg-gray-900"

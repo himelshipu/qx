@@ -969,10 +969,16 @@ Alpine.store("sidebar", {
 
     toggleMobileOpen() {
         this.isMobileOpen = !this.isMobileOpen;
+        if (this.isMobileOpen) {
+            this.isExpanded = true;
+        }
     },
 
     setMobileOpen(val) {
         this.isMobileOpen = val;
+        if (val) {
+            this.isExpanded = true;
+        }
     },
 });
 

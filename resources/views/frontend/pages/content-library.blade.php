@@ -2,7 +2,7 @@
 
 @section('content')
 	<section class="container transition-colors duration-200">
-		<div class="mb-12 mt-2">
+		<div class="mb-4 md:mb-12 mt-2">
 			<h1 class="text-3xl md:text-4xl font-semibold text-[#222] dark:text-white leading-tight text-left mb-2">Database
 			</h1>
 		</div>
@@ -17,9 +17,9 @@
 
 		<form method="GET" action="{{ route('frontend.content-library') }}" class="flex flex-wrap items-center gap-4 mb-10"
 			id="filters-form">
-			<div class="relative">
+			<div class="relative w-full md:w-[220px]">
 				<select name="platform" id="platform-filter"
-					class="appearance-none h-12 w-[220px] pr-10 px-4 rounded-lg border border-gray-300 bg-transparent text-sm font-bold text-gray-800 transition focus:border-gray-400 focus:ring-1 focus:ring-gray-400/20 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:focus:border-gray-500 dark:focus:ring-gray-500/20">
+					class="appearance-none h-12 w-full pr-10 px-4 rounded-lg border border-gray-300 bg-transparent text-sm font-bold text-gray-800 transition focus:border-gray-400 focus:ring-1 focus:ring-gray-400/20 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:focus:border-gray-500 dark:focus:ring-gray-500/20">
 					<option value="all">Platform: All</option>
 					@foreach ($platforms as $platform => $count)
 						<option value="{{ $platform }}" {{ $filters['platform'] === $platform ? 'selected' : '' }}>
@@ -31,9 +31,9 @@
 					class="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 rotate-90 text-gray-500 dark:text-gray-400" />
 			</div>
 
-			<div class="relative">
+			<div class="relative w-full md:w-[220px]">
 				<select name="status" id="status-filter"
-					class="appearance-none h-12 w-[220px] pr-10 px-4 rounded-lg border border-gray-300 bg-transparent text-sm font-bold text-gray-800 transition focus:border-gray-400 focus:ring-1 focus:ring-gray-400/20 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:focus:border-gray-500 dark:focus:ring-gray-500/20">
+					class="appearance-none h-12 w-full pr-10 px-4 rounded-lg border border-gray-300 bg-transparent text-sm font-bold text-gray-800 transition focus:border-gray-400 focus:ring-1 focus:ring-gray-400/20 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:focus:border-gray-500 dark:focus:ring-gray-500/20">
 					<option value="all">Status: All</option>
 					@foreach ($statuses as $status => $count)
 						<option value="{{ $status }}" {{ $filters['status'] === $status ? 'selected' : '' }}>
@@ -45,30 +45,30 @@
 					class="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 rotate-90 text-gray-500 dark:text-gray-400" />
 			</div>
 
-			<div class="relative">
+			<div class="relative w-full md:w-[260px]">
 				<x-icons.clock
 					class="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
 				<input type="text" id="date-range-display" placeholder="Date: Select Range" value="{{ $dateRangeLabel }}"
 					autocomplete="off"
-					class="h-12 w-[260px] pl-12 pr-10 rounded-lg border border-gray-300 bg-transparent text-sm font-bold text-gray-800 transition focus:border-gray-400 focus:ring-1 focus:ring-gray-400/20 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:focus:border-gray-500 dark:focus:ring-gray-500/20">
+					class="h-12 w-full pl-12 pr-10 rounded-lg border border-gray-300 bg-transparent text-sm font-bold text-gray-800 transition focus:border-gray-400 focus:ring-1 focus:ring-gray-400/20 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:focus:border-gray-500 dark:focus:ring-gray-500/20">
 				<x-icons.chevron-right
 					class="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 rotate-90 text-gray-500 dark:text-gray-400" />
 				<input type="hidden" name="date_from" id="date-from" value="{{ $filters['date_from'] }}">
 				<input type="hidden" name="date_to" id="date-to" value="{{ $filters['date_to'] }}">
 			</div>
 
-			<div class="ml-auto flex items-center gap-2">
+			<div class="flex items-center gap-2 w-full md:w-auto">
 				<input type="text" name="q" id="search-input" value="{{ $filters['search'] }}"
 					placeholder="Search anything in library..."
-					class="h-12 w-64 rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 transition focus:border-gray-400 focus:ring-1 focus:ring-gray-400/20 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:focus:border-gray-500 dark:focus:ring-gray-500/20">
+					class="h-12 w-full md:w-64 rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 transition focus:border-gray-400 focus:ring-1 focus:ring-gray-400/20 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:focus:border-gray-500 dark:focus:ring-gray-500/20">
 				<a href="{{ route('frontend.content-library') }}"
 					class="h-12 inline-flex items-center px-5 border border-gray-300 rounded-lg text-[13px] font-bold text-gray-800 dark:text-white hover:bg-purple-50 transition">Reset</a>
 			</div>
 		</form>
 
 		<div id="content-library-results"
-			class="rounded-2xl border border-gray-200 bg-white pt-4 dark:border-gray-800 dark:bg-white/[0.03] shadow-sm">
-			<div class="overflow-hidden">
+			class="rounded-2xl bg-white dark:bg-white/[0.03] shadow-sm">
+			<div class="overflow-hidden rounded-2xl">
 				<table class="min-w-full">
 					<thead class="bg-gray-50/50 dark:bg-gray-800/50 border-y border-gray-200 dark:border-gray-700">
 						<tr class="text-xs font-bold text-gray-400 uppercase tracking-widest text-left">
@@ -109,7 +109,7 @@
 							@endphp
 							<tr class="hover:bg-gray-50/50 dark:hover:bg-white/5 transition-colors">
 								<td class="px-6 py-4">
-									<div class="flex items-center gap-3">
+									<div class="flex flex-col md:flex-row items-center gap-3">
 										@if ($avatarPath)
 											<img src="{{ image_url($avatarPath) }}" class="w-9 h-9 rounded-full object-cover">
 										@else
@@ -118,14 +118,14 @@
 												{{ strtoupper(substr($personName, 0, 1)) }}
 											</div>
 										@endif
-										<span class="text-sm font-bold text-gray-800 dark:text-white">{{ $personName }}</span>
+										<span class="text-xs md:text-sm text-center md:text-left font-bold text-gray-800 dark:text-white">{{ $personName }}</span>
 									</div>
 								</td>
-								<td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
+								<td class="px-6 py-4 text-xs md:text-sm text-gray-600 dark:text-gray-400">
 									{{ $entry->order?->campaign?->title ?? ($entry->title ?? 'N/A') }}</td>
-								<td class="px-6 py-4 text-sm text-gray-500">
+								<td class="px-6 py-4 text-xs md:text-sm text-gray-500">
 									{{ optional($entry->accepted_at ?? $entry->created_at)?->format('M d, Y') }}</td>
-								<td class="px-6 py-4 text-sm font-bold text-gray-700 dark:text-white">
+								<td class="px-6 py-4 text-xs md:text-sm font-bold text-gray-700 dark:text-white">
 									{{ strtoupper($entry->order?->currency ?? 'USD') }} {{ number_format((float) $entry->line_total, 2) }}</td>
 								<td class="px-6 py-4">
 									<span class="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider {{ $statusClass }}">
@@ -141,7 +141,7 @@
 							</tr>
 						@empty
 							<tr>
-								<td colspan="6" class="px-6 py-10 text-center text-sm text-gray-500 dark:text-gray-400">No content records
+								<td colspan="6" class="px-6 py-10 text-center text-xs md:text-sm text-gray-500 dark:text-gray-400">No content records
 									found.</td>
 							</tr>
 						@endforelse
@@ -156,10 +156,10 @@
 				@endphp
 				<div class="px-6 py-4 border-t border-gray-200 dark:border-gray-800 flex justify-between items-center">
 					@if ($entries->onFirstPage())
-						<span class="text-sm font-bold text-gray-400">Previous</span>
+						<span class="text-xs md:text-sm font-bold text-gray-400">Previous</span>
 					@else
 						<a href="{{ $entries->appends(request()->query())->previousPageUrl() }}"
-							class="js-library-page-link text-sm font-bold text-gray-500 hover:text-purple-400 transition">Previous</a>
+							class="js-library-page-link text-xs md:text-sm font-bold text-gray-500 hover:text-purple-400 transition">Previous</a>
 					@endif
 
 					<div class="flex gap-2">
@@ -173,7 +173,7 @@
 
 					@if ($entries->hasMorePages())
 						<a href="{{ $entries->appends(request()->query())->nextPageUrl() }}"
-							class="js-library-page-link text-sm font-bold text-gray-500 hover:text-purple-400 transition">Next</a>
+							class="js-library-page-link text-xs md:text-sm font-bold text-gray-500 hover:text-purple-400 transition">Next</a>
 					@else
 						<span class="text-sm font-bold text-gray-400">Next</span>
 					@endif

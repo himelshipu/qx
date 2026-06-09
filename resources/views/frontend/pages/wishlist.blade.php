@@ -3,10 +3,10 @@
 @section('title', 'Wishlist')
 
 @section('content')
-<div class="min-h-screen bg-gray-50 dark:bg-gray-950 px-4 py-6 sm:px-6 lg:px-8" data-wishlist-page>
-    <div class="mx-auto max-w-7xl">
+<div data-wishlist-page>
+    <div class="mx-auto max-w-4xl py-12">
         <div class="mb-8">
-            <h1 class="text-3xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-4xl">My Wishlist</h1>
+            <h1 class="text-3xl font-bold tracking-tight text-gray-900 dark:text-white">My Wishlist</h1>
             <p class="mt-2 text-gray-600 dark:text-gray-400">Your curated collection of influencers across different lists</p>
         </div>
 

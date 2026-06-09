@@ -1,12 +1,12 @@
 <?php
 
-namespace App\View\Components\backend\Shell;
+namespace App\View\Components\Backend\Shell;
 
 use Closure;
 use Illuminate\Contracts\View\View;
 use Illuminate\View\Component;
 
-class CalenderArea extends Component
+class Chart extends Component
 {
     /**
      * Create a new component instance.
@@ -21,6 +21,6 @@ class CalenderArea extends Component
      */
     public function render(): View|Closure|string
     {
-        return view('components.backend.shell.calender-area');
+        return view('components.backend.shell.chart');
     }
 }

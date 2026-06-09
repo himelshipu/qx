@@ -1,6 +1,6 @@
 <?php
 
-namespace App\View\Components\backend\Shell;
+namespace App\View\Components\Backend\Shell;
 
 use App\Helpers\MenuHelper;
 use Closure;

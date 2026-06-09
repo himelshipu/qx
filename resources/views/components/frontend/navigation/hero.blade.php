@@ -6,8 +6,8 @@
         </h2>
 
         <p class="text-base text-gray-500 dark:text-gray-400 leading-relaxed max-w-4xl">
-            Rockies brings brands and influencers together into a single workflow -- talent discovery,
-             task assignments, approvals, timeline tracking, and reporting -- plus
+            Rockies brings brands and influencers together into a single workflow - talent discovery,
+             task assignments, approvals, timeline tracking, and reporting - plus
              automated commissions, payouts, invoices and contracts
         </p>
     </div>

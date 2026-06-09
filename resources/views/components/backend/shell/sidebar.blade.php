@@ -12,7 +12,7 @@
 <aside id="sidebar"
     data-badges-route="{{ route('dashboard.api.sidebar-badges') }}"
     data-badges-refresh-seconds="{{ (int) config('communication.sidebar_refresh_seconds', 60) }}"
-    class="fixed top-0 left-0 z-40 h-screen bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 transition-all duration-300 shadow-xl"
+    class="fixed top-0 left-0 z-40 h-screen bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 transition-transform duration-300 shadow-xl lg:transition-all"
     x-data="{ 
         openMenu: @js($activeAccordion),
         sidebarStorageKey: 'admin.sidebar.expanded',
@@ -26,6 +26,7 @@
         },
         persistSidebarState() {
             try {
+                if (window.innerWidth < 1024) return;
                 localStorage.setItem(this.sidebarStorageKey, $store.sidebar.isExpanded ? '1' : '0');
             } catch (e) {}
         },
@@ -33,7 +34,11 @@
             this.openMenu = this.openMenu === menuId ? null : menuId;
         }
     }"
-    :class="$store.sidebar.isExpanded ? 'w-72' : 'w-20'"
+    :class="[
+        $store.sidebar.isExpanded ? 'lg:w-72' : 'lg:w-20',
+        'w-72',
+        $store.sidebar.isMobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+    ]"
     x-init="
         restoreSidebarState();
         persistSidebarState();

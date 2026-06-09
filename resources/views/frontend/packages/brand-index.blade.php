@@ -144,7 +144,7 @@
 							</div>
 
 							<!-- Stats Grid -->
-							<div class="grid grid-cols-3 gap-2 bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3 mb-4">
+							<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3 mb-4">
 								<div class="text-center">
 									<p class="text-xs text-gray-600 dark:text-gray-400">Unit Price</p>
 									<p class="text-sm font-bold text-purple-600 dark:text-purple-400">

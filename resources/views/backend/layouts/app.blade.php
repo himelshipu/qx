@@ -107,12 +107,11 @@ window.addEventListener('resize', checkMobile);" class="bg-white text-gray-900 d
 				:class="{
 				    'lg:ml-72': $store.sidebar.isExpanded,
 				    'lg:ml-20': !$store.sidebar.isExpanded,
-				    'ml-0': $store.sidebar.isMobileOpen
 				}">
 				<!-- app header start -->
 				<x-backend.shell.header />
 				<!-- app header end -->
-				<main class="max-w-full ml-[90px] lg:ml-0 px-4 sm:px-6 py-6 bg-white dark:bg-gray-900">
+				<main class="max-w-full px-4 sm:px-6 py-6 bg-white dark:bg-gray-900">
 					@yield('content')
 				</main>
 			</div>

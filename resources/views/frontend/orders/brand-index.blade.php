@@ -92,7 +92,7 @@
                 <div class="rounded-xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-gray-900 hover:shadow-md transition-shadow duration-300">
                     <div class="flex flex-col gap-4">
                         <!-- Header: Order # + Status + Button (all on same row, vertically centered) -->
-                        <div class="flex items-center justify-between gap-3">
+                        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                             <div class="flex-1 min-w-0">
                                 <h3 class="text-lg font-bold text-gray-900 dark:text-white">Order <span x-text="order.order_number"></span></h3>
                                 <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
