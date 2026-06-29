@@ -130,18 +130,24 @@ final class InfluencerService
      */
     public function getPlatformFilters(): Collection
     {
+        // Only show platforms which actually have at least one active influencer stat.
+        // (i.e. the user would see influencers when selecting that platform)
         $discoveredPlatforms = InfluencerPlatformStat::query()
             ->where('is_active', true)
+            ->whereHas('influencer', fn (Builder $q) => $q->where('is_active', true))
+            ->whereHas('influencer.user', fn (Builder $q) => $q->where('is_active', true))
             ->select('platform')
             ->distinct()
             ->pluck('platform')
             ->map(fn ($value): string => $this->normalizePlatformKey((string) $value))
             ->filter(fn (string $value): bool => $value !== '')
+            ->unique()
             ->values();
 
-        $orderedPlatforms = collect(self::PLATFORM_PRIORITY)
-            ->merge($discoveredPlatforms)
-            ->unique()
+        $orderedPlatforms = $discoveredPlatforms
+            ->sortBy(fn (string $platformKey): int => array_search($platformKey, self::PLATFORM_PRIORITY, true) !== false
+                ? array_search($platformKey, self::PLATFORM_PRIORITY, true)
+                : count(self::PLATFORM_PRIORITY))
             ->values();
 
         return $orderedPlatforms

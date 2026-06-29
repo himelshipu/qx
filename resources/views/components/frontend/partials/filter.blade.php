@@ -1,4 +1,4 @@
-@props(['selectedPlatform' => null, 'regionOptions' => [], 'genderOptions' => [], 'followerRangeOptions' => [], 'contentTypeOptions' => [], 'contentTypeOptionsByPlatform' => [], 'selectedContentTypes' => [], 'priceRange' => ['min' => 0, 'max' => 0], 'selectedPriceLabel' => null])
+@props(['selectedPlatform' => null, 'platformOptions' => [], 'regionOptions' => [], 'genderOptions' => [], 'followerRangeOptions' => [], 'contentTypeOptions' => [], 'contentTypeOptionsByPlatform' => [], 'selectedContentTypes' => [], 'priceRange' => ['min' => 0, 'max' => 0], 'selectedPriceLabel' => null])
 
 @php
 	$platformSelected = !empty($selectedPlatform);
@@ -27,36 +27,13 @@
 						data-value="">
 						Platform
 					</div>
-					<div
-						class="platform-option px-4 py-3 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl cursor-pointer transition-colors"
-						data-value="instagram">
-						Instagram
-					</div>
-					<div
-						class="platform-option px-4 py-3 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl cursor-pointer transition-colors"
-						data-value="tiktok">
-						TikTok
-					</div>
-					<div
-						class="platform-option px-4 py-3 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl cursor-pointer transition-colors"
-						data-value="youtube">
-						YouTube
-					</div>
-					<div
-						class="platform-option px-4 py-3 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl cursor-pointer transition-colors"
-						data-value="twitter">
-						X (Twitter)
-					</div>
-					<div
-						class="platform-option px-4 py-3 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl cursor-pointer transition-colors"
-						data-value="linkedin">
-						LinkedIn
-					</div>
-					<div
-						class="platform-option px-4 py-3 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl cursor-pointer transition-colors"
-						data-value="facebook">
-						Facebook
-					</div>
+					@foreach($platformOptions as $platform)
+						<div
+							class="platform-option px-4 py-3 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl cursor-pointer transition-colors"
+							data-value="{{ $platform['value'] ?? $platform['slug'] ?? strtolower($platform['name'] ?? '') }}">
+							{{ $platform['label'] ?? $platform['name'] ?? ucfirst($platform['value'] ?? '') }}
+						</div>
+					@endforeach
 				</div>
 			</div>
 
@@ -83,6 +60,7 @@
 					</div>
 				</div>
 
+				
 				<!-- Hidden input for selected categories -->
 				<input type="hidden" id="categories-input" name="categories" value="">
 			</div>

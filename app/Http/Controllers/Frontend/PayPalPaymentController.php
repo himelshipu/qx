@@ -131,16 +131,169 @@ class PayPalPaymentController extends Controller
             ->with('warning', 'PayPal payment was cancelled');
     }
 
-    /**
-     * Handle PayPal IPN notification (legacy - kept for future webhook support)
-     */
-    public function notify(Request $request)
-    {
-        // Log webhook for future processing if needed
-        Log::info('PayPal webhook received', $request->all());
+   /**
+ * Handle PayPal webhook notification
+ */
+public function notify(Request $request)
+{
+    Log::info('PayPal webhook received', [
+        'headers' => $request->headers->all(),
+        'payload' => $request->all()
+    ]);
 
-        return response('Webhook received', 200);
+    try {
+        // 1. Verify webhook signature
+        $webhookId = config('paypal.webhook_id');
+        
+        if (!$webhookId) {
+            Log::error('PayPal webhook ID not configured');
+            return response('Webhook ID missing', 400);
+        }
+
+        // 2. Get PayPal service
+        $paypal = new PayPalService();
+        $payload = $request->getContent();
+        $headers = [
+            'PAYPAL-AUTH-ALGO' => $request->header('paypal-auth-algo'),
+            'PAYPAL-CERT-URL' => $request->header('paypal-cert-url'),
+            'PAYPAL-TRANSMISSION-ID' => $request->header('paypal-transmission-id'),
+            'PAYPAL-TRANSMISSION-SIG' => $request->header('paypal-transmission-sig'),
+            'PAYPAL-TRANSMISSION-TIME' => $request->header('paypal-transmission-time'),
+        ];
+
+        // 3. Verify webhook
+        $verified = $paypal->verifyWebhook($webhookId, $payload, $headers);
+        
+        if (!$verified) {
+            Log::error('PayPal webhook verification failed');
+            return response('Webhook verification failed', 400);
+        }
+
+        // 4. Process webhook event
+        $eventType = $request->input('event_type');
+        $resource = $request->input('resource');
+
+        Log::info('Processing PayPal webhook', [
+            'event_type' => $eventType,
+            'resource_id' => $resource['id'] ?? null
+        ]);
+
+        switch ($eventType) {
+            case 'PAYMENT.CAPTURE.COMPLETED':
+                $this->handlePaymentCaptureCompleted($resource);
+                break;
+                
+            case 'PAYMENT.CAPTURE.DENIED':
+                $this->handlePaymentCaptureDenied($resource);
+                break;
+                
+            case 'PAYMENT.CAPTURE.REFUNDED':
+                $this->handlePaymentCaptureRefunded($resource);
+                break;
+                
+            default:
+                Log::info('Unhandled PayPal webhook event', ['event_type' => $eventType]);
+        }
+
+        return response('Webhook processed successfully', 200);
+        
+    } catch (Exception $e) {
+        Log::error('PayPal webhook processing failed', [
+            'error' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
+        ]);
+        
+        return response('Webhook processing failed', 500);
     }
+}
+
+    /**
+     * Handle payment capture completed
+     */
+    protected function handlePaymentCaptureCompleted(array $resource): void
+    {
+        $captureId = $resource['id'] ?? null;
+        $orderId = $resource['supplementary_data']['related_ids']['order_id'] ?? null;
+        
+        if (!$captureId || !$orderId) {
+            Log::error('Missing capture or order ID in webhook', ['resource' => $resource]);
+            return;
+        }
+
+        // Find brand payment by paypal_order_id
+        $brandPayment = OrderBrandPayment::where('paypal_order_id', $orderId)->first();
+        
+        if (!$brandPayment) {
+            Log::error('Brand payment not found for PayPal order', ['paypal_order_id' => $orderId]);
+            return;
+        }
+
+        // Update payment status
+        $brandPayment->update([
+            'paypal_transaction_id' => $captureId,
+            'reference_number' => $captureId,
+            'status' => 'confirmed',
+            'confirmed_at' => now(),
+            'payment_method' => 'paypal'
+        ]);
+
+        Log::info('PayPal payment confirmed via webhook', [
+            'brand_payment_id' => $brandPayment->id,
+            'capture_id' => $captureId
+        ]);
+
+        // Notify admins
+        $this->notifyAdminsAboutPayment($brandPayment);
+    }
+
+/**
+ * Handle payment capture denied
+ */
+protected function handlePaymentCaptureDenied(array $resource): void
+{
+    $orderId = $resource['supplementary_data']['related_ids']['order_id'] ?? null;
+    
+    if (!$orderId) {
+        return;
+    }
+
+    $brandPayment = OrderBrandPayment::where('paypal_order_id', $orderId)->first();
+    
+    if ($brandPayment) {
+        $brandPayment->update([
+            'status' => 'rejected'
+        ]);
+        
+        Log::warning('PayPal payment denied', [
+            'brand_payment_id' => $brandPayment->id
+        ]);
+    }
+}
+
+/**
+ * Handle payment capture refunded
+ */
+protected function handlePaymentCaptureRefunded(array $resource): void
+{
+    $captureId = $resource['id'] ?? null;
+    
+    if (!$captureId) {
+        return;
+    }
+
+    $brandPayment = OrderBrandPayment::where('paypal_transaction_id', $captureId)->first();
+    
+    if ($brandPayment) {
+        $brandPayment->update([
+            'status' => 'refunded',
+            'refunded_at' => now()
+        ]);
+        
+        Log::info('PayPal payment refunded via webhook', [
+            'brand_payment_id' => $brandPayment->id
+        ]);
+    }
+}
 
     /**
      * Notify admins about PayPal payment submission

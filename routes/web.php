@@ -65,6 +65,7 @@ use App\Http\Controllers\Frontend\SupportTicketController as FrontendSupportTick
 use App\Http\Controllers\InfluencerProfileController;
 use App\Http\Controllers\PaymentMethodController;
 use App\Http\Controllers\PublicPageController;
+use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Route;
 
@@ -146,7 +147,9 @@ Route::middleware(['web'])->group(function () {
     Route::get('/api/categories', [InfluencersController::class, 'apiCategories']);
 
     // PayPal IPN Webhook
-    Route::post('/paypal/notify', [PayPalPaymentController::class, 'notify'])->name('frontend.paypal.notify');
+   Route::post('/paypal/notify', [PayPalPaymentController::class, 'notify'])
+    ->name('frontend.paypal.notify')
+    ->withoutMiddleware([ValidateCsrfToken::class]); 
 });
 
 /*

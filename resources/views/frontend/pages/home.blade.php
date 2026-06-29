@@ -4,7 +4,7 @@
 	<div class="min-h-screen transition-colors duration-200">
 		<main class="container mx-auto flex flex-col gap-14">
 
-			<x-frontend.navigation.hero :region-options="$regionOptions" :gender-options="$genderOptions" :follower-range-options="$followerRangeOptions" />
+			<x-frontend.navigation.hero :platform-options="$platformOptions" :region-options="$regionOptions" :gender-options="$genderOptions" :follower-range-options="$followerRangeOptions" />
 			<x-frontend.partials.featured :featuredInfluencers="$featuredInfluencers" />
 			<x-frontend.partials.social-media :influencersByPlatform="$influencersByPlatform" />
 			<x-frontend.partials.cases />

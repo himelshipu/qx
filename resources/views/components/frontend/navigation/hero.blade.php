@@ -13,7 +13,7 @@
     </div>
 
     <div class="w-full sm:w-[620px] lg:w-[980px] mx-auto">
-        <x-frontend.partials.filter :region-options="$regionOptions" :gender-options="$genderOptions" :follower-range-options="$followerRangeOptions" />
+        <x-frontend.partials.filter :platform-options="$platformOptions ?? []" :region-options="$regionOptions" :gender-options="$genderOptions" :follower-range-options="$followerRangeOptions" />
     </div>
 
 </div>

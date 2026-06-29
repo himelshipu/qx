@@ -37,6 +37,7 @@ final class HomeController extends Controller
         $homeData              = $this->homeService->getHomePageData();
         $influencersByPlatform = $this->homeService->getInfluencersByPlatform();
         $featuredInfluencers   = $this->influencerService->getFeaturedInfluencers(4);
+        $platformOptions       = $this->influencerService->getPlatformFilters();
         $faqItems              = $this->homeService->getHomeFaqItems();
         $testimonials          = $this->homeService->getTestimonials();
 
@@ -48,6 +49,7 @@ final class HomeController extends Controller
             'users'                 => $homeData->users,
             'influencersByPlatform' => $influencersByPlatform,
             'featuredInfluencers'   => $featuredInfluencers,
+            'platformOptions'       => $platformOptions,
             'faqItems'              => $faqItems,
             'testimonials'          => $testimonials,
             'regionOptions'         => $this->influencerService->getRegionFilters()->all(),

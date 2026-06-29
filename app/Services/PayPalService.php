@@ -213,4 +213,49 @@ class PayPalService
             throw $e;
         }
     }
+
+    /**
+     * Verify PayPal webhook signature
+     */
+    public function verifyWebhook(string $webhookId, string $payload, array $headers): bool
+    {
+        try {
+            // Get access token
+            $this->client->getAccessToken();
+            
+            // Prepare verification data
+            $verificationData = [
+                'auth_algo' => $headers['PAYPAL-AUTH-ALGO'] ?? '',
+                'cert_url' => $headers['PAYPAL-CERT-URL'] ?? '',
+                'transmission_id' => $headers['PAYPAL-TRANSMISSION-ID'] ?? '',
+                'transmission_sig' => $headers['PAYPAL-TRANSMISSION-SIG'] ?? '',
+                'transmission_time' => $headers['PAYPAL-TRANSMISSION-TIME'] ?? '',
+                'webhook_id' => $webhookId,
+                'webhook_event' => json_decode($payload, true)
+            ];
+
+            // Verify webhook signature using PayPal API
+            $response = $this->client->verifyWebHook($verificationData);
+
+            // Normalize response
+            if (!is_array($response)) {
+                $response = json_decode(json_encode($response), true);
+            }
+
+            $verificationStatus = $response['verification_status'] ?? null;
+
+            Log::info('PayPal webhook verification result', [
+                'status' => $verificationStatus,
+                'webhook_id' => $webhookId
+            ]);
+
+            return $verificationStatus === 'SUCCESS';
+            
+        } catch (Exception $e) {
+            Log::error('PayPal webhook verification failed', [
+                'error' => $e->getMessage()
+            ]);
+            return false;
+        }
+    }
 }

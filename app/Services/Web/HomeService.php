@@ -157,9 +157,7 @@ final class HomeService
                     'influencers' => $influencers
                 ];
             })
-            ->filter(fn(array $group): bool =>
-                $group['influencers']->isNotEmpty() || in_array($group['key'], $mandatoryPlatforms, true)
-            )
+            ->filter(fn(array $group): bool => $group['influencers']->isNotEmpty())
             ->values();
     }
 

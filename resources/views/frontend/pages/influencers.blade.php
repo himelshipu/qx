@@ -8,7 +8,7 @@
 	<div class="transition-colors duration-200">
 		<main>
 			<div class="w-full sm:w-155 lg:w-245 mx-auto">
-				<x-frontend.partials.filter :selected-platform="$selectedPlatform ?? null" :region-options="$regionOptions ?? []" :gender-options="$genderOptions ?? []" :follower-range-options="$followerRangeOptions ?? []" :content-type-options="$contentTypeOptions ?? []" :content-type-options-by-platform="$contentTypeOptionsByPlatform ?? []" :selected-content-types="$selectedContentTypes ?? []" :price-range="$priceRange ?? []" :selected-price-label="$selectedPriceLabel ?? null" />
+				<x-frontend.partials.filter :selected-platform="$selectedPlatform ?? null" :platform-options="$platformFilters ?? []" :region-options="$regionOptions ?? []" :gender-options="$genderOptions ?? []" :follower-range-options="$followerRangeOptions ?? []" :content-type-options="$contentTypeOptions ?? []" :content-type-options-by-platform="$contentTypeOptionsByPlatform ?? []" :selected-content-types="$selectedContentTypes ?? []" :price-range="$priceRange ?? []" :selected-price-label="$selectedPriceLabel ?? null" />
 			</div>
 
 			<section class="w-full pb-8 mt-8">
