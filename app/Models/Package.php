@@ -70,6 +70,7 @@ class Package extends Model
             ->select([
                 'id',
                 'created_by',
+                'influencer_id',
                 'platform',
                 'name',
                 'description',
@@ -81,6 +82,7 @@ class Package extends Model
                 'updated_at',
             ])
             ->with('createdBy:id,name')
+            ->with(['influencer:id,user_id,display_name', 'influencer.user:id,name'])
             ->withCount(['cartItems', 'orderItems']);
     }
 
@@ -121,6 +123,23 @@ class Package extends Model
         }
 
         return $query->where('platform', $platform);
+    }
+
+    public function scopeDashboardInfluencer(Builder $query, mixed $influencerId): Builder
+    {
+        if ($influencerId === null || $influencerId === '' || $influencerId === 'all') {
+            return $query;
+        }
+
+        if ($influencerId === 'unassigned') {
+            return $query->whereNull('influencer_id');
+        }
+
+        if (!is_numeric($influencerId)) {
+            return $query;
+        }
+
+        return $query->where('influencer_id', (int) $influencerId);
     }
 
     public function scopeDashboardOrder(Builder $query): Builder

@@ -61,7 +61,7 @@ final class PackageService
      * Build package listing payload for dashboard index page.
      *
      * @param array<string, mixed> $filters
-     * @return array{packages:\Illuminate\Contracts\Pagination\LengthAwarePaginator,stats:array{total:int,active:int,inactive:int,in_use:int},filters:array<string,mixed>,platformOptions:array<int, array{value:string,label:string}>}
+     * @return array{packages:\Illuminate\Contracts\Pagination\LengthAwarePaginator,stats:array{total:int,active:int,inactive:int,in_use:int},filters:array<string,mixed>,platformOptions:array<int, array{value:string,label:string}>,influencerOptions:array<int, array{value:string,label:string}>}
      */
     public function getIndexPayload(array $filters): array
     {
@@ -69,13 +69,15 @@ final class PackageService
             'q' => trim((string) ($filters['q'] ?? '')),
             'status' => (string) ($filters['status'] ?? 'all'),
             'platform' => (string) ($filters['platform'] ?? 'all'),
+            'influencer_id' => $this->normalizeInfluencerFilter($filters['influencer_id'] ?? 'all'),
         ];
 
         return [
-            'packages'        => $this->packageRepository->paginateForDashboard($normalized),
-            'stats'           => $this->packageRepository->getStats(),
-            'filters'         => $normalized,
-            'platformOptions' => $this->getPlatformOptions(includeAll: true)
+            'packages'         => $this->packageRepository->paginateForDashboard($normalized),
+            'stats'            => $this->packageRepository->getStats(),
+            'filters'          => $normalized,
+            'platformOptions'  => $this->getPlatformOptions(includeAll: true),
+            'influencerOptions' => $this->getInfluencerOptions(),
         ];
     }
 
@@ -89,11 +91,54 @@ final class PackageService
             'q' => trim((string) ($filters['q'] ?? '')),
             'status' => (string) ($filters['status'] ?? 'all'),
             'platform' => (string) ($filters['platform'] ?? 'all'),
+            'influencer_id' => $this->normalizeInfluencerFilter($filters['influencer_id'] ?? 'all'),
         ];
 
         return [
             'packages' => $this->packageRepository->paginateForDashboard($normalized),
         ];
+    }
+
+    /**
+     * Normalize the influencer filter input.
+     */
+    private function normalizeInfluencerFilter(mixed $value): string
+    {
+        if ($value === null || $value === '') {
+            return 'all';
+        }
+
+        return (string) $value;
+    }
+
+    /**
+     * Build influencer options for the dashboard filter dropdown.
+     *
+     * @return array<int, array{value:string,label:string}>
+     */
+    private function getInfluencerOptions(): array
+    {
+        $options = [
+            ['value' => 'all', 'label' => 'All Influencers'],
+            ['value' => 'unassigned', 'label' => 'Unassigned'],
+        ];
+
+        $influencers = Influencer::query()
+            ->with('user:id,name')
+            ->orderBy('display_name')
+            ->get(['id', 'user_id', 'display_name']);
+
+        foreach ($influencers as $influencer) {
+            $label = $influencer->display_name
+                ?: ($influencer->user?->name ?: 'Influencer #' . $influencer->id);
+
+            $options[] = [
+                'value' => (string) $influencer->id,
+                'label' => $label,
+            ];
+        }
+
+        return $options;
     }
 
     /**

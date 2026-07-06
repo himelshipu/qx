@@ -50,6 +50,51 @@
                                 class="h-10 w-full rounded-lg border border-gray-200 bg-transparent pl-10 pr-3 text-sm text-gray-900 focus:border-gray-400 focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-white">
                         </div>
                     </div>
+                    <div class="min-w-56" data-influencer-combobox>
+                        <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Influencer</label>
+                        <input type="hidden" name="influencer_id" value="{{ $filters['influencer_id'] ?? 'all' }}" data-influencer-value>
+                        <div class="relative">
+                            <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
+                                <x-icons.search class="h-4 w-4" />
+                            </span>
+                            <input
+                                type="text"
+                                autocomplete="off"
+                                spellcheck="false"
+                                placeholder="Search influencer..."
+                                data-influencer-input
+                                aria-autocomplete="list"
+                                aria-expanded="false"
+                                class="h-10 w-full rounded-lg border border-gray-200 bg-transparent pl-9 pr-9 text-sm text-gray-900 focus:border-gray-400 focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-white"
+                            >
+                            <button
+                                type="button"
+                                data-influencer-clear
+                                aria-label="Clear selection"
+                                class="absolute inset-y-0 right-0 hidden items-center px-2 text-gray-400 transition hover:text-gray-700 dark:hover:text-gray-200">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                </svg>
+                            </button>
+                            <ul
+                                data-influencer-list
+                                role="listbox"
+                                class="absolute left-0 right-0 z-30 mt-1 hidden max-h-60 overflow-y-auto rounded-lg border border-gray-200 bg-white py-1 shadow-lg dark:border-gray-700 dark:bg-gray-800">
+                                @foreach ($influencerOptions as $option)
+                                    <li
+                                        data-influencer-option
+                                        data-value="{{ $option['value'] }}"
+                                        data-label="{{ $option['label'] }}"
+                                        role="option"
+                                        aria-selected="{{ (string) ($filters['influencer_id'] ?? 'all') === $option['value'] ? 'true' : 'false' }}"
+                                        class="influencer-combobox-option cursor-pointer px-3 py-2 text-sm text-gray-700 transition aria-selected:bg-gray-100 aria-selected:font-medium hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700 dark:aria-selected:bg-gray-700">
+                                        {{ $option['label'] }}
+                                    </li>
+                                @endforeach
+                                <li data-influencer-empty class="hidden px-3 py-2 text-sm text-gray-500 dark:text-gray-400">No matches found</li>
+                            </ul>
+                        </div>
+                    </div>
                     <div class="min-w-44">
                         <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Platform</label>
                         <select name="platform"

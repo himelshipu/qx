@@ -23,12 +23,14 @@ class EloquentPackageRepository implements PackageRepositoryInterface
         $search = (string) ($filters['q'] ?? '');
         $status = (string) ($filters['status'] ?? 'all');
         $platform = (string) ($filters['platform'] ?? 'all');
+        $influencerId = $filters['influencer_id'] ?? 'all';
 
         return Package::query()
             ->forDashboard()
             ->dashboardSearch($search)
             ->dashboardStatus($status)
             ->dashboardPlatform($platform)
+            ->dashboardInfluencer($influencerId)
             ->dashboardOrder()
             ->paginate($perPage);
     }

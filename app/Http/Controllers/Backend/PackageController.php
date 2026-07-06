@@ -23,12 +23,12 @@ class PackageController extends Controller
      */
     public function index(Request $request): View
     {
-        return view('backend.pages.packages.index', $this->packageService->getIndexPayload($request->only(['q', 'status', 'platform'])));
+        return view('backend.pages.packages.index', $this->packageService->getIndexPayload($request->only(['q', 'status', 'platform', 'influencer_id'])));
     }
 
     public function table(Request $request): View
     {
-        return view('backend.pages.packages._results', $this->packageService->getTablePayload($request->only(['q', 'status', 'platform'])));
+        return view('backend.pages.packages._results', $this->packageService->getTablePayload($request->only(['q', 'status', 'platform', 'influencer_id'])));
     }
 
     /**
